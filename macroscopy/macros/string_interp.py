@@ -1,7 +1,7 @@
 import re
 
-from macroscopy.src.macros import *
-from macroscopy.src.lift import *
+from macroscopy.core.macros import *
+from macroscopy.core.lift import *
 
 
 @expr_macro

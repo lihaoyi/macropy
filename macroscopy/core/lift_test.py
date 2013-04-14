@@ -1,6 +1,6 @@
 import unittest
 
-from macroscopy.src.macros import *
+from macroscopy.core.macros import *
 
 
 class TestLift(unittest.TestCase):

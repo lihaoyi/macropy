@@ -3,7 +3,7 @@ import sys
 import imp
 import ast
 from ast import *
-from macroscopy.src.core import *
+from macroscopy.core.core import *
 from util import *
 
 
@@ -14,12 +14,10 @@ class placeholder(object):
 
 
 def expr_macro(func):
-    print "Registering", func.func_name
     Macros.expr_registry[func.func_name] = func
 
 
 def block_macro(func):
-    print "Registering", func.func_name
     Macros.block_registry[func.func_name] = func
 
 
@@ -75,21 +73,25 @@ class MacroLoader(object):
     def load_module(self, module_name):
         """see http://www.python.org/dev/peps/pep-0302/ if you don't know what
         a lot of this stuff is for"""
-        if module_name in sys.modules:
-            return sys.modules[module_name]
-        print "Transforming", module_name
-        a = expand_ast(ast.parse(self.txt))
 
-        code = compile(a, module_name, 'exec')
+        try:
+            if module_name in sys.modules:
+                return sys.modules[module_name]
 
-        mod = imp.new_module(module_name)
-        mod.__file__ = self.file_name
-        mod.__loader__ = self
+            a = expand_ast(ast.parse(self.txt))
 
-        exec code in mod.__dict__
+            code = compile(a, module_name, 'exec')
 
-        sys.modules[module_name] = mod
-        return mod
+            mod = imp.new_module(module_name)
+            mod.__file__ = self.file_name
+            mod.__loader__ = self
+
+            exec code in mod.__dict__
+
+            sys.modules[module_name] = mod
+            return mod
+        except Exception, e:
+            pass
 
 
 def expand_ast(node):
@@ -117,18 +119,19 @@ def expand_ast(node):
 @singleton
 class MacroFinder(object):
     def find_module(self, module_name, package_path):
-
         if module_name in sys.modules:
             return None
 
-        if module_name.startswith("macroscopy"):
-            (file, pathname, description) = imp.find_module(module_name.split('.')[-1], package_path)
-            print "Finding", module_name
-            if file is not None:
-                print "Found", module_name
+        if "macroscopy" in str(package_path):
+            try:
+                (file, pathname, description) = imp.find_module(module_name.split('.')[-1], package_path)
                 txt = file.read()
-                if "from macros import *" in txt:
-                    return MacroLoader(module_name, txt, file.name)
+
+                return MacroLoader(module_name, txt, file.name)
+            except Exception, e:
+                pass
+
+
 
 
 sys.meta_path.append(MacroFinder)

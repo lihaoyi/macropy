@@ -1,9 +1,8 @@
-print "S"
 import unittest
 
-from macroscopy.src.macros import *
-from macroscopy.src.lift import *
-from macroscopy.src.string_interp import *
+from macroscopy.core.macros import *
+from macroscopy.core.lift import *
+from macroscopy.macros.string_interp import *
 
 
 class TestStringInterp(unittest.TestCase):
@@ -24,7 +23,7 @@ class TestStringInterp(unittest.TestCase):
             c = s%"%{apple_count} %{'apples'} and %{apple_count + banana_delta} %{''.join(['b', 'a', 'n', 'a', 'n', 'a', 's'])}"
 
             assert(c == "10 apples and 14 bananas")
-            print c
+
         test_ast(code)
 
 
