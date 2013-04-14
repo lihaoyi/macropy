@@ -1,1 +1,0 @@
-print "Hello Lift Test!"

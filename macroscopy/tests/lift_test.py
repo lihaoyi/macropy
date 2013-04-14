@@ -1,12 +1,7 @@
-
-from macros import *
-import re
-from lift import *
-from string_interpolate import *
-
-
 import unittest
-from macros import *
+
+from macroscopy.src.macros import *
+
 
 class TestLift(unittest.TestCase):
 
@@ -53,22 +48,25 @@ class TestLift(unittest.TestCase):
             x, y, z = 1, 3, 9
             assert(eval(unparse(b)) == 13)
         """)
+    def test_quote_unquote_block(self):
 
-    def test_string_interpolate(self):
         test_string("""
-            a, b = 1, 2
-            c = s%"%{a} apple and %{b} bananas"
-            assert(c == "1 apple and 2 bananas")
+            a = 10
+            b = ["a", "b", "c"]
+            c = []
+            with q as code:
+                c.append(a)
+                c.append(u%a)
+                c.extend(u%b)
+
+            exec(unparse(code))
+            assert(c == [10, 10, 'a', 'b', 'c'])
+            c = []
+            a, b = None, None
+            exec(unparse(code))
+            assert(c == [None, 10, 'a', 'b', 'c'])
         """)
 
-    def test_string_interpolate_2(self):
-        test_string("""
-            apple_count = 10
-            banana_delta = 4
-            c = s%"%{apple_count} %{'apples'} and %{apple_count + banana_delta} %{''.join(['b', 'a', 'n', 'a', 'n', 'a', 's'])}"
-
-            assert(c == "10 apples and 14 bananas")
-        """)
 
 def test_string(txt):
     txt = txt.strip().replace("\n            ", "\n")

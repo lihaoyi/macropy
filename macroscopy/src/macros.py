@@ -2,10 +2,8 @@
 import sys
 import imp
 import ast
-import weakref
-import random
 from ast import *
-from core import *
+from macroscopy.src.core import *
 from util import *
 
 
@@ -15,13 +13,18 @@ class placeholder(object):
         return "placeholder"
 
 
-def macro(func):
-    Macros.registry[func.func_name] = func
+def expr_macro(func):
+    print "Registering", func.func_name
+    Macros.expr_registry[func.func_name] = func
+
+
+def block_macro(func):
+    print "Registering", func.func_name
+    Macros.block_registry[func.func_name] = func
 
 
 expr.__repr__ = lambda self: ast.dump(self, annotate_fields=False)
-
-
+stmt.__repr__ = lambda self: ast.dump(self, annotate_fields=False)
 
 
 def splat(node):
@@ -47,7 +50,8 @@ def interpolate_ast(node, values):
 
 @singleton
 class Macros(object):
-    registry = {}
+    expr_registry = {}
+    block_registry = {}
 
     def recurse(self, node, func):
         if type(node) is list:
@@ -73,6 +77,7 @@ class MacroLoader(object):
         a lot of this stuff is for"""
         if module_name in sys.modules:
             return sys.modules[module_name]
+        print "Transforming", module_name
         a = expand_ast(ast.parse(self.txt))
 
         code = compile(a, module_name, 'exec')
@@ -90,20 +95,21 @@ class MacroLoader(object):
 def expand_ast(node):
     def macro_search(node):
 
-        if isinstance(node, With):
-            for func in Macros.registry:
-                if func.func_name == node.context_expr.id:
-                    expansion = func(node)
-                    return Macros.recurse(expansion, macro_search)
-        if isinstance(node, BinOp) \
+        if      isinstance(node, With) \
+                and type(node.context_expr) is Name \
+                and node.context_expr.id in Macros.block_registry:
+
+            expansion = Macros.block_registry[node.context_expr.id](node)
+            return Macros.recurse(expansion, macro_search)
+
+        if      isinstance(node, BinOp) \
                 and type(node.left) is Name \
                 and type(node.op) is Mod \
-                and node.left.id in Macros.registry:
-            #for g in globals().items():
-            #    print "A", g
+                and node.left.id in Macros.expr_registry:
 
-            expansion = Macros.registry[node.left.id](node.right)
+            expansion = Macros.expr_registry[node.left.id](node.right)
             return Macros.recurse(expansion, macro_search)
+
         return Macros.recurse(node, macro_search)
     node = macro_search(node)
     return node
@@ -114,16 +120,15 @@ class MacroFinder(object):
 
         if module_name in sys.modules:
             return None
-        try:
-            (file, pathname, description) = imp.find_module(module_name.split('.')[-1], package_path)
 
+        if module_name.startswith("macroscopy"):
+            (file, pathname, description) = imp.find_module(module_name.split('.')[-1], package_path)
+            print "Finding", module_name
             if file is not None:
                 print "Found", module_name
                 txt = file.read()
                 if "from macros import *" in txt:
                     return MacroLoader(module_name, txt, file.name)
-        except ImportError, e:
-            return None
 
 
 sys.meta_path.append(MacroFinder)

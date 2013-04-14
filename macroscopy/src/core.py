@@ -23,6 +23,9 @@ def parse_expr(x):
     return ast.parse(x).body[0].value
 
 
+def parse_stmt(x):
+    return ast.parse(x).body
+
 def unparse(ast):
     import StringIO
     buffer = StringIO.StringIO()

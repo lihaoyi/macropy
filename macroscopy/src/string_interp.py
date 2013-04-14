@@ -1,11 +1,10 @@
-
-from macros import *
-from ast import *
-from lift import *
 import re
 
+from macroscopy.src.macros import *
+from macroscopy.src.lift import *
 
-@macro
+
+@expr_macro
 def s(node):
     captured = []
     new_string = ""
