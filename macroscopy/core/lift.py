@@ -30,7 +30,10 @@ def q(node):
 
     node = unquote_search(node, unquotes)
     unquote_calcs = [unparse(u) for u in unquotes]
-    out = parse_expr("interpolate_ast("+repr(node)+",["+",".join(unquote_calcs)+"])")
+    string = "interp_ast("+repr(node)+",["+",".join(unquote_calcs)+"])"
+
+    out = parse_expr(string)
+
     return out
 
 @block_macro
@@ -44,7 +47,7 @@ def q(node):
     unquotes = []
     body = unquote_search(node.body, unquotes)
     unquote_calcs = [unparse(u) for u in unquotes]
-    body_txt = "interpolate_ast("+repr(body)+",["+",".join(unquote_calcs)+"])"
+    body_txt = "interp_ast("+repr(body)+",["+",".join(unquote_calcs)+"])"
     out = parse_stmt(node.optional_vars.id + " = " + body_txt)
     return out
 

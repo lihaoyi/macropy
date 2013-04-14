@@ -3,21 +3,17 @@ import re
 from macroscopy.core.macros import *
 from macroscopy.core.lift import *
 
+def wrap(printer, txt, x):
+    string = txt + " -> " + str(x)
+    try:
+        printer(string)
+    except Exception, e:
+        print string
+    return x
 
 @expr_macro
-def s(node):
-    captured = []
-    new_string = ""
-    chunks = re.split("%{(.*?)}", node.s)
-    for i in range(0, len(chunks)):
-        if i % 2 == 0:
-            new_string += chunks[i]
-        else:
-            new_string += "%s"
-            captured += [chunks[i]]
-
-    out = Tuple(elts=[parse_expr(x) for x in captured], ctx=Load())
-    result = q%((u%new_string) % (ast % out))
-    return result
+def trace(node):
+    new_node = q%(wrap((lambda log: lambda x: log(x))(log), u%unparse(node), ast%node))
+    return new_node
 
 

@@ -1,9 +1,9 @@
 import unittest
 
 from macroscopy.core.macros import *
+from macroscopy.core import lift
 
-
-class TestLift(unittest.TestCase):
+class Tests(unittest.TestCase):
 
     def test_simple(self):
         test_string("""
@@ -11,6 +11,7 @@ class TestLift(unittest.TestCase):
             b = 2
             data1 = q%(1 + u%(a + b))
             data2 = q%(1 + (a + b))
+
             assert eval(unparse(data1)) == 13
             assert eval(unparse(data2)) == 13
             a = 1

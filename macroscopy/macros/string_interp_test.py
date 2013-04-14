@@ -5,16 +5,14 @@ from macroscopy.core.lift import *
 from macroscopy.macros.string_interp import *
 
 
-class TestStringInterp(unittest.TestCase):
+class Tests(unittest.TestCase):
     def test_string_interpolate(self):
-        print "test_string_interpolate"
         with q as code:
             a, b = 1, 2
             c = s%"%{a} apple and %{b} bananas"
             assert(c == "1 apple and 2 bananas")
 
         test_ast(code)
-        print "xxx"
 
     def test_string_interpolate_2(self):
         with q as code:
@@ -28,9 +26,5 @@ class TestStringInterp(unittest.TestCase):
 
 
 def test_ast(txt):
-    print "omg"
     node = expand_ast(txt)
     exec unparse(node)
-
-def main():
-    unittest.main()

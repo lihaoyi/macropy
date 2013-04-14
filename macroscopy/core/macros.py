@@ -33,7 +33,7 @@ def splat(node):
     return {"lineno": node.lineno, "col_offset": node.col_offset}
 
 
-def interpolate_ast(node, values):
+def interp_ast(node, values):
     def v(): return values
 
     def func(node):
