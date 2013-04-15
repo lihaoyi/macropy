@@ -7,6 +7,8 @@ from tracing import *
 
 
 result = []
+
+
 def log(x):
     result.append(x)
     pass
@@ -75,7 +77,6 @@ class Tests(unittest.TestCase):
                     evens += [n]
                 else:
                     odds += [n]
-
 
 
         assert(result[-18:] == [

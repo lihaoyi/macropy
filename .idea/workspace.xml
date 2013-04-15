@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9635bfa4-4f56-4df2-86e2-f116c56bc57f" name="Default" comment="A">
+    <list default="true" id="9635bfa4-4f56-4df2-86e2-f116c56bc57f" name="Default" comment="Added multiline tracing unit test">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/macroscopy/macros/future_test.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macroscopy/macros/__init__.py" afterPath="$PROJECT_DIR$/macroscopy/macros/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macroscopy/core/core.py" afterPath="$PROJECT_DIR$/macroscopy/core/core.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macroscopy/core/macros.py" afterPath="$PROJECT_DIR$/macroscopy/core/macros.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macroscopy/macros/string_interp_test.py" afterPath="$PROJECT_DIR$/macroscopy/macros/string_interp_test.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macroscopy/run.py" afterPath="$PROJECT_DIR$/macroscopy/run.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macroscopy/macros/tracing.py" afterPath="$PROJECT_DIR$/macroscopy/macros/tracing.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macroscopy/macros/tracing_test.py" afterPath="$PROJECT_DIR$/macroscopy/macros/tracing_test.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macroscopy/core/util.py" afterPath="$PROJECT_DIR$/macroscopy/core/util.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macroscopy/core/unparser.py" afterPath="$PROJECT_DIR$/macroscopy/core/unparser.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="Project.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/run.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365994648596" ignored="false" />
+    <file path="/run.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366002123730" ignored="false" />
     <file path="/importz.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365483076658" ignored="false" />
     <file path="/thing.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365737898877" ignored="false" />
     <file path="/fragment.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365787163596" ignored="false" />
@@ -21,7 +20,7 @@
     <file path="/macros.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365999070199" ignored="false" />
     <file path="/ast.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365482346443" ignored="false" />
     <file path="/tracer.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365792607304" ignored="false" />
-    <file path="/__init__.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365997767421" ignored="false" />
+    <file path="/__init__.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366001453661" ignored="false" />
     <file path="/a.dummy" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365866190154" ignored="false" />
     <file path="/node_classes.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365741837960" ignored="false" />
     <file path="/lift.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365998846641" ignored="false" />
@@ -31,13 +30,14 @@
     <file path="/util.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365996806634" ignored="false" />
     <file path="/core.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365999093160" ignored="false" />
     <file path="/string_interpolate.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365954924649" ignored="false" />
-    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366000871926" ignored="false" />
+    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366001428435" ignored="false" />
     <file path="/string_interpolate_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365962203966" ignored="false" />
-    <file path="/*.regexp" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365996934805" ignored="false" />
+    <file path="/*.regexp" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366003402479" ignored="false" />
     <file path="/string_interp_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365974071946" ignored="false" />
     <file path="/tracing.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366000702079" ignored="false" />
-    <file path="/tracing_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366000852359" ignored="false" />
+    <file path="/tracing_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366001098641" ignored="false" />
     <file path="/_ast.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365992507767" ignored="false" />
+    <file path="/adt_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366004210049" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,13 +59,12 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="macros.py" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/macroscopy/core/macros.py">
+      <file leaf-file-name="future_test.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/macroscopy/macros/future_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="104" column="8" selection-start="2551" selection-end="2551" vertical-scroll-proportion="0.35279804">
+            <state line="118" column="18" selection-start="3698" selection-end="3698" vertical-scroll-proportion="0.7760479">
               <folding>
-                <marker date="1366000887071" expanded="true" signature="637:879" placeholder="..." />
-                <marker date="1366000887071" expanded="true" signature="1972:2022" placeholder="..." />
+                <element signature="e#0#15#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -89,22 +88,22 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/macroscopy/tests/run.py" />
-        <option value="$PROJECT_DIR$/macroscopy/src/macros.py" />
-        <option value="$PROJECT_DIR$/macroscopy/tests/string_interp_test.py" />
         <option value="$PROJECT_DIR$/macroscopy/macros/string_interp.py" />
         <option value="$USER_HOME$/.PyCharm20/system/python_stubs/-1373548814/_ast.py" />
         <option value="$PROJECT_DIR$/macroscopy/core/lift_test.py" />
-        <option value="$PROJECT_DIR$/macroscopy/run.py" />
         <option value="$PROJECT_DIR$/macroscopy/core/util.py" />
-        <option value="$PROJECT_DIR$/macroscopy/__init__.py" />
         <option value="$PROJECT_DIR$/macroscopy/macros/string_interp_test.py" />
-        <option value="$PROJECT_DIR$/macroscopy/macros/__init__.py" />
         <option value="$PROJECT_DIR$/macroscopy/core/lift.py" />
         <option value="$PROJECT_DIR$/macroscopy/core/core.py" />
-        <option value="$PROJECT_DIR$/macroscopy/macros/tracing.py" />
-        <option value="$PROJECT_DIR$/macroscopy/macros/tracing_test.py" />
         <option value="$PROJECT_DIR$/macroscopy/core/macros.py" />
+        <option value="$PROJECT_DIR$/macroscopy/macros/tracing_test.py" />
+        <option value="$PROJECT_DIR$/macroscopy/macros/tracing.py" />
+        <option value="$PROJECT_DIR$/macroscopy/__init__.py" />
+        <option value="$PROJECT_DIR$/macroscopy/macros/__init__.py" />
+        <option value="$PROJECT_DIR$/macroscopy/core/unparser.py" />
+        <option value="$PROJECT_DIR$/macroscopy/run.py" />
+        <option value="$PROJECT_DIR$/macroscopy/macros/adt_test.py" />
+        <option value="$PROJECT_DIR$/macroscopy/macros/future_test.py" />
       </list>
     </option>
   </component>
@@ -355,7 +354,7 @@
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/macroscopy/macros" />
       <option name="IS_MODULE_SDK" value="true" />
-      <module name="" />
+      <module name="Project" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/macroscopy/macros/string_interp_test.py" />
       <option name="CLASS_NAME" value="" />
@@ -378,7 +377,7 @@
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/macroscopy/core" />
       <option name="IS_MODULE_SDK" value="true" />
-      <module name="" />
+      <module name="Project" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/macroscopy/core/lift_test.py" />
       <option name="CLASS_NAME" value="" />
@@ -401,7 +400,7 @@
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/macroscopy/core" />
       <option name="IS_MODULE_SDK" value="true" />
-      <module name="" />
+      <module name="Project" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/macroscopy/core/lift_test.py" />
       <option name="CLASS_NAME" value="Tests" />
@@ -456,7 +455,7 @@
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="" />
       <option name="IS_MODULE_SDK" value="false" />
-      <module name="" />
+      <module name="Project" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="" />
       <option name="CLASS_NAME" value="" />
@@ -566,7 +565,11 @@
       <created>1365996717709</created>
       <updated>1365996717709</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Added multiline tracing unit test">
+      <created>1366000897164</created>
+      <updated>1366000897164</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -585,7 +588,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.12375" sideWeight="0.6722488" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.480625" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.50625" sideWeight="0.6722488" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.50625" sideWeight="0.6722488" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -631,7 +634,7 @@
     <option name="MAXIMUM_HISTORY_ROWS" value="1000" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="Big refactoring for Walker&#10;" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added multiline tracing unit test" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="false" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -653,6 +656,7 @@
     <MESSAGE value="Refactored AST interpolation" />
     <MESSAGE value="All tests pass!" />
     <MESSAGE value="Big refactoring for Walker&#10;" />
+    <MESSAGE value="Added multiline tracing unit test" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -660,113 +664,9 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/macroscopy/core/unparser.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="15" column="20" selection-start="413" selection-end="413" vertical-scroll-proportion="0.020681266">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="uml://Python/_ast.Lt">
-      <provider selected="true" editor-type-id="UmlEditorProvider">
-        <state>
-          <ID>Python</ID>
-          <OriginalElement>_ast.Lt</OriginalElement>
-          <nodes>
-            <node x="102.0" y="654.0">_ast.cmpop</node>
-            <node x="102.0" y="752.0">_ast.Lt</node>
-            <node x="0.0" y="118.0">object</node>
-            <node x="70.0" y="456.0">_ast.AST</node>
-            <node x="131.0" y="0.0">_abcoll.Hashable</node>
-          </nodes>
-          <notes />
-          <edges>
-            <edge source="object" target="_abcoll.Hashable">
-              <point x="0.0" y="-144.0" />
-              <point x="0.0" y="34.0" />
-            </edge>
-            <edge source="_ast.AST" target="object">
-              <point x="0.0" y="-74.0" />
-              <point x="0.0" y="144.0" />
-            </edge>
-            <edge source="_ast.Lt" target="_ast.cmpop">
-              <point x="0.0" y="-24.0" />
-              <point x="0.0" y="24.0" />
-            </edge>
-            <edge source="_ast.cmpop" target="_ast.AST">
-              <point x="0.0" y="-24.0" />
-              <point x="0.0" y="74.0" />
-            </edge>
-          </edges>
-          <settings layout="Hierarchic Group" zoom="1.0" x="39.0" y="170.0" />
-          <SelectedNodes />
-          <Categories>
-            <Category>Methods</Category>
-            <Category>Inner Classes</Category>
-          </Categories>
-        </state>
-      </provider>
-    </entry>
-    <entry file="uml://Python/_ast.AST">
-      <provider selected="true" editor-type-id="UmlEditorProvider">
-        <state>
-          <ID>Python</ID>
-          <OriginalElement>_ast.AST</OriginalElement>
-          <nodes>
-            <node x="" y="">object</node>
-            <node x="" y="">_ast.AST</node>
-            <node x="" y="">_abcoll.Hashable</node>
-          </nodes>
-          <notes />
-          <edges />
-          <settings layout="Hierarchic Group" zoom="1.0" x="39.0" y="92.0" />
-          <SelectedNodes />
-          <Categories />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/.PyCharm20/system/python_stubs/-1373548814/_ast.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="99" column="6" selection-start="2168" selection-end="2168" vertical-scroll-proportion="0.33413175">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macroscopy/macros/string_interp_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="40" selection-start="359" selection-end="359" vertical-scroll-proportion="0.2035928">
-          <folding>
-            <marker date="1365997029245" expanded="true" signature="168:585" placeholder="..." />
-            <marker date="1365997029245" expanded="true" signature="207:318" placeholder="..." />
-            <marker date="1365997029245" expanded="true" signature="359:585" placeholder="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/macroscopy/core/util.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="13" column="0" selection-start="245" selection-end="245" vertical-scroll-proportion="0.26467067">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macroscopy/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macroscopy/macros/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="8" column="49" selection-start="289" selection-end="289" vertical-scroll-proportion="0.16287425">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macroscopy/run.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="18" column="0" selection-start="433" selection-end="433" vertical-scroll-proportion="0.18323353">
           <folding />
         </state>
       </provider>
@@ -778,27 +678,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/macroscopy/macros/string_interp.py">
+    <entry file="file://$PROJECT_DIR$/macroscopy/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="13" column="35" selection-start="284" selection-end="284" vertical-scroll-proportion="0.2035928">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macroscopy/core/lift.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="25" column="0" selection-start="688" selection-end="688" vertical-scroll-proportion="0.5170316">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macroscopy/macros/tracing.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="42" column="35" selection-start="1053" selection-end="1053" vertical-scroll-proportion="0.5724551">
-          <folding>
-            <marker date="1366000714177" expanded="true" signature="256:268" placeholder="..." />
-            <marker date="1366000714177" expanded="true" signature="1154:1192" placeholder="..." />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -811,25 +694,106 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/macroscopy/macros/tracing_test.py">
+    <entry file="file://$PROJECT_DIR$/macroscopy/core/lift.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="78" column="8" selection-start="2094" selection-end="2094" vertical-scroll-proportion="0.19343066">
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-            <marker date="1366000881320" expanded="true" signature="247:432" placeholder="..." />
-            <marker date="1366000881320" expanded="true" signature="273:432" placeholder="..." />
-            <marker date="1366000881320" expanded="true" signature="274:432" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1366000881320" expanded="true" signature="294:303" placeholder="..." />
-          </folding>
+        <state line="25" column="0" selection-start="688" selection-end="688" vertical-scroll-proportion="0.5170316">
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/macroscopy/core/macros.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="104" column="8" selection-start="2551" selection-end="2551" vertical-scroll-proportion="0.35279804">
+        <state line="118" column="0" selection-start="2840" selection-end="2840" vertical-scroll-proportion="-0.013381995">
           <folding>
-            <marker date="1366000887071" expanded="true" signature="637:879" placeholder="..." />
-            <marker date="1366000887071" expanded="true" signature="1972:2022" placeholder="..." />
+            <marker date="1366000896608" expanded="true" signature="637:879" placeholder="..." />
+            <marker date="1366000896608" expanded="true" signature="1972:2022" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macroscopy/core/lift_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="80" column="0" selection-start="2023" selection-end="2023" vertical-scroll-proportion="1.6287425">
+          <folding>
+            <element signature="e#0#15#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macroscopy/macros/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="11" column="45" selection-start="478" selection-end="478" vertical-scroll-proportion="0.2239521">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macroscopy/core/unparser.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="12" column="4" selection-start="360" selection-end="521" vertical-scroll-proportion="0.020681266">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macroscopy/macros/tracing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="24" column="0" selection-start="399" selection-end="399" vertical-scroll-proportion="0.20598802">
+          <folding>
+            <marker date="1366001253514" expanded="true" signature="256:268" placeholder="..." />
+            <marker date="1366001253514" expanded="true" signature="1153:1191" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macroscopy/macros/string_interp.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="13" column="35" selection-start="284" selection-end="284" vertical-scroll-proportion="0.2035928">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macroscopy/macros/tracing_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="112" column="0" selection-start="2874" selection-end="2874" vertical-scroll-proportion="0.8759124">
+          <folding>
+            <element signature="e#0#15#0" expanded="false" />
+            <marker date="1366001138560" expanded="true" signature="249:434" placeholder="..." />
+            <marker date="1366001138560" expanded="true" signature="275:434" placeholder="..." />
+            <marker date="1366001138560" expanded="true" signature="276:434" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1366001138560" expanded="true" signature="296:305" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macroscopy/macros/string_interp_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="11" column="0" selection-start="272" selection-end="272" vertical-scroll-proportion="0.14476885">
+          <folding>
+            <marker date="1365997029245" expanded="true" signature="168:585" placeholder="..." />
+            <marker date="1365997029245" expanded="true" signature="207:318" placeholder="..." />
+            <marker date="1365997029245" expanded="true" signature="359:585" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macroscopy/run.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="28" column="0" selection-start="533" selection-end="533" vertical-scroll-proportion="0.38682634">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.PyCharm20/system/python_stubs/-1373548814/_ast.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="152" column="6" selection-start="3122" selection-end="3122" vertical-scroll-proportion="0.031021899">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macroscopy/macros/future_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="118" column="18" selection-start="3698" selection-end="3698" vertical-scroll-proportion="0.7760479">
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
           </folding>
         </state>
       </provider>

@@ -23,7 +23,6 @@ class TraceWalker(Walker):
 
         def func(node):
 
-
             if isinstance(node, expr) and \
                             node._fields != () and \
                             type(node) is not Num and \

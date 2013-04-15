@@ -19,3 +19,10 @@ run(lift_test.Tests)
 run(string_interp_test.Tests)
 
 run(tracing_test.Tests)
+
+def match(x): return lambda y: y
+
+x = 10
+
+
+

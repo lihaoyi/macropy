@@ -1,10 +1,16 @@
 """
 
-                            lift
-                              |
-                              |
+            Xlift_expr     Xlift_block    lift_decorate
+                |             |             |
+                |             |             |
                 --------------|--------------
                 |             |             |
                 |             |             |
-          string_interp     tracing       asserts
+          Xstring_interp   Xtracing       asserts
+                |             |             |
+                |             |             |
+                -----------------------------
+                |             |             |
+                |             |             |
+              ADTs         matching       monads
 """
