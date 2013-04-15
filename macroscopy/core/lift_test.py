@@ -73,6 +73,7 @@ def test_string(txt):
     txt = txt.strip().replace("\n            ", "\n")
 
     node = expand_ast(ast.parse(txt))
+    print unparse(node)
     exec unparse(node)
 
 

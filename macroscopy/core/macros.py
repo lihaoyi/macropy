@@ -7,10 +7,10 @@ from macroscopy.core.core import *
 from util import *
 
 
-@singleton
-class placeholder(object):
+
+class Placeholder(AST):
     def __repr__(self):
-        return "placeholder"
+        return "Placeholder()"
 
 
 def expr_macro(func):
@@ -37,13 +37,13 @@ def interp_ast(node, values):
     def v(): return values
 
     def func(node):
-        if node is placeholder:
+        if type(node) is Placeholder:
             val = v().pop(0)
             return ast_repr(val)
-
         else:
-            return Macros.recurse(node, func)
-    return func(node)
+            return node
+    x = Macros.recurse(node, func)
+    return x
 
 
 @singleton
@@ -51,15 +51,26 @@ class Macros(object):
     expr_registry = {}
     block_registry = {}
 
+
+
     def recurse(self, node, func):
         if type(node) is list:
-            return flatten([func(x) for x in node])
+            return flatten([
+                self.recurse(x, func)
+                for x in node
+            ])
         elif isinstance(node, AST):
-            for field, old_value in iter_fields(node):
-                old_value = getattr(node, field, None)
-                new_value = func(old_value)
-                setattr(node, field, new_value)
-            return node
+            node = func(node)
+            print type(node)
+
+            if type(node) is list:
+                return self.recurse(node, func)
+            else:
+                for field, old_value in iter_fields(node):
+                    old_value = getattr(node, field, None)
+                    new_value = self.recurse(old_value, func)
+                    setattr(node, field, new_value)
+                return node
         else:
             return node
 
@@ -91,29 +102,32 @@ class MacroLoader(object):
             sys.modules[module_name] = mod
             return mod
         except Exception, e:
+            print e
             pass
 
 
 def expand_ast(node):
+
     def macro_search(node):
+
 
         if      isinstance(node, With) \
                 and type(node.context_expr) is Name \
                 and node.context_expr.id in Macros.block_registry:
 
-            expansion = Macros.block_registry[node.context_expr.id](node)
-            return Macros.recurse(expansion, macro_search)
+            return Macros.block_registry[node.context_expr.id](node)
 
         if      isinstance(node, BinOp) \
                 and type(node.left) is Name \
                 and type(node.op) is Mod \
                 and node.left.id in Macros.expr_registry:
 
-            expansion = Macros.expr_registry[node.left.id](node.right)
-            return Macros.recurse(expansion, macro_search)
+            return Macros.expr_registry[node.left.id](node.right)
 
-        return Macros.recurse(node, macro_search)
-    node = macro_search(node)
+
+        return node
+    node = Macros.recurse(node, macro_search)
+
     return node
 
 @singleton

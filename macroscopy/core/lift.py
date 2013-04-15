@@ -10,16 +10,18 @@ def unquote_search(node, unquotes):
     if isinstance(node, BinOp) and type(node.left) is Name and type(node.op) is Mod:
         if 'u' == node.left.id:
             unquotes.append(node.right)
-            return placeholder
+            return Placeholder()
         if 'ast' == node.left.id:
             unquotes.append(node.right)
             tree = parse_expr("eval(unparse(1))")
-            tree.args[0].args[0] = placeholder
+            tree.args[0].args[0] = Placeholder()
+
             return tree
-    return Macros.recurse(node, lambda x: unquote_search(x, unquotes))
+    return node
 
 @expr_macro
 def q(node):
+    print "EXPR"
     """
     Quotes the target expression. This lifts the target AST from compile-time to
     load-time, making it available to the caller. Also provides an unquote
@@ -27,8 +29,8 @@ def q(node):
     """
     unquotes = []
 
-
-    node = unquote_search(node, unquotes)
+    node = Macros.recurse(node, lambda x: unquote_search(x, unquotes))
+    print node
     unquote_calcs = [unparse(u) for u in unquotes]
     string = "interp_ast("+repr(node)+",["+",".join(unquote_calcs)+"])"
 
@@ -38,6 +40,7 @@ def q(node):
 
 @block_macro
 def q(node):
+    print "BLOCK"
     """
     Quotes the target block, which must ba a With block. This lifts the
     AST from compile-time to load-time, making it available to the caller.
@@ -45,7 +48,7 @@ def q(node):
     the compile-time lifted AST.
     """
     unquotes = []
-    body = unquote_search(node.body, unquotes)
+    body = Macros.recurse(node.body, lambda x: unquote_search(x, unquotes))
     unquote_calcs = [unparse(u) for u in unquotes]
     body_txt = "interp_ast("+repr(body)+",["+",".join(unquote_calcs)+"])"
     out = parse_stmt(node.optional_vars.id + " = " + body_txt)

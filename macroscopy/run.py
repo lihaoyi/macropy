@@ -12,8 +12,8 @@ def run(x):
     runner.run(unittest.TestLoader().loadTestsFromTestCase(x))
 
 
-#run(lift_test.Tests)
+run(lift_test.Tests)
 
 #run(string_interp_test.Tests)
 
-run(tracing_test.Tests)
+#run(tracing_test.Tests)
