@@ -1,5 +1,5 @@
 
-from macroscopy.core.macros import *
+from macropy.core.macros import *
 
 
 def u(node):

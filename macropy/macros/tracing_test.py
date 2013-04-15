@@ -1,8 +1,8 @@
 import unittest
 
-from macroscopy.core.macros import *
-from macroscopy.core.lift import *
-from macroscopy.macros.string_interp import *
+from macropy.core.macros import *
+from macropy.core.lift import *
+from macropy.macros.string_interp import *
 from tracing import *
 
 

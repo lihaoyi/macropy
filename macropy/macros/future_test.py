@@ -1,19 +1,13 @@
 import unittest
 
-from macroscopy.core.macros import *
-from macroscopy.core.lift import *
-from macroscopy.macros.string_interp import *
+from macropy.core.macros import *
+from macropy.core.lift import *
+from macropy.macros.string_interp import *
 
 
-def Tests(unittest.TestCase):
-    def test_adt(self):
-        @adt
-        def Call(ast.expr):
-            func, args, keywords, starargs, kwargs
-
+class Tests(unittest.TestCase):
     def test_matching(self):
-        with ast.Call(x, y, ast.Call(a, b)) as x:
-            pass
+        pass
 
 def adt(x): return x
 
@@ -84,7 +78,7 @@ def AST():
         def Subscript(value, slice, ctx): pass
         def Tuple(elts, ctx): pass
         def UnaryOp(op, operand): pass
-        def Yield(value):
+        def Yield(value): pass
     def expr_context():
         def AugLoad(): pass
         def AugStore(): pass
@@ -118,7 +112,9 @@ def AST():
         def Suite(body): pass
     def unaryop():
         def Invert(): pass
-        def Not(): pass
+        def Ndot(): pass
         def UAdd(): pass
         def USub(): pass
     def keyword(arg, value): pass
+
+

@@ -3,7 +3,7 @@ import sys
 import imp
 import ast
 from ast import *
-from macroscopy.core.core import *
+from macropy.core.core import *
 from util import *
 
 
@@ -145,7 +145,7 @@ class MacroFinder(object):
         if module_name in sys.modules:
             return None
 
-        if "macroscopy" in str(package_path):
+        if "macropy" in str(package_path):
             try:
                 (file, pathname, description) = imp.find_module(module_name.split('.')[-1], package_path)
                 txt = file.read()

@@ -1,7 +1,7 @@
 import unittest
 
-from macroscopy.core.macros import *
-from macroscopy.core import lift
+from macropy.core.macros import *
+from macropy.core import lift
 
 class Tests(unittest.TestCase):
 
