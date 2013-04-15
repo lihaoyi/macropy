@@ -4,9 +4,12 @@
                 |             |             |
                 |             |             |
                 --------------|--------------
+                              |
+                              |
+                --------------|--------------
                 |             |             |
                 |             |             |
-          Xstring_interp   Xtracing       asserts
+          Xstring_interp   Xtracing    Xfast_literals
                 |             |             |
                 |             |             |
                 -----------------------------

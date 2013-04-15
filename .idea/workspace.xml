@@ -2,11 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9635bfa4-4f56-4df2-86e2-f116c56bc57f" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/macropy/macros/literals.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/macropy/macros/literals_test.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/macros/__init__.py" afterPath="$PROJECT_DIR$/macropy/macros/__init__.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/run.py" afterPath="$PROJECT_DIR$/macropy/run.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="Project.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/run.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366002123730" ignored="false" />
+    <file path="/run.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366047081903" ignored="false" />
     <file path="/importz.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365483076658" ignored="false" />
     <file path="/thing.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365737898877" ignored="false" />
     <file path="/fragment.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365787163596" ignored="false" />
@@ -14,7 +18,7 @@
     <file path="/macros.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365999070199" ignored="false" />
     <file path="/ast.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365482346443" ignored="false" />
     <file path="/tracer.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365792607304" ignored="false" />
-    <file path="/__init__.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366001453661" ignored="false" />
+    <file path="/__init__.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366047329681" ignored="false" />
     <file path="/a.dummy" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365866190154" ignored="false" />
     <file path="/node_classes.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365741837960" ignored="false" />
     <file path="/lift.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365998846641" ignored="false" />
@@ -32,6 +36,9 @@
     <file path="/tracing_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366001098641" ignored="false" />
     <file path="/_ast.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365992507767" ignored="false" />
     <file path="/adt_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366037128188" ignored="false" />
+    <file path="/literals.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366047182583" ignored="false" />
+    <file path="/literal_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366047658589" ignored="false" />
+    <file path="/literals_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366047481104" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,10 +60,10 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="future_test.py" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/macropy/macros/future_test.py">
+      <file leaf-file-name="literals_test.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/macropy/macros/literals_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="13" column="0" selection-start="225" selection-end="225" vertical-scroll-proportion="0.020359281">
+            <state line="12" column="0" selection-start="313" selection-end="313" vertical-scroll-proportion="0.14251497">
               <folding />
             </state>
           </provider>
@@ -80,11 +87,6 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$USER_HOME$/.PyCharm20/system/python_stubs/-1373548814/_ast.py" />
-        <option value="$PROJECT_DIR$/macroscopy/core/lift_test.py" />
-        <option value="$PROJECT_DIR$/macroscopy/core/util.py" />
-        <option value="$PROJECT_DIR$/macroscopy/macros/string_interp_test.py" />
-        <option value="$PROJECT_DIR$/macroscopy/core/lift.py" />
         <option value="$PROJECT_DIR$/macroscopy/core/core.py" />
         <option value="$PROJECT_DIR$/macroscopy/core/macros.py" />
         <option value="$PROJECT_DIR$/macroscopy/macros/tracing_test.py" />
@@ -96,6 +98,11 @@
         <option value="$PROJECT_DIR$/macroscopy/macros/adt_test.py" />
         <option value="$PROJECT_DIR$/macroscopy/macros/future_test.py" />
         <option value="$PROJECT_DIR$/macropy/macros/tracing.py" />
+        <option value="$PROJECT_DIR$/macropy/macros/literal_test.py" />
+        <option value="$PROJECT_DIR$/macropy/run.py" />
+        <option value="$PROJECT_DIR$/macropy/macros/literals.py" />
+        <option value="$PROJECT_DIR$/macropy/macros/__init__.py" />
+        <option value="$PROJECT_DIR$/macropy/macros/literals_test.py" />
       </list>
     </option>
   </component>
@@ -317,6 +324,7 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Dropbox\Workspace\6.945\Project\macropy\macros" />
       <recent name="C:\Dropbox\Workspace\6.945\Project\macroscopy\macros" />
       <recent name="C:\Dropbox\Workspace\6.945\Project\macroscopy" />
       <recent name="C:\Dropbox\Workspace\6.945\Project" />
@@ -576,7 +584,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1616" height="916" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32908162" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -588,7 +596,7 @@
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.12375" sideWeight="0.6722488" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.12375" sideWeight="0.6722488" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.480625" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.50625" sideWeight="0.6722488" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -668,62 +676,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/macropy/core/util.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="13" column="0" selection-start="245" selection-end="245" vertical-scroll-proportion="0.26467067">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/.PyCharm20/system/python_stubs/-1373548814/__builtin__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="1332" column="8" selection-start="43238" selection-end="43238" vertical-scroll-proportion="0.062043797">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/core/core.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="28" column="4" selection-start="709" selection-end="709" vertical-scroll-proportion="0.5700599">
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/core/lift.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="25" column="0" selection-start="688" selection-end="688" vertical-scroll-proportion="0.5170316">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/core/lift_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="80" column="0" selection-start="2023" selection-end="2023" vertical-scroll-proportion="1.6287425">
-          <folding>
-            <element signature="e#0#15#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/macros/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="11" column="45" selection-start="478" selection-end="478" vertical-scroll-proportion="0.2239521">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/core/macros.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="118" column="0" selection-start="2840" selection-end="2840" vertical-scroll-proportion="0.020681266">
-          <folding>
-            <marker date="1366037180613" expanded="true" signature="634:876" placeholder="..." />
-            <marker date="1366037180613" expanded="true" signature="1969:2019" placeholder="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/.PyCharm20/system/python_stubs/-1373548814/_ast.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="47" column="8" selection-start="1153" selection-end="1153" vertical-scroll-proportion="0.0">
@@ -731,16 +683,40 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/__init__.py">
+    <entry file="file://$PROJECT_DIR$/macropy/core/unparser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+        <state line="32" column="21" selection-start="884" selection-end="884" vertical-scroll-proportion="0.020681266">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/core/util.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="13" column="0" selection-start="245" selection-end="245" vertical-scroll-proportion="0.26467067">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/core/macros.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="140" column="0" selection-start="3466" selection-end="3466" vertical-scroll-proportion="2.7919707">
+          <folding>
+            <marker date="1366037180613" expanded="true" signature="634:876" placeholder="..." />
+            <marker date="1366037180613" expanded="true" signature="1969:2019" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/core/lift_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="80" column="0" selection-start="2017" selection-end="2017" vertical-scroll-proportion="0.87784433">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/macropy/macros/tracing_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="112" column="0" selection-start="2874" selection-end="2874" vertical-scroll-proportion="0.8759124">
+        <state line="112" column="0" selection-start="2865" selection-end="2865" vertical-scroll-proportion="0.8759124">
           <folding>
             <element signature="e#0#15#0" expanded="true" />
             <marker date="1366037180645" expanded="true" signature="240:425" placeholder="..." />
@@ -751,28 +727,30 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/run.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19" column="17" selection-start="505" selection-end="505" vertical-scroll-proportion="0.38682634">
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.PyCharm20/system/python_stubs/-1373548814/__builtin__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="126" column="4" selection-start="3499" selection-end="3499" vertical-scroll-proportion="0.020681266">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/macropy/macros/string_interp_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="17" column="24" selection-start="434" selection-end="434" vertical-scroll-proportion="0.26885644">
+        <state line="17" column="24" selection-start="425" selection-end="425" vertical-scroll-proportion="0.26885644">
           <folding>
             <marker date="1366037180657" expanded="true" signature="159:576" placeholder="..." />
             <marker date="1366037180657" expanded="true" signature="198:309" placeholder="..." />
             <marker date="1366037180657" expanded="true" signature="350:576" placeholder="..." />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/macros/string_interp.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="13" selection-start="298" selection-end="298" vertical-scroll-proportion="0.2239521">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/core/unparser.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="32" column="21" selection-start="884" selection-end="884" vertical-scroll-proportion="0.5997567">
-          <folding />
         </state>
       </provider>
     </entry>
@@ -786,16 +764,44 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/run.py">
+    <entry file="file://$PROJECT_DIR$/macropy/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="28" column="0" selection-start="512" selection-end="512" vertical-scroll-proportion="0.38682634">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/macros/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="11" column="40" selection-start="441" selection-end="441" vertical-scroll-proportion="0.2239521">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/macros/string_interp.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="23" column="0" selection-start="495" selection-end="495" vertical-scroll-proportion="0.4071856">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/macropy/macros/future_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="13" column="0" selection-start="225" selection-end="225" vertical-scroll-proportion="0.020359281">
+        <state line="29" column="33" selection-start="610" selection-end="610" vertical-scroll-proportion="0.020359281">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/macros/literals.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="21" column="0" selection-start="355" selection-end="355" vertical-scroll-proportion="0.36646706">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/macros/literals_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="12" column="0" selection-start="313" selection-end="313" vertical-scroll-proportion="0.14251497">
           <folding />
         </state>
       </provider>
