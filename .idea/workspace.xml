@@ -2,22 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9635bfa4-4f56-4df2-86e2-f116c56bc57f" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/macropy/run.py" />
-      <change type="DELETED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\run.py" afterPath="" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\__init__.py" afterPath="$PROJECT_DIR$/macropy/__init__.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\core\__init__.py" afterPath="$PROJECT_DIR$/macropy/core/__init__.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\core\core.py" afterPath="$PROJECT_DIR$/macropy/core/core.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\core\lift.py" afterPath="$PROJECT_DIR$/macropy/core/lift.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\core\lift_test.py" afterPath="$PROJECT_DIR$/macropy/core/lift_test.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\core\macros.py" afterPath="$PROJECT_DIR$/macropy/core/macros.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\core\unparser.py" afterPath="$PROJECT_DIR$/macropy/core/unparser.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\core\util.py" afterPath="$PROJECT_DIR$/macropy/core/util.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\macros\__init__.py" afterPath="$PROJECT_DIR$/macropy/macros/__init__.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\macros\future_test.py" afterPath="$PROJECT_DIR$/macropy/macros/future_test.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\macros\string_interp.py" afterPath="$PROJECT_DIR$/macropy/macros/string_interp.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\macros\string_interp_test.py" afterPath="$PROJECT_DIR$/macropy/macros/string_interp_test.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\macros\tracing.py" afterPath="$PROJECT_DIR$/macropy/macros/tracing.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macroscopy\macros\tracing_test.py" afterPath="$PROJECT_DIR$/macropy/macros/tracing_test.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="Project.iws" />
@@ -40,7 +24,7 @@
     <file path="/util.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365996806634" ignored="false" />
     <file path="/core.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365999093160" ignored="false" />
     <file path="/string_interpolate.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365954924649" ignored="false" />
-    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366004274882" ignored="false" />
+    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366037190843" ignored="false" />
     <file path="/string_interpolate_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365962203966" ignored="false" />
     <file path="/*.regexp" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366003402479" ignored="false" />
     <file path="/string_interp_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365974071946" ignored="false" />
@@ -69,10 +53,10 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="run.py" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/macropy/run.py">
+      <file leaf-file-name="future_test.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/macropy/macros/future_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="28" column="0" selection-start="512" selection-end="512" vertical-scroll-proportion="0.38682634">
+            <state line="13" column="0" selection-start="225" selection-end="225" vertical-scroll-proportion="0.020359281">
               <folding />
             </state>
           </provider>
@@ -246,6 +230,16 @@
             <PATH_ELEMENT>
               <option name="myItemId" value="&lt; Python 2.7.3 (C:/Runtimes/Python27/python.exe) &gt;" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.NamedLibraryElementNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Project" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Project" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
           <PATH>
@@ -573,12 +567,16 @@
       <created>1366004275225</created>
       <updated>1366004275225</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Changed name to macropy">
+      <created>1366037194125</created>
+      <updated>1366037194125</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1616" height="916" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32908162" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -592,7 +590,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.12375" sideWeight="0.6722488" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.480625" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.50625" sideWeight="0.6722488" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.50625" sideWeight="0.6722488" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -638,7 +636,7 @@
     <option name="MAXIMUM_HISTORY_ROWS" value="1000" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="put some sketches in future_test" />
+    <option name="LAST_COMMIT_MESSAGE" value="Changed name to macropy" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="false" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -662,6 +660,7 @@
     <MESSAGE value="Big refactoring for Walker&#10;" />
     <MESSAGE value="Added multiline tracing unit test" />
     <MESSAGE value="put some sketches in future_test" />
+    <MESSAGE value="Changed name to macropy" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -777,13 +776,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/macros/future_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="13" column="0" selection-start="234" selection-end="234" vertical-scroll-proportion="0.18323353">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/macropy/macros/tracing.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="34" column="31" selection-start="764" selection-end="765" vertical-scroll-proportion="0.40958083">
@@ -797,6 +789,13 @@
     <entry file="file://$PROJECT_DIR$/macropy/run.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="28" column="0" selection-start="512" selection-end="512" vertical-scroll-proportion="0.38682634">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/macros/future_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="13" column="0" selection-start="225" selection-end="225" vertical-scroll-proportion="0.020359281">
           <folding />
         </state>
       </provider>

@@ -1,0 +1,8 @@
+/.idea/
+/.idea_modules/
+/project/project/
+target/
+lib_managed/
+src_managed/
+*.iml
+*.pyc
