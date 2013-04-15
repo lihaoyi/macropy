@@ -12,39 +12,26 @@ def unquote_search(node, unquotes):
             unquotes.append(node.right)
             return Placeholder()
         if 'ast' == node.left.id:
+            print "AST"
             unquotes.append(node.right)
-            tree = parse_expr("eval(unparse(1))")
-            tree.args[0].args[0] = Placeholder()
-
-            return tree
+            return Placeholder()
     return node
 
 @expr_macro
 def q(node):
-    """
-    Quotes the target expression. This lifts the target AST from compile-time to
-    load-time, making it available to the caller. Also provides an unquote
-    facility to interpolate run-time values into the compile-time lifted AST.
-    """
     unquotes = []
 
     node = Macros.recurse(node, lambda x: unquote_search(x, unquotes))
-
+    print "Unquotes\t", unquotes
     unquote_calcs = [unparse(u) for u in unquotes]
     string = "interp_ast("+repr(node)+",["+",".join(unquote_calcs)+"])"
-
+    print "string\t", string
     out = parse_expr(string)
 
     return out
 
 @block_macro
 def q(node):
-    """
-    Quotes the target block, which must ba a With block. This lifts the
-    AST from compile-time to load-time, making it available to the caller.
-    Also provides an unquote facility to interpolate run-time values into
-    the compile-time lifted AST.
-    """
     unquotes = []
     body = Macros.recurse(node.body, lambda x: unquote_search(x, unquotes))
     unquote_calcs = [unparse(u) for u in unquotes]

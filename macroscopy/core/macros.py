@@ -23,6 +23,7 @@ def block_macro(func):
 
 expr.__repr__ = lambda self: ast.dump(self, annotate_fields=False)
 stmt.__repr__ = lambda self: ast.dump(self, annotate_fields=False)
+comprehension.__repr__ = lambda self: ast.dump(self, annotate_fields=False)
 
 
 def splat(node):
@@ -39,7 +40,10 @@ def interp_ast(node, values):
     def func(node):
         if type(node) is Placeholder:
             val = v().pop(0)
-            return ast_repr(val)
+            if isinstance(val, AST):
+                return val
+            else:
+                return ast_repr(val)
         else:
             return node
     x = Macros.recurse(node, func)
@@ -99,6 +103,7 @@ class MacroLoader(object):
 
             mod = imp.new_module(module_name)
             mod.__file__ = self.file_name
+
             mod.__loader__ = self
 
             exec code in mod.__dict__

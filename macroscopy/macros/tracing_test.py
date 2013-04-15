@@ -26,7 +26,7 @@ class Tests(unittest.TestCase):
         assert(result[-1] == "('omg' * 3) -> 'omgomgomg'")
 
     def test_fancy(self):
-        """
+
         with q as code:
             trace%(1 + 2 + 3 + 4)
 
@@ -41,16 +41,14 @@ class Tests(unittest.TestCase):
         def func(x): return x * 3
 
         with q as code:
-            #trace%([len(x) for x in [func("omg"), "wtf" + "f", "b" * 2 + "q"]] + [100])
-            trace%([func("omg"), "wtf" + "f", "b" * 2 + "q"])
+
+            trace%([x for x in [1, 2, 3]])
 
         print to_str(code)
         exec to_str(code)
         print "================="
         for line in result:
             print line
-        """
-
 
 
 def to_str(txt):

@@ -16,18 +16,23 @@ def log(node):
     new_node = q%(wrap(lambda x: log(x), u%unparse(node), ast%node))
     return new_node
 
+from ast import *
 @expr_macro
 def trace(node):
 
-
     def func(node):
+        print "Tracing", node
 
-        if isinstance(node, expr) and \
+        if isinstance(node, AST) and \
+                node._fields != () and \
                 type(node) is not Num and \
                 type(node) is not Str and \
                 type(node) is not Name:
+
             txt = unparse(node)
-            for field, old_value in iter_fields(node):
+            for field, old_value in list(iter_fields(node)):
+                print field
+                print old_value
                 old_value = getattr(node, field, None)
 
                 new_value = Macros.recurse(old_value, func, autorecurse=False)
@@ -41,5 +46,3 @@ def trace(node):
             return node
 
     return Macros.recurse(node, func, autorecurse=False)
-
-

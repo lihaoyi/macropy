@@ -44,6 +44,7 @@ class Tests(unittest.TestCase):
         test_string("""
             a = q%(x + y)
             b = q%(ast%a + z)
+            print unparse(b)
             x, y, z = 1, 2, 3
             assert(eval(unparse(b)) == 6)
             x, y, z = 1, 3, 9
