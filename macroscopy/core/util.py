@@ -11,3 +11,5 @@ def flatten(xs):
 
 def singleton(cls):
     return cls()
+
+

@@ -16,7 +16,7 @@ from unparser import Unparser
 
 
 def ast_repr(x):
-    return ast.parse(repr(x))
+    return parse_expr(repr(x))
 
 
 def parse_expr(x):

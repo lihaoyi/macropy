@@ -26,27 +26,22 @@ stmt.__repr__ = lambda self: ast.dump(self, annotate_fields=False)
 comprehension.__repr__ = lambda self: ast.dump(self, annotate_fields=False)
 
 
-def splat(node):
-    """Extracts the `lineno` and `col_offset` from the given node as a dict.
-    meant to be used e.g. through Str("omg", **splat(node)) to transfer the old
-    `lineno` and `col_offset` to the newly created node.
-    """
-    return {"lineno": node.lineno, "col_offset": node.col_offset}
-
-
 def interp_ast(node, values):
     def v(): return values
 
+    @Walker
     def func(node):
         if type(node) is Placeholder:
             val = v().pop(0)
             if isinstance(val, AST):
                 return val
             else:
-                return ast_repr(val)
+                x = ast_repr(val)
+                return x
         else:
             return node
-    x = Walker(func).recurse(node)
+
+    x = func.recurse(node)
     return x
 
 class Walker(object):
@@ -107,6 +102,7 @@ class MacroLoader(object):
                 return sys.modules[module_name]
             a = expand_ast(ast.parse(self.txt))
             code = unparse(a)
+
             mod = imp.new_module(module_name)
             mod.__file__ = self.file_name
 
@@ -122,7 +118,7 @@ class MacroLoader(object):
 
 
 def expand_ast(node):
-
+    @Walker
     def macro_search(node):
 
         if      isinstance(node, With) \
@@ -138,9 +134,8 @@ def expand_ast(node):
 
             return Macros.expr_registry[node.left.id](node.right)
 
-
         return node
-    node = Walker(macro_search).recurse(node)
+    node = macro_search.recurse(node)
 
     return node
 
