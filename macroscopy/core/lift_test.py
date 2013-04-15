@@ -49,6 +49,7 @@ class Tests(unittest.TestCase):
             x, y, z = 1, 3, 9
             assert(eval(unparse(b)) == 13)
         """)
+
     def test_quote_unquote_block(self):
 
         test_string("""
@@ -73,7 +74,6 @@ def test_string(txt):
     txt = txt.strip().replace("\n            ", "\n")
 
     node = expand_ast(ast.parse(txt))
-    print unparse(node)
     exec unparse(node)
 
 

@@ -21,7 +21,6 @@ def unquote_search(node, unquotes):
 
 @expr_macro
 def q(node):
-    print "EXPR"
     """
     Quotes the target expression. This lifts the target AST from compile-time to
     load-time, making it available to the caller. Also provides an unquote
@@ -30,7 +29,7 @@ def q(node):
     unquotes = []
 
     node = Macros.recurse(node, lambda x: unquote_search(x, unquotes))
-    print node
+
     unquote_calcs = [unparse(u) for u in unquotes]
     string = "interp_ast("+repr(node)+",["+",".join(unquote_calcs)+"])"
 
@@ -40,7 +39,6 @@ def q(node):
 
 @block_macro
 def q(node):
-    print "BLOCK"
     """
     Quotes the target block, which must ba a With block. This lifts the
     AST from compile-time to load-time, making it available to the caller.

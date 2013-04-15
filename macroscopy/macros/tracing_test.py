@@ -14,40 +14,42 @@ def log(x):
 
 class Tests(unittest.TestCase):
     def test_basic(self):
-        """
+
         with q as code:
             log%(1 + 2)
             log%("omg" * 3)
 
+        print to_str(code)
         exec to_str(code)
 
         assert(result[-2] == "(1 + 2) -> 3")
         assert(result[-1] == "('omg' * 3) -> 'omgomgomg'")
-        """
+
     def test_fancy(self):
         """
         with q as code:
             trace%(1 + 2 + 3 + 4)
 
         exec to_str(code)
-
+        print result[-3:]
         assert(result[-3:] == [
             "(1 + 2) -> 3",
             "((1 + 2) + 3) -> 6",
             "(((1 + 2) + 3) + 4) -> 10"
         ])
-        """
+
         def func(x): return x * 3
 
         with q as code:
             #trace%([len(x) for x in [func("omg"), "wtf" + "f", "b" * 2 + "q"]] + [100])
-            trace%([func("omg"), "wtf" + "f", "b" * 2 + "q"] + [100])
+            trace%([func("omg"), "wtf" + "f", "b" * 2 + "q"])
 
+        print to_str(code)
         exec to_str(code)
         print "================="
         for line in result:
             print line
-
+        """
 
 
 

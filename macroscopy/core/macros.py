@@ -51,25 +51,29 @@ class Macros(object):
     expr_registry = {}
     block_registry = {}
 
+    def recurse(self, node, func, autorecurse=True):
 
-
-    def recurse(self, node, func):
         if type(node) is list:
             return flatten([
-                self.recurse(x, func)
+                self.recurse(x, func, autorecurse)
                 for x in node
             ])
+
         elif isinstance(node, AST):
             node = func(node)
-            print type(node)
 
-            if type(node) is list:
-                return self.recurse(node, func)
+            if autorecurse:
+                if type(node) is list:
+                    return self.recurse(node, func, autorecurse)
+                else:
+                    for field, old_value in iter_fields(node):
+                        old_value = getattr(node, field, None)
+
+                        new_value = self.recurse(old_value, func, autorecurse)
+
+                        setattr(node, field, new_value)
+                    return node
             else:
-                for field, old_value in iter_fields(node):
-                    old_value = getattr(node, field, None)
-                    new_value = self.recurse(old_value, func)
-                    setattr(node, field, new_value)
                 return node
         else:
             return node
