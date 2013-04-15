@@ -18,27 +18,27 @@ def log(node):
 from ast import *
 @expr_macro
 def trace(node):
+    @singleton
+    class TraceWalker(Walker):
+        def __init__(self):
+            self.autorecurse = False
 
-    def func(node):
+            def func(node):
 
-        if isinstance(node, AST) and \
-                node._fields != () and \
-                type(node) is not Num and \
-                type(node) is not Str and \
-                type(node) is not Name:
+                if isinstance(node, AST) and \
+                        node._fields != () and \
+                        type(node) is not Num and \
+                        type(node) is not Str and \
+                        type(node) is not Name:
 
-            txt = unparse(node)
-            for field, old_value in list(iter_fields(node)):
-                old_value = getattr(node, field, None)
+                    txt = unparse(node)
+                    self.walk_children(node)
 
-                new_value = Macros.recurse(old_value, func, autorecurse=False)
+                    wrapped = q%(wrap(log, u%txt, ast%node))
+                    return wrapped
+                else:
+                    return node
+            self.func = func
 
-                setattr(node, field, new_value)
-
-            wrapped = q%(wrap(log, u%txt, ast%node))
-            return wrapped
-        else:
-            return node
-
-    ret = Macros.recurse(node, func, autorecurse=False)
+    ret = TraceWalker.recurse(node)
     return ret

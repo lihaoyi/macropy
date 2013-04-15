@@ -24,11 +24,8 @@ class Tests(unittest.TestCase):
 
     def test_combo(self):
 
-
         trace%(1 + 2 + 3 + 4)
 
-
-        print result[-3:]
         assert(result[-3:] == [
             "(1 + 2) -> 3",
             "((1 + 2) + 3) -> 6",

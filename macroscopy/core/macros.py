@@ -46,48 +46,50 @@ def interp_ast(node, values):
                 return ast_repr(val)
         else:
             return node
-    x = Macros.recurse(node, func)
+    x = Walker(func).recurse(node)
     return x
 
+class Walker(object):
+    def __init__(self, func, autorecurse=True):
+        self.func = func
+        self.autorecurse = autorecurse
+
+    def walk_children(self, node):
+        for field, old_value in list(iter_fields(node)):
+            old_value = getattr(node, field, None)
+            new_value = self.recurse(old_value)
+            setattr(node, field, new_value)
+
+    def recurse(self, node):
+        if type(node) is list:
+            return flatten([
+                self.recurse(x)
+                for x in node
+            ])
+
+        elif type(node) is comprehension:
+            self.walk_children(node)
+            return node
+        elif isinstance(node, AST):
+            node = self.func(node)
+            if self.autorecurse:
+                if type(node) is list:
+                    return self.recurse(node)
+                else:
+                    self.walk_children(node)
+                    return node
+            else:
+                return node
+        else:
+            return node
 
 @singleton
 class Macros(object):
     expr_registry = {}
     block_registry = {}
 
-    def recurse(self, node, func, autorecurse=True):
-
-        if type(node) is list:
-            return flatten([
-                self.recurse(x, func, autorecurse)
-                for x in node
-            ])
-
-        elif type(node) is comprehension:
-            for field, old_value in iter_fields(node):
-                old_value = getattr(node, field, None)
-                new_value = self.recurse(old_value, func, autorecurse)
-                setattr(node, field, new_value)
-            return node
-        elif isinstance(node, AST):
-
-            node = func(node)
 
 
-
-            if autorecurse:
-                if type(node) is list:
-                    return self.recurse(node, func, autorecurse)
-                else:
-                    for field, old_value in iter_fields(node):
-                        old_value = getattr(node, field, None)
-                        new_value = self.recurse(old_value, func, autorecurse)
-                        setattr(node, field, new_value)
-                    return node
-            else:
-                return node
-        else:
-            return node
 
 
 class MacroLoader(object):
@@ -138,7 +140,7 @@ def expand_ast(node):
 
 
         return node
-    node = Macros.recurse(node, macro_search)
+    node = Walker(macro_search).recurse(node)
 
     return node
 

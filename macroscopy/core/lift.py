@@ -20,7 +20,7 @@ def unquote_search(node, unquotes):
 def q(node):
     unquotes = []
 
-    node = Macros.recurse(node, lambda x: unquote_search(x, unquotes))
+    node = Walker(lambda x: unquote_search(x, unquotes)).recurse(node)
     unquote_calcs = [unparse(u) for u in unquotes]
     string = "interp_ast("+repr(node)+",["+",".join(unquote_calcs)+"])"
     out = parse_expr(string)
@@ -30,7 +30,7 @@ def q(node):
 @block_macro
 def q(node):
     unquotes = []
-    body = Macros.recurse(node.body, lambda x: unquote_search(x, unquotes))
+    body = Walker(lambda x: unquote_search(x, unquotes)).recurse(node.body)
     unquote_calcs = [unparse(u) for u in unquotes]
     body_txt = "interp_ast("+repr(body)+",["+",".join(unquote_calcs)+"])"
     out = parse_stmt(node.optional_vars.id + " = " + body_txt)
