@@ -12,7 +12,6 @@ def unquote_search(node, unquotes):
             unquotes.append(node.right)
             return Placeholder()
         if 'ast' == node.left.id:
-            print "AST"
             unquotes.append(node.right)
             return Placeholder()
     return node
@@ -22,10 +21,8 @@ def q(node):
     unquotes = []
 
     node = Macros.recurse(node, lambda x: unquote_search(x, unquotes))
-    print "Unquotes\t", unquotes
     unquote_calcs = [unparse(u) for u in unquotes]
     string = "interp_ast("+repr(node)+",["+",".join(unquote_calcs)+"])"
-    print "string\t", string
     out = parse_expr(string)
 
     return out

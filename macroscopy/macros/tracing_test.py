@@ -13,44 +13,43 @@ def log(x):
 
 
 class Tests(unittest.TestCase):
+
     def test_basic(self):
 
-        with q as code:
-            log%(1 + 2)
-            log%("omg" * 3)
-
-        print to_str(code)
-        exec to_str(code)
+        log%(1 + 2)
+        log%("omg" * 3)
 
         assert(result[-2] == "(1 + 2) -> 3")
         assert(result[-1] == "('omg' * 3) -> 'omgomgomg'")
 
-    def test_fancy(self):
+    def test_combo(self):
 
-        with q as code:
-            trace%(1 + 2 + 3 + 4)
 
-        exec to_str(code)
+        trace%(1 + 2 + 3 + 4)
+
+
         print result[-3:]
         assert(result[-3:] == [
             "(1 + 2) -> 3",
             "((1 + 2) + 3) -> 6",
             "(((1 + 2) + 3) + 4) -> 10"
         ])
+    def test_fancy(self):
+        trace%([len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]])
+        assert(result[-14:] == [
+            "('b' * 2) -> 'bb'",
+            "(('b' * 2) + 'q') -> 'bbq'",
+            "('lo' * 3) -> 'lololo'",
+            "(('lo' * 3) + 'l') -> 'lololol'",
+            "['omg', 'wtf', (('b' * 2) + 'q'), (('lo' * 3) + 'l')] -> ['omg', 'wtf', 'bbq', 'lololol']",
+            "len(x) -> 3",
+            "(len(x) * 3) -> 9",
+            "len(x) -> 3",
+            "(len(x) * 3) -> 9",
+            "len(x) -> 3",
+            "(len(x) * 3) -> 9",
+            "len(x) -> 7",
+            "(len(x) * 3) -> 21",
+            "[(len(x) * 3) for x in ['omg', 'wtf', (('b' * 2) + 'q'), (('lo' * 3) + 'l')]] -> [9, 9, 9, 21]"
+        ])
 
-        def func(x): return x * 3
-
-        with q as code:
-
-            trace%([x for x in [1, 2, 3]])
-
-        print to_str(code)
-        exec to_str(code)
-        print "================="
-        for line in result:
-            print line
-
-
-def to_str(txt):
-    node = expand_ast(txt)
-    return unparse(node)

@@ -63,8 +63,17 @@ class Macros(object):
                 for x in node
             ])
 
+        elif type(node) is comprehension:
+            for field, old_value in iter_fields(node):
+                old_value = getattr(node, field, None)
+                new_value = self.recurse(old_value, func, autorecurse)
+                setattr(node, field, new_value)
+            return node
         elif isinstance(node, AST):
+
             node = func(node)
+
+
 
             if autorecurse:
                 if type(node) is list:
@@ -72,9 +81,7 @@ class Macros(object):
                 else:
                     for field, old_value in iter_fields(node):
                         old_value = getattr(node, field, None)
-
                         new_value = self.recurse(old_value, func, autorecurse)
-
                         setattr(node, field, new_value)
                     return node
             else:
@@ -96,11 +103,8 @@ class MacroLoader(object):
         try:
             if module_name in sys.modules:
                 return sys.modules[module_name]
-
             a = expand_ast(ast.parse(self.txt))
-
-            code = compile(a, module_name, 'exec')
-
+            code = unparse(a)
             mod = imp.new_module(module_name)
             mod.__file__ = self.file_name
 
@@ -118,7 +122,6 @@ class MacroLoader(object):
 def expand_ast(node):
 
     def macro_search(node):
-
 
         if      isinstance(node, With) \
                 and type(node.context_expr) is Name \
@@ -153,7 +156,6 @@ class MacroFinder(object):
                 return MacroLoader(module_name, txt, file.name)
             except Exception, e:
                 pass
-
 
 
 

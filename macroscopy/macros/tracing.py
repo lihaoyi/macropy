@@ -1,4 +1,3 @@
-import re
 
 from macroscopy.core.macros import *
 from macroscopy.core.lift import *
@@ -13,7 +12,7 @@ def wrap(printer, txt, x):
 
 @expr_macro
 def log(node):
-    new_node = q%(wrap(lambda x: log(x), u%unparse(node), ast%node))
+    new_node = q%(wrap(log, u%unparse(node), ast%node))
     return new_node
 
 from ast import *
@@ -21,7 +20,6 @@ from ast import *
 def trace(node):
 
     def func(node):
-        print "Tracing", node
 
         if isinstance(node, AST) and \
                 node._fields != () and \
@@ -31,18 +29,16 @@ def trace(node):
 
             txt = unparse(node)
             for field, old_value in list(iter_fields(node)):
-                print field
-                print old_value
                 old_value = getattr(node, field, None)
 
                 new_value = Macros.recurse(old_value, func, autorecurse=False)
 
                 setattr(node, field, new_value)
 
-
-            wrapped = q%(wrap(lambda x: log(x), u%txt, ast%node))
+            wrapped = q%(wrap(log, u%txt, ast%node))
             return wrapped
         else:
             return node
 
-    return Macros.recurse(node, func, autorecurse=False)
+    ret = Macros.recurse(node, func, autorecurse=False)
+    return ret
