@@ -26,6 +26,3 @@ run(tracing_test.Tests)
 def match(x): return lambda y: y
 
 x = 10
-
-
-
