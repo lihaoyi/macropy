@@ -5,49 +5,114 @@ from macropy.core.lift import *
 from macropy.macros.string_interp import *
 import time
 
-class Tests(unittest.TestCase):
-    def test_basic(self):
-        import sqlite3
-        conn = sqlite3.connect(":memory:")
-        cursor = conn.cursor()
 
-        for line in open("linq_test_dataset.sql").read().split(";"):
-            cursor.execute(line.strip())
+def run():
+    #import sqlite3
+    #conn = sqlite3.connect(":memory:")
+    #cursor = conn.cursor()
 
-        conn.commit()
+    def type_dict(d):
+        return lambda x: d[type(x)]
 
-        def rawQuery(string):
-            cursor = conn.cursor()
-            cursor.execute(string)
-            return cursor.fetchall()
+    def handleExpr(tree):
+
+        if type(tree) is BoolOp:
+            boolop_map = {
+                And: "AND",
+                Or: "OR"
+            }
+
+            return (" " + boolop_map(tree.op) + " ").join(handleExpr(value) for value in tree.values)
+        if type(tree) is BinOp:
+            binop_map = type_dict({
+                Add: "+",
+                Sub: "-",
+                Mult: "*",
+                Div: "/",
+                Mod: "%",
+                Pow: "**",
+                LShift: "<<",
+                RShift: ">>",
+                BitOr: "|",
+                BitXor: "",
+                BitAnd: "&",
+                FloorDiv: "/"
+            })
+            return handleExpr(tree.left) + " " + binop_map(tree.op) + " " + handleExpr(tree.right)
+
+        if type(tree) is UnaryOp:
+            unaryop_map = type_dict({
+                Invert: "~",
+                Not: "NOT ",
+                UAdd: "+",
+                USub: "-"
+            })
+            return unaryop_map(tree.op) + handleExpr(tree.operand)
+
+        if type(tree) is IfExp:
+            return "CASE WHEN " + handleExpr(tree.test) + " THEN " + handleExpr(tree.body) + " ELSE " + handleExpr(tree.orelse) + " END"
+        if type(tree) is Compare:
+
+            cmpop_map = type_dict({
+                Eq: "=",
+                NotEq: "!=",
+                Lt: "<",
+                LtE: "<=",
+                Gt: ">",
+                GtE: ">=",
+                Is: "=",
+                IsNot: "!=",
+                In: "IN",
+                NotIn: "NOT IN"
+            })
 
 
+            return handleExpr(tree.left) + " " + cmpop_map(tree.ops[0]) + " " + handleExpr(tree.comparators[0])
 
-        dbA = []
-        dbB = []
-        print rawQuery("""SELECT name FROM bbc""")
-        sql%(x.foo for x in dbA)
+        if type(tree) is Num:
+            return repr(tree.n)
 
-        print rawQuery("""SELECT name FROM bbc WHERE region = 'Europe'""")
-        sql%(x for x in dbA if x > 5)
+        if type(tree) is Str:
+            return repr(tree.s)
 
-        print rawQuery(
-            """
-            SELECT region, name, population FROM bbc x
-            WHERE population >= (
-                SELECT MAX(population) FROM bbc y
-                WHERE y.region=x.region
-                AND population>0
-            )
-            """
+        if type(tree) is Attribute:
+            return tree.value.id + "." + tree.attr
+
+        if type(tree) is Name:
+            return tree.id
+
+        if type(tree) is List: pass
+        if type(tree) is Tuple:
+            return ", ".join([handleExpr(e) for e in tree.elts])
+
+    def transGen(tree):
+        assert type(tree) is GeneratorExp
+        elt = tree.elt
+
+        if type(elt) is Attribute:
+            sel = handleExpr(elt)
+
+        if type(elt) is Tuple:
+            sel = handleExpr(elt)
+
+        frm = " JOIN ".join(
+            gen.iter.id + " " + gen.target.id
+            for gen in tree.generators
         )
-        sql%(
-            (x.region, x.name, x.population)
-            for x in bbc
-            if x.population >= max(
-                y.population
-                for y in bbc
-                if y.region == x.region
-                and y.population > 0
-            )
+
+        all_guards = "AND".join(
+            handleExpr(ifexp)
+            for gen in tree.generators
+            for ifexp in gen.ifs
         )
+
+        whr = "" if all_guards == "" else "WHERE " + all_guards
+
+        return "SELECT %s FROM %s %s" % (sel, frm, whr)
+    dbA = []
+    dbB = []
+    treeA = q%((x.foo, y.bar) for x in dbA if x.foo > 10 for y in dbA)
+    treeB = q%(x.foo for x in dbA for y in dbA)
+
+    print transGen(treeA)
+    print transGen(treeB)
