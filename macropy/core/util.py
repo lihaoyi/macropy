@@ -9,6 +9,7 @@ def flatten(xs):
     return res
 
 
+# Intended for use as a class decorator
 def singleton(cls):
     return cls()
 

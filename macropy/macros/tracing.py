@@ -46,13 +46,10 @@ class TraceWalker(Walker):
 
 @expr_macro
 def trace(node):
-
-
     ret = TraceWalker.recurse(node)
     return ret
 
 @block_macro
 def trace(node):
-    print node.body
     ret = TraceWalker.recurse(node.body)
     return ret
