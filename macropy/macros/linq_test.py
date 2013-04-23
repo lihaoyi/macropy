@@ -41,6 +41,7 @@ class Tests(unittest.TestCase):
             )
             """
         )
+
         sql%(
             (x.region, x.name, x.population)
             for x in bbc
