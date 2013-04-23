@@ -62,15 +62,15 @@ Core Functions:
 
 @expr_macro
 def sql(tree):
-    def handleExpr(tree):
+    def recurse(tree):
 
         if type(tree) is BoolOp:
-            boolop_map = {
+            boolop_map = type_dict({
                 And: "AND",
                 Or: "OR"
-            }
+            })
 
-            return (" " + boolop_map(tree.op) + " ").join(handleExpr(value) for value in tree.values)
+            return (" " + boolop_map(tree.op) + " ").join(recurse(value) for value in tree.values)
         if type(tree) is BinOp:
             binop_map = type_dict({
                 Add: "+",
@@ -86,7 +86,7 @@ def sql(tree):
                 BitAnd: "&",
                 FloorDiv: "/"
             })
-            return handleExpr(tree.left) + " " + binop_map(tree.op) + " " + handleExpr(tree.right)
+            return recurse(tree.left) + " " + binop_map(tree.op) + " " + recurse(tree.right)
 
         if type(tree) is UnaryOp:
             unaryop_map = type_dict({
@@ -95,10 +95,10 @@ def sql(tree):
                 UAdd: "+",
                 USub: "-"
             })
-            return unaryop_map(tree.op) + handleExpr(tree.operand)
+            return unaryop_map(tree.op) + recurse(tree.operand)
 
         if type(tree) is IfExp:
-            return "CASE WHEN " + handleExpr(tree.test) + " THEN " + handleExpr(tree.body) + " ELSE " + handleExpr(tree.orelse) + " END"
+            return "CASE WHEN " + recurse(tree.test) + " THEN " + recurse(tree.body) + " ELSE " + recurse(tree.orelse) + " END"
         if type(tree) is Compare:
 
             cmpop_map = type_dict({
@@ -115,8 +115,19 @@ def sql(tree):
             })
 
 
-            return handleExpr(tree.left) + " " + cmpop_map(tree.ops[0]) + " " + handleExpr(tree.comparators[0])
+            return recurse(tree.left) + " " + cmpop_map(tree.ops[0]) + " " + recurse(tree.comparators[0])
 
+        if type(tree) is Call:
+            """func_map = {
+                "len": "COUNT",
+                "min": "MIN",
+                "max": "MAX",
+                "sum": "SUM",
+            }
+            if type(tree.args[0]) is GeneratorExp:
+
+            else:
+                func_map[tree.func.id] + "(" + ", ".join(map(recurse, tree.args)) + ")" """
         if type(tree) is Num:
             return repr(tree.n)
 
@@ -129,31 +140,29 @@ def sql(tree):
         if type(tree) is Name:
             return tree.id
 
-        if type(tree) is List: pass
+        if type(tree) is List:
+            return "(" + ", ".join(recurse(e) for e in tree.elts) + ")"
+
         if type(tree) is Tuple:
-            return ", ".join([handleExpr(e) for e in tree.elts])
+            return ", ".join([recurse(e) for e in tree.elts])
+        if type(tree) is GeneratorExp:
+            elt = tree.elt
 
+            sel = recurse(elt)
 
-    assert type(tree) is GeneratorExp
-    elt = tree.elt
+            frm = " JOIN ".join(
+                gen.iter.id + " " + gen.target.id
+                for gen in tree.generators
+            )
 
-    if type(elt) is Attribute:
-        sel = handleExpr(elt)
+            all_guards = "AND".join(
+                recurse(ifexp)
+                for gen in tree.generators
+                for ifexp in gen.ifs
+            )
 
-    if type(elt) is Tuple:
-        sel = handleExpr(elt)
+            whr = "" if all_guards == "" else "WHERE " + all_guards
 
-    frm = " JOIN ".join(
-        gen.iter.id + " " + gen.target.id
-        for gen in tree.generators
-    )
-
-    all_guards = "AND".join(
-        handleExpr(ifexp)
-        for gen in tree.generators
-        for ifexp in gen.ifs
-    )
-
-    whr = "" if all_guards == "" else "WHERE " + all_guards
-
-    return ast_repr("SELECT %s FROM %s %s" % (sel, frm, whr))
+            return "(SELECT %s FROM %s %s)" % (sel, frm, whr)
+        raise Exception("No handler for " + str(tree))
+    return ast_repr(recurse(tree)[1:-1])
