@@ -66,6 +66,14 @@ class Tests(unittest.TestCase):
             "sum([sum([1, 2, 3]), min(4, 5, 6), max(7, 8, 9)]) -> 19"
         ])
 
+    def test_simple_block_trace(self):
+        with trace:
+            sum = 0
+            for i in range(0, 5):
+                sum = sum + 5
+
+            square = sum * sum
+        print result
     def test_block_trace(self):
 
         with trace:
