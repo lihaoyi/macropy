@@ -10,8 +10,10 @@ class Tests(unittest.TestCase):
             a = 10
             b = 2
             data1 = q%(1 + u%(a + b))
+            print data1
             data2 = q%(1 + (a + b))
 
+            print data1
             assert eval(unparse(data1)) == 13
             assert eval(unparse(data2)) == 13
             a = 1
