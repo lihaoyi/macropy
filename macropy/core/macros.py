@@ -1,11 +1,9 @@
-
 import sys
 import imp
 import ast
 from ast import *
 from macropy.core.core import *
 from util import *
-
 
 
 class Placeholder(AST):
@@ -84,9 +82,6 @@ class Macros(object):
     block_registry = {}
 
 
-
-
-
 class MacroLoader(object):
     def __init__(self, module_name, txt, file_name):
         self.module_name = module_name
@@ -94,7 +89,7 @@ class MacroLoader(object):
         self.file_name = file_name
 
     def load_module(self, module_name):
-        """see http://www.python.org/dev/peps/pep-0302/ if you don't know what
+        """See http://www.python.org/dev/peps/pep-0302/ if you don't know what
         a lot of this stuff is for"""
 
         try:
@@ -121,9 +116,9 @@ def expand_ast(node):
     @Walker
     def macro_search(node):
 
-        if      isinstance(node, With) \
-                and type(node.context_expr) is Name \
-                and node.context_expr.id in Macros.block_registry:
+        if (isinstance(node, With)
+            and type(node.context_expr) is Name 
+            and node.context_expr.id in Macros.block_registry):
 
             return Macros.block_registry[node.context_expr.id](node)
 
@@ -155,7 +150,4 @@ class MacroFinder(object):
                 pass
 
 
-
 sys.meta_path.append(MacroFinder)
-
-

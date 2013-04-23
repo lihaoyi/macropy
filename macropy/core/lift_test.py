@@ -76,5 +76,3 @@ def test_string(txt):
 
     node = expand_ast(ast.parse(txt))
     exec unparse(node)
-
-

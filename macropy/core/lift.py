@@ -15,7 +15,8 @@ def unquote_search(node, unquotes):
             unquotes.append(node.right)
             return Placeholder()
     return node
-
+q%(1 + u%(a + b)) -> interp_ast(...placeholder..., [a + b])
+interp_ast(..., [])
 @expr_macro
 def q(node):
     unquotes = []
@@ -35,7 +36,3 @@ def q(node):
     body_txt = "interp_ast("+repr(body)+",["+",".join(unquote_calcs)+"])"
     out = parse_stmt(node.optional_vars.id + " = " + body_txt)
     return out
-
-
-
-

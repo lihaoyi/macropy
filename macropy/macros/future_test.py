@@ -9,8 +9,84 @@ class Tests(unittest.TestCase):
     def test_matching(self):
         pass
 
+class Foo(object):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+x1 = 10
+y1 = 4
+if Foo(x=(x1 + 5), y=(y1, 5)) << foo1:
+
+if s%"i am a %{cow} hear me %{moo}" << String:
+    print cow
+    print moo
+if match%("i am a ", cow, "hear me", moo) << string:
+    ...
+if match("i am a ", cow, " hear me", u%repeat(" moo", 5)) << string:
+    i am a cow hear me moo moo moo
+
+macro%(..., ...)
+
+a = Var()
+b = Var()
+
+
+def handleFoo(foo):
+    with matcher:
+        if Foo(x, Bar(y)) << foo:
+            ...
+        if Bar(y) << foo:
+            ...
+    matcher%(Foo(a, b) << thing)
+    return a + b
+
 def adt(x): return x
 
+
+server = do
+    conn <- acceptConn
+    handleConn conn
+
+
+def Maybe():
+    def Just(x):
+    def Nothing():
+
+monadic%[a + b for a in Just(x) for b in Nothing()] # --> Nothing
+monadic%[a + b for a in Just(x) for b in Just(y)] # --> Just(x + y)
+
+
+LINQ
+
+sql%[a.x for a in database if a.x > 10] # -> SELECT 'x' FROM 'a' IF x > 10
+
+[a + b for a in [1,2,3] for b in [1,2,3]]
+
+with do as result:
+    a << [1, 2, 3]
+    b << [1, 2, 3]
+    a + b
+
+# [2,3,4,3,4,5,4,5,6]
+
+with do:
+    with do as replicateM:
+        numtimes = 10
+        with do as body:
+            conn << acceptConn
+            handleConn(conn)
+= replicateM 10 (do
+            conn <- acceptConn
+            handleConn conn)
+    
+
+assert%(a == 2)   # failure: a == 2
+
+
+class alias:
+    @auto
+    def __init__(name, asname): pass
 
 @adt
 def AST():
