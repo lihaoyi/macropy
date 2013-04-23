@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9635bfa4-4f56-4df2-86e2-f116c56bc57f" name="Default" comment="modified readme">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/readme.md" afterPath="$PROJECT_DIR$/readme.md" />
+    <list default="true" id="9635bfa4-4f56-4df2-86e2-f116c56bc57f" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/core/lift_test.py" afterPath="$PROJECT_DIR$/macropy/core/lift_test.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/macros/tracing_test.py" afterPath="$PROJECT_DIR$/macropy/macros/tracing_test.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="Project.iws" />
@@ -25,7 +26,7 @@
     <file path="/util.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365996806634" ignored="false" />
     <file path="/core.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365999093160" ignored="false" />
     <file path="/string_interpolate.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365954924649" ignored="false" />
-    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366760811177" ignored="false" />
+    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366761196150" ignored="false" />
     <file path="/string_interpolate_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365962203966" ignored="false" />
     <file path="/*.regexp" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366003402479" ignored="false" />
     <file path="/string_interp_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365974071946" ignored="false" />
@@ -65,19 +66,19 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="lift.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/macropy/core/lift.py">
+      <file leaf-file-name="tracing_test.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/macropy/macros/tracing_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+            <state line="21" column="0" selection-start="288" selection-end="288" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="lift_test.py" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="lift_test.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/macropy/core/lift_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="9" column="12" selection-start="178" selection-end="264" vertical-scroll-proportion="0.0">
+            <state line="13" column="0" selection-start="277" selection-end="277" vertical-scroll-proportion="0.27283952">
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
@@ -85,29 +86,44 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="tracing_test.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/macropy/macros/tracing_test.py">
+      <file leaf-file-name="linq_test.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/macropy/macros/linq_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="69" column="8" selection-start="1869" selection-end="1996" vertical-scroll-proportion="0.0">
-              <folding />
+            <state line="52" column="0" selection-start="1225" selection-end="1225" vertical-scroll-proportion="0.0">
+              <folding>
+                <element signature="e#0#15#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="tracing.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/macropy/macros/tracing.py">
+      <file leaf-file-name="linq.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/macropy/macros/linq.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="39" column="28" selection-start="982" selection-end="982" vertical-scroll-proportion="0.0">
-              <folding />
+            <state line="144" column="0" selection-start="4032" selection-end="4073" vertical-scroll-proportion="0.0">
+              <folding>
+                <element signature="e#0#42#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="readme.md" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="readme.md" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/readme.md">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="169" column="22" selection-start="6005" selection-end="6005" vertical-scroll-proportion="0.40276036">
+            <state line="169" column="22" selection-start="6005" selection-end="6005" vertical-scroll-proportion="0.0">
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="pattern_test.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/macropy/macros/pattern_test.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="14" column="0" selection-start="264" selection-end="264" vertical-scroll-proportion="0.0">
+              <folding>
+                <element signature="e#0#15#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -132,6 +148,15 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="literals.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/macropy/macros/literals.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="21" column="0" selection-start="355" selection-end="355" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="string_interp_test.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/macropy/macros/string_interp_test.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -139,27 +164,6 @@
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="macros.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/macropy/core/macros.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="153" column="0" selection-start="3959" selection-end="3959" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="linq_test_dataset.sql" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/macropy/macros/linq_test_dataset.sql">
-          <provider editor-type-id="com.intellij.persistence.database.editor.CsvTableFileEditorProvider">
-            <state />
-          </provider>
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="15" column="46" selection-start="369" selection-end="369" vertical-scroll-proportion="-3.4">
-              <folding />
             </state>
           </provider>
         </entry>
@@ -195,9 +199,9 @@
         <option value="$PROJECT_DIR$/macropy/core/util.py" />
         <option value="$PROJECT_DIR$/macropy/macros/linq_test.py" />
         <option value="$PROJECT_DIR$/macropy/macros/linq.py" />
-        <option value="$PROJECT_DIR$/macropy/core/lift_test.py" />
-        <option value="$PROJECT_DIR$/macropy/macros/tracing_test.py" />
         <option value="$PROJECT_DIR$/readme.md" />
+        <option value="$PROJECT_DIR$/macropy/macros/tracing_test.py" />
+        <option value="$PROJECT_DIR$/macropy/core/lift_test.py" />
       </list>
     </option>
   </component>
@@ -407,6 +411,7 @@
     <property name="restartRequiresConfirmation" value="true" />
     <property name="last_opened_file_path" value="Z:/rsm" />
     <property name="FullScreen" value="false" />
+    <property name="GoToClass.includeJavaFiles" value="false" />
     <property name="options.searchVisible" value="true" />
     <property name="options.splitter.details.proportions" value="0.2" />
   </component>
@@ -849,7 +854,11 @@
       <created>1366760489922</created>
       <updated>1366760489922</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="modified readme">
+      <created>1366760854128</created>
+      <updated>1366760854128</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -866,7 +875,7 @@
       <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.505" sideWeight="0.6722488" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32894737" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.383125" sideWeight="0.6722488" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.383125" sideWeight="0.6722488" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32894737" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -976,40 +985,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/macros/pattern_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="0" selection-start="264" selection-end="264" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/macros/literals.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="21" column="0" selection-start="355" selection-end="355" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/macros/linq.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="167" column="34" selection-start="4791" selection-end="4791" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="e#0#42#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/macros/linq_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="22" column="10" selection-start="466" selection-end="467" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/macropy/macros/linq_test_dataset.sql">
       <provider editor-type-id="com.intellij.persistence.database.editor.CsvTableFileEditorProvider">
         <state />
@@ -1034,15 +1009,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/core/lift_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="9" column="12" selection-start="178" selection-end="264" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/macropy/macros/tracing.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="39" column="28" selection-start="982" selection-end="982" vertical-scroll-proportion="0.0">
@@ -1059,22 +1025,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/macros/string_interp.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/macros/tracing_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="69" column="8" selection-start="1869" selection-end="1996" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/macropy/core/unparser.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="18" column="9" selection-start="462" selection-end="462" vertical-scroll-proportion="0.0">
@@ -1084,8 +1034,67 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/readme.md">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="169" column="22" selection-start="6005" selection-end="6005" vertical-scroll-proportion="0.40276036">
+        <state line="169" column="22" selection-start="6005" selection-end="6005" vertical-scroll-proportion="0.0">
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/macros/pattern_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="14" column="0" selection-start="264" selection-end="264" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/macros/string_interp.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/macros/literals.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="21" column="0" selection-start="355" selection-end="355" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/macros/linq_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="52" column="0" selection-start="1225" selection-end="1225" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/macros/tracing_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="21" column="0" selection-start="288" selection-end="288" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/macros/linq.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="144" column="0" selection-start="4032" selection-end="4073" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="e#0#42#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/core/lift_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="13" column="0" selection-start="277" selection-end="277" vertical-scroll-proportion="0.27283952">
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
