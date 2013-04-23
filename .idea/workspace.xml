@@ -2,14 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9635bfa4-4f56-4df2-86e2-f116c56bc57f" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/macropy/macros/linq.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/macropy/macros/linq_test.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/macropy/macros/linq_test_dataset.sql" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/macros/future_test.py" afterPath="$PROJECT_DIR$/macropy/macros/future_test.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/core/lift.py" afterPath="$PROJECT_DIR$/macropy/core/lift.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/core/lift_test.py" afterPath="$PROJECT_DIR$/macropy/core/lift_test.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/macros/string_interp.py" afterPath="$PROJECT_DIR$/macropy/macros/string_interp.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/macros/tracing.py" afterPath="$PROJECT_DIR$/macropy/macros/tracing.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="Project.iws" />
@@ -32,7 +25,7 @@
     <file path="/util.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365996806634" ignored="false" />
     <file path="/core.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365999093160" ignored="false" />
     <file path="/string_interpolate.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365954924649" ignored="false" />
-    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366672494894" ignored="false" />
+    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366690224665" ignored="false" />
     <file path="/string_interpolate_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365962203966" ignored="false" />
     <file path="/*.regexp" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366003402479" ignored="false" />
     <file path="/string_interp_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365974071946" ignored="false" />
@@ -80,10 +73,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="lift.py" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="lift.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/macropy/core/lift.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="12" column="32" selection-start="322" selection-end="322" vertical-scroll-proportion="0.0">
+            <state line="14" column="0" selection-start="339" selection-end="339" vertical-scroll-proportion="0.29382715">
               <folding />
             </state>
           </provider>
@@ -92,7 +85,7 @@
       <file leaf-file-name="lift_test.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/macropy/core/lift_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="76" column="18" selection-start="1970" selection-end="1970" vertical-scroll-proportion="0.0">
+            <state line="74" column="18" selection-start="1915" selection-end="1915" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
@@ -109,10 +102,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="tracing.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="tracing.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/macropy/macros/tracing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="14" column="46" selection-start="251" selection-end="251" vertical-scroll-proportion="0.29382715">
+            <state line="11" column="0" selection-start="177" selection-end="177" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="e#1#34#0" expanded="true" />
               </folding>
@@ -159,7 +152,7 @@
       <file leaf-file-name="macros.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/macropy/core/macros.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="161" column="0" selection-start="3981" selection-end="3981" vertical-scroll-proportion="0.0">
+            <state line="153" column="0" selection-start="3959" selection-end="3959" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -196,9 +189,9 @@
         <option value="$PROJECT_DIR$/macropy/macros/linq.py" />
         <option value="$PROJECT_DIR$/macropy/macros/linq_test.py" />
         <option value="$PROJECT_DIR$/macropy/macros/string_interp.py" />
-        <option value="$PROJECT_DIR$/macropy/core/lift.py" />
         <option value="$PROJECT_DIR$/macropy/core/lift_test.py" />
         <option value="$PROJECT_DIR$/macropy/macros/tracing.py" />
+        <option value="$PROJECT_DIR$/macropy/core/lift.py" />
       </list>
     </option>
   </component>
@@ -620,7 +613,7 @@
     </recent_temporary>
   </component>
   <component name="ShelveChangesManager" show_recycled="false" />
-  <component name="SvnConfiguration" maxAnnotateRevisions="500" myUseAcceleration="nothing" myAutoUpdateAfterCommit="false" cleanupOnStartRun="false">
+  <component name="SvnConfiguration" maxAnnotateRevisions="500" myUseAcceleration="nothing" myAutoUpdateAfterCommit="false" cleanupOnStartRun="false" SSL_PROTOCOLS="all">
     <option name="USER" value="" />
     <option name="PASSWORD" value="" />
     <option name="mySSHConnectionTimeout" value="30000" />
@@ -630,7 +623,6 @@
     <option name="MERGE_DIFF_USE_ANCESTRY" value="true" />
     <option name="UPDATE_LOCK_ON_DEMAND" value="false" />
     <option name="IGNORE_SPACES_IN_MERGE" value="false" />
-    <option name="DETECT_NESTED_COPIES" value="true" />
     <option name="CHECK_NESTED_FOR_QUICK_MERGE" value="false" />
     <option name="IGNORE_SPACES_IN_ANNOTATE" value="true" />
     <option name="SHOW_MERGE_SOURCES_IN_ANNOTATE" value="true" />
@@ -692,28 +684,32 @@
       <created>1366037194125</created>
       <updated>1366037194125</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Removed ast% unquoter; added basic test bench for LINQ expressions">
+      <created>1366690226358</created>
+      <updated>1366690226358</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1616" height="916" extended-state="6" />
     <editor active="true" />
     <layout>
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32908162" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.12375" sideWeight="0.6722488" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.12375" sideWeight="0.67105263" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.505" sideWeight="0.6722488" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32894737" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.328125" sideWeight="0.6722488" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.328125" sideWeight="0.67105263" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32894737" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3277512" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.480625" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -761,7 +757,7 @@
     <option name="WRAP_WHEN_TYPING_REACHES_RIGHT_MARGIN" value="false" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="Changed name to macropy" />
+    <option name="LAST_COMMIT_MESSAGE" value="Removed ast% unquoter; added basic test bench for LINQ expressions" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="false" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -787,6 +783,7 @@
     <MESSAGE value="Added multiline tracing unit test" />
     <MESSAGE value="put some sketches in future_test" />
     <MESSAGE value="Changed name to macropy" />
+    <MESSAGE value="Removed ast% unquoter; added basic test bench for LINQ expressions" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -845,7 +842,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/macropy/core/macros.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="161" column="0" selection-start="3981" selection-end="3981" vertical-scroll-proportion="0.0">
+        <state line="153" column="0" selection-start="3959" selection-end="3959" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -880,7 +877,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/macropy/core/lift_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="76" column="18" selection-start="1970" selection-end="1970" vertical-scroll-proportion="0.0">
+        <state line="74" column="18" selection-start="1915" selection-end="1915" vertical-scroll-proportion="0.0">
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>
@@ -894,19 +891,19 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/core/lift.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="12" column="32" selection-start="322" selection-end="322" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/macropy/macros/tracing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="46" selection-start="251" selection-end="251" vertical-scroll-proportion="0.29382715">
+        <state line="11" column="0" selection-start="177" selection-end="177" vertical-scroll-proportion="0.0">
           <folding>
             <element signature="e#1#34#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/core/lift.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="14" column="0" selection-start="339" selection-end="339" vertical-scroll-proportion="0.29382715">
+          <folding />
         </state>
       </provider>
     </entry>

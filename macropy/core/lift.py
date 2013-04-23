@@ -12,8 +12,7 @@ def unquote_search(node, unquotes):
             unquotes.append(node.right)
             return Placeholder()
     return node
-q%(1 + u%(a + b)) -> interp_ast(...placeholder..., [a + b])
-interp_ast(..., [])
+
 @expr_macro
 def q(node):
     unquotes = []
