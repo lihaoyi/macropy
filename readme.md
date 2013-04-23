@@ -12,6 +12,10 @@ MacroPy
 
 All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 40 lines of code.
 
+**MacroPy is a work in progress, for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/).**
+
+Rough Overview
+--------------
 Macro functions are defined in two ways:
 
 ```python
@@ -151,6 +155,12 @@ Lastly, `trace` can be used as a block macro:
 
 
 ```python
+with trace:
+    sum = 0
+    for i in range(0, 5):
+        sum = sum + 5
+
+    square = sum * sum
 #sum = 0
 #for i in range(0, 5):
 #   sum = (sum + 5)
