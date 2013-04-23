@@ -14,3 +14,5 @@ def singleton(cls):
     return cls()
 
 
+def type_dict(d):
+    return lambda x: d[type(x)]

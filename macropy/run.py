@@ -28,5 +28,5 @@ run(tracing_test.Tests)
 
 from macropy.macros import linq
 from macropy.macros import linq_test
-linq_test.run()
-x = 10
+run(linq_test.Tests)
+
