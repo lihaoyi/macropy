@@ -1,7 +1,7 @@
 MacroPy
 =======
 
-**MacroPy** is an implementation of [Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (*macros*) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree) of Python code at _module import time_. This is an easy way to modify the semantics of a python program, and has been used to implement features such as:
+**MacroPy** is an implementation of [Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (macros) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree) of Python code at _module import time_. This is an easy way to modify the semantics of a python program, and has been used to implement features such as:
 
 - [Quasiquotes](), a quick way to manipulate fragments of a program
 - [String Interpolation](), a common feature in many languages
