@@ -43,7 +43,7 @@ class Tests(unittest.TestCase):
     def test_quote_unquote_ast(self):
         test_string("""
             a = q%(x + y)
-            b = q%(ast%a + z)
+            b = q%(u%a + z)
             print unparse(b)
             x, y, z = 1, 2, 3
             assert(eval(unparse(b)) == 6)

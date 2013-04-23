@@ -11,6 +11,18 @@ class Tests(unittest.TestCase):
 
 def adt(x): return x
 
+match = ()
+unknown = ()
+
+match% IfExp(test=test, body=Str(s="wtf"), orelse=Num(n=n)) ** unknown
+
+assert type(unknown) is IfExp
+test = unknown.test
+assert type(unknown.body) is Str
+assert unknown.body.s == "wtf"
+assert type(unknown.orelse) is Num
+n = unknown.orelse.n
+
 
 @adt
 def AST():

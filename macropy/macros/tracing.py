@@ -1,18 +1,18 @@
 
 from macropy.core.macros import *
 from macropy.core.lift import *
+import ast
+
 
 def wrap(printer, txt, x):
-
     string = txt + " -> " + repr(x)
-
     printer(string)
-
     return x
+
 
 @expr_macro
 def log(node):
-    new_node = q%(wrap(log, u%unparse(node), ast%node))
+    new_node = q%(wrap(log, u%unparse(node), u%node))
     return new_node
 
 
@@ -32,7 +32,7 @@ class TraceWalker(Walker):
                 txt = unparse(node)
                 self.walk_children(node)
 
-                wrapped = q%(wrap(log, u%txt, ast%node))
+                wrapped = q%(wrap(log, u%txt, u%node))
                 return wrapped
             elif isinstance(node, stmt):
                 txt = unparse(node).strip()
