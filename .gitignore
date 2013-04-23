@@ -2,3 +2,4 @@
 .idea_modules/
 *.iml
 *.pyc
+*.swp
