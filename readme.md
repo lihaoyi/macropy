@@ -37,7 +37,7 @@ with my_block_macro:
 
 Any time either of these syntactic forms is seen, if a matching macro exists, the abstract syntax tree captured by these forms (the `...` in the code above) is given to the respective macro to handle. The macro can then return a new tree, which is substituted into the original code in-place.
 
-Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros] folder.
+Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) folder.
 
 Quasiquotes
 -----------
