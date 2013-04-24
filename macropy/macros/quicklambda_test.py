@@ -14,6 +14,9 @@ class Tests(unittest.TestCase):
         basetwo = f%int(_, base=2)
         assert basetwo('10010') == 18
 
+    def test_attribute(self):
+        assert map(f%_.split(' ')[0], ["i am cow", "hear me moo"]) == ["i", "hear"]
+
     def test_no_args(self):
         from random import random
         thunk = f%random()
