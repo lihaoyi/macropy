@@ -18,6 +18,14 @@ def log(node):
 
 
 class TraceWalker(Walker):
+    """
+    If registry=None, this transforms the expression tree such that each
+    individual subtree is traced as it is evaluated
+
+    If registry=[], the tree is unchanged, and instead a list of individual
+    subtrees together with their string representation is placed into the
+    registry. This can be retrieved after the recursion is complete.
+    """
     def __init__(self, registry=None):
         self.autorecurse = False
         self.registry = registry
@@ -68,7 +76,7 @@ def require_log(stuff):
 
 def require_transform(node):
     walker = TraceWalker([])
-    ret = walker.recurse(node)
+    walker.recurse(node)
 
     registry = List(elts = [List(elts = [ast_repr(s), t]) for s, t in walker.registry])
     new = q%(u%node or require_log(u%registry))

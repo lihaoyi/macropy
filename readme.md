@@ -190,7 +190,34 @@ Used this way, `trace` will print out the source code of every _statement_ that 
 
 Smart Asserts
 -------------
-*Work-In-Progress*
+```python
+require%(3**2 + 4**2 != 5**2)
+#AssertionError: Require Failed
+#(3 ** 2) -> 9
+#(4 ** 2) -> 16
+#((3 ** 2) + (4 ** 2)) -> 25
+#(5 ** 2) -> 25
+#(((3 ** 2) + (4 ** 2)) != (5 ** 2)) -> False
+```
+
+MacroPy provides a variant on the `assert` keyword called `require%`. Like `assert`, `require%` throws an `AssertionError` if the condition is false.
+
+Unlike `assert`, `require%` automatically tells you what code failed the condition, and traces all the sub-expressions within the code so you can more easily see what went wrong. Pretty handy!
+
+`require% can also be used in block form:
+
+```python
+a = 10
+b = 2
+with require:
+    a > 5
+    a * b == 20
+    a < 2
+#Require Failed
+#(a < 2) -> False
+```
+
+This requires every statement in the block to be a boolean expression. Each expression will then be wrapped in a `require%`, throwing an `AssertionError` with a nice trace when a condition fails.
 
 Pattern Matching
 ----------------

@@ -118,8 +118,8 @@ else:
 
         require%(1 == 1)
 
-        with self.assertRaises(AssertionError) as cm:
-            require%(3**2 + 4**2 != 5**2)
+        #with self.assertRaises(AssertionError) as cm:
+        require%(3**2 + 4**2 != 5**2)
 
         assert cm.exception.message.split('\n') == [
             'Require Failed',
@@ -133,11 +133,10 @@ else:
         require%(3**2 + 4**2 == 5**2)
 
     def test_require_block(self):
-        a = 10
-        b = 2
         with self.assertRaises(AssertionError) as cm:
+            a = 10
+            b = 2
             with require:
-
                 a > 5
                 a * b == 20
                 a < 2
