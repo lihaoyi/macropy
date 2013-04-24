@@ -213,7 +213,7 @@ with require:
     a > 5
     a * b == 20
     a < 2
-#Require Failed
+#AssertionError: Require Failed
 #(a < 2) -> False
 ```
 
