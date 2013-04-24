@@ -35,7 +35,6 @@ def compare_queries(query1, query2):
         raise e
 
 
-
 class Tests(unittest.TestCase):
     """
     Most examples taken from
@@ -93,7 +92,6 @@ class Tests(unittest.TestCase):
             )
             AND region = 'Europe'
             """,
-
             sql%(
                 x.name for x in bbc
                 if x.gdp / x.population > (

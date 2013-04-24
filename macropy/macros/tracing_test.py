@@ -110,3 +110,35 @@ else:
              "[n] -> [1]",
         ])
 
+    def test_require(self):
+        with self.assertRaises(AssertionError) as cm:
+            require%(1 == 10)
+
+        assert cm.exception.message == "Require Failed\n(1 == 10) -> False"
+
+        require%(1 == 1)
+
+        with self.assertRaises(AssertionError) as cm:
+            require%(3**2 + 4**2 != 5**2)
+
+        assert cm.exception.message.split('\n') == [
+            'Require Failed',
+            '(3 ** 2) -> 9',
+            '(4 ** 2) -> 16',
+            '((3 ** 2) + (4 ** 2)) -> 25',
+            '(5 ** 2) -> 25',
+            '(((3 ** 2) + (4 ** 2)) != (5 ** 2)) -> False'
+        ]
+
+        require%(3**2 + 4**2 == 5**2)
+
+    def test_require_block(self):
+        a = 10
+        b = 2
+        with self.assertRaises(AssertionError) as cm:
+            with require:
+
+                a > 5
+                a * b == 20
+                a < 2
+        assert cm.exception.message == "Require Failed\n(a < 2) -> False"
