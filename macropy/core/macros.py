@@ -108,8 +108,7 @@ class MacroLoader(object):
             sys.modules[module_name] = mod
             return mod
         except Exception, e:
-            print e
-            pass
+            raise e
 
 
 def expand_ast(node):
