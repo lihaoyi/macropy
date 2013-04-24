@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9635bfa4-4f56-4df2-86e2-f116c56bc57f" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/macros/quicklambda_test.py" afterPath="$PROJECT_DIR$/macropy/macros/quicklambda_test.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/readme.md" afterPath="$PROJECT_DIR$/readme.md" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
@@ -26,7 +25,7 @@
     <file path="/util.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365996806634" ignored="false" />
     <file path="/core.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365999093160" ignored="false" />
     <file path="/string_interpolate.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365954924649" ignored="false" />
-    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366827521727" ignored="false" />
+    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366827777470" ignored="false" />
     <file path="/string_interpolate_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365962203966" ignored="false" />
     <file path="/*.regexp" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366780149470" ignored="false" />
     <file path="/string_interp_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365974071946" ignored="false" />
@@ -41,7 +40,7 @@
     <file path="/linq_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366764355207" ignored="false" />
     <file path="/linq.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366748387531" ignored="false" />
     <file path="/string_interp.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366689996928" ignored="false" />
-    <file path="/readme.md" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366827769937" ignored="false" />
+    <file path="/readme.md" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366827844533" ignored="false" />
     <file path="/quickfunc_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366773244617" ignored="false" />
     <file path="/quickfunc.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366773230600" ignored="false" />
     <file path="/quicklambda_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366827702732" ignored="false" />
@@ -150,7 +149,7 @@
       <file leaf-file-name="readme.md" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/readme.md">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="267" column="14" selection-start="8764" selection-end="8764" vertical-scroll-proportion="0.3174404">
+            <state line="271" column="0" selection-start="8995" selection-end="8995" vertical-scroll-proportion="0.4880803">
               <folding />
             </state>
           </provider>
@@ -794,7 +793,11 @@
       <created>1366827527343</created>
       <updated>1366827527343</updated>
     </task>
-    <option name="localTasksCounter" value="38" />
+    <task id="LOCAL-00038" summary="tweak readme">
+      <created>1366827780505</created>
+      <updated>1366827780505</updated>
+    </task>
+    <option name="localTasksCounter" value="39" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -1024,7 +1027,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/readme.md">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="267" column="14" selection-start="8764" selection-end="8764" vertical-scroll-proportion="0.3174404">
+        <state line="271" column="0" selection-start="8995" selection-end="8995" vertical-scroll-proportion="0.4880803">
           <folding />
         </state>
       </provider>

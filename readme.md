@@ -261,13 +261,14 @@ Macropy provides a syntax for lambda expressions similar to Scala's [anonymous f
 f%(_ + _) -> lambda a, b: a + b
 ```
 
-This works too:
+where the underscores get replaced by identifiers, which are then set to be the parameters of the enclosing `lambda`. This works too:
 
 ```python
 map(f%_.split(' ')[0], ["i am cow", "hear me moo"])
 #["i", "hear"]
 ```
-where the underscores get replaced by identifiers, which are then set to be the parameters of the enclosing `lambda`. This can be used as a concise, lightweight substitute for `functools.partial`
+
+Quick Lambdas can be also used as a concise, lightweight, more-readable substitute for `functools.partial`
 
 ```python
 import functools
