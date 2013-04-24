@@ -25,7 +25,7 @@
     <file path="/util.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365996806634" ignored="false" />
     <file path="/core.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365999093160" ignored="false" />
     <file path="/string_interpolate.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365954924649" ignored="false" />
-    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366773313336" ignored="false" />
+    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366776571256" ignored="false" />
     <file path="/string_interpolate_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365962203966" ignored="false" />
     <file path="/*.regexp" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366774691578" ignored="false" />
     <file path="/string_interp_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365974071946" ignored="false" />
@@ -101,7 +101,7 @@
       <file leaf-file-name="readme.md" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/readme.md">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="257" column="7" selection-start="8349" selection-end="8349" vertical-scroll-proportion="0.42659974">
+            <state line="136" column="137" selection-start="4879" selection-end="4879" vertical-scroll-proportion="0.35382685">
               <folding />
             </state>
           </provider>
@@ -898,7 +898,11 @@
       <created>1366773316400</created>
       <updated>1366773316400</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="tweak readme">
+      <created>1366776572752</created>
+      <updated>1366776572752</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -967,7 +971,7 @@
     <option name="WRAP_WHEN_TYPING_REACHES_RIGHT_MARGIN" value="false" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="simple implementation of quicklambda, together with unit tests and readme" />
+    <option name="LAST_COMMIT_MESSAGE" value="tweak readme" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="false" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -981,7 +985,6 @@
     <option name="UPDATE_FILTER_BY_SCOPE" value="false" />
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="false" />
     <option name="FILE_HISTORY_SPLITTER_PROPORTION" value="0.6" />
-    <MESSAGE value="All tests pass" />
     <MESSAGE value="Simple tracing example works" />
     <MESSAGE value="Before fixing Macros.recurse() exposing the list[] to the mutual-recurring function" />
     <MESSAGE value="lift_test all passes again, after refactoring the recursion algorithm" />
@@ -1006,6 +1009,7 @@
     <MESSAGE value="modified readme" />
     <MESSAGE value="tweaked stuff" />
     <MESSAGE value="simple implementation of quicklambda, together with unit tests and readme" />
+    <MESSAGE value="tweak readme" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1145,7 +1149,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/readme.md">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="257" column="7" selection-start="8349" selection-end="8349" vertical-scroll-proportion="0.42659974">
+        <state line="136" column="137" selection-start="4879" selection-end="4879" vertical-scroll-proportion="0.35382685">
           <folding />
         </state>
       </provider>
