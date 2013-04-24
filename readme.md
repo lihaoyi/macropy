@@ -25,7 +25,7 @@ def my_expr_macro(tree):
     return new_tree
 
 @block_macro
-def my_expr_macro(tree):
+def my_block_macro(tree):
     ...
     return new_tree
 ```
