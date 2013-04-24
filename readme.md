@@ -245,7 +245,36 @@ This feature is inspired by [C#'s LINQ to SQL](http://msdn.microsoft.com/en-us/l
 
 This allows you to write queries to a database in the same way you would write queries on in-memory lists. *WIP*
 
-Lightweight Anonymous Functions
+Quick Lambdas
 -------------------------------
-*Work-In-Progress*
+```python
+map(f%(_ + 1), [1, 2, 3])
+#[2, 3, 4]
+
+reduce(f%(_ + _), [1, 2, 3])
+#6
+```
+
+Metascala provides a syntax for lambda expressions similar to Scala's [anonymous functions](http://www.codecommit.com/blog/scala/quick-explanation-of-scalas-syntax). Essentially, the transformation is:
+
+```python
+f%(_ + _) -> lambda a, b: a + b
+```
+
+where the underscores get replaced by identifiers, which are then set to be the parameters of the enclosing `lambda`. This can be used as a concise, lightweight substitute for `functools.partial`
+
+```python
+import functools
+basetwo = functools.partial(int, base=2)
+basetwo('10010')
+#18
+```
+
+is equivalent to
+
+```python
+basetwo = f%int(_, base=2)
+basetwo('10010')
+#18
+```
 

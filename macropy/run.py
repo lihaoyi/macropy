@@ -30,3 +30,7 @@ from macropy.macros import linq
 from macropy.macros import linq_test
 run(linq_test.Tests)
 
+from macropy.macros import quicklambda
+from macropy.macros import quicklambda_test
+run(quicklambda_test.Tests)
+

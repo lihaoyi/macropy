@@ -69,7 +69,6 @@ def trace(node):
     return ret
 
 
-
 def require_log(stuff):
     s = "\n".join(txt + " -> " + str(tree) for [txt, tree] in stuff)
     raise AssertionError("Require Failed\n" + s)
