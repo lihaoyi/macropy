@@ -118,8 +118,8 @@ else:
 
         require%(1 == 1)
 
-        #with self.assertRaises(AssertionError) as cm:
-        require%(3**2 + 4**2 != 5**2)
+        with self.assertRaises(AssertionError) as cm:
+            require%(3**2 + 4**2 != 5**2)
 
         assert cm.exception.message.split('\n') == [
             'Require Failed',
