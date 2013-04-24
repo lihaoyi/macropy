@@ -255,7 +255,7 @@ reduce(f%(_ + _), [1, 2, 3])
 #6
 ```
 
-Metascala provides a syntax for lambda expressions similar to Scala's [anonymous functions](http://www.codecommit.com/blog/scala/quick-explanation-of-scalas-syntax). Essentially, the transformation is:
+Macropy provides a syntax for lambda expressions similar to Scala's [anonymous functions](http://www.codecommit.com/blog/scala/quick-explanation-of-scalas-syntax). Essentially, the transformation is:
 
 ```python
 f%(_ + _) -> lambda a, b: a + b
