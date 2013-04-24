@@ -136,7 +136,7 @@ print "sqrt(x)", sqrt(x)
 
 and the `log%` macro (shown above) helps remove this duplication by automatically expanding `log%(1 + 2)` into `wrap("(1 + 2)", (1 + 2))`. `wrap` then evaluates the expression, printing out the source code and final value of the computation.
 
-In addition to simple logging, MacroPy provides the `trace%` macro. This macro not only logs the source and result of the enter expression, but also the source and result of all sub-expressions nested within it:
+In addition to simple logging, MacroPy provides the `trace%` macro. This macro not only logs the source and result of the given expression, but also the source and result of all sub-expressions nested within it:
 
 ```python
 trace%([len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]])
