@@ -11,6 +11,7 @@ class Tests(unittest.TestCase):
         assert(oct%1234567 == 342391)
         assert(hex%DEADBEEF == 3735928559)
 
+
     def test_perf(self):
         start_time = time.time()
 

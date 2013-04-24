@@ -88,27 +88,19 @@ class MacroLoader(object):
         self.txt = txt
         self.file_name = file_name
 
-    def load_module(self, module_name):
-        """See http://www.python.org/dev/peps/pep-0302/ if you don't know what
-        a lot of this stuff is for"""
-
-        try:
-            if module_name in sys.modules:
-                return sys.modules[module_name]
-            a = expand_ast(ast.parse(self.txt))
-            code = unparse(a)
-
-            mod = imp.new_module(module_name)
-            mod.__file__ = self.file_name
-
-            mod.__loader__ = self
-
-            exec code in mod.__dict__
-
-            sys.modules[module_name] = mod
-            return mod
-        except Exception, e:
-            raise e
+    def load_module(self, fullname):
+        a = expand_ast(ast.parse(self.txt))
+        code = unparse(a)
+        ispkg = False
+        mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
+        mod.__loader__ = self
+        if ispkg:
+            mod.__path__ = []
+            mod.__package__ = fullname
+        else:
+            mod.__package__ = fullname.rpartition('.')[0]
+        exec(compile(code, self.file_name, "exec"), mod.__dict__)
+        return mod
 
 
 def expand_ast(node):
