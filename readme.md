@@ -3,12 +3,12 @@ MacroPy
 
 **MacroPy** is an implementation of [Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (macros) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree)(AST) of Python code at _module import time_. This is an easy way to modify the semantics of a python program, and has been used to implement features such as:
 
-- [Quasiquotes](), a quick way to manipulate fragments of a program
-- [String Interpolation](), a common feature in many languages
-- [Tracing]() and [Smart Asserts]()
-- [Pattern Matching]() from the Functional Programming world
-- [LINQ to SQL]() from C#
-- [Lightweight Anonymous Functions]() from Scala and Groovy
+- [Quasiquotes](#quasiquotes), a quick way to manipulate fragments of a program
+- [String Interpolation](#string-interpolation), a common feature in many languages
+- [Tracing](#tracing) and [Smart Asserts](#smart-asserts)
+- [Pattern Matching](#pattern-matching) from the Functional Programming world
+- [LINQ to SQL](#linq-to-sql) from C#
+- [Quick Lambdas](#quick-lambdas) from Scala and Groovy,
 
 All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 40 lines of code.
 
@@ -139,7 +139,7 @@ and the `log%` macro (shown above) helps remove this duplication by automaticall
 In addition to simple logging, MacroPy provides the `trace%` macro. This macro not only logs the source and result of the given expression, but also the source and result of all sub-expressions nested within it:
 
 ```python
-trace%([len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]])
+trace%[len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]]
 #('b' * 2) -> 'bb'
 #(('b' * 2) + 'q') -> 'bbq'
 #('lo' * 3) -> 'lololo'
@@ -277,4 +277,17 @@ basetwo = f%int(_, base=2)
 basetwo('10010')
 #18
 ```
+
+Quick Lambdas can also be used entirely without the `_` placeholders, in which case they wrap the target in a no argument `lambda: ...` thunk:
+
+```python
+from random import random
+thunk = f%random()
+print thunk()
+#0.5497242707566372
+print thunk()
+#0.3068253802774531
+```
+
+This cuts out reduces the number of characters needed to make a thunk from 7 to 2, making it much easier to use thunks to do things like emulating by [name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html).
 

@@ -14,6 +14,11 @@ class Tests(unittest.TestCase):
         basetwo = f%int(_, base=2)
         assert basetwo('10010') == 18
 
+    def test_no_args(self):
+        from random import random
+        thunk = f%random()
+        assert thunk() != thunk()
+
 
 
 
