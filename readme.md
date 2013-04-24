@@ -190,17 +190,35 @@ Used this way, `trace` will print out the source code of every _statement_ that 
 
 Smart Asserts
 -------------
-*to-be-completed*
+*Work-In-Progress*
 
 Pattern Matching
 ----------------
-*to-be-completed*
+*Work-In-Progress*
 
 LINQ to SQL
 -----------
-*to-be-completed*
+```python
+print sql%(
+    x.name for x in bbc
+    if x.gdp / x.population > (
+        y.gdp / y.population for y in bbc
+        if y.name == 'United Kingdom'
+    ) and x.region == 'Europe'
+)
+#SELECT name FROM bbc
+#WHERE gdp/population > (
+#    SELECT gdp/population FROM bbc
+#    WHERE name = 'United Kingdom'
+#)
+#AND region = 'Europe'
+```
+
+This feature is inspired by [C#'s LINQ to SQL](http://msdn.microsoft.com/en-us/library/bb386976.aspx). In short, code used to manipulate lists is lifted into an AST which is then cross-compiled into a snippet of [SQL](http://en.wikipedia.org/wiki/SQL).
+
+This allows you to write queries to a database in the same way you would write queries on in-memory lists. *WIP*
 
 Lightweight Anonymous Functions
 -------------------------------
-*to-be-completed*
+*Work-In-Progress*
 
