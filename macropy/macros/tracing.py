@@ -97,3 +97,5 @@ def require(node):
         expr.value = require_transform(expr.value)
 
     return node.body
+
+def log(x): print x

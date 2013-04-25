@@ -53,7 +53,6 @@ class Tests(unittest.TestCase):
 
     def test_quote_unquote_block(self):
 
-
         a = 10
         b = ["a", "b", "c"]
         c = []

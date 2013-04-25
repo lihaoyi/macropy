@@ -3,16 +3,12 @@ import unittest
 from macropy.core import macros
 
 
-
-
-
 runner = unittest.TextTestRunner()
 def run(x):
     runner.run(unittest.TestLoader().loadTestsFromTestCase(x))
 
 from macropy.core import lift_test
 run(lift_test.Tests)
-
 
 from macropy.macros import literals_test
 run(literals_test.Tests)
@@ -28,4 +24,3 @@ run(linq_test.Tests)
 
 from macropy.macros import quicklambda_test
 run(quicklambda_test.Tests)
-
