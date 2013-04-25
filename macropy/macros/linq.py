@@ -2,6 +2,7 @@ from macropy.core.macros import expr_macro
 from macropy.core.core import *
 from ast import *
 from macropy.core.util import *
+
 """
 Aggregate Functions:
     http://www.sqlite.org/lang_aggfunc.html
@@ -59,6 +60,7 @@ Core Functions:
     upper(x)                str.upper
     zeroblob(n)
 """
+macros = True
 
 @expr_macro
 def sql(tree):

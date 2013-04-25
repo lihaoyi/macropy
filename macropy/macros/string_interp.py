@@ -1,8 +1,9 @@
 import re
 
 from macropy.core.macros import *
-from macropy.core.lift import *
+from macropy.core.lift import macros, q, u
 
+macros = True
 
 @expr_macro
 def s(node):

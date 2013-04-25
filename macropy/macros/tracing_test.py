@@ -1,9 +1,8 @@
 import unittest
 
-from macropy.core.macros import *
-from macropy.core.lift import *
-from macropy.macros.string_interp import *
-from tracing import *
+
+from macropy.macros.tracing import macros
+from macropy.macros.tracing import *
 
 
 result = []

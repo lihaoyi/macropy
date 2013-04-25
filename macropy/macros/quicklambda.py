@@ -1,11 +1,11 @@
 import re
 
 from macropy.core.macros import *
-from macropy.core.lift import *
+from macropy.core.lift import macros, q, u
 
 _ = None  # makes IDE happy
 
-
+macros = True
 
 @expr_macro
 def f(node):

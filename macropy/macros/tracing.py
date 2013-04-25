@@ -1,8 +1,10 @@
 
 from macropy.core.macros import *
-from macropy.core.lift import *
+from macropy.core.lift import macros, q, u
 import ast
 
+
+macros = True
 
 def wrap(printer, txt, x):
     string = txt + " -> " + repr(x)

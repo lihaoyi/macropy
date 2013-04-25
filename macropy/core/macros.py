@@ -12,11 +12,11 @@ class Placeholder(AST):
 
 
 def expr_macro(func):
-    Macros.expr_registry[func.func_name] = func
+    expr_registry[func.func_name] = func
 
 
 def block_macro(func):
-    Macros.block_registry[func.func_name] = func
+    block_registry[func.func_name] = func
 
 
 expr.__repr__ = lambda self: ast.dump(self, annotate_fields=False)
@@ -76,21 +76,26 @@ class Walker(object):
         else:
             return node
 
-@singleton
-class Macros(object):
-    expr_registry = {}
-    block_registry = {}
+
+expr_registry = {}
+block_registry = {}
 
 
 class MacroLoader(object):
-    def __init__(self, module_name, txt, file_name):
+    def __init__(self, module_name, tree, file_name):
         self.module_name = module_name
-        self.txt = txt
+        self.tree = tree
         self.file_name = file_name
 
     def load_module(self, fullname):
-        a = expand_ast(ast.parse(self.txt))
-        code = unparse(a)
+
+        required_pkgs, found_macros = detect_macros(self.tree)
+
+        for pkg in required_pkgs:
+            __import__(pkg)
+
+        tree = expand_ast(self.tree)
+        code = unparse(tree)
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
         mod.__loader__ = self
@@ -102,23 +107,36 @@ class MacroLoader(object):
         exec(compile(code, self.file_name, "exec"), mod.__dict__)
         return mod
 
+def detect_macros(node):
+    required_pkgs = []
+    found_macros = {}
+    for stmt in node.body:
+        if      isinstance(stmt, ImportFrom) \
+                and stmt.names[0].name == 'macros' \
+                and stmt.names[0].asname is  None:
 
-def expand_ast(node):
+            for a in stmt.names[1:]:
+                found_macros[a.asname or a.name] = a.name
+            required_pkgs.append(stmt.module)
+
+
+    return required_pkgs, found_macros
+
+def expand_ast(node, ):
     @Walker
     def macro_search(node):
+        if      isinstance(node, With) \
+                and type(node.context_expr) is Name \
+                and node.context_expr.id in block_registry:
 
-        if (isinstance(node, With)
-            and type(node.context_expr) is Name 
-            and node.context_expr.id in Macros.block_registry):
-
-            return Macros.block_registry[node.context_expr.id](node)
+            return block_registry[node.context_expr.id](node)
 
         if      isinstance(node, BinOp) \
                 and type(node.left) is Name \
                 and type(node.op) is Mod \
-                and node.left.id in Macros.expr_registry:
+                and node.left.id in expr_registry:
 
-            return Macros.expr_registry[node.left.id](node.right)
+            return expr_registry[node.left.id](node.right)
 
         return node
     node = macro_search.recurse(node)
@@ -128,17 +146,15 @@ def expand_ast(node):
 @singleton
 class MacroFinder(object):
     def find_module(self, module_name, package_path):
-        if module_name in sys.modules:
-            return None
 
-        if "macropy" in str(package_path):
-            try:
-                (file, pathname, description) = imp.find_module(module_name.split('.')[-1], package_path)
-                txt = file.read()
-
-                return MacroLoader(module_name, txt, file.name)
-            except Exception, e:
-                pass
+        try:
+            (file, pathname, description) = imp.find_module(module_name.split('.')[-1], package_path)
+            txt = file.read()
+            tree = ast.parse(txt)
+            if detect_macros(tree) == ([], {}): return
+            else: return MacroLoader(module_name, tree, file.name)
+        except Exception, e:
+            pass
 
 
 sys.meta_path.append(MacroFinder)

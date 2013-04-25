@@ -1,10 +1,8 @@
 import unittest
 import sqlite3
-from macropy.core.macros import *
-from macropy.core.lift import *
-from macropy.macros.string_interp import *
+
 import time
-from linq import *
+from macropy.macros.linq import macros, sql
 
 
 conn = sqlite3.connect(":memory:")
