@@ -296,5 +296,5 @@ print thunk()
 #0.3068253802774531
 ```
 
-This cuts out reduces the number of characters needed to make a thunk from 7 to 2, making it much easier to use thunks to do things like emulating by [name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html).
+This cuts out reduces the number of characters needed to make a thunk from 7 to 2, making it much easier to use thunks to do things like emulating [by name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html).
 

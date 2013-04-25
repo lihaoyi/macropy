@@ -38,15 +38,18 @@ class TraceWalker(Walker):
                             type(node) is not Str and \
                             type(node) is not Name:
 
-                txt = unparse(node)
-                self.walk_children(node)
-
-                if self.registry is not None:
-                    self.registry.append([txt, node])
+                try:
+                    literal_eval(node)
                     return node
-                else:
-                    wrapped = q%(wrap(log, u%txt, u%node))
-                    return wrapped
+                except ValueError:
+                    txt = unparse(node)
+                    self.walk_children(node)
+                    if self.registry is not None:
+                        self.registry.append([txt, node])
+                        return node
+                    else:
+                        wrapped = q%(wrap(log, u%txt, u%node))
+                        return wrapped
             elif isinstance(node, stmt):
                 txt = unparse(node).strip()
                 self.walk_children(node)

@@ -57,8 +57,7 @@ class Tests(unittest.TestCase):
 
     def test_function_call(self):
         trace%sum([sum([1, 2, 3]), min(4, 5, 6), max(7, 8, 9)])
-        assert(result[-6:] == [
-            "[1, 2, 3] -> [1, 2, 3]",
+        assert(result[-5:] == [
             "sum([1, 2, 3]) -> 6",
             "min(4, 5, 6) -> 4",
             "max(7, 8, 9) -> 9",
@@ -78,12 +77,9 @@ class Tests(unittest.TestCase):
                 else:
                     odds += [n]
 
-
-        assert(result[-18:] == [
+        assert(result[-16:] == [
             "evens = []",
-            "[] -> []",
             "odds = []",
-            "[] -> []",
             """for n in range(0, 2):
     if ((n / 2) == (n // 2)):
         evens += [n]
