@@ -32,6 +32,8 @@ class Matcher(object):
         if result:
             for (varname, value) in result[1]:
                 locals_dict[varname] = value
+            retrn True
+        return False
 
 
 class LiteralMatcher(Matcher):
