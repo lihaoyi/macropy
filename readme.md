@@ -249,6 +249,26 @@ The reasoning being that although you may sometimes want complex, custom-built c
 class Point(x, y): pass
 ```
 
+As opposed to the equivalent class, written manually:
+
+```python
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __str__(self):
+        return "Point(" + self.x + ", " + self.y + ")"
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+```
+
+This is clearly a pain to do, error prone to deal with, and violates [DRY](http://en.wikipedia.org/wiki/Don't_repeat_yourself) in an extreme way: each member of the class (`x` and `y` in this case) has to be repeated _6_ times, with loads and loads of boilerplate. Given how tedious writing all this code is, it is no surprise that most python classes do not come with proper `__str__` or useful `__eq__` functions! With case classes, there is no excuse!
+
 Like any other class, a case class may contain methods in its body, or class variables. The only restrictions are that only the `__init__`, `__repr__`, `___str__`, `__eq__` methods will be set for you, and it may not manually inherit from anything.
 
 Pattern Matching
