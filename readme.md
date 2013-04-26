@@ -269,7 +269,27 @@ class Point:
 
 This is clearly a pain to do, error prone to deal with, and violates [DRY](http://en.wikipedia.org/wiki/Don't_repeat_yourself) in an extreme way: each member of the class (`x` and `y` in this case) has to be repeated _6_ times, with loads and loads of boilerplate. Given how tedious writing all this code is, it is no surprise that most python classes do not come with proper `__str__` or useful `__eq__` functions! With case classes, there is no excuse!
 
-Like any other class, a case class may contain methods in its body, or class variables. The only restrictions are that only the `__init__`, `__repr__`, `___str__`, `__eq__` methods will be set for you, and it may not manually inherit from anything.
+Case classes also provide a convenient copy-constructor, which creates a shallow copy of the case class with modified fields, leaving the original unchanged:
+
+```python
+a = Point(1, 2)
+b = a.copy(x = 3)
+print a #Point(1, 2)
+print b #Point(3, 2)
+```
+
+Like any other class, a case class may contain methods in its body:
+
+```python
+@case
+class Point(x, y):
+    def length(self):
+        return (self.x ** 2 + self.y ** 2) ** 0.5
+
+print Point(3, 4).length() #5
+```
+
+or class variables. The only restrictions are that only the `__init__`, `__repr__`, `___str__`, `__eq__` methods will be set for you, and it may not manually inherit from anything.
 
 Pattern Matching
 ----------------

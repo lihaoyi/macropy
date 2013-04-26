@@ -1,9 +1,13 @@
 from macropy.core.core import *
 from macropy.core.macros import *
 from macropy.core.lift import macros, q, u
+
 macros = True
 
+NO_ARG = object()
+
 def case_transform(tree, parents):
+
     def self_get(x):
         mini_tree = q%self.x
         mini_tree.attr = x
@@ -16,7 +20,7 @@ def case_transform(tree, parents):
 
     with q as str_fun:
         def __str__(self):
-            return u%tree.name + "(" + reduce(lambda x, y: str(x) + ", " + str(y), u%list_tree) + ")"
+            return u%tree.name + "(" + ", ".join(map(str, u%list_tree)) + ")"
 
         def __repr__(self):
             return self.__str__()
@@ -40,7 +44,17 @@ def case_transform(tree, parents):
             except:
                 return False
 
+    with q as copy_fun:
+        def copy(self):
+            return Thing()
 
+    copy_fun[0].args.args += [Name(id = n, ctx=Param()) for n in var_names]
+    copy_fun[0].args.defaults = [q%NO_ARG for n in var_names]
+    ret = copy_fun[0].body[0].value
+    ret.func = Name(id=tree.name)
+
+
+    ret.args = [q%(u%self_get(n) if u%Name(id=n) is NO_ARG else u%Name(id=n)) for n in var_names]
 
     tree.body += eq_fun
     init_fun[0].args.args += tree.bases
@@ -62,7 +76,8 @@ def case_transform(tree, parents):
     tree.decorator_list = []
     tree.body += str_fun
     tree.body += init_fun
-
+    tree.body += copy_fun
+    print unparse(tree)
     return tree
 
 @decorator_macro
