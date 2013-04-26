@@ -1,5 +1,6 @@
 from macropy.core.macros import *
 
+macros = True
 
 def u(node):
     """Stub to make the IDE happy"""

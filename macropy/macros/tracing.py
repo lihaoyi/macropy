@@ -1,8 +1,10 @@
 
 from macropy.core.macros import *
-from macropy.core.lift import *
+from macropy.core.lift import macros, q, u
 import ast
 
+
+macros = True
 
 def wrap(printer, txt, x):
     string = txt + " -> " + repr(x)
@@ -38,15 +40,18 @@ class TraceWalker(Walker):
                             type(node) is not Str and \
                             type(node) is not Name:
 
-                txt = unparse(node)
-                self.walk_children(node)
-
-                if self.registry is not None:
-                    self.registry.append([txt, node])
+                try:
+                    literal_eval(node)
                     return node
-                else:
-                    wrapped = q%(wrap(log, u%txt, u%node))
-                    return wrapped
+                except ValueError:
+                    txt = unparse(node)
+                    self.walk_children(node)
+                    if self.registry is not None:
+                        self.registry.append([txt, node])
+                        return node
+                    else:
+                        wrapped = q%(wrap(log, u%txt, u%node))
+                        return wrapped
             elif isinstance(node, stmt):
                 txt = unparse(node).strip()
                 self.walk_children(node)
@@ -92,3 +97,5 @@ def require(node):
         expr.value = require_transform(expr.value)
 
     return node.body
+
+def log(x): print x
