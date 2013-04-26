@@ -34,3 +34,6 @@ from macropy.macros import quicklambda
 from macropy.macros import quicklambda_test
 run(quicklambda_test.Tests)
 
+from macropy.macros import pattern
+from macropy.macros import pattern_test
+run(pattern_test.Tests)
