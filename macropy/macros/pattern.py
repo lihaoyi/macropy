@@ -32,7 +32,7 @@ class Matcher(object):
         if result:
             for (varname, value) in result[1]:
                 locals_dict[varname] = value
-            retrn True
+            return True
         return False
 
 
@@ -165,3 +165,5 @@ def matching(node):
                 u%(node.right), locals()))
         else:
             return node
+    func.recurse(node)
+    return node

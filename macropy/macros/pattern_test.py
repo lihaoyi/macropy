@@ -3,6 +3,7 @@ import unittest
 from macropy.core.macros import *
 from macropy.core.lift import *
 from macropy.macros.string_interp import *
+from macropy.macros.pattern import macros
 from macropy.macros.pattern import *
 
 class Foo(object):
@@ -51,7 +52,7 @@ class Tests(unittest.TestCase):
     
     def test_scary_macros(self):
         with matching:
-            Foo(a, b) << Foo(3, 5)
+            print "hello"
         self.assertEquals(3, a)
         self.asserEquals(5, b)
 
