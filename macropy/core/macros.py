@@ -14,6 +14,7 @@ class Placeholder(AST):
 def expr_macro(func):
     expr_registry[func.func_name] = func
 
+
 def decorator_macro(func):
     decorator_registry[func.func_name] = func
 
@@ -83,7 +84,6 @@ expr_registry = {}
 block_registry = {}
 decorator_registry = {}
 
-
 class MacroLoader(object):
     def __init__(self, module_name, tree, file_name):
         self.module_name = module_name
@@ -140,6 +140,7 @@ def expand_ast(node, ):
                 and node.left.id in expr_registry:
 
             return expr_registry[node.left.id](node.right)
+
 
         if      isinstance(node, ClassDef) \
                 and len(node.decorator_list) == 1\

@@ -31,5 +31,3 @@ def unparse(ast):
     buffer = StringIO.StringIO()
     Unparser(ast, buffer)
     return buffer.getvalue()
-
-

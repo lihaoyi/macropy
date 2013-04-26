@@ -62,7 +62,7 @@ def case_transform(tree, parents):
     tree.decorator_list = []
     tree.body += str_fun
     tree.body += init_fun
-    print unparse(tree)
+
     return tree
 
 @decorator_macro
