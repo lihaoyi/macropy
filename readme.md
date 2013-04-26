@@ -6,7 +6,7 @@ MacroPy
 - [Quasiquotes](#quasiquotes), a quick way to manipulate fragments of a program
 - [String Interpolation](#string-interpolation), a common feature in many languages
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts)
-- [Case Classes](Case-Classes), easy [Algebraic Data Types](https://en.wikipedia.org/wiki/Algebraic_data_type) from Scala
+- [Case Classes](#Case-Classes), easy [Algebraic Data Types](https://en.wikipedia.org/wiki/Algebraic_data_type) from Scala
 - [Pattern Matching](#pattern-matching) from the Functional Programming world
 - [LINQ to SQL](#linq-to-sql) from C#
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy,
