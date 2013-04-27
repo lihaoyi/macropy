@@ -1,14 +1,13 @@
 import unittest
 import sqlite3
 
-import time
-from macropy.macros.linq import macros, sql
+from macropy.macros2.linq import macros, sql
 
 
 conn = sqlite3.connect(":memory:")
 cursor = conn.cursor()
 
-for line in open("macros/linq_test_dataset.sql").read().split(";"):
+for line in open("macros2/linq_test_dataset.sql").read().split(";"):
     cursor.execute(line.strip())
 
 conn.commit()

@@ -1,7 +1,7 @@
 import unittest
-
-from macropy.macros.literals import macros, bin, oct, hex
 import time
+
+from macropy.macros2.literals import macros, bin, oct, hex
 
 class Tests(unittest.TestCase):
     def test_basic(self):

@@ -1,23 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9635bfa4-4f56-4df2-86e2-f116c56bc57f" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/macropy/macros2/__init__.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/macropy/macros2/peg.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/macropy/macros2/peg_test.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macropy\macros\tracing.py" afterPath="$PROJECT_DIR$/macropy/macros2/tracing.py" />
-      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macropy\macros\tracing_test.py" afterPath="$PROJECT_DIR$/macropy/macros2/tracing_test.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/core/__init__.py" afterPath="$PROJECT_DIR$/macropy/core/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/macros/__init__.py" afterPath="$PROJECT_DIR$/macropy/macros/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/macros/adt.py" afterPath="$PROJECT_DIR$/macropy/macros/adt.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/macros/adt_test.py" afterPath="$PROJECT_DIR$/macropy/macros/adt_test.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/core/lift.py" afterPath="$PROJECT_DIR$/macropy/core/lift.py" />
+    <list default="true" id="9635bfa4-4f56-4df2-86e2-f116c56bc57f" name="Default" comment="mlre">
+      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macropy\macros\linq.py" afterPath="$PROJECT_DIR$/macropy/macros2/linq.py" />
+      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macropy\macros\linq_test.py" afterPath="$PROJECT_DIR$/macropy/macros2/linq_test.py" />
+      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macropy\macros\linq_test_dataset.sql" afterPath="$PROJECT_DIR$/macropy/macros2/linq_test_dataset.sql" />
+      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macropy\macros\literals.py" afterPath="$PROJECT_DIR$/macropy/macros2/literals.py" />
+      <change type="MOVED" beforePath="C:\Dropbox\Workspace\6.945\Project\macropy\macros\literals_test.py" afterPath="$PROJECT_DIR$/macropy/macros2/literals_test.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/run.py" afterPath="$PROJECT_DIR$/macropy/run.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="Project.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/run.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367046483102" ignored="false" />
+    <file path="/run.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367046553622" ignored="false" />
     <file path="/importz.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365483076658" ignored="false" />
     <file path="/thing.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365737898877" ignored="false" />
     <file path="/fragment.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365787163596" ignored="false" />
@@ -35,7 +30,7 @@
     <file path="/util.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365996806634" ignored="false" />
     <file path="/core.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365999093160" ignored="false" />
     <file path="/string_interpolate.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365954924649" ignored="false" />
-    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367036595264" ignored="false" />
+    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367046518823" ignored="false" />
     <file path="/string_interpolate_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365962203966" ignored="false" />
     <file path="/*.regexp" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366780149470" ignored="false" />
     <file path="/string_interp_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366861686428" ignored="false" />
@@ -45,9 +40,9 @@
     <file path="/adt_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367036661737" ignored="false" />
     <file path="/literals.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366859117463" ignored="false" />
     <file path="/literal_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366047658589" ignored="false" />
-    <file path="/literals_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366859239873" ignored="false" />
+    <file path="/literals_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367046580051" ignored="false" />
     <file path="/future_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366335918072" ignored="false" />
-    <file path="/linq_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366862075388" ignored="false" />
+    <file path="/linq_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367046570550" ignored="false" />
     <file path="/linq.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366862055844" ignored="false" />
     <file path="/string_interp.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366861874274" ignored="false" />
     <file path="/readme.md" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366967175315" ignored="false" />
@@ -82,10 +77,30 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="run.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="run.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/macropy/run.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="1" column="20" selection-start="36" selection-end="36" vertical-scroll-proportion="0.021013597">
+            <state line="11" column="40" selection-start="253" selection-end="253" vertical-scroll-proportion="0.0">
+              <folding>
+                <element signature="e#0#15#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="literals_test.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/macropy/macros2/literals_test.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="3" column="45" selection-start="74" selection-end="74" vertical-scroll-proportion="0.06304079">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="linq_test.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/macropy/macros2/linq_test.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="3" column="41" selection-start="73" selection-end="73" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -109,31 +124,13 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="peg.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/macropy/macros2/peg.py">
+      <file leaf-file-name="linq.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/macropy/macros2/linq.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="85" column="37" selection-start="2201" selection-end="2201" vertical-scroll-proportion="0.0">
+            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
               <folding>
-                <element signature="e#0#9#0" expanded="true" />
+                <element signature="e#0#42#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="re.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://C:/Runtimes/Python/Lib/re.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="235" column="42" selection-start="10125" selection-end="10125" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="rlcompleter.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://C:/Runtimes/Python/Lib/rlcompleter.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="86" column="21" selection-start="3165" selection-end="3165" vertical-scroll-proportion="0.0">
-              <folding />
             </state>
           </provider>
         </entry>
@@ -194,8 +191,6 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/macropy/core/core.py" />
-        <option value="$PROJECT_DIR$/macropy/core/macros.py" />
         <option value="$PROJECT_DIR$/macropy/macros/pattern_test.py" />
         <option value="$PROJECT_DIR$/readme.md" />
         <option value="$PROJECT_DIR$/macropy/macros/adt_test.py" />
@@ -210,6 +205,8 @@
         <option value="$PROJECT_DIR$/macropy/core/__init__.py" />
         <option value="$PROJECT_DIR$/macropy/macros2/tracing_test.py" />
         <option value="$PROJECT_DIR$/macropy/run.py" />
+        <option value="$PROJECT_DIR$/macropy/macros2/linq_test.py" />
+        <option value="$PROJECT_DIR$/macropy/macros2/literals_test.py" />
       </list>
     </option>
   </component>
@@ -533,7 +530,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="Project" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/macropy/macros/linq_test.py" />
+      <option name="SCRIPT_NAME" value="C:\Dropbox\Workspace\6.945\Project\macropy\macros2\linq_test.py" />
       <option name="CLASS_NAME" value="Tests" />
       <option name="METHOD_NAME" value="test_basic" />
       <option name="FOLDER_NAME" value="" />
@@ -916,13 +913,18 @@
       <created>1366967178243</created>
       <updated>1366967178243</updated>
     </task>
-    <option name="localTasksCounter" value="47" />
+    <task id="LOCAL-00047" summary="shifted some stuff into macros2 folder to keep things neat">
+      <created>1367046500786</created>
+      <updated>1367046500786</updated>
+    </task>
+    <option name="localTasksCounter" value="48" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1616" height="916" extended-state="6" />
     <editor active="true" />
     <layout>
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32934132" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3269461" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -937,7 +939,6 @@
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.480625" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -985,7 +986,7 @@
     <option name="WRAP_WHEN_TYPING_REACHES_RIGHT_MARGIN" value="false" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="tweak readme" />
+    <option name="LAST_COMMIT_MESSAGE" value="shifted some stuff into macros2 folder to keep things neat" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="false" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -999,7 +1000,6 @@
     <option name="UPDATE_FILTER_BY_SCOPE" value="false" />
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="false" />
     <option name="FILE_HISTORY_SPLITTER_PROPORTION" value="0.6" />
-    <MESSAGE value="Refactored AST interpolation" />
     <MESSAGE value="All tests pass!" />
     <MESSAGE value="Big refactoring for Walker&#10;" />
     <MESSAGE value="Added multiline tracing unit test" />
@@ -1024,6 +1024,7 @@
     <MESSAGE value="Tweaked readme" />
     <MESSAGE value="Added copy constructor" />
     <MESSAGE value="tweak readme" />
+    <MESSAGE value="shifted some stuff into macros2 folder to keep things neat" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1031,29 +1032,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/macropy/macros/adt_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="51" column="39" selection-start="1381" selection-end="1381" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/core/core.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/core/lift.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="13" column="0" selection-start="336" selection-end="336" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/macropy/core/macros.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
@@ -1146,9 +1124,34 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/macros2/linq.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="e#0#42#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/macros2/linq_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="3" column="41" selection-start="73" selection-end="73" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/macropy/run.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="1" column="20" selection-start="36" selection-end="36" vertical-scroll-proportion="0.021013597">
+        <state line="11" column="40" selection-start="253" selection-end="253" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/macropy/macros2/literals_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="3" column="45" selection-start="74" selection-end="74" vertical-scroll-proportion="0.06304079">
           <folding />
         </state>
       </provider>
