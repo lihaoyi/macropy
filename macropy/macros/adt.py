@@ -44,6 +44,9 @@ def case_transform(tree, parents):
             except:
                 return False
 
+        def __ne__(self, other):
+            return not self.__eq__(other)
+
     with q as copy_fun:
         def copy(self):
             return Thing()

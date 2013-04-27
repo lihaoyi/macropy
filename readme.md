@@ -252,7 +252,7 @@ class Point(x, y): pass
 As opposed to the equivalent class, written manually:
 
 ```python
-class Point:
+class Point(object):
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -265,9 +265,12 @@ class Point:
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 ```
 
-This is clearly a pain to do, error prone to deal with, and violates [DRY](http://en.wikipedia.org/wiki/Don't_repeat_yourself) in an extreme way: each member of the class (`x` and `y` in this case) has to be repeated _6_ times, with loads and loads of boilerplate. Given how tedious writing all this code is, it is no surprise that most python classes do not come with proper `__str__` or useful `__eq__` functions! With case classes, there is no excuse!
+Whew, what a lot of boilerplate! This is clearly a pain to do, error prone to deal with, and violates [DRY](http://en.wikipedia.org/wiki/Don't_repeat_yourself) in an extreme way: each member of the class (`x` and `y` in this case) has to be repeated _6_ times, with loads and loads of boilerplate. Given how tedious writing all this code is, it is no surprise that most python classes do not come with proper `__str__` or useful `__eq__` functions! With case classes, there is no excuse, since all this will be generated for you.
 
 Case classes also provide a convenient copy-constructor, which creates a shallow copy of the case class with modified fields, leaving the original unchanged:
 

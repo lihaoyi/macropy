@@ -17,6 +17,7 @@ class Tests(unittest.TestCase):
                 assert(p.x == x)
                 assert(p.y == y)
                 assert(Point(x, y) == Point(x, y))
+                assert((Point(x, y) != Point(x, y)) is False)
 
     def test_advanced(self):
 
@@ -71,3 +72,5 @@ class Tests(unittest.TestCase):
         assert len(my_list) == 3
         assert sum(iter(my_list)) == 6
         assert sum(iter(empty_list)) == 0
+
+
