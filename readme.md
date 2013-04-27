@@ -429,7 +429,7 @@ Much of this conciseness arises from the use of macros to wrap tuples into `Seq(
 ```python
 with peg:
     value = Lazy(lambda: r('[0-9]+') | Seq(Raw('('), expr, Raw(')')))
-    op = Lazy(lambda: r('+' | '-' | '*' | '/'))
+    op = Lazy(lambda: r(Raw('+') | Raw('-') | Raw('*') | Raw('/')))
     expr = Lazy(lambda: Seq(value, ~Seq(op, value)))
 ```
 
