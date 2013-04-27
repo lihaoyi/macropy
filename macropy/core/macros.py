@@ -14,7 +14,6 @@ class Placeholder(AST):
 def expr_macro(func):
     expr_registry[func.func_name] = func
 
-
 def decorator_macro(func):
     decorator_registry[func.func_name] = func
 
@@ -44,6 +43,7 @@ def interp_ast(node, values):
 
     x = func.recurse(node)
     return x
+
 
 class Walker(object):
     def __init__(self, func, autorecurse=True):
@@ -84,6 +84,7 @@ expr_registry = {}
 block_registry = {}
 decorator_registry = {}
 
+
 class MacroLoader(object):
     def __init__(self, module_name, tree, file_name):
         self.module_name = module_name
@@ -110,6 +111,7 @@ class MacroLoader(object):
         exec(compile(code, self.file_name, "exec"), mod.__dict__)
         return mod
 
+
 def detect_macros(node):
     required_pkgs = []
     found_macros = {}
@@ -124,6 +126,7 @@ def detect_macros(node):
 
 
     return required_pkgs, found_macros
+
 
 def expand_ast(node, ):
     @Walker
