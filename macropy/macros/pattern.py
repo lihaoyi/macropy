@@ -3,6 +3,7 @@ import inspect
 from ast import *
 from macropy.core import util
 from macropy.core.macros import *
+from macropy.core.lift import macros
 from macropy.core.lift import *
 
 
@@ -27,14 +28,19 @@ class Matcher(object):
         """
         pass
 
-    def match_update_locals(self, matchee, locals_dict):
-        result = self.match(matchee)
-        if result:
-            for (varname, value) in result[1]:
-                locals_dict[varname] = value
-            return True
-        return False
+    def match_value(self, matchee, should_raise):
+        results = self.match(matchee)
+        self.var_dict = {}
+        if not results:
+            if should_raise:
+                raise Exception("Pattern match exception")
+            return False
+        for (varname, value) in results[1]:
+            self.var_dict[varname] = value
 
+    def get_var(self, var_name):
+        return self.var_dict[var_name]
+        
 
 class LiteralMatcher(Matcher):
     def __init__(self, val):
@@ -71,7 +77,7 @@ class TupleMatcher(Matcher):
 
 
 class ListMatcher(Matcher):
-    def __init__(self, matchers):
+    def __init__(self, *matchers):
         self.matchers = matchers
         assert _vars_are_disjoint(util.flatten([m.var_names() for m in
             matchers]))
@@ -113,9 +119,11 @@ class ClassMatcher(Matcher):
             if arg is not 'self':
                 arg_field_names.append(arg)
         self.arg_field_names = arg_field_names
+        assert _vars_are_disjoint(util.flatten([m.var_names() for m in
+            argMatchers]))
 
     def var_names(self):
-        return util.flatten([matcher.var_names() for matcher in self.matchers])
+        return util.flatten([matcher.var_names() for matcher in self.argMatchers])
 
     def match(self, matchee):
         updates = []
@@ -131,28 +139,33 @@ class ClassMatcher(Matcher):
             return (True, updates)
         return False
 
-def build_matcher(node):
+
+def build_matcher(node, modified):
     if isinstance(node, Num):
         return q%(LiteralMatcher(u%(node.n)))
-    if isinstance(node, String):
+    if isinstance(node, Str):
         return q%(LiteralMatcher(u%(node.s)))
     if isinstance(node, Name):
+        if node.id in ['True', 'False']:
+            return q%(LiteralMatcher(u%(node)))
+        modified.add(node.id)
         return q%(NameMatcher(u%(node.id)))
     if isinstance(node, List):
         sub_matchers = []
         for child in node.elts:
-            sub_matchers.append(build_matcher(child))
-        return Call(Name('ListMatcher'), *sub_matchers)
+            sub_matchers.append(build_matcher(child, modified))
+        return Call(Name('ListMatcher', Load()), sub_matchers, [], None, None)
     if isinstance(node, Tuple):
         sub_matchers = []
         for child in node.elts:
-            sub_matchers.append(build_matcher(child))
-        return Call(Name('TupleMatcher'), *sub_matchers)
+            sub_matchers.append(build_matcher(child, modified))
+        return Call(Name('TupleMatcher', Load()), sub_matchers, [], None, None)
     if isinstance(node, Call):
         sub_matchers = []
         for child in node.args:
-            sub_matchers.append(build_matcher(child))
-        return Call(Name('ClassMatcher'), node.func, *sub_matchers)
+            sub_matchers.append(build_matcher(child, modified))
+        return Call(Name('ClassMatcher', Load()), [node.func] + sub_matchers,
+                [], None, None)
     raise Exception("Unrecognized node " + repr(node))
 
 
@@ -160,10 +173,22 @@ def build_matcher(node):
 def matching(node):
     @Walker
     def func(node):
-        if isinstance(node, BinOp) and node.op == LShift:
-            return q%((u%(build_matcher(node.left))).match_update_locals(
-                u%(node.right), locals()))
+        if (isinstance(node, Expr) and 
+                isinstance(node.value, BinOp) and
+                isinstance(node.value.op, LShift)):
+            modified = set()
+            matcher = build_matcher(node.value.left, modified) 
+            # lol random names for hax
+            with q as assignment:
+                xsfvdy = u%(matcher)
+            statements = [assignment,
+                          Expr(q%(xsfvdy.match_value(u%(node.value.right),
+                              True)))]
+            for var_name in modified:
+                statements.append(Assign([Name(var_name, Store())],
+                    q%(xsfvdy.get_var(u%var_name))))
+            return statements
         else:
             return node
     func.recurse(node)
-    return node
+    return node.body
