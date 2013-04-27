@@ -294,7 +294,7 @@ print Point(3, 4).length() #5
 
 or class variables. The only restrictions are that only the `__init__`, `__repr__`, `___str__`, `__eq__` methods will be set for you, and it may not manually inherit from anything. Instead of manual inheritence, inheritence for case classes is defined by _nesting_, as shown below:
 
-```scala
+```python
 @case
 class List():
     def __len__(self):
