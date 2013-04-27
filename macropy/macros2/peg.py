@@ -6,6 +6,14 @@ from macropy.macros.adt import case, NO_ARG
 import re
 macros = True
 
+@block_macro
+def peg(tree):
+    for statement in tree.body:
+        if type(statement) is Assign:
+            statement.value = q%(Lazy(lambda: u%parser(statement.value)))
+
+    return tree.body
+
 
 @expr_macro
 def peg(tree):
@@ -17,25 +25,10 @@ def parser(tree):
         return q%Raw(u%tree)
 
     if type(tree) is UnaryOp:
-        if type(tree.op) is UAdd:   return q%rep1(u%parser(tree.operand))
-        if type(tree.op) is USub:   return q%Not(u%parser(tree.operand))
-        if type(tree.op) is Invert: return q%Rep(u%parser(tree.operand))
+        tree.operand = parser(tree.operand)
+        return tree
 
     if type(tree) is BinOp:
-        if type(tree.op) is BitOr:
-            left = parser(tree.left)
-            right = parser(tree.right)
-            result = q%Or([])
-            result.args[0].elts = [left, right]
-            return result
-
-        if type(tree.op) is BitAnd:
-            left = parser(tree.left)
-            right = parser(tree.right)
-            result = q%And([])
-            result.args[0].elts = [left, right]
-            return result
-
         tree.left = parser(tree.left)
         tree.right = parser(tree.right)
         return tree
@@ -72,8 +65,38 @@ class Input(string, index):
 @case
 class Parser:
     def parse(self, string):
-        return self.parse_input(Input(string, 0))
+        res = self.parse_input(Input(string, 0))
+        if res is None:
+            return None
 
+        out, remaining_input = res
+        return [out]
+
+    def parse_all(self, string):
+        res = self.parse_input(Input(string, 0))
+        if res is None:
+            return None
+
+        (out, remaining_input) = res
+        if remaining_input.index != len(string):
+            return None
+
+        return [out]
+
+
+    def __and__(self, other):   return And([self, other])
+
+    def __or__(self, other):    return Or([self, other])
+
+    def __neg__(self):          return Not(self)
+
+    def __pos__(self):          return rep1(self)
+
+    def __invert__(self):       return Rep(self)
+
+    def __mul__(self, other):   return Transform(self, other)
+
+    def __pow__(self, other):   return Transform(self, lambda x: other(*x))
 
     class Raw(string):
         def parse_input(self, input):
@@ -90,55 +113,74 @@ class Parser:
                 return group, input.copy(index = input.index + len(group))
             else:
                 return None
+    class NChildParser:
 
-    class Seq(children):
-        def parse_input(self, input):
-            current_input = input
-            results = []
-            for child in self.children:
-                res = child.parse_input(current_input)
-                if res is None: return None
+        class Seq(children):
+            def parse_input(self, input):
+                current_input = input
+                results = []
+                for child in self.children:
+                    res = child.parse_input(current_input)
+                    if res is None: return None
 
-                (res, current_input) = res
-                results.append(res)
-            return (results, current_input)
+                    (res, current_input) = res
+                    results.append(res)
+                return (results, current_input)
 
 
-    class Or(children):
-        def parse_input(self, input):
-            for child in self.children:
-                res = child.parse_input(input)
-                if res != None: return res
+        class Or(children):
+            def parse_input(self, input):
+                for child in self.children:
+                    res = child.parse_input(input)
+                    if res != None: return res
 
-            return None
-
-    class And(children):
-        def parse_input(self, input):
-            results = [child.parse_input(input) for child in self.children]
-            if all(results):
-                return results[0]
-
-            return None
-
-    class Not(parser):
-        def parse_input(self, input):
-            if self.parser.parse_input(input):
                 return None
-            else:
-                return (None, input)
+
+        class And(children):
+            def parse_input(self, input):
+                results = [child.parse_input(input) for child in self.children]
+                if all(results):
+                    return results[0]
+
+                return None
+
+    class OneChildParser:
+        class Not(parser):
+            def parse_input(self, input):
+                if self.parser.parse_input(input):
+                    return None
+                else:
+                    return (None, input)
 
 
-    class Rep(parser):
-        def parse_input(self, input):
-            current_input = input
-            results = []
+        class Rep(parser):
+            def parse_input(self, input):
+                current_input = input
+                results = []
 
-            while True:
-                res = self.parser.parse_input(current_input)
-                if res is None: return (results, current_input)
+                while True:
+                    res = self.parser.parse_input(current_input)
+                    if res is None: return (results, current_input)
 
-                (res, current_input) = res
-                results.append(res)
+                    (res, current_input) = res
+                    results.append(res)
+
+        class Transform(parser, func):
+
+            def parse_input(self, input):
+                result = self.parser.parse_input(input)
+                if result is None:
+                    return None
+                else:
+                    res, new_input = result
+                    return self.func(res), new_input
+
+        class Lazy(parser_thunk):
+            def parse_input(self, input):
+                if not isinstance(self.parser_thunk, Parser):
+                    self.parser_thunk = self.parser_thunk()
+                return self.parser_thunk.parse_input(input)
+
 
     class Success(string):
         def parse_input(self, input):
@@ -148,6 +190,8 @@ class Parser:
     class Failure():
         def parse_input(self, input):
             return None
+
+
 
 
 def rep1(parser):

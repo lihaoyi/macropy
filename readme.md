@@ -318,7 +318,7 @@ This feature is inspired by [C#'s LINQ to SQL](http://msdn.microsoft.com/en-us/l
 This allows you to write queries to a database in the same way you would write queries on in-memory lists. *WIP*
 
 Quick Lambdas
--------------------------------
+-------------
 ```python
 map(f%(_ + 1), [1, 2, 3])
 #[2, 3, 4]
@@ -370,3 +370,67 @@ print thunk()
 
 This cuts out reduces the number of characters needed to make a thunk from 7 to 2, making it much easier to use thunks to do things like emulating [by name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html).
 
+Parser Combinators
+------------------
+```python
+def reduce_chain(chain):
+    chain = list(reversed(chain))
+    o_dict = {
+        "+": f%(_+_),
+        "-": f%(_-_),
+        "*": f%(_*_),
+        "/": f%(_/_),
+    }
+    while len(chain) > 1:
+        a, [o, b] = chain.pop(), chain.pop()
+        chain.append(o_dict[o](a, b))
+    return chain[0]
+
+"""
+PEG Grammer:
+Value   <- [0-9]+ / '(' Expr ')'
+Op      <- "+" / "-" / "*" / "/"
+Expr <- Value (Op Value)*
+"""
+with peg:
+    value = r('[0-9]+') * int | ('(', expr, ')') * (f%_[1])
+    op = '+' | '-' | '*' | '/'
+    expr = (value, ~(op, value)) ** (f%reduce_chain([_] + _))
+
+print expr.parse_all("123") #[123]
+print expr.parse_all("((123))") #[123]
+print expr.parse_all("(123+456+789)") #[1368]
+print expr.parse_all("(6/2)") #[3]
+print expr.parse_all("(1+2+3)+2") #[8]
+print expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)") #[1804]
+```
+
+[Parser Combinators](http://en.wikipedia.org/wiki/Parser_combinator) are a really nice way of building simple recursive descent parsers, when the task is too large for [regexes](http://en.wikipedia.org/wiki/Regex) but yet too small for the heavy-duty [parser generators](http://en.wikipedia.org/wiki/Comparison_of_parser_generators).
+
+The above example describes a simple parser for arithmetic expressions, using our own parser combinator library which roughly follows the [PEG](http://en.wikipedia.org/wiki/Parsing_expression_grammar) syntax. Note how that in the example, the bulk of the code goes into the loop that reduces sequences of numbers and operators to a single number, rather than the recursive-descent parser!
+
+In fact, the correspondence would be even closer if we stripped out the snippets of code which perform the actual arithmetic (as opposed to just the parsing):
+
+```python
+"""
+PEG Grammer:
+Value   <- [0-9]+ / '(' Expr ')'
+Op      <- "+" / "-" / "*" / "/"
+Expr <- Value (Op Value)*
+"""
+with peg:
+    value = r('[0-9]+') | ('(', expr, ')')
+    op = '+' | '-' | '*' | '/'
+    expr = (value, ~(op, value))
+```
+
+Much of this conciseness arises from the use of macros to wrap tuples into `Seq()`s and strings into `Raw()`s, as well as wrapping each definition in a `Lazy()` thunk to allow recursive definitions to work:
+
+```python
+with peg:
+    value = Lazy(lambda: r('[0-9]+') | Seq(Raw('('), expr, Raw(')')))
+    op = Lazy(lambda: r('+' | '-' | '*' | '/'))
+    expr = Lazy(lambda: Seq(value, ~Seq(op, value)))
+```
+
+Although these modifications are pure [syntactic sugar](http://en.wikipedia.org/wiki/Syntactic_sugar), the grammar becomes completely obfuscated once the sugar is removed.
