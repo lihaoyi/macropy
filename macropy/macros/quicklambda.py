@@ -21,6 +21,6 @@ def f(node):
 
     node = Walker(underscore_search).recurse(node)
 
-    new_node = q%(lambda: u%node)
+    new_node = q%(lambda: ast%node)
     new_node.args.args = [Name(id = x) for x in used_names]
     return new_node

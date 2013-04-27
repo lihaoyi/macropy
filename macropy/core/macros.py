@@ -36,7 +36,7 @@ def interp_ast(node, values):
             if isinstance(val, AST):
                 return val
             else:
-                x = ast_repr(val)
+                x = (val)
                 return x
         else:
             return node

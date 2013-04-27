@@ -40,10 +40,16 @@ class Tests(unittest.TestCase):
         assert(eval(unparse(a)) == 3)
 
 
+    def test_unquote_name(self):
+        n = "x"
+        x = 1
+        y = q%(name%n + name%n)
+        assert(eval(unparse(y)) == 2)
+
     def test_quote_unquote_ast(self):
 
         a = q%(x + y)
-        b = q%(u%a + z)
+        b = q%(ast%a + z)
 
         x, y, z = 1, 2, 3
         assert(eval(unparse(b)) == 6)

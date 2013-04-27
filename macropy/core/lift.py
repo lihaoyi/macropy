@@ -9,8 +9,20 @@ def u(node):
 def unquote_search(node, unquotes):
     if isinstance(node, BinOp) and type(node.left) is Name and type(node.op) is Mod:
         if 'u' == node.left.id:
+            x = ast.parse("ast_repr()").body[0].value
+            x.args = [node.right]
+            unquotes.append(x)
+            return Placeholder()
+
+        if 'name' == node.left.id:
+            x = ast.parse("Name(id=x)").body[0].value
+            x.keywords[0].value = node.right
+            unquotes.append(x)
+            return Placeholder()
+        if 'ast' == node.left.id:
             unquotes.append(node.right)
             return Placeholder()
+
 
     return node
 

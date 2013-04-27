@@ -14,7 +14,7 @@ def wrap(printer, txt, x):
 
 @expr_macro
 def log(node):
-    new_node = q%(wrap(log, u%unparse(node), u%node))
+    new_node = q%(wrap(log, u%unparse(node), ast%node))
     return new_node
 
 
@@ -50,7 +50,7 @@ class TraceWalker(Walker):
                         self.registry.append([txt, node])
                         return node
                     else:
-                        wrapped = q%(wrap(log, u%txt, u%node))
+                        wrapped = q%(wrap(log, u%txt, ast%node))
                         return wrapped
             elif isinstance(node, stmt):
                 txt = unparse(node).strip()
@@ -83,7 +83,7 @@ def require_transform(node):
     walker.recurse(node)
 
     registry = List(elts = [List(elts = [ast_repr(s), t]) for s, t in walker.registry])
-    new = q%(u%node or require_log(u%registry))
+    new = q%(ast%node or require_log(ast%registry))
 
     return new
 

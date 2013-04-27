@@ -10,7 +10,7 @@ macros = True
 def peg(tree):
     for statement in tree.body:
         if type(statement) is Assign:
-            statement.value = q%(Lazy(lambda: u%parser(statement.value)))
+            statement.value = q%(Lazy(lambda: ast%parser(statement.value)))
 
     return tree.body
 
@@ -22,7 +22,7 @@ def peg(tree):
 def parser(tree):
 
     if type(tree) is Str:
-        return q%Raw(u%tree)
+        return q%Raw(ast%tree)
 
     if type(tree) is UnaryOp:
         tree.operand = parser(tree.operand)
