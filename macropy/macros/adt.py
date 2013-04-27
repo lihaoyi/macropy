@@ -20,7 +20,7 @@ def case_transform(tree, parents):
 
     with q as str_fun:
         def __str__(self):
-            return u%tree.name + "(" + ", ".join(map(str, u%list_tree)) + ")"
+            return u%tree.name + "(" + ", ".join(map(str, ast%list_tree)) + ")"
 
         def __repr__(self):
             return self.__str__()
@@ -40,7 +40,7 @@ def case_transform(tree, parents):
     with q as eq_fun:
         def __eq__(self, other):
             try:
-                return all(u%eq_list_tree)
+                return all(ast%eq_list_tree)
             except:
                 return False
 
@@ -57,7 +57,7 @@ def case_transform(tree, parents):
     ret.func = Name(id=tree.name)
 
 
-    ret.args = [q%(u%self_get(n) if u%Name(id=n) is NO_ARG else u%Name(id=n)) for n in var_names]
+    ret.args = [q%(ast%self_get(n) if name%n is NO_ARG else name%n) for n in var_names]
 
     tree.body += eq_fun
     init_fun[0].args.args += tree.bases
