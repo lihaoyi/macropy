@@ -37,3 +37,16 @@ class Tests(unittest.TestCase):
         assert(a == Point(1, 2))
         assert(b == Point(3, 2))
         assert(c == Point(3, 4))
+
+    def test_nested(self):
+        @case
+        class List():
+            class Nil: pass
+            class Cons(head, tail): pass
+
+            def is_list(self):
+                return True
+        assert(isinstance(Cons(None, None), List))
+        assert(isinstance(Nil(), List))
+        assert(Cons(None, None).is_list() == True)
+        assert(Nil().is_list() == True)

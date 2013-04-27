@@ -11,6 +11,7 @@ def unquote_search(node, unquotes):
         if 'u' == node.left.id:
             unquotes.append(node.right)
             return Placeholder()
+
     return node
 
 @expr_macro

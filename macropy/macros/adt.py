@@ -66,19 +66,24 @@ def case_transform(tree, parents):
         setter[0].value = name
         init_fun[0].body += setter
 
-    tree.body = [
-        case_transform(statement, [Name(id = tree.name)])
-        if type(statement) is ClassDef
-        else statement
-        for statement in tree.body
-    ]
-    tree.bases = []
+    new_body = []
+    new_classes = []
+    for statement in tree.body:
+        if type(statement) is ClassDef:
+            new_classes += [case_transform(statement, [Name(id = tree.name)])]
+        else:
+            new_body += [statement]
+
+    tree.body = new_body
+    tree.bases = parents
+
     tree.decorator_list = []
     tree.body += str_fun
     tree.body += init_fun
     tree.body += copy_fun
-    print unparse(tree)
-    return tree
+    out = [tree] + new_classes
+
+    return out
 
 @decorator_macro
 def case(tree):

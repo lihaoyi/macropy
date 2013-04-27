@@ -1,19 +1,4 @@
 """
-
-            Xlift_expr     Xlift_block    lift_decorate
-                |             |             |
-                |             |             |
-                --------------|--------------
-                              |
-                              |
-                --------------|--------------
-                |             |             |
-                |             |             |
-          Xstring_interp   Xtracing    Xfast_literals
-                |             |             |
-                |             |             |
-                -----------------------------
-                |             |             |
-                |             |             |
-              ADTs         matching       monads
+This module contains macros which are in the middle of the dependency graph:
+they may both depend on and be depended upon by other macros.
 """
