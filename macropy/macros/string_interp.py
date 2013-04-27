@@ -20,5 +20,3 @@ def s(node):
     out = Tuple(elts=[parse_expr(x) for x in captured], ctx=Load())
     result = q%((u%new_string) % (u%out))
     return result
-
-

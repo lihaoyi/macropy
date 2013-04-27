@@ -24,6 +24,9 @@ run(linq_test.Tests)
 from macropy.macros import quicklambda_test
 run(quicklambda_test.Tests)
 
+from macropy.macros import pattern_test
+run(pattern_test.Tests)
+
 from macropy.macros import adt_test
 run(adt_test.Tests)
 
