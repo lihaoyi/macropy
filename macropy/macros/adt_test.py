@@ -39,14 +39,35 @@ class Tests(unittest.TestCase):
         assert(c == Point(3, 4))
 
     def test_nested(self):
+
         @case
         class List():
-            class Nil: pass
-            class Cons(head, tail): pass
+            def __len__(self):
+                return 0
 
-            def is_list(self):
-                return True
-        assert(isinstance(Cons(None, None), List))
-        assert(isinstance(Nil(), List))
-        assert(Cons(None, None).is_list() == True)
-        assert(Nil().is_list() == True)
+            def __iter__(self):
+                return iter([])
+
+            class Nil:
+                pass
+
+            class Cons(head, tail):
+                def __len__(self):
+                    return 1 + len(self.tail)
+
+                def __iter__(self):
+                    current = self
+
+                    while len(current) > 0:
+                        yield current.head
+                        current = current.tail
+
+        assert isinstance(Cons(None, None), List)
+        assert isinstance(Nil(), List)
+
+        my_list = Cons(1, Cons(2, Cons(3, Nil())))
+        empty_list = Nil()
+
+        assert len(my_list) == 3
+        assert sum(iter(my_list)) == 6
+        assert sum(iter(empty_list)) == 0

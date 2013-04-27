@@ -289,7 +289,47 @@ class Point(x, y):
 print Point(3, 4).length() #5
 ```
 
-or class variables. The only restrictions are that only the `__init__`, `__repr__`, `___str__`, `__eq__` methods will be set for you, and it may not manually inherit from anything.
+or class variables. The only restrictions are that only the `__init__`, `__repr__`, `___str__`, `__eq__` methods will be set for you, and it may not manually inherit from anything. Instead of manual inheritence, inheritence for case classes is defined by _nesting_, as shown below:
+
+```scala
+@case
+class List():
+    def __len__(self):
+        return 0
+
+    def __iter__(self):
+        return iter([])
+
+    class Nil:
+        pass
+
+    class Cons(head, tail):
+        def __len__(self):
+            return 1 + len(self.tail)
+
+        def __iter__(self):
+            current = self
+
+            while len(current) > 0:
+                yield current.head
+                current = current.tail
+
+print isinstance(Cons(None, None), List)    # True
+print isinstance(Nil(), List)               # True
+
+my_list = Cons(1, Cons(2, Cons(3, Nil())))
+empty_list = Nil()
+
+print my_list.head              # 1
+print my_list.tail              # Cons(2, Cons(3, Nil()))
+print len(my_list)              # 5
+print sum(iter(my_list))        # 6
+print sum(iter(empty_list))     # 0
+```
+
+This is an implementation of a singly linked [cons list](http://en.wikipedia.org/wiki/Cons), providing both `head` and `tail` (LISP's `car` and `cdr`) as well as the ability to get the `len` or `iter` for the list.
+
+As the classes `Nil` are `Cons` are nested within `List`, both of them get transformed into top-level classes which inherit from it. This nesting can go arbitrarily deep.
 
 Pattern Matching
 ----------------
