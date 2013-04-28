@@ -450,7 +450,7 @@ print expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)") #[1804]
 
 [Parser Combinators](http://en.wikipedia.org/wiki/Parser_combinator) are a really nice way of building simple recursive descent parsers, when the task is too large for [regexes](http://en.wikipedia.org/wiki/Regex) but yet too small for the heavy-duty [parser generators](http://en.wikipedia.org/wiki/Comparison_of_parser_generators).
 
-The above example describes a simple parser for arithmetic expressions, using our own parser combinator library which roughly follows the [PEG](http://en.wikipedia.org/wiki/Parsing_expression_grammar) syntax. Note how that in the example, the bulk of the code goes into the loop that reduces sequences of numbers and operators to a single number, rather than the recursive-descent parser!
+The above example describes a simple parser for arithmetic expressions, using our own parser combinator library which roughly follows the [PEG](http://en.wikipedia.org/wiki/Parsing_expression_grammar) syntax. Note how that in the example, the bulk of the code goes into the loop that reduces sequences of numbers and operators to a single number, rather than the recursive-descent parser itself!
 
 In fact, the correspondence would be even closer if we stripped out the snippets of code which perform the actual arithmetic (as opposed to just the parsing):
 
@@ -471,9 +471,124 @@ Much of this conciseness arises from the use of macros to wrap tuples into `Seq(
 
 ```python
 with peg:
-    value = Lazy(lambda: r('[0-9]+') | Seq(Raw('('), expr, Raw(')')))
-    op = Lazy(lambda: r(Raw('+') | Raw('-') | Raw('*') | Raw('/')))
-    expr = Lazy(lambda: Seq(value, ~Seq(op, value)))
+    value = Lazy(lambda: r('[0-9]+') | Seq([Raw('('), expr, Raw(')')]))
+    op = Lazy(lambda: Raw('+') | Raw('-') | Raw('*') | Raw('/'))
+    expr = Lazy(lambda: Seq([value, ~Seq([op, value])]))
 ```
 
 Although these modifications are pure [syntactic sugar](http://en.wikipedia.org/wiki/Syntactic_sugar), the grammar becomes completely obfuscated once the sugar is removed.
+
+These parser combinators are applicable to more than just toy problems; below is a parser for JSON built using the same library:
+
+```python
+"""
+JSON <- S? ( Object / Array / String / True / False / Null / Number ) S?
+
+Object <- "{"
+             ( String ":" JSON ( "," String ":" JSON )*
+             / S? )
+         "}"
+
+Array <- "["
+            ( JSON ( "," JSON )*
+            / S? )
+        "]"
+
+String <- S? ["] ( [^ " \ U+0000-U+001F ] / Escape )* ["] S?
+
+Escape <- [\] ( [ " / \ b f n r t ] / UnicodeEscape )
+
+UnicodeEscape <- "u" [0-9A-Fa-f]{4}
+
+True <- "true"
+False <- "false"
+Null <- "null"
+
+Number <- Minus? IntegralPart FractionalPart? ExponentPart?
+
+Minus <- "-"
+IntegralPart <- "0" / [1-9] [0-9]*
+FractionalPart <- "." [0-9]+
+ExponentPart <- ( "e" / "E" ) ( "+" / "-" )? [0-9]+
+S <- [ U+0009 U+000A U+000D U+0020 ]+
+
+"""
+with peg:
+    json_exp = (opt(space), (obj | array | string | true | false | null | number), opt(space)) * (lambda x: x[1])
+
+    obj = ('{', ((string, ':', json_exp), ~((',', string, ':', json_exp))) | space, '}')
+    array = ('[', (json_exp, ~(',', json_exp)) | space, ']')
+
+    string = (opt(space), '"', ~(r('[^"]') | escape) * ("".join), '"')
+    escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
+    unicode_escape = 'u', +r('[0-9A-Fa-f]')
+
+    true = 'true' * (lambda x: True)
+    false = 'false' * (lambda x: False)
+    null = 'null' * (lambda x: None)
+
+    number = (opt(minus), integral, opt(fractional), opt(exponent))
+    minus = '-'
+    integral = '0' | r('[1-9][0-9]*')
+    fractional = ('.', r('[0-9]+'))
+    exponent = (('e' | 'E'), opt('+' | '-'), r("[0-9]+"))
+
+    space = r('\s+')
+```
+
+Not how closely it matches the PEG grammer shown above it! The parser shown only parses the JSON into a parse tree but does not convert it into python data structures (`dict`s, `list`s, `string`s, etc.). That can easily be fixed:
+
+```python
+with peg:
+    json_exp = (opt(space), (obj | array | string | true | false | null | number), opt(space)) * (lambda x: x[1])
+
+    obj = ('{', ((string, ':', json_exp), ~((',', string, ':', json_exp))) | space, '}') * (
+        lambda x: dict([[x[1][0][0], x[1][0][2]]] + [[y[1], y[3]] for y in x[1][1]])
+    )
+    array = ('[', (json_exp, ~(',', json_exp)) | space, ']') * (lambda x: [x[1][0]] + [y[1] for y in x[1][1]])
+
+    string = (opt(space), '"', ~(r('[^"]') | escape) * ("".join), '"') * (f%"".join(_[2]))
+    escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
+    unicode_escape = 'u', +r('[0-9A-Fa-f]')
+
+    true = 'true' * (lambda x: True)
+    false = 'false' * (lambda x: False)
+    null = 'null' * (lambda x: None)
+
+    number = (opt(minus), integral, opt(fractional), opt(exponent)) ** (f%float(_+_+_+_))
+    minus = '-'
+    integral = '0' | r('[1-9][0-9]*')
+    fractional = ('.', r('[0-9]+')) ** (f%(_+_))
+    exponent = (('e' | 'E'), opt('+' | '-'), r("[0-9]+")) ** (f%(_+_+_))
+
+    space = r('\s+')
+
+test_string = """
+    {
+        "firstName": "John",
+        "lastName": "Smith",
+        "age": 25,
+        "address": {
+            "streetAddress": "21 2nd Street",
+            "city": "New York",
+            "state": "NY",
+            "postalCode": 10021
+        },
+        "phoneNumbers": [
+            {
+                "type": "home",
+                "number": "212 555-1234"
+            },
+            {
+                "type": "fax",
+                "number": "646 555-4567"
+            }
+        ]
+    }
+"""
+import json
+print json_exp.parse_all(test_string)[0] == json.loads(test_string)
+# True
+```
+
+As you can see, the full parser parses that non-trivial blob of JSON into an identical structure as the in-built `json` package

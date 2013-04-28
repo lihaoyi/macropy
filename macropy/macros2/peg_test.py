@@ -111,6 +111,15 @@ class Tests(unittest.TestCase):
         assert expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)") == [1804]
 
     def test_json(self):
+
+        def test(parser, string):
+            import json
+            try:
+                assert parser.parse_all(string)[0] == json.loads(string)
+            except:
+                print parser.parse_all(string)
+                print json.loads(string)
+
         """
         JSON <- S? ( Object / Array / String / True / False / Null / Number ) S?
 
@@ -143,20 +152,11 @@ class Tests(unittest.TestCase):
         S <- [ U+0009 U+000A U+000D U+0020 ]+
 
         """
-
-        def test(parser, string):
-            import json
-            try:
-                assert parser.parse_all(string)[0] == json.loads(string)
-            except:
-                print parser.parse_all(string)
-                print json.loads(string)
-
         with peg:
             json_exp = (opt(space), (obj | array | string | true | false | null | number), opt(space)) * (lambda x: x[1])
 
-            obj = ('{', ((string, ':', json_exp), ~((',', string, ':', json_exp) * (lambda x: [x[1], x[3]]))) | space, '}') * (
-                lambda x: dict([[x[1][0][0], x[1][0][2]]] + [[y[0], y[1]] for y in x[1][1]])
+            obj = ('{', ((string, ':', json_exp), ~((',', string, ':', json_exp))) | space, '}') * (
+                lambda x: dict([[x[1][0][0], x[1][0][2]]] + [[y[1], y[3]] for y in x[1][1]])
             )
             array = ('[', (json_exp, ~(',', json_exp)) | space, ']') * (lambda x: [x[1][0]] + [y[1] for y in x[1][1]])
 
@@ -168,7 +168,7 @@ class Tests(unittest.TestCase):
             false = 'false' * (lambda x: False)
             null = 'null' * (lambda x: None)
 
-            number = (opt(minus), integral, opt(fractional), opt(exponent)) ** (f%eval(_+_+_+_))
+            number = (opt(minus), integral, opt(fractional), opt(exponent)) ** (f%float(_+_+_+_))
             minus = '-'
             integral = '0' | r('[1-9][0-9]*')
             fractional = ('.', r('[0-9]+')) ** (f%(_+_))
