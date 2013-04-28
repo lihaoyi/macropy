@@ -589,6 +589,19 @@ test_string = """
 import json
 print json_exp.parse_all(test_string)[0] == json.loads(test_string)
 # True
+
+import pprint
+pp = pprint.PrettyPrinter(4)
+pp.pprint(parser.parse_all(string)[0])
+#{   'address': {   'city': 'New York',
+#                   'postalCode': 10021.0,
+#                   'state': 'NY',
+#                   'streetAddress': '21 2nd Street'},
+#    'age': 25.0,
+#    'firstName': 'John',
+#    'lastName': 'Smith',
+#    'phoneNumbers': [   {   'number': '212 555-1234', 'type': 'home'},
+#                        {   'number': '646 555-4567', 'type': 'fax'}]}
 ```
 
 As you can see, the full parser parses that non-trivial blob of JSON into an identical structure as the in-built `json` package
