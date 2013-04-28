@@ -40,6 +40,18 @@ class Tests(unittest.TestCase):
                 ClassMatcher(Foo, LiteralMatcher(5),
                     LiteralMatcher(6)).match(Foo(5,7)))
 
+        # with matching:
+        #    Foo(a, b) << Foo(4, 5)
+        #    for i in xrange(10):
+        #    
+        #    Foo(a,b) << Foo(4,5):
+
+        matcher1 = ClassMatcher(Foo, NameMatcher('a'),
+                NameMatcher('b'))
+        matcher1.match_value(Foo(4, 5), False)
+        a = matcher1.get_var('a')
+        b = matcher1.get_var('b')
+
     def test_disjoint_vars_tuples(self):
         with self.assertRaises(AssertionError):
             TupleMatcher(NameMatcher('x'), NameMatcher('x'))
@@ -47,14 +59,43 @@ class Tests(unittest.TestCase):
 
     def test_disjoint_vars_lists(self):
         with self.assertRaises(AssertionError):
-            ListMatcher([NameMatcher('x'), NameMatcher('x')])
-        ListMatcher([NameMatcher('y'), NameMatcher('x')])
+            ListMatcher(NameMatcher('x'), NameMatcher('x'))
+        ListMatcher(NameMatcher('y'), NameMatcher('x'))
     
-    def test_scary_macros(self):
+    def test_basic_matching(self):
         with matching:
-            print "hello"
-        self.assertEquals(3, a)
-        self.asserEquals(5, b)
+            Foo(a, b) << Foo(3, 5)
+            self.assertEquals(3, a)
+            self.assertEquals(5, b)
+
+    def test_compound_matching(self):
+        with matching:
+            Foo(x, Foo(4, y)) << Foo(2, Foo(4, 7))
+            self.assertEquals(2, x)
+            self.assertEquals(7, y)
+            Foo("hey there", Foo(x, y)) << Foo("hey there", Foo(1, x))
+            self.assertEquals(1, x)
+            self.assertEquals(2, y)
+
+    def test_match_exceptions(self):
+        with self.assertRaises(Exception):
+            Foo(x, Foo(4, y)) << Foo(2, 7)
+        with self.assertRaises(Exception):
+            Foo(x, Foo(4, y)) << Foo(2, Foo(5, 7))
+    
+    def test_disjoint_varnames_assertion(self):
+        with matching:
+            with self.assertRaises(AssertionError):
+                Foo(x, x) << Foo(3, 4)
+            with self.assertRaises(AssertionError):
+                Foo(x, Foo(4, x)) << Foo(3, 4)
+
+    def test_boolean_matching(self):
+        with matching:
+            with self.assertRaises(Exception):
+                Foo(True, x) << Foo(False, 5)
+            self.assertTrue(True)
+            self.assertFalse(False)
 
 if __name__ == '__main__':
     unittest.main()
