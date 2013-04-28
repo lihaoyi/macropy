@@ -10,6 +10,7 @@ MacroPy
 - [Pattern Matching](#pattern-matching) from the Functional Programming world
 - [LINQ to SQL](#linq-to-sql) from C#
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy,
+- [Parser Combinators](#parser-combinators), inspired by [Scala's](http://www.suryasuravarapu.com/2011/04/scala-parser-combinators-win.html).
 
 All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 40 lines of code.
 
@@ -448,7 +449,7 @@ print expr.parse_all("(1+2+3)+2") #[8]
 print expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)") #[1804]
 ```
 
-[Parser Combinators](http://en.wikipedia.org/wiki/Parser_combinator) are a really nice way of building simple recursive descent parsers, when the task is too large for [regexes](http://en.wikipedia.org/wiki/Regex) but yet too small for the heavy-duty [parser generators](http://en.wikipedia.org/wiki/Comparison_of_parser_generators).
+[Parser Combinators](http://en.wikipedia.org/wiki/Parser_combinator) are a really nice way of building simple recursive descent parsers, when the task is too large for [regexes](http://en.wikipedia.org/wiki/Regex) but yet too small for the heavy-duty [parser generators](http://en.wikipedia.org/wiki/Comparison_of_parser_generators). These parser combinators are inspired by [Scala's](http://www.suryasuravarapu.com/2011/04/scala-parser-combinators-win.html), utilizing macros to make the syntax as clean as possible.
 
 The above example describes a simple parser for arithmetic expressions, using our own parser combinator library which roughly follows the [PEG](http://en.wikipedia.org/wiki/Parsing_expression_grammar) syntax. Note how that in the example, the bulk of the code goes into the loop that reduces sequences of numbers and operators to a single number, rather than the recursive-descent parser itself!
 
@@ -604,4 +605,4 @@ pp.pprint(parser.parse_all(string)[0])
 #                        {   'number': '646 555-4567', 'type': 'fax'}]}
 ```
 
-As you can see, the full parser parses that non-trivial blob of JSON into an identical structure as the in-built `json` package
+As you can see, the full parser parses that non-trivial blob of JSON into an identical structure as the in-built `json` package.
