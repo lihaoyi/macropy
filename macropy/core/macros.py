@@ -51,6 +51,7 @@ class Walker(object):
         self.autorecurse = autorecurse
 
     def walk_children(self, node):
+
         for field, old_value in list(iter_fields(node)):
             old_value = getattr(node, field, None)
             new_value = self.recurse(old_value)
@@ -99,6 +100,7 @@ class MacroLoader(object):
             __import__(pkg)
 
         tree = expand_ast(self.tree)
+
         code = unparse(tree)
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))

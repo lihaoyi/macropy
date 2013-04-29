@@ -160,7 +160,7 @@ class Tests(unittest.TestCase):
             )
             array = ('[', (json_exp, ~(',', json_exp)) | space, ']') * (lambda x: [x[1][0]] + [y[1] for y in x[1][1]])
 
-            string = (opt(space), '"', ~(r('[^"]') | escape) * ("".join), '"') * (f%"".join(_[2]))
+            string = (opt(space), '"', ~(r('[^"]') | escape) * ("".string.join), '"') * (f%"".string.join(_[2]))
             escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
             unicode_escape = 'u', +r('[0-9A-Fa-f]')
 
@@ -204,3 +204,18 @@ class Tests(unittest.TestCase):
                 ]
             }
         """)
+
+    def test_bindings(self):
+        with peg:
+            short = ("omg" is wtf) >> wtf * 2
+            medium = ("omg" is o, " ", "wtf" is w, " ", r("bb+q") is b) >> o + w + b
+
+        print "================="
+        assert short.parse_all('omg') == ['omgomg']
+        assert short.parse_all('omgg') is None
+        assert short.parse_all('cow') is None
+        assert medium.parse_all('omg wtf bbq') == ['omgwtfbbq']
+        assert medium.parse_all('omg wtf bbbbbq') == ['omgwtfbbbbbq']
+        assert medium.parse_all('omg wtf bbqq') is None
+
+

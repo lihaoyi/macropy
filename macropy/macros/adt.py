@@ -28,7 +28,8 @@ def case_transform(tree, parents):
 
     with q as methods:
         def __init__(self):
-            pass
+            super(name%tree.name, self).__init__()
+
         def __str__(self):
             return u%tree.name + "(" + ", ".join(map(str, ast%list_tree)) + ")"
 
@@ -53,16 +54,15 @@ def case_transform(tree, parents):
     ret = copy_fun.body[0].value
     ret.func = Name(id=tree.name)
 
-
     ret.args = [q%(ast%self_get(n) if name%n is NO_ARG else name%n) for n in var_names]
 
     init_fun.args.args += tree.bases
 
     for name in tree.bases:
         with q as setter:
-            self.x = x
+            self.x = ast%name
         setter[0].targets[0].attr = name.id
-        setter[0].value = name
+
         init_fun.body += setter
 
     init_fun.body += [
@@ -84,6 +84,7 @@ def case_transform(tree, parents):
     tree.decorator_list = []
     tree.body += methods
     out = [tree] + new_classes
+
 
     return out
 
