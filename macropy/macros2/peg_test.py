@@ -116,10 +116,10 @@ class Tests(unittest.TestCase):
             import json
             try:
                 assert parser.parse_all(string)[0] == json.loads(string)
-            except:
+            except Exception, e:
                 print parser.parse_all(string)
                 print json.loads(string)
-
+                raise e
         """
         JSON <- S? ( Object / Array / String / True / False / Null / Number ) S?
 
@@ -209,6 +209,9 @@ class Tests(unittest.TestCase):
         with peg:
             short = ("omg" is wtf) >> wtf * 2
             medium = ("omg" is o, " ", "wtf" is w, " ", r("bb+q") is b) >> o + w + b
+            seq1 = ("l", (+"ol") is xxx) >> xxx
+            seq2 = ("l", +("ol" is xxx)) >> xxx
+            seq3 = ("l", +("ol" is xxx)) >> sum(map(len, xxx))
 
         print "================="
         assert short.parse_all('omg') == ['omgomg']
@@ -217,5 +220,102 @@ class Tests(unittest.TestCase):
         assert medium.parse_all('omg wtf bbq') == ['omgwtfbbq']
         assert medium.parse_all('omg wtf bbbbbq') == ['omgwtfbbbbbq']
         assert medium.parse_all('omg wtf bbqq') is None
+        for x in ["lol", "lolol", "ol", "'"]:
+            assert seq1.parse_all(x) == seq2.parse_all(x)
 
+        assert seq3.parse_all("lolololol") == [8]
 
+    def test_bindings_json(self):
+
+        def test(parser, string):
+            import json
+            try:
+                assert parser.parse_all(string)[0] == json.loads(string)
+            except Exception, e:
+                print parser.parse_all(string)
+                print json.loads(string)
+                raise e
+        """
+        JSON <- S? ( Object / Array / String / True / False / Null / Number ) S?
+
+        Object <- "{"
+                     ( String ":" JSON ( "," String ":" JSON )*
+                     / S? )
+                 "}"
+
+        Array <- "["
+                    ( JSON ( "," JSON )*
+                    / S? )
+                "]"
+
+        String <- S? ["] ( [^ " \ U+0000-U+001F ] / Escape )* ["] S?
+
+        Escape <- [\] ( [ " / \ b f n r t ] / UnicodeEscape )
+
+        UnicodeEscape <- "u" [0-9A-Fa-f]{4}
+
+        True <- "true"
+        False <- "false"
+        Null <- "null"
+
+        Number <- Minus? IntegralPart FractionalPart? ExponentPart?
+
+        Minus <- "-"
+        IntegralPart <- "0" / [1-9] [0-9]*
+        FractionalPart <- "." [0-9]+
+        ExponentPart <- ( "e" / "E" ) ( "+" / "-" )? [0-9]+
+        S <- [ U+0009 U+000A U+000D U+0020 ]+
+
+        """
+        with peg:
+            json_exp = (opt(space), (obj | array | string | true | false | null | number), opt(space)) * (lambda x: x[1])
+
+            obj = ('{', ((string, ':', json_exp), ~((',', string, ':', json_exp))) | space, '}') * (
+                lambda x: dict([[x[1][0][0], x[1][0][2]]] + [[y[1], y[3]] for y in x[1][1]])
+            )
+            array = ('[', (json_exp is first, ~(',', json_exp is rest)) | space, ']') >> [first] + rest
+
+            string = (opt(space), '"', ~(r('[^"]') | escape) * ("".string.join) is body, '"') >> "".join(body)
+            escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
+            unicode_escape = 'u', +r('[0-9A-Fa-f]')
+
+            true = 'true' >> True
+            false = 'false' >> False
+            null = 'null' >> None
+
+            number = (opt(minus), integral, opt(fractional), opt(exponent)) ** (f%float(_+_+_+_))
+            minus = '-'
+            integral = '0' | r('[1-9][0-9]*')
+            fractional = ('.', r('[0-9]+')) ** (f%(_+_))
+            exponent = (('e' | 'E'), opt('+' | '-'), r("[0-9]+")) ** (f%(_+_+_))
+
+            space = r('\s+')
+
+        test(number, "12031.33123E-2")
+        test(string, '"i am a cow lol omfg"')
+        test(array, '[1, 2, "omg", ["wtf", "bbq", 42]]')
+        test(obj, '{"omg": "123", "wtf": 456, "bbq": "789"}')
+        test(json_exp, '{"omg": 1, "wtf": 12.4123}  ')
+        test(json_exp, """
+            {
+                "firstName": "John",
+                "lastName": "Smith",
+                "age": 25,
+                "address": {
+                    "streetAddress": "21 2nd Street",
+                    "city": "New York",
+                    "state": "NY",
+                    "postalCode": 10021
+                },
+                "phoneNumbers": [
+                    {
+                        "type": "home",
+                        "number": "212 555-1234"
+                    },
+                    {
+                        "type": "fax",
+                        "number": "646 555-4567"
+                    }
+                ]
+            }
+        """)

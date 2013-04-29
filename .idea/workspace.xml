@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9635bfa4-4f56-4df2-86e2-f116c56bc57f" name="Default" comment="Added body-initializer for ADTs">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/macros/adt.py" afterPath="$PROJECT_DIR$/macropy/macros/adt.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/core/macros.py" afterPath="$PROJECT_DIR$/macropy/core/macros.py" />
+    <list default="true" id="9635bfa4-4f56-4df2-86e2-f116c56bc57f" name="Default" comment="before moving bindings() from a dict to an association list">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/macros2/peg.py" afterPath="$PROJECT_DIR$/macropy/macros2/peg.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/macropy/macros2/peg_test.py" afterPath="$PROJECT_DIR$/macropy/macros2/peg_test.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
@@ -28,7 +26,7 @@
     <file path="/util.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365996806634" ignored="false" />
     <file path="/core.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365999093160" ignored="false" />
     <file path="/string_interpolate.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365954924649" ignored="false" />
-    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367220444109" ignored="false" />
+    <file path="/Dummy.txt" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367224412705" ignored="false" />
     <file path="/string_interpolate_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1365962203966" ignored="false" />
     <file path="/*.regexp" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367215897146" ignored="false" />
     <file path="/string_interp_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366861686428" ignored="false" />
@@ -49,8 +47,8 @@
     <file path="/quicklambda_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1366862306500" ignored="false" />
     <file path="/quicklambda.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367217897240" ignored="false" />
     <file path="/adt.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367214210869" ignored="false" />
-    <file path="/peg_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367220407321" ignored="false" />
-    <file path="/peg.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367219563907" ignored="false" />
+    <file path="/peg_test.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367224218918" ignored="false" />
+    <file path="/peg.py" changelist="9635bfa4-4f56-4df2-86e2-f116c56bc57f" time="1367221301698" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,10 +73,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="peg_test.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="peg_test.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/macropy/macros2/peg_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="219" column="0" selection-start="7850" selection-end="7850" vertical-scroll-proportion="0.8329146">
+            <state line="275" column="95" selection-start="9852" selection-end="9852" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -104,10 +102,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="peg.py" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="peg.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/macropy/macros2/peg.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="178" column="40" selection-start="5154" selection-end="5154" vertical-scroll-proportion="0.0">
+            <state line="211" column="26" selection-start="6116" selection-end="6116" vertical-scroll-proportion="0.56736714">
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -967,7 +965,11 @@
       <created>1367213332492</created>
       <updated>1367213332492</updated>
     </task>
-    <option name="localTasksCounter" value="60" />
+    <task id="LOCAL-00060" summary="Basic bindings support for PEG parser combinators now works">
+      <created>1367220459091</created>
+      <updated>1367220459091</updated>
+    </task>
+    <option name="localTasksCounter" value="61" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -980,7 +982,7 @@
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3269461" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32908162" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.15" sideWeight="0.6730539" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.15" sideWeight="0.6730539" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.505" sideWeight="0.6706587" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32814372" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -1036,7 +1038,7 @@
     <option name="WRAP_WHEN_TYPING_REACHES_RIGHT_MARGIN" value="false" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added body-initializer for ADTs" />
+    <option name="LAST_COMMIT_MESSAGE" value="Basic bindings support for PEG parser combinators now works" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="false" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -1050,7 +1052,6 @@
     <option name="UPDATE_FILTER_BY_SCOPE" value="false" />
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="false" />
     <option name="FILE_HISTORY_SPLITTER_PROPORTION" value="0.6" />
-    <MESSAGE value="Basic skeleton of a readme" />
     <MESSAGE value="More readme" />
     <MESSAGE value="Cleaned up some stuff" />
     <MESSAGE value="readme" />
@@ -1075,6 +1076,7 @@
     <MESSAGE value="Added json example to readme" />
     <MESSAGE value="tweak readme" />
     <MESSAGE value="Added body-initializer for ADTs" />
+    <MESSAGE value="Basic bindings support for PEG parser combinators now works" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1186,19 +1188,19 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/macros2/peg.py">
+    <entry file="file://$PROJECT_DIR$/macropy/macros2/peg_test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="178" column="40" selection-start="5154" selection-end="5154" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
+        <state line="275" column="95" selection-start="9852" selection-end="9852" vertical-scroll-proportion="0.0">
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/macropy/macros2/peg_test.py">
+    <entry file="file://$PROJECT_DIR$/macropy/macros2/peg.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="219" column="0" selection-start="7850" selection-end="7850" vertical-scroll-proportion="0.8329146">
-          <folding />
+        <state line="211" column="26" selection-start="6116" selection-end="6116" vertical-scroll-proportion="0.56736714">
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

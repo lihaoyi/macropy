@@ -99,11 +99,9 @@ class Input(string, index):
 
 @case
 class Parser:
-    self.name_binding = None
 
     def bind_to(self, string):
-        self.name_binding = string
-        return self
+        return Binder(self, string)
 
     def parse(self, string):
         res = self.parse_input(Input(string, 0))
@@ -124,11 +122,6 @@ class Parser:
 
         return [out]
 
-    def bound(self, thunk):
-        if self.name_binding is None:
-            return {}
-        else:
-            return {self.name_binding: thunk()}
 
     def __and__(self, other):   return And([self, other])
 
@@ -150,7 +143,7 @@ class Parser:
     class Raw(string):
         def parse_input(self, input):
             if input.string[input.index:].startswith(self.string):
-                return self.string, self.bound(f%self.string), input.copy(index = input.index + len(self.string))
+                return self.string, {}, input.copy(index = input.index + len(self.string))
             else:
                 return None
 
@@ -159,7 +152,7 @@ class Parser:
             match = re.match(self.regex_string, input.string[input.index:])
             if match:
                 group = match.group()
-                return group, self.bound(f%group), input.copy(index = input.index + len(group))
+                return group, {}, input.copy(index = input.index + len(group))
             else:
                 return None
 
@@ -217,6 +210,7 @@ class Parser:
                     if res is None: return (results, result_dict, current_input)
 
                     (res, bindings, current_input) = res
+
                     for k, v in bindings.items():
                         result_dict[k] = result_dict[k] + [v]
 
@@ -242,6 +236,15 @@ class Parser:
                     res, bindings, new_input = result
                     return self.func(bindings), bindings, new_input
 
+        class Binder(parser, name):
+            def parse_input(self, input):
+
+                result = self.parser.parse_input(input)
+                if result is None: return None
+                result, bindings, new_input = result
+                bindings[self.name] = result
+                return result, bindings, new_input
+
         class Lazy(parser_thunk):
             def parse_input(self, input):
                 if not isinstance(self.parser_thunk, Parser):
@@ -251,7 +254,7 @@ class Parser:
 
     class Success(string):
         def parse_input(self, input):
-            return (self.string, bound(self.string), input)
+            return (self.string, {}, input)
 
 
     class Failure():
