@@ -226,12 +226,15 @@ def _rewrite_if(node):
     #     except PatternMatchException:
     #         u%(_maybe_rewrite_if(failBody))
     # return rewritten
-    try_stmt = TryExcept(node.body, [ExceptHandler(Name('PatternMatchException',
-        Load()), None, node.orelse)], [])
+    handler = ExceptHandler(Name('PatternMatchException',
+        Load()), None, node.orelse)
+    try_stmt = TryExcept(node.body, [handler], [])
     macroed_match = With(Name('matching', Load()), None, Expr(node.test))
     try_stmt.body = [macroed_match] + try_stmt.body
-    if len(try_stmt.orelse) == 1:
-        try_stmt.orelse = _maybe_rewrite_if(try_stmt.orelse)
+    if len(handler.body) == 1:
+        handler.body = [_maybe_rewrite_if(handler.body[0])]
+    elif not handler.body:
+        handler.body = [Pass()]
     return try_stmt
 
 
@@ -249,4 +252,5 @@ def case_switch(node):
     """
     for i in xrange(len(node.body)):
         node.body[i] = _maybe_rewrite_if(node.body[i])
+    print unparse(node.body)
     return node.body

@@ -16,6 +16,10 @@ class Bar(object):
     def __init__(self, a):
           self.a = a
 
+class Baz(object):
+    def __init__(self, b):
+        self.b = b
+
 
 class Tests(unittest.TestCase):
     def test_literal_matcher(self):
@@ -96,12 +100,37 @@ class Tests(unittest.TestCase):
                 Foo(True, x) << Foo(False, 5)
             self.assertTrue(True)
             self.assertFalse(False)
+
+    def test_atomicity(self):
+        with matching:
+            x = 1
+            y = 5
+            with self.assertRaises(PatternMatchException):
+                (x, (3, y)) << (2, (4, 6))
+            self.assertEquals(1, x)
+            self.assertEquals(5, y)
+            (x, (3, y)) << (2, (3, 6))
+            self.assertEquals(2, x)
+            self.assertEquals(6, y)
+
     def test_switch(self):
         with case_switch:
             if Bar(5) << Bar(6):
                 self.assertTrue(False)
             else:
                 self.assertTrue(True)
+
+    def test_instance_checking(self):
+        blah = Baz(5)
+        with case_switch:
+            if Foo(lol, wat) << blah:
+                self.assertTrue(False)
+            elif Bar(4) << blah:
+                self.assertTrue(False)
+            elif Baz(x) << blah:
+                self.assertEquals(5, x)
+
+
 
 if __name__ == '__main__':
     unittest.main()
