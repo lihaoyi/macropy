@@ -39,7 +39,7 @@ def parser(tree, bindings):
         tree.right.args.args = map(f%Name(id = _), b_left)
         return tree, b_left
 
-    if type(tree) is BinOp and type(tree.op) is Mult:
+    if type(tree) is BinOp and type(tree.op) is FloorDiv:
         tree.left, b_left = parser(tree.left, bindings)
         return tree, b_left
 
@@ -126,7 +126,9 @@ class Parser:
 
     def __invert__(self):       return Rep(self)
 
-    def __mul__(self, other):   return Transform(self, other)
+    def __mul__(self, n):   return RepN(self, n)
+
+    def __floordiv__(self, other):   return Transform(self, other)
 
     def __pow__(self, other):   return Transform(self, lambda x: other(*x))
 
@@ -209,6 +211,24 @@ class Parser:
 
                     results.append(res)
 
+        class RepN(parser, n):
+            def parse_input(self, input):
+                current_input = input
+                results = []
+                result_dict = defaultdict(lambda: [])
+
+                for i in range(self.n):
+                    res = self.parser.parse_input(current_input)
+                    if res is None: return None
+
+                    (res, bindings, current_input) = res
+
+                    for k, v in bindings.items():
+                        result_dict[k] = result_dict[k] + [v]
+
+                    results.append(res)
+
+                return (results, result_dict, current_input)
         class Transform(parser, func):
 
             def parse_input(self, input):
@@ -256,13 +276,13 @@ class Parser:
             return None
 
 
-
-
 def rep1(parser):
     return And([Rep(parser), parser])
 
+
 def opt(parser):
     return Or([parser, Raw("")])
+
 
 def r(parser):
     return Regex(parser.string)

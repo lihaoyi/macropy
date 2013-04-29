@@ -7,53 +7,59 @@ class Tests(unittest.TestCase):
     def test_basic(self):
         parse1 = peg%"Hello World"
 
-        assert parse1.parse("Hello World")[0] == 'Hello World'
-        assert parse1.parse("Hello, World") is None
+        assert parse1.parse_all("Hello World")[0] == 'Hello World'
+        assert parse1.parse_all("Hello, World") is None
 
         parse2 = peg%("Hello World", r("."))
-        assert parse2.parse("Hello World") is None
-        assert parse2.parse("Hello World1")[0] == ['Hello World', '1']
-        assert parse2.parse("Hello World ")[0] == ['Hello World', ' ']
+        assert parse2.parse_all("Hello World") is None
+        assert parse2.parse_all("Hello World1")[0] == ['Hello World', '1']
+        assert parse2.parse_all("Hello World ")[0] == ['Hello World', ' ']
 
     def test_operators(self):
         parse1 = peg%"Hello World"
 
         parse2 = peg%(parse1, +"!")
-        assert parse2.parse("Hello World!!!")[0] == ['Hello World', ['!', '!', '!']]
-        assert parse2.parse("Hello World!")[0] == ['Hello World', ['!']]
-        assert parse2.parse("Hello World") is None
+        assert parse2.parse_all("Hello World!!!")[0] == ['Hello World', ['!', '!', '!']]
+        assert parse2.parse_all("Hello World!")[0] == ['Hello World', ['!']]
+        assert parse2.parse_all("Hello World") is None
 
         parse3 = peg%(parse1, ("!" | "?"))
-        assert parse3.parse("Hello World!")[0] == ['Hello World', '!']
-        assert parse3.parse("Hello World?")[0] == ['Hello World', '?']
-        assert parse3.parse("Hello World%") is None
+        assert parse3.parse_all("Hello World!")[0] == ['Hello World', '!']
+        assert parse3.parse_all("Hello World?")[0] == ['Hello World', '?']
+        assert parse3.parse_all("Hello World%") is None
 
         parse4 = peg%(parse1, ~"!" & "!!!")
-        assert parse4.parse("Hello World!!!")[0] == ['Hello World', ['!', '!', '!']]
-        assert parse4.parse("Hello World!!") is None
+        assert parse4.parse_all("Hello World!!!")[0] == ['Hello World', ['!', '!', '!']]
+        assert parse4.parse_all("Hello World!!") is None
 
         parse4 = peg%(parse1, ~"!" & "!!!")
-        assert parse4.parse("Hello World!!!")[0] == ["Hello World", ["!", "!", "!"]]
+        assert parse4.parse_all("Hello World!!!")[0] == ["Hello World", ["!", "!", "!"]]
 
         parse5 = peg%(parse1, ~"!" & -"!!!")
-        assert parse5.parse("Hello World!!")[0] == ["Hello World", ['!', '!']]
-        assert parse5.parse("Hello World!!!") is None
+        assert parse5.parse_all("Hello World!!")[0] == ["Hello World", ['!', '!']]
+        assert parse5.parse_all("Hello World!!!") is None
+
+        parse6 = peg%(parse1, "!" * 3)
+        assert parse6.parse_all("Hello World!") is None
+        assert parse6.parse_all("Hello World!!") is None
+        assert parse6.parse_all("Hello World!!!")[0] == ["Hello World", ['!', '!', '!']]
+        assert parse6.parse_all("Hello World!!!!") is None
 
 
     def test_conversion(self):
-        parse1 = peg%(("Hello World", +"!") ** (lambda _, x: x))
+        parse1 = peg%(("Hello World", +"!") // (f%_[1]))
 
         assert parse1.parse("Hello World!!!")[0] == ['!', '!', '!']
         assert parse1.parse("Hello World") is None
 
-        parse2 = parse1 * len
+        parse2 = parse1 // len
         assert parse2.parse("Hello World!!!")[0] == 3
 
 
     def test_block(self):
         with peg:
-            parse1 = ("Hello World", +"!") ** (lambda _, x: x)
-            parse2 = parse1 * len
+            parse1 = ("Hello World", +"!") // (f%_[1])
+            parse2 = parse1 // len
 
         assert parse1.parse("Hello World!!!")[0] == ['!', '!', '!']
         assert parse1.parse("Hello World") is None
@@ -99,9 +105,9 @@ class Tests(unittest.TestCase):
             return chain[0]
 
         with peg:
-            value = r('[0-9]+') * int | ('(', expr, ')') * (f%_[1])
+            value = r('[0-9]+') // int | ('(', expr, ')') // (f%_[1])
             op = '+' | '-' | '*' | '/'
-            expr = (value, ~(op, value)) ** (f%reduce_chain([_] + _))
+            expr = (value, ~(op, value)) // (lambda x: reduce_chain([x[0]] + x[1]))
 
         assert expr.parse_all("123") == [123]
         assert expr.parse_all("((123))") == [123]
@@ -110,100 +116,6 @@ class Tests(unittest.TestCase):
         assert expr.parse_all("(1+2+3)+2") == [8]
         assert expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)") == [1804]
 
-    def test_json(self):
-
-        def test(parser, string):
-            import json
-            try:
-                assert parser.parse_all(string)[0] == json.loads(string)
-            except Exception, e:
-                print parser.parse_all(string)
-                print json.loads(string)
-                raise e
-        """
-        JSON <- S? ( Object / Array / String / True / False / Null / Number ) S?
-
-        Object <- "{"
-                     ( String ":" JSON ( "," String ":" JSON )*
-                     / S? )
-                 "}"
-
-        Array <- "["
-                    ( JSON ( "," JSON )*
-                    / S? )
-                "]"
-
-        String <- S? ["] ( [^ " \ U+0000-U+001F ] / Escape )* ["] S?
-
-        Escape <- [\] ( [ " / \ b f n r t ] / UnicodeEscape )
-
-        UnicodeEscape <- "u" [0-9A-Fa-f]{4}
-
-        True <- "true"
-        False <- "false"
-        Null <- "null"
-
-        Number <- Minus? IntegralPart FractionalPart? ExponentPart?
-
-        Minus <- "-"
-        IntegralPart <- "0" / [1-9] [0-9]*
-        FractionalPart <- "." [0-9]+
-        ExponentPart <- ( "e" / "E" ) ( "+" / "-" )? [0-9]+
-        S <- [ U+0009 U+000A U+000D U+0020 ]+
-
-        """
-        with peg:
-            json_exp = (opt(space), (obj | array | string | true | false | null | number), opt(space)) * (lambda x: x[1])
-
-            obj = ('{', ((string, ':', json_exp), ~((',', string, ':', json_exp))) | space, '}') * (
-                lambda x: dict([[x[1][0][0], x[1][0][2]]] + [[y[1], y[3]] for y in x[1][1]])
-            )
-            array = ('[', (json_exp, ~(',', json_exp)) | space, ']') * (lambda x: [x[1][0]] + [y[1] for y in x[1][1]])
-
-            string = (opt(space), '"', ~(r('[^"]') | escape) * ("".join), '"') * (f%"".join(_[2]))
-            escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
-            unicode_escape = 'u', +r('[0-9A-Fa-f]')
-
-            true = 'true' * (lambda x: True)
-            false = 'false' * (lambda x: False)
-            null = 'null' * (lambda x: None)
-
-            number = (opt(minus), integral, opt(fractional), opt(exponent)) ** (f%float(_+_+_+_))
-            minus = '-'
-            integral = '0' | r('[1-9][0-9]*')
-            fractional = ('.', r('[0-9]+')) ** (f%(_+_))
-            exponent = (('e' | 'E'), opt('+' | '-'), r("[0-9]+")) ** (f%(_+_+_))
-
-            space = r('\s+')
-
-        test(number, "12031.33123E-2")
-        test(string, '"i am a cow lol omfg"')
-        test(array, '[1, 2, "omg", ["wtf", "bbq", 42]]')
-        test(obj, '{"omg": "123", "wtf": 456, "bbq": "789"}')
-        test(json_exp, '{"omg": 1, "wtf": 12.4123}  ')
-        test(json_exp, """
-            {
-                "firstName": "John",
-                "lastName": "Smith",
-                "age": 25,
-                "address": {
-                    "streetAddress": "21 2nd Street",
-                    "city": "New York",
-                    "state": "NY",
-                    "postalCode": 10021
-                },
-                "phoneNumbers": [
-                    {
-                        "type": "home",
-                        "number": "212 555-1234"
-                    },
-                    {
-                        "type": "fax",
-                        "number": "646 555-4567"
-                    }
-                ]
-            }
-        """)
 
     def test_bindings(self):
         with peg:
@@ -271,21 +183,21 @@ class Tests(unittest.TestCase):
 
             pair = (string is k, ':', json_exp is v) >> (k, v)
             obj = ('{', pair is first, ~((',', pair is rest)), opt(space), '}') >> dict([first] + rest)
-            array = ('[', (json_exp is first, ~(',', json_exp is rest)) | space, ']') >> [first] + rest
+            array = ('[', json_exp is first, ~(',', json_exp is rest), opt(space), ']') >> [first] + rest
 
-            string = (opt(space), '"', ~(r('[^"]') | escape) * ("".join) is body, '"') >> "".join(body)
+            string = (opt(space), '"', ~(r('[^"]') | escape) // ("".join) is body, '"') >> "".join(body)
             escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
-            unicode_escape = 'u', +r('[0-9A-Fa-f]')
+            unicode_escape = 'u', r('[0-9A-Fa-f]') * 4
 
             true = 'true' >> True
             false = 'false' >> False
             null = 'null' >> None
 
-            number = (opt(minus), integral, opt(fractional), opt(exponent)) * (f%float("".join(_)))
+            number = (opt(minus), integral, opt(fractional), opt(exponent)) // (f%float("".join(_)))
             minus = '-'
             integral = '0' | r('[1-9][0-9]*')
-            fractional = ('.', r('[0-9]+')) * "".join
-            exponent = (('e' | 'E'), opt('+' | '-'), r("[0-9]+")) * "".join
+            fractional = ('.', r('[0-9]+')) // "".join
+            exponent = (('e' | 'E'), opt('+' | '-'), r("[0-9]+")) // "".join
 
             space = r('\s+')
 

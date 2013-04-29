@@ -33,3 +33,6 @@ run(adt_test.Tests)
 
 from macropy.macros2 import peg_test
 run(peg_test.Tests)
+
+from macropy.macros2 import pyxl_strings_test
+run(pyxl_strings_test.Tests)
