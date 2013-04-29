@@ -7,8 +7,17 @@ from macropy.core.lift import macros
 from macropy.core.lift import *
 
 
+class PatternMatchException(Exception):
+    pass
+
+
+class PatternVarConflict(Exception):
+    pass
+
+
 def _vars_are_disjoint(var_names):
     return len(var_names) == len(set(var_names))
+
 
 class Matcher(object):
     def __init__(self):
@@ -24,8 +33,7 @@ class Matcher(object):
     def match(self, matchee):
         """
         Returns (True, [(varname, value)...]) if there is a match.  Otherwise,
-        returns False.
-        """
+        returns False.  """
         pass
 
     def match_value(self, matchee, should_raise):
@@ -33,7 +41,7 @@ class Matcher(object):
         self.var_dict = {}
         if not results:
             if should_raise:
-                raise Exception("Pattern match exception")
+                raise PatternMatchException()
             return False
         for (varname, value) in results[1]:
             self.var_dict[varname] = value
@@ -58,8 +66,9 @@ class LiteralMatcher(Matcher):
 class TupleMatcher(Matcher):
     def __init__(self, *matchers):
         self.matchers = matchers
-        assert _vars_are_disjoint(util.flatten([m.var_names() for m in
-            matchers]))
+        if not _vars_are_disjoint(util.flatten([m.var_names() for m in
+            matchers])):
+            raise PatternVarConflict()
 
     def var_names(self):
         return util.flatten([matcher.var_names() for matcher in self.matchers])
@@ -79,8 +88,9 @@ class TupleMatcher(Matcher):
 class ListMatcher(Matcher):
     def __init__(self, *matchers):
         self.matchers = matchers
-        assert _vars_are_disjoint(util.flatten([m.var_names() for m in
-            matchers]))
+        if not _vars_are_disjoint(util.flatten([m.var_names() for m in
+            matchers])):
+            raise PatternVarConflict()
 
     def var_names(self):
         return util.flatten([matcher.var_names() for matcher in self.matchers])
@@ -119,8 +129,9 @@ class ClassMatcher(Matcher):
             if arg is not 'self':
                 arg_field_names.append(arg)
         self.arg_field_names = arg_field_names
-        assert _vars_are_disjoint(util.flatten([m.var_names() for m in
-            argMatchers]))
+        if not _vars_are_disjoint(util.flatten([m.var_names() for m in
+            argMatchers])):
+            raise PatternVarConflict()
 
     def var_names(self):
         return util.flatten([matcher.var_names() for matcher in self.argMatchers])
@@ -147,7 +158,7 @@ def build_matcher(node, modified):
         return q%(LiteralMatcher(u%(node.s)))
     if isinstance(node, Name):
         if node.id in ['True', 'False']:
-            return q%(LiteralMatcher(u%(node)))
+            return q%(LiteralMatcher(ast%(node)))
         modified.add(node.id)
         return q%(NameMatcher(u%(node.id)))
     if isinstance(node, List):
@@ -169,20 +180,32 @@ def build_matcher(node, modified):
     raise Exception("Unrecognized node " + repr(node))
 
 
+def _is_pattern_match_stmt(node):
+    return (isinstance(node, Expr) and 
+            _is_pattern_match_expr(node.value))
+            
+
+def _is_pattern_match_expr(node):
+    return (isinstance(node, BinOp) and
+            isinstance(node.op, LShift))
+
+
 @block_macro
 def matching(node):
+    """
+    This macro will enable non-refutable pattern matching.  If a pattern match
+    fails, an exception will be thrown.
+    """
     @Walker
     def func(node):
-        if (isinstance(node, Expr) and 
-                isinstance(node.value, BinOp) and
-                isinstance(node.value.op, LShift)):
+        if _is_pattern_match_stmt(node):
             modified = set()
             matcher = build_matcher(node.value.left, modified) 
             # lol random names for hax
             with q as assignment:
-                xsfvdy = u%(matcher)
+                xsfvdy = ast%(matcher)
             statements = [assignment,
-                          Expr(q%(xsfvdy.match_value(u%(node.value.right),
+                          Expr(q%(xsfvdy.match_value(ast%(node.value.right),
                               True)))]
             for var_name in modified:
                 statements.append(Assign([Name(var_name, Store())],
@@ -191,4 +214,39 @@ def matching(node):
         else:
             return node
     func.recurse(node)
+    return node.body
+
+
+def _rewrite_if(node):
+    # with q as rewritten:
+    #     try:
+    #         with matching:
+    #             u%(matchPattern)
+    #         u%(successBody)
+    #     except PatternMatchException:
+    #         u%(_maybe_rewrite_if(failBody))
+    # return rewritten
+    try_stmt = TryExcept(node.body, [ExceptHandler(Name('PatternMatchException',
+        Load()), None, node.orelse)], [])
+    macroed_match = With(Name('matching', Load()), None, Expr(node.test))
+    try_stmt.body = [macroed_match] + try_stmt.body
+    if len(try_stmt.orelse) == 1:
+        try_stmt.orelse = _maybe_rewrite_if(try_stmt.orelse)
+    return try_stmt
+
+
+def _maybe_rewrite_if(stmt):
+    if isinstance(stmt, If) and _is_pattern_match_expr(stmt.test):
+        return _rewrite_if(stmt)
+    return stmt
+
+@block_macro
+def case_switch(node):
+    """
+    This only enables (refutable) pattern matching in top-level if statements.
+    The advantage of this is the limited reach ensures less interference with
+    existing code.
+    """
+    for i in xrange(len(node.body)):
+        node.body[i] = _maybe_rewrite_if(node.body[i])
     return node.body

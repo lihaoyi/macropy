@@ -53,12 +53,12 @@ class Tests(unittest.TestCase):
         b = matcher1.get_var('b')
 
     def test_disjoint_vars_tuples(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(PatternVarConflict):
             TupleMatcher(NameMatcher('x'), NameMatcher('x'))
         TupleMatcher(NameMatcher('y'), NameMatcher('x'))
 
     def test_disjoint_vars_lists(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(PatternVarConflict):
             ListMatcher(NameMatcher('x'), NameMatcher('x'))
         ListMatcher(NameMatcher('y'), NameMatcher('x'))
     
@@ -85,17 +85,23 @@ class Tests(unittest.TestCase):
     
     def test_disjoint_varnames_assertion(self):
         with matching:
-            with self.assertRaises(AssertionError):
+            with self.assertRaises(PatternVarConflict):
                 Foo(x, x) << Foo(3, 4)
-            with self.assertRaises(AssertionError):
+            with self.assertRaises(PatternVarConflict):
                 Foo(x, Foo(4, x)) << Foo(3, 4)
 
     def test_boolean_matching(self):
         with matching:
-            with self.assertRaises(Exception):
+            with self.assertRaises(PatternMatchException):
                 Foo(True, x) << Foo(False, 5)
             self.assertTrue(True)
             self.assertFalse(False)
+    def test_switch(self):
+        with case_switch:
+            if Bar(5) << Bar(6):
+                self.assertTrue(False)
+            else:
+                self.assertTrue(True)
 
 if __name__ == '__main__':
     unittest.main()
