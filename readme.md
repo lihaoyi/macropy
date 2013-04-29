@@ -5,6 +5,7 @@ MacroPy
 
 - [Quasiquotes](#quasiquotes), a quick way to manipulate fragments of a program
 - [String Interpolation](#string-interpolation), a common feature in many languages
+- [Pyxl](#pyxl), integrating XML markup into a Python program
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts)
 - [Case Classes](#case-classes), easy [Algebraic Data Types](https://en.wikipedia.org/wiki/Algebraic_data_type) from Scala
 - [Pattern Matching](#pattern-matching) from the Functional Programming world
@@ -117,6 +118,39 @@ and expands it into the expression
 ```
 
 Which is evaluated at run-time in the local scope, using whatever the values `a` and `b` happen to hold at the time. The contents of the `%{...}` can be any arbitrary python expression, and is not limited to variable names.
+
+Pyxl Integration
+----------------
+
+```python
+image_name = "bolton.png"
+image = p%'<img src="/static/images/{image_name}" />'
+
+text = "Michael Bolton"
+block = p%'<div>{image}{text}</div>'
+
+element_list = [image, text]
+block2 = p%'<div>{element_list}</div>'
+
+assert block2.to_string() == '<div><img src="/static/images/bolton.png" />Michael Bolton</div>'
+```
+
+[Pyxl](https://github.com/dropbox/pyxl) is a way of integrating XML markup into your Python code. By default, pyxl hooks into the python UTF-8 decoder in order to transform the source files at load-time. In this, it is similar to how MacroPy transforms source files at import time.
+
+A major difference is that Pyxl by default leaves the HTML fragments directly in the source code>
+
+```python
+image_name = "bolton.png"
+image = <img src="/static/images/{image_name}" />
+
+text = "Michael Bolton"
+block = <div>{image}{text}</div>
+
+element_list = [image, text]
+block2 = <div>{element_list}</div>
+```
+
+This [three-line-of-code macro](https://github.com/lihaoyi/macropy/blob/master/macropy/macros2/pyxl_strings.py) simply uses pyxl as a macro (operating on string literals), rather than hooking into the UTF-8 decoder. This means that unlike directly using pyxl, the MacroPy version doesn't cause your syntax highlighter to screw up. In general, this demonstrates how easy it is to integrate an "external" DSL into your python program: MacroPy handles all the intricacies of hooking into the interpreter and intercepting the import workflow. The programmer simply needs to provide the source-to-source transformation, which in this case was already provided.
 
 Tracing
 -------
