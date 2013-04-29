@@ -11,79 +11,68 @@ macros = True
 def peg(tree):
     for statement in tree.body:
         if type(statement) is Assign:
-            new_tree, bindings = parser(statement.value)
+            new_tree, bindings = parser(statement.value, [])
             statement.value = q%(Lazy(lambda: ast%new_tree))
 
 
-    print unparse(tree.body)
     return tree.body
 
 
 @expr_macro
 def peg(tree):
-    new_tree, bindings = parser(tree)
+    new_tree, bindings = parser(tree, [])
     return new_tree
 
-class Substituter(Walker):
-    def __init__(self, bindings):
-        self.autorecurse = True
-        self.bindings = bindings
-        def rec(tree):
-            if type(tree) is Name and tree.id in self.bindings:
-                return q%bindings[u%tree.id]
-            else:
-                return tree
 
-        self.func = rec
-
-def parser(tree):
-
+def parser(tree, bindings):
     if type(tree) is Str:
-        return q%Raw(ast%tree), set()
+        return q%Raw(ast%tree), bindings
 
     if type(tree) is UnaryOp:
-        (tree.operand, bindings) = parser(tree.operand)
+        (tree.operand, bindings) = parser(tree.operand, bindings)
         return tree, bindings
 
     if type(tree) is BinOp and type(tree.op) is RShift:
-        tree.left, b_left = parser(tree.left)
-        tree.right = q%(lambda bindings: ast%Substituter(b_left).recurse(tree.right))
+        tree.left, b_left = parser(tree.left, [])
+        tree.right = q%(lambda bindings: ast%tree.right)
+
+        tree.right.args.args = map(f%Name(id = _), b_left)
         return tree, b_left
 
     if type(tree) is BinOp and type(tree.op) is Mult:
-        tree.left, b_left = parser(tree.left)
+        tree.left, b_left = parser(tree.left, bindings)
         return tree, b_left
 
     if type(tree) is BinOp:
-        tree.left, b_left  = parser(tree.left)
-        tree.right, b_right = parser(tree.right)
-        return tree, b_left | b_right
+        tree.left, b_left = parser(tree.left, bindings)
+        tree.right, b_right = parser(tree.right, b_left)
+        return tree, b_right
 
     if type(tree) is Tuple:
         result = q%Seq([])
-        result.args[0].elts, bindings = zip(*map(parser, tree.elts))
-        result.args[0].elts = list(result.args[0].elts)
-        return result, {x for y in bindings for x in y}
+
+        result.args[0].elts = tree.elts
+        for i, elt in enumerate(tree.elts):
+            result.args[0].elts[i], bindings = parser(tree.elts[i], bindings)
+
+        return result, bindings
 
     if type(tree) is Call:
-        tree.args, arg_bindings = zip(*map(parser, tree.args))
-        tree.args = list(tree.args)
-        tree.func, func_bindings = parser(tree.func)
-
-        return tree, func_bindings | {x for y in arg_bindings for x in y}
+        for i, elt in enumerate(tree.args):
+            tree.args[i], bindings = parser(tree.args[i], bindings)
+        tree.func, bindings = parser(tree.func, bindings)
+        return tree, bindings
 
     if type(tree) is Attribute:
-        tree.value, bindings = parser(tree.value)
+        tree.value, bindings = parser(tree.value, bindings)
         return tree, bindings
 
     if type(tree) is Compare and type(tree.ops[0]) is Is:
-        left_tree, bindings = parser(tree.left)
-        new_tree = q%((ast%left_tree).bind_to(u%tree.comparators[0].id) )
-        return new_tree, {tree.comparators[0].id} | bindings
+        left_tree, bindings = parser(tree.left, bindings)
+        new_tree = q%((ast%left_tree).bind_to(u%len(bindings)) )
+        return new_tree, bindings + [tree.comparators[0].id]
 
-
-
-    return tree, set()
+    return tree, bindings
 
 """
 PEG Parser Atoms
@@ -238,13 +227,15 @@ class Parser:
                     return None
                 else:
                     res, bindings, new_input = result
-                    return self.func(bindings), {}, new_input
+                    binding_list = map(f%_[1], sorted(bindings.items()))
+                    return self.func(*binding_list), {}, new_input
 
         class Binder(parser, name):
             def parse_input(self, input):
                 result = self.parser.parse_input(input)
                 if result is None: return None
                 result, bindings, new_input = result
+
                 bindings[self.name] = result
                 return result, bindings, new_input
 

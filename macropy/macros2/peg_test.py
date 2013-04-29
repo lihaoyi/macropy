@@ -213,7 +213,6 @@ class Tests(unittest.TestCase):
             seq2 = ("l", +("ol" is xxx)) >> xxx
             seq3 = ("l", +("ol" is xxx)) >> sum(map(len, xxx))
 
-        print "================="
         assert short.parse_all('omg') == ['omgomg']
         assert short.parse_all('omgg') is None
         assert short.parse_all('cow') is None
