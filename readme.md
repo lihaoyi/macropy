@@ -525,7 +525,7 @@ In this case, the `is` keyword is used to bind the result of `expr` to the name 
 with peg:
     ...
     # parses an array and extracts the relevant bits into a Python list
-     array = ('[', (json_exp, ~(',', json_exp)) | space, ']') // (lambda x: [x[1][0]] + [y[1] for y in x[1][1]])
+     array = ('[', (json_exp, ~(',', json_exp)), opt(space), ']') // (lambda x: [x[1][0]] + [y[1] for y in x[1][1]])
     ...
 ```
 
@@ -537,6 +537,7 @@ array = ('[', json_exp is first, ~(',', json_exp is rest), opt(space), ']') >> [
 
 Now, it is clear that we are only interested in the result of the two `json_exp` parsers. The `>>` operator allows us to use those, while the rest of the parse tree (`[`s, `,`s, etc.) are conveniently discarded.
 
+###Full Example
 These parser combinators are not limited to toy problems, like the arithmetic expression parser above. Below is the full source of the JSON parser, along with it's PEG grammer:
 
 ```python
