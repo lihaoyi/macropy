@@ -437,9 +437,9 @@ Op      <- "+" / "-" / "*" / "/"
 Expr <- Value (Op Value)*
 """
 with peg:
-    value = r('[0-9]+') * int | ('(', expr, ')') * (f%_[1])
+    value = r('[0-9]+') // int | ('(', expr, ')') // (lambda x: x[1])
     op = '+' | '-' | '*' | '/'
-    expr = (value, ~(op, value)) ** (f%reduce_chain([_] + _))
+    expr = (value is first, ~(op, value) is rest) >> reduce_chain([first] + rest)
 
 print expr.parse_all("123") #[123]
 print expr.parse_all("((123))") #[123]
@@ -453,33 +453,91 @@ print expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)") #[1804]
 
 The above example describes a simple parser for arithmetic expressions, using our own parser combinator library which roughly follows the [PEG](http://en.wikipedia.org/wiki/Parsing_expression_grammar) syntax. Note how that in the example, the bulk of the code goes into the loop that reduces sequences of numbers and operators to a single number, rather than the recursive-descent parser itself!
 
-In fact, the correspondence would be even closer if we stripped out the snippets of code which perform the actual arithmetic (as opposed to just the parsing):
+Anything within a `with peg:` block is transformed into a *parser*. A parser is something with a `.parse_all(input)` method that attempts to parse the given `input` string. This method returns:
+
+- `None`, if the parser failed to parse the input
+- `[result]` if the parser succeeded with the value `result`
+
+###Basic Combinators
+
+Parsers are generally built up from a few common building blocks:
+
+- String literals like `'+'` match the input to their literal value (e.g. '+') and return it as the parse result, or fails (returns `None`) if it does not match.
+- Regexes like `r([0-9]+)` match the regex to the input if possible, and return it. Otherwise it fails.
+- Tuples like `('(', expr, ')')` match each of the elements within sequentially, and return a list containing the result of each element. It fails if any of its elements fails.
+- Elements separated by `|`, for example `'+' | '-' | '*' | '/'`, attempt to match each of the options from left to right, and return the result of the first success.
+- Elements separated by `&`, for example `r('[1234]') & r('[3456]')`, require both sides succeed, and return the result of the left side.
+- `~parser` attempts to match the `parser` 0 or more times, returning a list of the results from each successful match.
+- `+parser` attempts to match the `parser` 1 or more times, returning a list of the results from each successful match. If `parser` does not succeed at least once, `+parser` fails.
+- `-parser` negates the `parser`: if `parser` succeeded (with any result), `-parser` fails. If `parser` failed, `-parser` succeeds with the result `""`, the empty string.
+- `parser * n` attempts to match the `parser` exactly `n` times, returning a list of length `n` containing the result of the `n` successes. Fails otherwise.
+- `opt(parser)` matches the `parser` 0 or 1 times, returning either `[]` or `[result]` where `result` is the result of `parser`.
+
+###Transformers
+
+So far, these building blocks all return the raw parse tree: all the things like whitespace, curly-braces, etc. will still be there. Often, you want to take a parser e.g.
 
 ```python
-"""
-PEG Grammer:
-Value   <- [0-9]+ / '(' Expr ')'
-Op      <- "+" / "-" / "*" / "/"
-Expr <- Value (Op Value)*
-"""
 with peg:
-    value = r('[0-9]+') | ('(', expr, ')')
-    op = '+' | '-' | '*' | '/'
-    expr = (value, ~(op, value))
+    num = r('[0-9]+')
+
+print num.parse_all("123") # ["123"]
 ```
 
-Much of this conciseness arises from the use of macros to wrap tuples into `Seq()`s and strings into `Raw()`s, as well as wrapping each definition in a `Lazy()` thunk to allow recursive definitions to work:
+which returns the a string of digits, and convert it into a parser which returns an `int` with the value of that string. This can be done with the `//` operator:
 
 ```python
 with peg:
-    value = Lazy(lambda: r('[0-9]+') | Seq([Raw('('), expr, Raw(')')]))
-    op = Lazy(lambda: Raw('+') | Raw('-') | Raw('*') | Raw('/'))
-    expr = Lazy(lambda: Seq([value, ~Seq([op, value])]))
+    num = r('[0-9]+') // int
+
+print num.parse_all("123") # [123]
 ```
 
-Although these modifications are pure [syntactic sugar](http://en.wikipedia.org/wiki/Syntactic_sugar), the grammar becomes completely obfuscated once the sugar is removed.
+The `//` operator takes a function which will be used to transform the result of the parser: in this case, it is the function `int`, which transforms the returned string into an integer. Another example is:
 
-These parser combinators are applicable to more than just toy problems; below is a parser for JSON built using the same library:
+```python
+with peg:
+    laugh = 'lol'
+    laughs1 = +'lol'
+    laughs2 = lots_of_laughs_1 // "".join
+
+print laughs1.parse_all("lollollol") # [['lol', 'lol', 'lol]]
+print laughs2.parse_all("lollollol") # ['lollollol]
+```
+
+Where the function `"".join"` is used to join together the list of results from `laughs1` into a single string.
+
+Although `//` is sufficient for everyone's needs, it is not always convenient. In the example above, a `value` is defined to be:
+
+```python
+value = ... | ('(', expr, ')') // (lambda x: x[1])
+```
+
+As you can see, we need to strip off the unwanted parentheses from the parse tree, and we do it with a `lambda` that only selects the middle element, which is the result of the `expr` parser. An alternate way of representing this is:
+
+```python
+value = ... | ('(', expr is result, ')') >> result
+```
+
+In this case, the `is` keyword is used to bind the result of `expr` to the name `result`. The `>>` operator can be used to transform the parser by only operating on the *bound* results within the parser. This goes a long way to keep things neat. For example, a JSON parser may define an array to be:
+
+```python
+with peg:
+    ...
+    # parses an array and extracts the relevant bits into a Python list
+     array = ('[', (json_exp, ~(',', json_exp)) | space, ']') // (lambda x: [x[1][0]] + [y[1] for y in x[1][1]])
+    ...
+```
+
+Where the huge `lambda` is necessary to pull out the necessary parts of the parse tree into a Python list. Although it works, it's difficult to write correctly and equally difficult to read. Using the `is` operator, this can be rewritten as:
+
+```python
+array = ('[', json_exp is first, ~(',', json_exp is rest), opt(space), ']') >> [first] + rest
+```
+
+Now, it is clear that we are only interested in the result of the two `json_exp` parsers. The `>>` operator allows us to use those, while the rest of the parse tree (`[`s, `,`s, etc.) are conveniently discarded.
+
+These parser combinators are not limited to toy problems, like the arithmetic expression parser above. Below is the full source of the JSON parser, along with it's PEG grammer:
 
 ```python
 """
@@ -515,52 +573,25 @@ S <- [ U+0009 U+000A U+000D U+0020 ]+
 
 """
 with peg:
-    json_exp = (opt(space), (obj | array | string | true | false | null | number), opt(space)) * (lambda x: x[1])
+    json_exp = (opt(space), (obj | array | string | true | false | null | number) is exp, opt(space)) >> exp
 
-    obj = ('{', ((string, ':', json_exp), ~((',', string, ':', json_exp))) | space, '}')
-    array = ('[', (json_exp, ~(',', json_exp)) | space, ']')
+    pair = (string is k, ':', json_exp is v) >> (k, v)
+    obj = ('{', pair is first, ~((',', pair is rest)), opt(space), '}') >> dict([first] + rest)
+    array = ('[', json_exp is first, ~(',', json_exp is rest), opt(space), ']') >> [first] + rest
 
-    string = (opt(space), '"', ~(r('[^"]') | escape) * ("".join), '"')
+    string = (opt(space), '"', ~(r('[^"]') | escape) // ("".join) is body, '"') >> "".join(body)
     escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
-    unicode_escape = 'u', +r('[0-9A-Fa-f]')
+    unicode_escape = 'u', r('[0-9A-Fa-f]') * 4
 
-    true = 'true' * (lambda x: True)
-    false = 'false' * (lambda x: False)
-    null = 'null' * (lambda x: None)
+    true = 'true' >> True
+    false = 'false' >> False
+    null = 'null' >> None
 
-    number = (opt(minus), integral, opt(fractional), opt(exponent))
+    number = (opt(minus), integral, opt(fractional), opt(exponent)) // (f%float("".join(_)))
     minus = '-'
     integral = '0' | r('[1-9][0-9]*')
-    fractional = ('.', r('[0-9]+'))
-    exponent = (('e' | 'E'), opt('+' | '-'), r("[0-9]+"))
-
-    space = r('\s+')
-```
-
-Not how closely it matches the PEG grammer shown above it! The parser shown only parses the JSON into a parse tree but does not convert it into python data structures (`dict`s, `list`s, `string`s, etc.). That can easily be fixed:
-
-```python
-with peg:
-    json_exp = (opt(space), (obj | array | string | true | false | null | number), opt(space)) * (lambda x: x[1])
-
-    obj = ('{', ((string, ':', json_exp), ~((',', string, ':', json_exp))) | space, '}') * (
-        lambda x: dict([[x[1][0][0], x[1][0][2]]] + [[y[1], y[3]] for y in x[1][1]])
-    )
-    array = ('[', (json_exp, ~(',', json_exp)) | space, ']') * (lambda x: [x[1][0]] + [y[1] for y in x[1][1]])
-
-    string = (opt(space), '"', ~(r('[^"]') | escape) * ("".join), '"') * (f%"".join(_[2]))
-    escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
-    unicode_escape = 'u', +r('[0-9A-Fa-f]')
-
-    true = 'true' * (lambda x: True)
-    false = 'false' * (lambda x: False)
-    null = 'null' * (lambda x: None)
-
-    number = (opt(minus), integral, opt(fractional), opt(exponent)) ** (f%float(_+_+_+_))
-    minus = '-'
-    integral = '0' | r('[1-9][0-9]*')
-    fractional = ('.', r('[0-9]+')) ** (f%(_+_))
-    exponent = (('e' | 'E'), opt('+' | '-'), r("[0-9]+")) ** (f%(_+_+_))
+    fractional = ('.', r('[0-9]+')) // "".join
+    exponent = (('e' | 'E'), opt('+' | '-'), r("[0-9]+")) // "".join
 
     space = r('\s+')
 
@@ -587,6 +618,7 @@ test_string = """
         ]
     }
 """
+
 import json
 print json_exp.parse_all(test_string)[0] == json.loads(test_string)
 # True
@@ -605,7 +637,7 @@ pp.pprint(parser.parse_all(string)[0])
 #                        {   'number': '646 555-4567', 'type': 'fax'}]}
 ```
 
-As you can see, the full parser parses that non-trivial blob of JSON into an identical structure as the in-built `json` package.
+As you can see, the full parser parses that non-trivial blob of JSON into an identical structure as the in-built `json` package. In addition, the source of the parser looks almost identical to the PEG grammar it is parsing, shown above. Pretty neat!
 
 Credits
 =======

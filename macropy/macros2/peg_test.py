@@ -80,6 +80,25 @@ class Tests(unittest.TestCase):
         assert expr.parse(")()") is not None
         assert expr.parse_all(")()") is None
 
+    def test_bindings(self):
+        with peg:
+            short = ("omg" is wtf) >> wtf * 2
+            medium = ("omg" is o, " ", "wtf" is w, " ", r("bb+q") is b) >> o + w + b
+            seq1 = ("l", (+"ol") is xxx) >> xxx
+            seq2 = ("l", +("ol" is xxx)) >> xxx
+            seq3 = ("l", +("ol" is xxx)) >> sum(map(len, xxx))
+
+        assert short.parse_all('omg') == ['omgomg']
+        assert short.parse_all('omgg') is None
+        assert short.parse_all('cow') is None
+        assert medium.parse_all('omg wtf bbq') == ['omgwtfbbq']
+        assert medium.parse_all('omg wtf bbbbbq') == ['omgwtfbbbbbq']
+        assert medium.parse_all('omg wtf bbqq') is None
+        for x in ["lol", "lolol", "ol", "'"]:
+            assert seq1.parse_all(x) == seq2.parse_all(x)
+
+        assert seq3.parse_all("lolololol") == [8]
+
     def test_arithmetic(self):
         """
         PEG grammar from Wikipedia
@@ -107,7 +126,8 @@ class Tests(unittest.TestCase):
         with peg:
             value = r('[0-9]+') // int | ('(', expr, ')') // (f%_[1])
             op = '+' | '-' | '*' | '/'
-            expr = (value, ~(op, value)) // (lambda x: reduce_chain([x[0]] + x[1]))
+            expr = (value is first, ~(op, value) is rest) >> reduce_chain([first] + rest)
+
 
         assert expr.parse_all("123") == [123]
         assert expr.parse_all("((123))") == [123]
@@ -117,24 +137,6 @@ class Tests(unittest.TestCase):
         assert expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)") == [1804]
 
 
-    def test_bindings(self):
-        with peg:
-            short = ("omg" is wtf) >> wtf * 2
-            medium = ("omg" is o, " ", "wtf" is w, " ", r("bb+q") is b) >> o + w + b
-            seq1 = ("l", (+"ol") is xxx) >> xxx
-            seq2 = ("l", +("ol" is xxx)) >> xxx
-            seq3 = ("l", +("ol" is xxx)) >> sum(map(len, xxx))
-
-        assert short.parse_all('omg') == ['omgomg']
-        assert short.parse_all('omgg') is None
-        assert short.parse_all('cow') is None
-        assert medium.parse_all('omg wtf bbq') == ['omgwtfbbq']
-        assert medium.parse_all('omg wtf bbbbbq') == ['omgwtfbbbbbq']
-        assert medium.parse_all('omg wtf bbqq') is None
-        for x in ["lol", "lolol", "ol", "'"]:
-            assert seq1.parse_all(x) == seq2.parse_all(x)
-
-        assert seq3.parse_all("lolololol") == [8]
 
     def test_bindings_json(self):
 
