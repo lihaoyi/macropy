@@ -73,4 +73,9 @@ class Tests(unittest.TestCase):
         assert sum(iter(my_list)) == 6
         assert sum(iter(empty_list)) == 0
 
+    def test_body_init(self):
+        @case
+        class Point(x, y):
+            self.length = (self.x**2 + self.y**2) ** 0.5
 
+        assert Point(3, 4).length == 5
