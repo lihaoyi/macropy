@@ -5,7 +5,7 @@ MacroPy
 
 - [Quasiquotes](#quasiquotes), a quick way to manipulate fragments of a program
 - [String Interpolation](#string-interpolation), a common feature in many languages
-- [Pyxl](#pyxl), integrating XML markup into a Python program
+- [Pyxl](#pyxl-integration), integrating XML markup into a Python program
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts)
 - [Case Classes](#case-classes), easy [Algebraic Data Types](https://en.wikipedia.org/wiki/Algebraic_data_type) from Scala
 - [Pattern Matching](#pattern-matching) from the Functional Programming world
