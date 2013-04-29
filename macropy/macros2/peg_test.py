@@ -160,7 +160,7 @@ class Tests(unittest.TestCase):
             )
             array = ('[', (json_exp, ~(',', json_exp)) | space, ']') * (lambda x: [x[1][0]] + [y[1] for y in x[1][1]])
 
-            string = (opt(space), '"', ~(r('[^"]') | escape) * ("".string.join), '"') * (f%"".string.join(_[2]))
+            string = (opt(space), '"', ~(r('[^"]') | escape) * ("".join), '"') * (f%"".join(_[2]))
             escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
             unicode_escape = 'u', +r('[0-9A-Fa-f]')
 
@@ -268,14 +268,13 @@ class Tests(unittest.TestCase):
 
         """
         with peg:
-            json_exp = (opt(space), (obj | array | string | true | false | null | number), opt(space)) * (lambda x: x[1])
+            json_exp = (opt(space), (obj | array | string | true | false | null | number) is exp, opt(space)) >> exp
 
-            obj = ('{', ((string, ':', json_exp), ~((',', string, ':', json_exp))) | space, '}') * (
-                lambda x: dict([[x[1][0][0], x[1][0][2]]] + [[y[1], y[3]] for y in x[1][1]])
-            )
+            pair = (string is k, ':', json_exp is v) >> (k, v)
+            obj = ('{', pair is first, ~((',', pair is rest)), opt(space), '}') >> dict([first] + rest)
             array = ('[', (json_exp is first, ~(',', json_exp is rest)) | space, ']') >> [first] + rest
 
-            string = (opt(space), '"', ~(r('[^"]') | escape) * ("".string.join) is body, '"') >> "".join(body)
+            string = (opt(space), '"', ~(r('[^"]') | escape) * ("".join) is body, '"') >> "".join(body)
             escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
             unicode_escape = 'u', +r('[0-9A-Fa-f]')
 
@@ -283,11 +282,11 @@ class Tests(unittest.TestCase):
             false = 'false' >> False
             null = 'null' >> None
 
-            number = (opt(minus), integral, opt(fractional), opt(exponent)) ** (f%float(_+_+_+_))
+            number = (opt(minus), integral, opt(fractional), opt(exponent)) * (f%float("".join(_)))
             minus = '-'
             integral = '0' | r('[1-9][0-9]*')
-            fractional = ('.', r('[0-9]+')) ** (f%(_+_))
-            exponent = (('e' | 'E'), opt('+' | '-'), r("[0-9]+")) ** (f%(_+_+_))
+            fractional = ('.', r('[0-9]+')) * "".join
+            exponent = (('e' | 'E'), opt('+' | '-'), r("[0-9]+")) * "".join
 
             space = r('\s+')
 

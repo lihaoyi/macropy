@@ -50,6 +50,10 @@ def parser(tree):
         tree.right = q%(lambda bindings: ast%Substituter(b_left).recurse(tree.right))
         return tree, b_left
 
+    if type(tree) is BinOp and type(tree.op) is Mult:
+        tree.left, b_left = parser(tree.left)
+        return tree, b_left
+
     if type(tree) is BinOp:
         tree.left, b_left  = parser(tree.left)
         tree.right, b_right = parser(tree.right)
@@ -234,11 +238,10 @@ class Parser:
                     return None
                 else:
                     res, bindings, new_input = result
-                    return self.func(bindings), bindings, new_input
+                    return self.func(bindings), {}, new_input
 
         class Binder(parser, name):
             def parse_input(self, input):
-
                 result = self.parser.parse_input(input)
                 if result is None: return None
                 result, bindings, new_input = result
