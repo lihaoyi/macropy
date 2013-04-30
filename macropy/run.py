@@ -30,7 +30,6 @@ run(pattern_test.Tests)
 from macropy.macros import adt_test
 run(adt_test.Tests)
 
-
 from macropy.macros2 import peg_test
 run(peg_test.Tests)
 

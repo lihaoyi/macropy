@@ -199,7 +199,7 @@ def _is_pattern_match_expr(node):
 
 
 @block_macro
-def matching(node):
+def _matching(node):
     """
     This macro will enable non-refutable pattern matching.  If a pattern match
     fails, an exception will be thrown.
@@ -237,7 +237,7 @@ def _rewrite_if(node):
     handler = ExceptHandler(Name('PatternMatchException',
         Load()), None, node.orelse)
     try_stmt = TryExcept(node.body, [handler], [])
-    macroed_match = With(Name('matching', Load()), None, Expr(node.test))
+    macroed_match = With(Name('_matching', Load()), None, Expr(node.test))
     try_stmt.body = [macroed_match] + try_stmt.body
     if len(handler.body) == 1:
         handler.body = [_maybe_rewrite_if(handler.body[0])]
@@ -260,5 +260,19 @@ def case_switch(node):
     """
     for i in xrange(len(node.body)):
         node.body[i] = _maybe_rewrite_if(node.body[i])
-    print unparse(node.body)
     return node.body
+
+@block_macro
+def patterns(node):
+    """
+    This enables patterns everywhere!  NB if you use this macro, you will not be
+    able to use real left shifts anywhere.
+    """
+    # First transform all if-matches, then wrap the whole thing in a "with
+    # _matching" block
+    @Walker
+    def if_rewriter(node):
+        return _maybe_rewrite_if(node)
+    if_rewriter.recurse(node)
+    node.context_expr = Name('_matching', Load())
+    return node
