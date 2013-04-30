@@ -6,6 +6,7 @@ from macropy.macros.string_interp import *
 from macropy.macros.pattern import macros
 from macropy.macros.pattern import *
 
+
 class Foo(object):
     def __init__(self, x, y):
           self.x = x
@@ -15,6 +16,7 @@ class Foo(object):
 class Bar(object):
     def __init__(self, a):
           self.a = a
+
 
 class Baz(object):
     def __init__(self, b):
@@ -129,7 +131,6 @@ class Tests(unittest.TestCase):
                 self.assertTrue(False)
             elif Baz(x) << blah:
                 self.assertEquals(5, x)
-
 
 
 if __name__ == '__main__':

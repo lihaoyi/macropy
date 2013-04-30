@@ -8,10 +8,16 @@ from macropy.core.lift import *
 
 
 class PatternMatchException(Exception):
+    """
+    Thrown when a nonrefutable pattern match fails
+    """
     pass
 
 
 class PatternVarConflict(Exception):
+    """
+    Thrown when a pattern attempts to match a variable more than once.
+    """
     pass
 
 
@@ -75,7 +81,8 @@ class TupleMatcher(Matcher):
 
     def match(self, matchee):
         updates = []
-        if (not isinstance(matchee,tuple) or len(matchee) != len(self.matchers)):
+        if (not isinstance(matchee, tuple) or 
+                len(matchee) != len(self.matchers)):
             return False
         for (matcher, sub_matchee) in zip(self.matchers, matchee):
             match = matcher.match(sub_matchee)
@@ -97,7 +104,7 @@ class ListMatcher(Matcher):
 
     def match(self, matchee):
         updates = []
-        if (not isinstance(matchee,list) or len(matchee) != len(matchers)):
+        if (not isinstance(matchee, list) or len(matchee) != len(self.matchers)):
             return False
         for (matcher, sub_matchee) in zip(self.matchers, matchee):
             match = matcher.match(sub_matchee)
@@ -134,7 +141,8 @@ class ClassMatcher(Matcher):
             raise PatternVarConflict()
 
     def var_names(self):
-        return util.flatten([matcher.var_names() for matcher in self.argMatchers])
+        return util.flatten([matcher.var_names() 
+            for matcher in self.argMatchers])
 
     def match(self, matchee):
         updates = []
