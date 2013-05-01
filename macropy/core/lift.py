@@ -32,7 +32,7 @@ def q(node):
 
     node = Walker(lambda x: unquote_search(x, unquotes)).recurse(node)
     unquote_calcs = [unparse(u) for u in unquotes]
-    string = "interp_ast("+repr(node)+",["+",".join(unquote_calcs)+"])"
+    string = "interp_ast("+ast.dump(node)+",["+",".join(unquote_calcs)+"])"
     out = parse_expr(string)
 
     return out
@@ -42,7 +42,7 @@ def q(node):
     unquotes = []
     body = Walker(lambda x: unquote_search(x, unquotes)).recurse(node.body)
     unquote_calcs = [unparse(u) for u in unquotes]
-    body_txt = "interp_ast(["+",".join(map(repr, body))+"],["+",".join(unquote_calcs)+"])"
+    body_txt = "interp_ast(["+",".join(map(ast.dump, body))+"],["+",".join(unquote_calcs)+"])"
 
     out = parse_stmt(node.optional_vars.id + " = " + body_txt)
 

@@ -20,9 +20,6 @@ def decorator_macro(func):
 def block_macro(func):
     block_registry[func.func_name] = func
 
-
-
-
 def interp_ast(node, values):
     def v(): return values
 
