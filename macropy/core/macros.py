@@ -116,46 +116,53 @@ def detect_macros(node):
     required_pkgs = []
     found_macros = {}
     for stmt in node.body:
-        if      isinstance(stmt, ImportFrom) \
-                and stmt.names[0].name == 'macros' \
-                and stmt.names[0].asname is  None:
+        if  (isinstance(stmt, ImportFrom)
+                and stmt.names[0].name == 'macros'
+                and stmt.names[0].asname is  None):
 
             for a in stmt.names[1:]:
                 found_macros[a.asname or a.name] = a.name
             required_pkgs.append(stmt.module)
 
-
     return required_pkgs, found_macros
 
 
-def expand_ast(node, ):
-    @Walker
-    def macro_search(node):
-        if      isinstance(node, With) \
-                and type(node.context_expr) is Name \
-                and node.context_expr.id in block_registry:
-
+def expand_ast(node):
+    modified = [False]
+    def macro_expand(node):
+        if (isinstance(node, With) 
+                and type(node.context_expr) is Name 
+                and node.context_expr.id in block_registry):
+            modified[0] = True
             return block_registry[node.context_expr.id](node)
 
-        if      isinstance(node, BinOp) \
-                and type(node.left) is Name \
-                and type(node.op) is Mod \
-                and node.left.id in expr_registry:
-
+        if  (isinstance(node, BinOp) 
+                and type(node.left) is Name 
+                and type(node.op) is Mod
+                and node.left.id in expr_registry):
+            modified[0] = True
             return expr_registry[node.left.id](node.right)
 
-
-        if      isinstance(node, ClassDef) \
-                and len(node.decorator_list) == 1\
-                and node.decorator_list[0] \
-                and type(node.decorator_list[0]) is Name\
-                and node.decorator_list[0].id in decorator_registry:
-
+        if  (isinstance(node, ClassDef)
+                and len(node.decorator_list) == 1
+                and node.decorator_list[0]
+                and type(node.decorator_list[0]) is Name
+                and node.decorator_list[0].id in decorator_registry):
+            modified[0] = True
             return decorator_registry[node.decorator_list[0].id](node)
+        modified[0] = False
         return node
-    node = macro_search.recurse(node)
 
+    @Walker
+    def macro_searcher(node):
+        modified[0] = [True]
+        while modified[0]:
+            node = macro_expand(node)
+        return node
+
+    node = macro_searcher.recurse(node)
     return node
+
 
 @singleton
 class MacroFinder(object):
