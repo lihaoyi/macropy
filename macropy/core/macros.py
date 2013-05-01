@@ -45,20 +45,20 @@ class Walker(object):
         self.autorecurse = autorecurse
 
     def walk_children(self, node):
-
         for field, old_value in list(iter_fields(node)):
             old_value = getattr(node, field, None)
             new_value = self.recurse(old_value)
             setattr(node, field, new_value)
 
     def recurse(self, node):
-        if type(node) is list:
+        if isinstance(node, list):
+
             return flatten([
                 self.recurse(x)
                 for x in node
             ])
 
-        elif type(node) is comprehension:
+        elif isinstance(node, comprehension):
             self.walk_children(node)
             return node
         elif isinstance(node, AST):
@@ -87,7 +87,6 @@ class MacroLoader(object):
         self.file_name = file_name
 
     def load_module(self, fullname):
-
         required_pkgs, found_macros = detect_macros(self.tree)
 
         for pkg in required_pkgs:
@@ -96,7 +95,6 @@ class MacroLoader(object):
         tree = expand_ast(self.tree)
 
         code = unparse(tree)
-
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
         mod.__loader__ = self
@@ -127,7 +125,7 @@ def detect_macros(node):
 def expand_ast(node):
     modified = [False]
     def macro_expand(node):
-        if (isinstance(node, With) 
+        if (isinstance(node, With)
                 and type(node.context_expr) is Name 
                 and node.context_expr.id in block_registry):
             modified[0] = True
