@@ -21,9 +21,6 @@ def block_macro(func):
     block_registry[func.func_name] = func
 
 
-expr.__repr__ = lambda self: ast.dump(self, annotate_fields=False)
-stmt.__repr__ = lambda self: ast.dump(self, annotate_fields=False)
-comprehension.__repr__ = lambda self: ast.dump(self, annotate_fields=False)
 
 
 def interp_ast(node, values):
