@@ -12,7 +12,7 @@ macros = Macros()
 def peg(tree):
     for statement in tree.body:
         if type(statement) is Assign:
-            new_tree, bindings = recurse(statement.value, [])
+            new_tree, bindings = _recurse(statement.value, [])
             statement.value = q%(Lazy(lambda: ast%new_tree))
 
 
@@ -21,32 +21,32 @@ def peg(tree):
 
 @macros.expr
 def peg(tree):
-    new_tree, bindings = recurse(tree, [])
+    new_tree, bindings = _recurse(tree, [])
     return new_tree
 
 
-def recurse(tree, bindings):
+def _recurse(tree, bindings):
     if type(tree) is Str:
         return q%Raw(ast%tree), bindings
 
     if type(tree) is UnaryOp:
-        (tree.operand, bindings) = recurse(tree.operand, bindings)
+        (tree.operand, bindings) = _recurse(tree.operand, bindings)
         return tree, bindings
 
     if type(tree) is BinOp and type(tree.op) is RShift:
-        tree.left, b_left = recurse(tree.left, [])
+        tree.left, b_left = _recurse(tree.left, [])
         tree.right = q%(lambda bindings: ast%tree.right)
 
         tree.right.args.args = map(f%Name(id = _), b_left)
         return tree, b_left
 
     if type(tree) is BinOp and type(tree.op) is FloorDiv:
-        tree.left, b_left = recurse(tree.left, bindings)
+        tree.left, b_left = _recurse(tree.left, bindings)
         return tree, b_left
 
     if type(tree) is BinOp:
-        tree.left, b_left = recurse(tree.left, bindings)
-        tree.right, b_right = recurse(tree.right, b_left)
+        tree.left, b_left = _recurse(tree.left, bindings)
+        tree.right, b_right = _recurse(tree.right, b_left)
         return tree, b_right
 
     if type(tree) is Tuple:
@@ -54,22 +54,22 @@ def recurse(tree, bindings):
 
         result.args[0].elts = tree.elts
         for i, elt in enumerate(tree.elts):
-            result.args[0].elts[i], bindings = recurse(tree.elts[i], bindings)
+            result.args[0].elts[i], bindings = _recurse(tree.elts[i], bindings)
 
         return result, bindings
 
     if type(tree) is Call:
         for i, elt in enumerate(tree.args):
-            tree.args[i], bindings = recurse(tree.args[i], bindings)
-        tree.func, bindings = recurse(tree.func, bindings)
+            tree.args[i], bindings = _recurse(tree.args[i], bindings)
+        tree.func, bindings = _recurse(tree.func, bindings)
         return tree, bindings
 
     if type(tree) is Attribute:
-        tree.value, bindings = recurse(tree.value, bindings)
+        tree.value, bindings = _recurse(tree.value, bindings)
         return tree, bindings
 
     if type(tree) is Compare and type(tree.ops[0]) is Is:
-        left_tree, bindings = recurse(tree.left, bindings)
+        left_tree, bindings = _recurse(tree.left, bindings)
         new_tree = q%(ast%left_tree).bind_to(u%len(bindings))
         return new_tree, bindings + [tree.comparators[0].id]
 

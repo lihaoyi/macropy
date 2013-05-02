@@ -6,7 +6,7 @@ macros = Macros()
 
 NO_ARG = object()
 
-def case_transform(tree, parents):
+def _case_transform(tree, parents):
 
     def self_get(x):
         mini_tree = q%self.x
@@ -71,7 +71,7 @@ def case_transform(tree, parents):
     new_classes = []
     for statement in tree.body:
         if type(statement) is ClassDef:
-            new_classes += [case_transform(statement, [Name(id = tree.name)])]
+            new_classes += [_case_transform(statement, [Name(id = tree.name)])]
         elif type(statement) is FunctionDef:
             new_body += [statement]
 
@@ -87,4 +87,4 @@ def case_transform(tree, parents):
 
 @macros.decorator
 def case(tree):
-    return case_transform(tree, [q%object])
+    return _case_transform(tree, [q%object])

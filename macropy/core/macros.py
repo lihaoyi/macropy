@@ -5,6 +5,7 @@ from ast import *
 from macropy.core.core import *
 from util import *
 
+
 class Macros(object):
     def __init__(self):
         self.expr_registry = {}
@@ -19,6 +20,7 @@ class Macros(object):
 
     def block(self, f):
         self.block_registry[f.func_name] = f
+
 
 class Walker(object):
     def __init__(self, func, autorecurse=True):
@@ -56,9 +58,6 @@ class Walker(object):
             return node
 
 
-
-
-
 class _MacroLoader(object):
     def __init__(self, module_name, tree, file_name):
         self.module_name = module_name
@@ -85,6 +84,7 @@ class _MacroLoader(object):
             mod.__package__ = fullname.rpartition('.')[0]
         exec compile(code, self.file_name, "exec") in  mod.__dict__
         return mod
+
 
 def _detect_macros(node):
     required_pkgs = []

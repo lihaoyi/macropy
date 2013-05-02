@@ -19,7 +19,7 @@ def log(node):
 
 
 
-class TraceWalker(Walker):
+class _TraceWalker(Walker):
     """
     If registry=None, this transforms the expression tree such that each
     individual subtree is traced as it is evaluated
@@ -65,12 +65,12 @@ class TraceWalker(Walker):
 
 @macros.expr
 def trace(node):
-    ret = TraceWalker().recurse(node)
+    ret = _TraceWalker().recurse(node)
     return ret
 
 @macros.block
 def trace(node):
-    ret = TraceWalker().recurse(node.body)
+    ret = _TraceWalker().recurse(node.body)
     return ret
 
 
@@ -78,9 +78,9 @@ def require_log(stuff):
     s = "\n".join(txt + " -> " + str(tree) for [txt, tree] in stuff)
     raise AssertionError("Require Failed\n" + s)
 
-def require_transform(node):
+def _require_transform(node):
 
-    walker = TraceWalker([])
+    walker = _TraceWalker([])
     walker.recurse(node)
 
     registry = [List(elts = [ast_repr(s), t]) for s, t in walker.registry]
@@ -90,12 +90,12 @@ def require_transform(node):
 
 @macros.expr
 def require(node):
-    return require_transform(node)
+    return _require_transform(node)
 
 @macros.block
 def require(node):
     for expr in node.body:
-        expr.value = require_transform(expr.value)
+        expr.value = _require_transform(expr.value)
 
     return node.body
 
