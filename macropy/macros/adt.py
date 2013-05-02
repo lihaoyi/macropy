@@ -23,7 +23,6 @@ def case_transform(tree, parents):
         return mini_tree
 
 
-
     with q as methods:
         def __init__(self):
             super(name%tree.name, self).__init__()

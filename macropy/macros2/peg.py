@@ -122,10 +122,22 @@ class Parser:
 
     def __neg__(self):          return Not(self)
 
-    def __pos__(self):          return rep1(self)
+    @property
+    def rep1(self):
+        return And([Rep(self), self])
 
-    def __invert__(self):       return Rep(self)
+    @property
+    def rep(self):
+        return Rep(self)
 
+    @property
+    def opt(self):
+        return Or([self, Raw("")])
+
+    @property
+    def r(self):
+        """Creates a regex-matching parser from the given raw parser"""
+        return Regex(self.string)
     def __mul__(self, n):   return RepN(self, n)
 
     def __floordiv__(self, other):   return Transform(self, other)
@@ -276,13 +288,8 @@ class Parser:
             return None
 
 
-def rep1(parser):
-    return And([Rep(parser), parser])
 
 
-def opt(parser):
-    return Or([parser, Raw("")])
 
 
-def r(parser):
-    return Regex(parser.string)
+
