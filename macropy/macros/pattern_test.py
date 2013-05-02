@@ -146,6 +146,19 @@ class Tests(unittest.TestCase):
             Foo(x=x) << foo
             self.assertEquals(21, x)
 
+    def test_unapply_matching(self):
+        class Even:
+            @classmethod
+            def __unapply__(clazz, val, kw_args):
+                if val % 2 != 0:
+                    raise PatternMatchException()
+                return ([], {})
+        with patterns:
+            if Even() << 4:
+                self.assertTrue(True)
+            else:
+                self.assertTrue(False)
+
 
 if __name__ == '__main__':
     unittest.main()

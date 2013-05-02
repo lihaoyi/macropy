@@ -168,8 +168,9 @@ class ClassMatcher(Matcher):
 
     def match(self, matchee):
         updates = []
-        if hasattr(matchee, '__unapply__'):
-            pos_vals, kw_dict = matchee.__unapply__(self.kwMatchers.keys())
+        if hasattr(self.clazz, '__unapply__'):
+            pos_vals, kw_dict = self.clazz.__unapply__(matchee,
+                    self.kwMatchers.keys())
         else:
             pos_vals, kw_dict = self.default_unapply(matchee,
                     self.kwMatchers.keys())
