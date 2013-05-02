@@ -116,7 +116,7 @@ class Tests(unittest.TestCase):
             if Bar(5) << Bar(6):
                 self.assertTrue(False)
             else:
-                self.assertTrue(True)
+                pass
 
     def test_instance_checking(self):
         blah = Baz(5)
@@ -153,9 +153,18 @@ class Tests(unittest.TestCase):
                 if val % 2 != 0:
                     raise PatternMatchException()
                 return ([], {})
+
+        class Twice:
+            @classmethod
+            def __unapply__(clazz, val, kw_args):
+                if val % 2 != 0:
+                    raise PatternMatchException()
+                return ([val / 2], {})
+
         with patterns:
             if Even() << 4:
-                self.assertTrue(True)
+                Twice(n) << 4
+                self.assertEquals(2, n)
             else:
                 self.assertTrue(False)
 
