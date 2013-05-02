@@ -56,19 +56,22 @@ class Walker(object):
             return node
 
 
-class MacroLoader(object):
+
+
+
+class _MacroLoader(object):
     def __init__(self, module_name, tree, file_name):
         self.module_name = module_name
         self.tree = tree
         self.file_name = file_name
 
     def load_module(self, fullname):
-        required_pkgs, found_macros = detect_macros(self.tree)
+        required_pkgs = _detect_macros(self.tree)
         for p in required_pkgs:
             __import__(p)
 
         modules = [sys.modules[p] for p in required_pkgs]
-        tree = expand_ast(self.tree, modules)
+        tree = _expand_ast(self.tree, modules)
 
         code = unparse_ast(tree)
 
@@ -80,26 +83,22 @@ class MacroLoader(object):
             mod.__package__ = fullname
         else:
             mod.__package__ = fullname.rpartition('.')[0]
-        exec(compile(code, self.file_name, "exec"), mod.__dict__)
+        exec compile(code, self.file_name, "exec") in  mod.__dict__
         return mod
 
-
-def detect_macros(node):
+def _detect_macros(node):
     required_pkgs = []
-    found_macros = {}
     for stmt in node.body:
         if  (isinstance(stmt, ImportFrom)
                 and stmt.names[0].name == 'macros'
                 and stmt.names[0].asname is  None):
 
-            for a in stmt.names[1:]:
-                found_macros[a.asname or a.name] = a.name
             required_pkgs.append(stmt.module)
 
-    return required_pkgs, found_macros
+    return required_pkgs
 
 
-def expand_ast(node, modules):
+def _expand_ast(node, modules):
     def macro_expand(node):
         for module in [m.macros for m in modules]:
 
@@ -138,17 +137,16 @@ def expand_ast(node, modules):
 
 
 @singleton
-class MacroFinder(object):
+class _MacroFinder(object):
     def find_module(self, module_name, package_path):
-
         try:
             (file, pathname, description) = imp.find_module(module_name.split('.')[-1], package_path)
             txt = file.read()
             tree = ast.parse(txt)
-            if detect_macros(tree) == ([], {}): return
-            else: return MacroLoader(module_name, tree, file.name)
+            if _detect_macros(tree) == []: return
+            else: return _MacroLoader(module_name, tree, file.name)
         except Exception, e:
             pass
 
 
-sys.meta_path.append(MacroFinder)
+sys.meta_path.append(_MacroFinder)

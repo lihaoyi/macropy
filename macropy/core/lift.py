@@ -16,6 +16,7 @@ class Literal(object):
 
     _fields = []
 
+
 @Walker
 def unquote_search(node):
     if isinstance(node, BinOp) and type(node.left) is Name and type(node.op) is Mod:
