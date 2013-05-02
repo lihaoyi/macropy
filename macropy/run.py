@@ -6,7 +6,9 @@ runner = unittest.TextTestRunner()
 def run(x):
     runner.run(unittest.TestLoader().loadTestsFromTestCase(x))
 
-
+from macropy import macro_tests
+run(macro_tests.Tests)
+"""
 from macropy.core import lift_test
 run(lift_test.Tests)
 
@@ -36,3 +38,4 @@ run(peg_test.Tests)
 
 from macropy.macros2 import pyxl_strings_test
 run(pyxl_strings_test.Tests)
+"""

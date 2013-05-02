@@ -1,6 +1,6 @@
 from macropy.core.macros import *
 
-macros = True
+macros = Macros()
 
 
 def u(node):
@@ -36,13 +36,13 @@ def unquote_search(node):
     return node
 
 
-@expr_macro
+@macros.expr
 def q(node):
     node = unquote_search.recurse(node)
     return parse_expr(real_repr(node))
 
 
-@block_macro
+@macros.block
 def q(node):
     body = unquote_search.recurse(node.body)
     return parse_stmt(node.optional_vars.id + " = " + real_repr(body))

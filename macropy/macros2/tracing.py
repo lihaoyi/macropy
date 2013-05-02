@@ -4,7 +4,7 @@ from macropy.core.lift import macros, q, u
 import ast
 
 
-macros = True
+macros = Macros()
 
 def wrap(printer, txt, x):
     string = txt + " -> " + repr(x)
@@ -12,7 +12,7 @@ def wrap(printer, txt, x):
     return x
 
 
-@expr_macro
+@macros.expr
 def log(node):
     new_node = q%(wrap(log, u%unparse_ast(node), ast%node))
     return new_node
@@ -63,12 +63,12 @@ class TraceWalker(Walker):
                 return node
         self.func = func
 
-@expr_macro
+@macros.expr
 def trace(node):
     ret = TraceWalker().recurse(node)
     return ret
 
-@block_macro
+@macros.block
 def trace(node):
     ret = TraceWalker().recurse(node.body)
     return ret
@@ -88,11 +88,11 @@ def require_transform(node):
 
     return new
 
-@expr_macro
+@macros.expr
 def require(node):
     return require_transform(node)
 
-@block_macro
+@macros.block
 def require(node):
     for expr in node.body:
         expr.value = require_transform(expr.value)

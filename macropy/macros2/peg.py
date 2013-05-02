@@ -2,12 +2,13 @@ import re
 
 from macropy.core.macros import *
 from macropy.core.lift import macros, q, u
-from macropy.macros.adt import case, NO_ARG
+from macropy.macros.quicklambda import macros, f
+from macropy.macros.adt import macros, case, NO_ARG
 import re
 from collections import defaultdict
-macros = True
+macros = Macros()
 
-@block_macro
+@macros.block
 def peg(tree):
     for statement in tree.body:
         if type(statement) is Assign:
@@ -18,7 +19,7 @@ def peg(tree):
     return tree.body
 
 
-@expr_macro
+@macros.expr
 def peg(tree):
     new_tree, bindings = recurse(tree, [])
     return new_tree

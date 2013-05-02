@@ -2,7 +2,7 @@ from macropy.core.core import *
 from macropy.core.macros import *
 from macropy.core.lift import macros, q, u
 
-macros = True
+macros = Macros()
 
 NO_ARG = object()
 
@@ -85,6 +85,6 @@ def case_transform(tree, parents):
 
     return out
 
-@decorator_macro
+@macros.decorator
 def case(tree):
     return case_transform(tree, [q%object])

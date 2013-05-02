@@ -5,15 +5,20 @@ from ast import *
 from macropy.core.core import *
 from util import *
 
-def expr_macro(func):
-    expr_registry[func.func_name] = func
+class Macros(object):
+    def __init__(self):
+        self.expr_registry = {}
+        self.decorator_registry = {}
+        self.block_registry = {}
 
-def decorator_macro(func):
-    decorator_registry[func.func_name] = func
+    def expr(self, f):
+        self.expr_registry[f.func_name] = f
 
-def block_macro(func):
-    block_registry[func.func_name] = func
+    def decorator(self, f):
+        self.decorator_registry[f.func_name] = f
 
+    def block(self, f):
+        self.block_registry[f.func_name] = f
 
 class Walker(object):
     def __init__(self, func, autorecurse=True):
@@ -51,11 +56,6 @@ class Walker(object):
             return node
 
 
-expr_registry = {}
-block_registry = {}
-decorator_registry = {}
-
-
 class MacroLoader(object):
     def __init__(self, module_name, tree, file_name):
         self.module_name = module_name
@@ -64,13 +64,14 @@ class MacroLoader(object):
 
     def load_module(self, fullname):
         required_pkgs, found_macros = detect_macros(self.tree)
+        for p in required_pkgs:
+            __import__(p)
 
-        for pkg in required_pkgs:
-            __import__(pkg)
-
-        tree = expand_ast(self.tree)
+        modules = [sys.modules[p] for p in required_pkgs]
+        tree = expand_ast(self.tree, modules)
 
         code = unparse_ast(tree)
+
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
         mod.__loader__ = self
@@ -98,29 +99,30 @@ def detect_macros(node):
     return required_pkgs, found_macros
 
 
-def expand_ast(node):
-
+def expand_ast(node, modules):
     def macro_expand(node):
-        if (isinstance(node, With)
-                and type(node.context_expr) is Name 
-                and node.context_expr.id in block_registry):
+        for module in [m.macros for m in modules]:
 
-            return block_registry[node.context_expr.id](node), True
+            if (isinstance(node, With)
+                    and type(node.context_expr) is Name
+                    and node.context_expr.id in module.block_registry):
 
-        if  (isinstance(node, BinOp) 
-                and type(node.left) is Name 
-                and type(node.op) is Mod
-                and node.left.id in expr_registry):
+                return module.block_registry[node.context_expr.id](node), True
 
-            return expr_registry[node.left.id](node.right), True
+            if  (isinstance(node, BinOp)
+                    and type(node.left) is Name
+                    and type(node.op) is Mod
+                    and node.left.id in module.expr_registry):
 
-        if  (isinstance(node, ClassDef)
-                and len(node.decorator_list) == 1
-                and node.decorator_list[0]
-                and type(node.decorator_list[0]) is Name
-                and node.decorator_list[0].id in decorator_registry):
+                return module.expr_registry[node.left.id](node.right), True
 
-            return decorator_registry[node.decorator_list[0].id](node), True
+            if  (isinstance(node, ClassDef)
+                    and len(node.decorator_list) == 1
+                    and node.decorator_list[0]
+                    and type(node.decorator_list[0]) is Name
+                    and node.decorator_list[0].id in module.decorator_registry):
+
+                return module.decorator_registry[node.decorator_list[0].id](node), True
 
         return node, False
 

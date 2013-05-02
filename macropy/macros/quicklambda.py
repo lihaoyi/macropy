@@ -5,9 +5,9 @@ from macropy.core.lift import macros, q, u
 
 _ = None  # makes IDE happy
 
-macros = True
+macros = Macros()
 
-@expr_macro
+@macros.expr
 def f(node):
     names = ('quickfuncvar' + str(i) for i in xrange(100))
     used_names = []

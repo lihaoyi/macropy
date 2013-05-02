@@ -1,4 +1,4 @@
-from macropy.core.macros import expr_macro
+from macropy.core.macros import Macros
 from macropy.core.core import *
 from ast import *
 from macropy.core.util import *
@@ -60,9 +60,9 @@ Core Functions:
     upper(x)                str.upper
     zeroblob(n)
 """
-macros = True
+macros = Macros()
 
-@expr_macro
+@macros.expr
 def sql(tree):
     def recurse(tree):
 
