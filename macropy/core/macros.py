@@ -99,36 +99,36 @@ def detect_macros(node):
 
 
 def expand_ast(node):
-    modified = [False]
+
     def macro_expand(node):
         if (isinstance(node, With)
                 and type(node.context_expr) is Name 
                 and node.context_expr.id in block_registry):
-            modified[0] = True
-            return block_registry[node.context_expr.id](node)
+
+            return block_registry[node.context_expr.id](node), True
 
         if  (isinstance(node, BinOp) 
                 and type(node.left) is Name 
                 and type(node.op) is Mod
                 and node.left.id in expr_registry):
-            modified[0] = True
-            return expr_registry[node.left.id](node.right)
+
+            return expr_registry[node.left.id](node.right), True
 
         if  (isinstance(node, ClassDef)
                 and len(node.decorator_list) == 1
                 and node.decorator_list[0]
                 and type(node.decorator_list[0]) is Name
                 and node.decorator_list[0].id in decorator_registry):
-            modified[0] = True
-            return decorator_registry[node.decorator_list[0].id](node)
-        modified[0] = False
-        return node
+
+            return decorator_registry[node.decorator_list[0].id](node), True
+
+        return node, False
 
     @Walker
     def macro_searcher(node):
-        modified[0] = [True]
-        while modified[0]:
-            node = macro_expand(node)
+        modified = True
+        while modified:
+            node, modified = macro_expand(node)
         return node
 
     node = macro_searcher.recurse(node)
