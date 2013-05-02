@@ -1,8 +1,12 @@
-import ast
-from unparser import Unparser
+"""
+This file contains the basic operations necessary to transform between
+code in various forms: Source, ASTs, and Values. These operations wrap
+more primitive forms (e.g. in the ast module) which should not be used
+directly.
 
-import StringIO
-"""                  parse_stmt
+This map maps out how to convert from form to form:
+
+                     parse_stmt
        ____________  parse_expr  ____________
       |            |----------->|            |
       |   Source   |            |    AST     |
@@ -15,6 +19,10 @@ real_repr |     |    eval        _v________|_
           |                     |   Value    |
           ----------------------|____________|
 """
+import ast
+from unparser import Unparser
+
+import StringIO
 
 
 
@@ -47,6 +55,7 @@ def real_repr(thing):
     elif isinstance(thing, list):
         return '[%s]' % ', '.join(real_repr(x) for x in thing)
     return repr(thing)
+
 
 def unparse_ast(ast):
     """Converts an AST back into the source code from whence it came!"""

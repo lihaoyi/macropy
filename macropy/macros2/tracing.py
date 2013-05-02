@@ -79,11 +79,12 @@ def require_log(stuff):
     raise AssertionError("Require Failed\n" + s)
 
 def require_transform(node):
+
     walker = TraceWalker([])
     walker.recurse(node)
 
-    registry = List(elts = [List(elts = [ast_repr(s), t]) for s, t in walker.registry])
-    new = q%(ast%node or require_log(ast%registry))
+    registry = [List(elts = [ast_repr(s), t]) for s, t in walker.registry]
+    new = q%(ast%node or require_log([ast%registry]))
 
     return new
 

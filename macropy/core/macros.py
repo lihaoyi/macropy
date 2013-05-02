@@ -5,12 +5,6 @@ from ast import *
 from macropy.core.core import *
 from util import *
 
-
-class Placeholder(AST):
-    def __repr__(self):
-        return "Placeholder()"
-
-
 def expr_macro(func):
     expr_registry[func.func_name] = func
 
@@ -19,24 +13,6 @@ def decorator_macro(func):
 
 def block_macro(func):
     block_registry[func.func_name] = func
-
-def interp_ast(node, values):
-    def v(): return values
-
-    @Walker
-    def func(node):
-        if type(node) is Placeholder:
-            val = v().pop(0)
-            if isinstance(val, AST):
-                return val
-            else:
-                x = (val)
-                return x
-        else:
-            return node
-
-    x = func.recurse(node)
-    return x
 
 
 class Walker(object):
