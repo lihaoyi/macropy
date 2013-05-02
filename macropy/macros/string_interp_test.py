@@ -17,4 +17,3 @@ class Tests(unittest.TestCase):
         c = s%"%{apple_count} %{'apples'} and %{apple_count + banana_delta} %{''.join(['b', 'a', 'n', 'a', 'n', 'a', 's'])}"
 
         assert(c == "10 apples and 14 bananas")
-

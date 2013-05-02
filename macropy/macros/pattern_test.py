@@ -26,8 +26,9 @@ class Baz(object):
 class Tests(unittest.TestCase):
     def test_literal_matcher(self):
         matcher = LiteralMatcher(5)
-        self.assertTrue(matcher.match(5))
-        self.assertFalse(matcher.match(4))
+        self.assertEquals([], matcher.match(5))
+        with self.assertRaises(PatternMatchException):
+            self.assertFalse(matcher.match(4))
 
     def test_tuple_matcher(self):
         matcher = TupleMatcher(
@@ -35,26 +36,21 @@ class Tests(unittest.TestCase):
                 TupleMatcher(
                     LiteralMatcher(4),
                     LiteralMatcher(5)))
-        self.assertEquals(False, matcher.match((5,5)))
-        self.assertTrue((True, []), matcher.match((5, (4, 5))))
+        with self.assertRaises(PatternMatchException):
+            matcher.match((5, 5))
+        self.assertEquals([], matcher.match((5, (4, 5))))
 
     def test_class_matcher(self):
-        self.assertTrue(
-                ClassMatcher(Foo, LiteralMatcher(5),
-                    LiteralMatcher(6)).match(Foo(5,6)))
-        self.assertFalse(
-                ClassMatcher(Foo, LiteralMatcher(5),
-                    LiteralMatcher(6)).match(Foo(5,7)))
+        self.assertEquals([],
+                ClassMatcher(Foo, [LiteralMatcher(5),
+                    LiteralMatcher(6)]).match(Foo(5,6)))
+        with self.assertRaises(PatternMatchException):
+            ClassMatcher(Foo, [LiteralMatcher(5),
+                LiteralMatcher(6)]).match(Foo(5,7))
 
-        # with _matching:
-        #    Foo(a, b) << Foo(4, 5)
-        #    for i in xrange(10):
-        #    
-        #    Foo(a,b) << Foo(4,5):
-
-        matcher1 = ClassMatcher(Foo, NameMatcher('a'),
-                NameMatcher('b'))
-        matcher1.match_value(Foo(4, 5), False)
+        matcher1 = ClassMatcher(Foo, [NameMatcher('a'),
+                NameMatcher('b')])
+        matcher1.match_value(Foo(4, 5))
         a = matcher1.get_var('a')
         b = matcher1.get_var('b')
 
@@ -131,18 +127,24 @@ class Tests(unittest.TestCase):
                 self.assertTrue(False)
             elif Baz(x) << blah:
                 self.assertEquals(5, x)
+            self.assertEquals(8, 1 << 3)
 
     def test_patterns_macro(self):
         blah = Baz(5)
         with patterns:
             if Foo(lol, wat) << blah:
+# this shouldn't happen
                 self.assertTrue(False)
             elif Bar(4) << blah:
                 self.assertTrue(False)
             elif Baz(x) << blah:
                 self.assertEquals(5, x)
-                with self.assertRaises(PatternMatchException):
-                    Foo(x, y) << blah
+
+    def test_keyword_matching(self):
+        foo = Foo(21, 23)
+        with patterns:
+            Foo(x=x) << foo
+            self.assertEquals(21, x)
 
 
 if __name__ == '__main__':

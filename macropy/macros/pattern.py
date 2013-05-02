@@ -26,6 +26,7 @@ def _vars_are_disjoint(var_names):
 
 
 class Matcher(object):
+
     def __init__(self):
         pass
 
@@ -38,18 +39,19 @@ class Matcher(object):
     
     def match(self, matchee):
         """
-        Returns (True, [(varname, value)...]) if there is a match.  Otherwise,
-        returns False.  """
+        Returns ([(varname, value)...]) if there is a match.  Otherwise,
+        raise PatternMatchException().  This guy is recursively implemented by
+        matchers, and is stateless.
+        """
         pass
 
-    def match_value(self, matchee, should_raise):
-        results = self.match(matchee)
+    def match_value(self, matchee):
+        """
+        Match against matchee and produce an internal dictionary of the values
+        for each variable.
+        """
         self.var_dict = {}
-        if not results:
-            if should_raise:
-                raise PatternMatchException()
-            return False
-        for (varname, value) in results[1]:
+        for (varname, value) in self.match(matchee):
             self.var_dict[varname] = value
 
     def get_var(self, var_name):
@@ -64,9 +66,9 @@ class LiteralMatcher(Matcher):
         return []
 
     def match(self, matchee):
-        if self.val == matchee:
-            return (True, [])
-        return False
+        if self.val != matchee:
+            raise PatternMatchException("Literal match failed")
+        return []
     
 
 class TupleMatcher(Matcher):
@@ -83,13 +85,12 @@ class TupleMatcher(Matcher):
         updates = []
         if (not isinstance(matchee, tuple) or 
                 len(matchee) != len(self.matchers)):
-            return False
+            raise PatternMatchException("Expected tuple of %d elements" %
+                    (len(self.matchers),))
         for (matcher, sub_matchee) in zip(self.matchers, matchee):
             match = matcher.match(sub_matchee)
-            if not match:
-                return False
-            updates.extend(match[1])
-        return (True, updates)
+            updates.extend(match)
+        return updates
 
 
 class ListMatcher(Matcher):
@@ -105,13 +106,12 @@ class ListMatcher(Matcher):
     def match(self, matchee):
         updates = []
         if (not isinstance(matchee, list) or len(matchee) != len(self.matchers)):
-            return False
+            raise PatternMatchException("Expected list of length %d" %
+                    (len(self.matchers),))
         for (matcher, sub_matchee) in zip(self.matchers, matchee):
             match = matcher.match(sub_matchee)
-            if not match:
-                return False
-            updates.extend(match[1])
-        return (True, updates)
+            updates.extend(match)
+        return updates
 
 
 class NameMatcher(Matcher):
@@ -122,41 +122,64 @@ class NameMatcher(Matcher):
         return [self.name]
 
     def match(self, matchee):
-        return (True, [(self.name, matchee)])
+        return [(self.name, matchee)]
 
 
 # Currently only works for positional arguments
 class ClassMatcher(Matcher):
-    def __init__(self, clazz, *argMatchers):
+    def __init__(self, clazz, positionalMatchers, **kwMatchers):
         self.clazz = clazz
-        self.argMatchers = argMatchers
-        arg_field_names = []
-        arg_spec = inspect.getargspec(clazz.__init__)
-        for arg in arg_spec.args:
-            if arg is not 'self':
-                arg_field_names.append(arg)
-        self.arg_field_names = arg_field_names
+        self.positionalMatchers = positionalMatchers
+        self.kwMatchers = kwMatchers
+
+        # This stores which fields of the object we will need to look at.
         if not _vars_are_disjoint(util.flatten([m.var_names() for m in
-            argMatchers])):
+            positionalMatchers])):
             raise PatternVarConflict()
 
+
     def var_names(self):
-        return util.flatten([matcher.var_names() 
-            for matcher in self.argMatchers])
+        return (util.flatten([matcher.var_names() 
+            for matcher in self.positionalMatchers]) + 
+            util.flatten([matcher.var_names() for matcher in
+                self.kwMatchers.values()]))
+
+
+    def default_unapply(self, matchee, kw_keys):
+# TODO should it fail if constructor-inspection doesn't work?
+        if not isinstance(matchee, self.clazz):
+            raise PatternMatchException("Matchee should be of type %r" %
+                    (self.clazz,))
+        pos_values = []
+        kw_dict = {}
+        arg_spec = inspect.getargspec(self.clazz.__init__)
+        for arg in arg_spec.args:
+            if arg is not 'self':
+                pos_values.append(getattr(matchee, arg, None))
+        # if arg_spec.varargs:
+        #     pos_values.extend(getattr(matchee, varargs, []))
+        for kw_key in kw_keys:
+            if not hasattr(matchee, kw_key):
+                raise PatternMatchException("Keyword argument match failed: no"
+                        + " attribute %r" % (kw_key,))
+            kw_dict[kw_key] = getattr(matchee, kw_key)
+        return pos_values, kw_dict
+
 
     def match(self, matchee):
         updates = []
-        if isinstance(matchee, self.clazz):
-            sub_matchees = []
-            for field_name in self.arg_field_names:
-                sub_matchees.append(getattr(matchee, field_name))
-            for (matcher, sub_matchee) in zip(self.argMatchers, sub_matchees):
-                match = matcher.match(sub_matchee)
-                if not match:
-                    return False
-                updates.extend(match[1])
-            return (True, updates)
-        return False
+        if hasattr(matchee, '__unapply__'):
+            pos_vals, kw_dict = matchee.__unapply__(self.kwMatchers.keys())
+        else:
+            pos_vals, kw_dict = self.default_unapply(matchee,
+                    self.kwMatchers.keys())
+
+        for (matcher, sub_matchee) in zip(self.positionalMatchers,
+                pos_vals):
+            updates.extend(matcher.match(sub_matchee))
+        for key, val in kw_dict.items():
+            updates.extend(self.kwMatchers[key].match(val))
+        return updates
 
 
 def build_matcher(node, modified):
@@ -183,8 +206,13 @@ def build_matcher(node, modified):
         sub_matchers = []
         for child in node.args:
             sub_matchers.append(build_matcher(child, modified))
-        return Call(Name('ClassMatcher', Load()), [node.func] + sub_matchers,
-                [], None, None)
+        positional_matchers = List(sub_matchers, Load())
+        kw_matchers = []
+        for kw in node.keywords:
+            kw_matchers.append(
+                    keyword(kw.arg, build_matcher(kw.value, modified)))
+        return Call(Name('ClassMatcher', Load()), [node.func,
+            positional_matchers], kw_matchers, None, None)
     raise Exception("Unrecognized node " + repr(node))
 
 
@@ -213,8 +241,7 @@ def _matching(node):
             with q as assignment:
                 xsfvdy = ast%(matcher)
             statements = [assignment,
-                          Expr(q%(xsfvdy.match_value(ast%(node.value.right),
-                              True)))]
+                          Expr(q%(xsfvdy.match_value(ast%(node.value.right))))]
             for var_name in modified:
                 statements.append(Assign([Name(var_name, Store())],
                     q%(xsfvdy.get_var(u%var_name))))
