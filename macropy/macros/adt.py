@@ -42,14 +42,13 @@ def _case_transform(tree, parents):
         def __ne__(self, other):
             return not self.__eq__(other)
         def copy(self):
-            return Thing()
+            return (name%tree.name)()
 
     init_fun, str_fun, repr_fun, eq_fun, ne_fun, copy_fun = methods
 
     copy_fun.args.args += [Name(id = n, ctx=Param()) for n in var_names]
     copy_fun.args.defaults = [q%NO_ARG for n in var_names]
     ret = copy_fun.body[0].value
-    ret.func = Name(id=tree.name)
 
     ret.args = [q%(ast%self_get(n) if name%n is NO_ARG else name%n) for n in var_names]
 
@@ -81,7 +80,6 @@ def _case_transform(tree, parents):
     tree.decorator_list = []
     tree.body += methods
     out = [tree] + new_classes
-
 
     return out
 
