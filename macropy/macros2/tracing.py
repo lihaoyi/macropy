@@ -14,7 +14,7 @@ def wrap(printer, txt, x):
 
 @expr_macro
 def log(node):
-    new_node = q%(wrap(log, u%unparse(node), ast%node))
+    new_node = q%(wrap(log, u%unparse_ast(node), ast%node))
     return new_node
 
 
@@ -44,7 +44,7 @@ class TraceWalker(Walker):
                     literal_eval(node)
                     return node
                 except ValueError:
-                    txt = unparse(node)
+                    txt = unparse_ast(node)
                     self.walk_children(node)
                     if self.registry is not None:
                         self.registry.append([txt, node])
@@ -53,7 +53,7 @@ class TraceWalker(Walker):
                         wrapped = q%(wrap(log, u%txt, ast%node))
                         return wrapped
             elif isinstance(node, stmt):
-                txt = unparse(node).strip()
+                txt = unparse_ast(node).strip()
                 self.walk_children(node)
                 with q as code:
                     log(u%txt)

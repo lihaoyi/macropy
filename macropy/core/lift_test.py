@@ -12,11 +12,11 @@ class Tests(unittest.TestCase):
         data1 = q%(1 + u%(a + b))
         data2 = q%(1 + (a + b))
 
-        assert eval(unparse(data1)) == 13
-        assert eval(unparse(data2)) == 13
+        assert eval(unparse_ast(data1)) == 13
+        assert eval(unparse_ast(data2)) == 13
         a = 1
-        assert eval(unparse(data1)) == 13
-        assert eval(unparse(data2)) == 4
+        assert eval(unparse_ast(data1)) == 13
+        assert eval(unparse_ast(data2)) == 4
 
 
     def test_structured(self):
@@ -25,28 +25,28 @@ class Tests(unittest.TestCase):
         b = ["wtf", "bbq"]
         data1 = q%([x for x in u%(a + b)])
 
-        assert(eval(unparse(data1)) == [1, 2, "omg", "wtf", "bbq"])
+        assert(eval(unparse_ast(data1)) == [1, 2, "omg", "wtf", "bbq"])
         b = []
-        assert(eval(unparse(data1)) == [1, 2, "omg", "wtf", "bbq"])
+        assert(eval(unparse_ast(data1)) == [1, 2, "omg", "wtf", "bbq"])
 
-    """
+
     def test_quote_unquote(self):
 
         x = 1
         y = 2
         a = q%(u%(x + y))
-        assert(eval(unparse(a)) == 3)
+        assert(eval(unparse_ast(a)) == 3)
         x = 0
         y = 0
-        assert(eval(unparse(a)) == 3)
+        assert(eval(unparse_ast(a)) == 3)
 
-    """
+
     def test_unquote_name(self):
         n = "x"
         x = 1
         y = q%(name%n + name%n)
-        
-        assert(eval(unparse(y)) == 2)
+
+        assert(eval(unparse_ast(y)) == 2)
 
     def test_quote_unquote_ast(self):
 
@@ -54,9 +54,9 @@ class Tests(unittest.TestCase):
         b = q%(ast%a + z)
 
         x, y, z = 1, 2, 3
-        assert(eval(unparse(b)) == 6)
+        assert(eval(unparse_ast(b)) == 6)
         x, y, z = 1, 3, 9
-        assert(eval(unparse(b)) == 13)
+        assert(eval(unparse_ast(b)) == 13)
 
 
     def test_quote_unquote_block(self):
@@ -69,11 +69,11 @@ class Tests(unittest.TestCase):
             c.append(u%a)
             c.extend(u%b)
 
-        exec(unparse(code))
+        exec(unparse_ast(code))
         assert(c == [10, 10, 'a', 'b', 'c'])
         c = []
         a, b = None, None
-        exec(unparse(code))
+        exec(unparse_ast(code))
         assert(c == [None, 10, 'a', 'b', 'c'])
 
 

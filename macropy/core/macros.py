@@ -94,7 +94,7 @@ class MacroLoader(object):
 
         tree = expand_ast(self.tree)
 
-        code = unparse(tree)
+        code = unparse_ast(tree)
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
         mod.__loader__ = self
