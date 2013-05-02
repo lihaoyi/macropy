@@ -15,8 +15,6 @@ def case_transform(tree, parents):
 
 
     var_names = [name.id for name in tree.bases]
-    list_tree = List(elts = map(self_get, var_names))
-
 
     def compare_field(x):
         mini_tree = q%(self.x == other.x)
@@ -24,21 +22,20 @@ def case_transform(tree, parents):
         mini_tree.comparators[0].attr = x
         return mini_tree
 
-    eq_list_tree = List(elts = map(compare_field, var_names))
 
     with q as methods:
         def __init__(self):
             super(name%tree.name, self).__init__()
 
         def __str__(self):
-            return u%tree.name + "(" + ", ".join(map(str, ast%list_tree)) + ")"
+            return u%tree.name + "(" + ", ".join(map(str, ast_list%map(self_get, var_names))) + ")"
 
         def __repr__(self):
             return self.__str__()
 
         def __eq__(self, other):
             try:
-                return all(ast%eq_list_tree)
+                return all(ast_list%map(compare_field, var_names))
             except:
                 return False
 

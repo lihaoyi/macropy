@@ -13,13 +13,20 @@ MacroPy
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy,
 - [Parser Combinators](#parser-combinators), inspired by [Scala's](http://www.suryasuravarapu.com/2011/04/scala-parser-combinators-win.html).
 
+MacroPy is tested to run on:
+
+- [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython)
+- [PyPy 1.9](http://pypy.org/)
+
+It does not yet work on [Jython](http://www.jython.org/)
+
 All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 40 lines of code.
 
 *MacroPy is very much a work in progress, for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/). Although it is constantly in flux, all of the examples with source code represent already-working functionality. The rest will be filled in over the coming weeks.*
 
 Rough Overview
 --------------
-Macro functions are defined in two ways:
+Macro functions are defined in three ways:
 
 ```python
 @expr_macro
@@ -31,6 +38,11 @@ def my_expr_macro(tree):
 def my_block_macro(tree):
     ...
     return new_tree
+
+@decorator_macro
+def my_decorator_macro(tree):
+    ...
+    return new_tree
 ```
 
 These two types of macros are called via
@@ -40,9 +52,13 @@ val = my_expr_macro%(...)
 
 with my_block_macro:
     ...
+
+@my_decorator_macro
+class X():
+    ...
 ```
 
-Any time either of these syntactic forms is seen, if a matching macro exists, the abstract syntax tree captured by these forms (the `...` in the code above) is given to the respective macro to handle. The macro can then return a new tree, which is substituted into the original code in-place.
+Any time any of these syntactic forms is seen, if a matching macro exists, the abstract syntax tree captured by these forms (the `...` in the code above) is given to the respective macro to handle. The macro can then return a new tree, which is substituted into the original code in-place.
 
 MacroPy intercepts the module-loading workflow, via the functionality provided by [PEP 302: New Import Hooks](http://www.python.org/dev/peps/pep-0302/). The workflow is roughly:
 

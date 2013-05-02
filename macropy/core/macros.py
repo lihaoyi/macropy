@@ -5,12 +5,6 @@ from ast import *
 from macropy.core.core import *
 from util import *
 
-
-class Placeholder(AST):
-    def __repr__(self):
-        return "Placeholder()"
-
-
 def expr_macro(func):
     expr_registry[func.func_name] = func
 
@@ -21,50 +15,26 @@ def block_macro(func):
     block_registry[func.func_name] = func
 
 
-expr.__repr__ = lambda self: ast.dump(self, annotate_fields=False)
-stmt.__repr__ = lambda self: ast.dump(self, annotate_fields=False)
-comprehension.__repr__ = lambda self: ast.dump(self, annotate_fields=False)
-
-
-def interp_ast(node, values):
-    def v(): return values
-
-    @Walker
-    def func(node):
-        if type(node) is Placeholder:
-            val = v().pop(0)
-            if isinstance(val, AST):
-                return val
-            else:
-                x = (val)
-                return x
-        else:
-            return node
-
-    x = func.recurse(node)
-    return x
-
-
 class Walker(object):
     def __init__(self, func, autorecurse=True):
         self.func = func
         self.autorecurse = autorecurse
 
     def walk_children(self, node):
-
         for field, old_value in list(iter_fields(node)):
             old_value = getattr(node, field, None)
             new_value = self.recurse(old_value)
             setattr(node, field, new_value)
 
     def recurse(self, node):
-        if type(node) is list:
+        if isinstance(node, list):
+
             return flatten([
                 self.recurse(x)
                 for x in node
             ])
 
-        elif type(node) is comprehension:
+        elif isinstance(node, comprehension):
             self.walk_children(node)
             return node
         elif isinstance(node, AST):
@@ -93,7 +63,6 @@ class MacroLoader(object):
         self.file_name = file_name
 
     def load_module(self, fullname):
-
         required_pkgs, found_macros = detect_macros(self.tree)
 
         for pkg in required_pkgs:
@@ -101,8 +70,7 @@ class MacroLoader(object):
 
         tree = expand_ast(self.tree)
 
-        code = unparse(tree)
-
+        code = unparse_ast(tree)
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
         mod.__loader__ = self
@@ -131,36 +99,36 @@ def detect_macros(node):
 
 
 def expand_ast(node):
-    modified = [False]
+
     def macro_expand(node):
-        if (isinstance(node, With) 
+        if (isinstance(node, With)
                 and type(node.context_expr) is Name 
                 and node.context_expr.id in block_registry):
-            modified[0] = True
-            return block_registry[node.context_expr.id](node)
+
+            return block_registry[node.context_expr.id](node), True
 
         if  (isinstance(node, BinOp) 
                 and type(node.left) is Name 
                 and type(node.op) is Mod
                 and node.left.id in expr_registry):
-            modified[0] = True
-            return expr_registry[node.left.id](node.right)
+
+            return expr_registry[node.left.id](node.right), True
 
         if  (isinstance(node, ClassDef)
                 and len(node.decorator_list) == 1
                 and node.decorator_list[0]
                 and type(node.decorator_list[0]) is Name
                 and node.decorator_list[0].id in decorator_registry):
-            modified[0] = True
-            return decorator_registry[node.decorator_list[0].id](node)
-        modified[0] = False
-        return node
+
+            return decorator_registry[node.decorator_list[0].id](node), True
+
+        return node, False
 
     @Walker
     def macro_searcher(node):
-        modified[0] = [True]
-        while modified[0]:
-            node = macro_expand(node)
+        modified = True
+        while modified:
+            node, modified = macro_expand(node)
         return node
 
     node = macro_searcher.recurse(node)

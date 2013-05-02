@@ -1,4 +1,5 @@
 import unittest
+
 import macropy.core.macros
 
 runner = unittest.TextTestRunner()
@@ -15,10 +16,10 @@ run(literals_test.Tests)
 from macropy.macros import string_interp_test
 run(string_interp_test.Tests)
 
-from macropy.macros2 import tracing_test, linq_test, literals_test
+from macropy.macros2 import tracing_test, literals_test
 
 run(tracing_test.Tests)
-
+from macropy.macros2 import linq_test
 run(linq_test.Tests)
 
 from macropy.macros import quicklambda_test
