@@ -24,11 +24,12 @@ class Tests(unittest.TestCase):
         a = [1, 2, "omg"]
         b = ["wtf", "bbq"]
         data1 = q%([x for x in u%(a + b)])
+
         assert(eval(unparse(data1)) == [1, 2, "omg", "wtf", "bbq"])
         b = []
         assert(eval(unparse(data1)) == [1, 2, "omg", "wtf", "bbq"])
 
-
+    """
     def test_quote_unquote(self):
 
         x = 1
@@ -39,11 +40,12 @@ class Tests(unittest.TestCase):
         y = 0
         assert(eval(unparse(a)) == 3)
 
-
+    """
     def test_unquote_name(self):
         n = "x"
         x = 1
         y = q%(name%n + name%n)
+        
         assert(eval(unparse(y)) == 2)
 
     def test_quote_unquote_ast(self):
