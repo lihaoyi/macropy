@@ -6,6 +6,7 @@ from macropy.core.macros import *
 from macropy.core.lift import macros
 from macropy.core.lift import *
 
+macros = Macros()
 
 class PatternMatchException(Exception):
     """
@@ -227,7 +228,7 @@ def _is_pattern_match_expr(node):
             isinstance(node.op, LShift))
 
 
-@block_macro
+@macros.block
 def _matching(node):
     """
     This macro will enable non-refutable pattern matching.  If a pattern match
@@ -279,7 +280,7 @@ def _maybe_rewrite_if(stmt):
         return _rewrite_if(stmt)
     return stmt
 
-@block_macro
+@macros.block
 def case_switch(node):
     """
     This only enables (refutable) pattern matching in top-level if statements.
@@ -290,7 +291,7 @@ def case_switch(node):
         node.body[i] = _maybe_rewrite_if(node.body[i])
     return node.body
 
-@block_macro
+@macros.block
 def patterns(node):
     """
     This enables patterns everywhere!  NB if you use this macro, you will not be

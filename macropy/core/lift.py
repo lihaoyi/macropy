@@ -1,6 +1,6 @@
 from macropy.core.macros import *
 
-macros = True
+macros = Macros()
 
 
 def u(node):
@@ -16,8 +16,9 @@ class Literal(object):
 
     _fields = []
 
+
 @Walker
-def unquote_search(node):
+def _unquote_search(node):
     if isinstance(node, BinOp) and type(node.left) is Name and type(node.op) is Mod:
         if 'u' == node.left.id:
             x = parse_expr("ast_repr(x)")
@@ -36,13 +37,13 @@ def unquote_search(node):
     return node
 
 
-@expr_macro
+@macros.expr
 def q(node):
-    node = unquote_search.recurse(node)
+    node = _unquote_search.recurse(node)
     return parse_expr(real_repr(node))
 
 
-@block_macro
+@macros.block
 def q(node):
-    body = unquote_search.recurse(node.body)
+    body = _unquote_search.recurse(node.body)
     return parse_stmt(node.optional_vars.id + " = " + real_repr(body))

@@ -3,9 +3,9 @@ import re
 from macropy.core.macros import *
 from macropy.core.lift import macros, q, u
 
-macros = True
+macros = Macros()
 
-@expr_macro
+@macros.expr
 def s(node):
     captured = []
     new_string = ""

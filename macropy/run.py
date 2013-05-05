@@ -6,6 +6,8 @@ runner = unittest.TextTestRunner()
 def run(x):
     runner.run(unittest.TestLoader().loadTestsFromTestCase(x))
 
+from macropy import macro_tests
+run(macro_tests.Tests)
 
 from macropy.core import lift_test
 run(lift_test.Tests)
@@ -17,8 +19,8 @@ from macropy.macros import string_interp_test
 run(string_interp_test.Tests)
 
 from macropy.macros2 import tracing_test, literals_test
-
 run(tracing_test.Tests)
+
 from macropy.macros2 import linq_test
 run(linq_test.Tests)
 

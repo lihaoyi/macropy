@@ -2,11 +2,11 @@ from macropy.core.core import *
 from macropy.core.macros import *
 from macropy.core.lift import macros, q, u
 
-macros = True
+macros = Macros()
 
 NO_ARG = object()
 
-def case_transform(tree, parents):
+def _case_transform(tree, parents):
 
     def self_get(x):
         mini_tree = q%self.x
@@ -42,14 +42,13 @@ def case_transform(tree, parents):
         def __ne__(self, other):
             return not self.__eq__(other)
         def copy(self):
-            return Thing()
+            return (name%tree.name)()
 
     init_fun, str_fun, repr_fun, eq_fun, ne_fun, copy_fun = methods
 
     copy_fun.args.args += [Name(id = n, ctx=Param()) for n in var_names]
     copy_fun.args.defaults = [q%NO_ARG for n in var_names]
     ret = copy_fun.body[0].value
-    ret.func = Name(id=tree.name)
 
     ret.args = [q%(ast%self_get(n) if name%n is NO_ARG else name%n) for n in var_names]
 
@@ -71,7 +70,7 @@ def case_transform(tree, parents):
     new_classes = []
     for statement in tree.body:
         if type(statement) is ClassDef:
-            new_classes += [case_transform(statement, [Name(id = tree.name)])]
+            new_classes += [_case_transform(statement, [Name(id = tree.name)])]
         elif type(statement) is FunctionDef:
             new_body += [statement]
 
@@ -82,9 +81,8 @@ def case_transform(tree, parents):
     tree.body += methods
     out = [tree] + new_classes
 
-
     return out
 
-@decorator_macro
+@macros.decorator
 def case(tree):
-    return case_transform(tree, [q%object])
+    return _case_transform(tree, [q%object])
