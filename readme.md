@@ -387,7 +387,41 @@ As the classes `Nil` are `Cons` are nested within `List`, both of them get trans
 
 Pattern Matching
 ----------------
-*Work-In-Progress*
+```python
+@case
+class List:
+  def Nil():
+    pass
+
+  def Cons(x, xs):
+    pass
+
+def foldl1(my_list, op):
+  with matching:
+    if Cons(x, Nil()) << my_list:
+      return x
+    elif Cons(x, xs) << my_list:
+      return op(x, foldl1(xs, op))
+```
+
+Pattern matching is taken from many functional languages, including Haskell,
+ML, and Scala, all of which allow a convenient syntax for extracting elements
+out of a complex data structure.  One can also override the way in which a
+pattern is matched.
+
+```python
+class Twice(object):
+  @classmethod
+  def __unapply__(x):
+    if not isinstance(x, int) or x % 2 != 0:
+      raise PatternMatchException()
+    else:
+      return ([x/2], {})
+
+with patterns:
+  Twice(n) << 8
+  print n     # 4
+```
 
 LINQ to SQL
 -----------
