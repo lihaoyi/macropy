@@ -35,7 +35,6 @@
 
 
 
-
 """
 Demos
 =====
@@ -74,7 +73,25 @@ print Point(1, 2) == Point(1, 2)
 
 
 pattern matching
--------
+----------------
+
+
+LINQ
+----
+import sqlite3
+conn = sqlite3.connect(":memory:")
+cursor = conn.cursor()
+for line in open("macros2/linq_test_dataset.sql").read().split(";"):
+    cursor.execute(line.strip())
+
+
+from macropy.macros2.linq import macros, sql
+
+string = sql%(x.name for x in bbc if x.population > 100000000)
+print string
+for line in cursor.execute(string).fetchall():
+    print line
+
 
 
 peg
