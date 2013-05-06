@@ -143,6 +143,23 @@ print expr.parse_all("(6/2)")           #[3]
 print expr.parse_all("(1+2+3)+2")       #[8]
 print expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)") #[1804]
 
+@case
+class ArithExpr(object):
+    class Add(left, right):
+        pass
+
+    class Mul(left, right):
+        pass
+
+    class Num(x):
+        pass
+
+def compute(expr):
+    with switch(expr):
+        if Num(n):
+            return n
+        elif Add(x, y):
+            return compute(x) + compute(y)
+        elif Mul(x, y):
+            return compute(x) * compute(y)
 """
-
-

@@ -215,6 +215,9 @@ def build_matcher(node, modified):
                     keyword(kw.arg, build_matcher(kw.value, modified)))
         return Call(Name('ClassMatcher', Load()), [node.func,
             positional_matchers], kw_matchers, None, None)
+    if (isinstance(node, BinOp) and isinstance(node.op, BitAnd)):
+        # TODO parallel matching
+        pass
     raise Exception("Unrecognized node " + repr(node))
 
 
