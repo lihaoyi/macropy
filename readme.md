@@ -29,23 +29,24 @@ Rough Overview
 Macro functions are defined in three ways:
 
 ```python
-@expr_macro
+macros = Macros()
+@macros.expr
 def my_expr_macro(tree):
     ...
     return new_tree
 
-@block_macro
+@macros.block
 def my_block_macro(tree):
     ...
     return new_tree
 
-@decorator_macro
+@macros.decorator
 def my_decorator_macro(tree):
     ...
     return new_tree
 ```
 
-These two types of macros are called via
+These three types of macros are called via
 
 ```python
 val = my_expr_macro%(...)
@@ -64,8 +65,10 @@ MacroPy intercepts the module-loading workflow, via the functionality provided b
 
 - Intercept an import
 - Parse the contents of the file into an AST
-- walk the AST and expand any macros that it finds
-- unparse the AST back into a string and resume loading it as a module
+- Walk the AST and expand any macros that it finds
+- Compile the modified AST and resume loading it as a module
+
+![Workflow](media/Workflow.png)
 
 Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) folder.
 
