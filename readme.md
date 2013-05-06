@@ -601,7 +601,7 @@ The `//` operator takes a function which will be used to transform the result of
 ```python
 with peg:
     laugh = 'lol'
-    laughs1 = +'lol'
+    laughs1 = 'lol'.rep1
     laughs2 = lots_of_laughs_1 // "".join
 
 print laughs1.parse_all("lollollol") # [['lol', 'lol', 'lol]]
