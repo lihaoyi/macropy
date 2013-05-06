@@ -7,7 +7,7 @@ import ast
 macros = Macros()
 
 def wrap(printer, txt, x):
-    string = "\t" + txt + " -> " + repr(x)
+    string = txt + " -> " + repr(x)
     printer(string)
     return x
 
