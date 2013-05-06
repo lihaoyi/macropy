@@ -1,15 +1,85 @@
-from macropy.macros.string_interp import macros, s
-from macropy.macros2.linq import macros, sql
-from macropy.macros.quicklambda import macros, f
-from macropy.macros2.tracing import macros, trace
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+Demos
+=====
+
+tracing
+-------
+from macropy.macros2.tracing import macros
 from macropy.macros2.tracing import *
-from macropy.macros2.peg import macros
-from macropy.macros2.peg import *
+with trace:
+    x = (1 + 2)
+    y = x * x + 7
+
+
+quicklambda
+-------
+from macropy.macros.quicklambda import macros, f
+
+print map(f%_[0], ['omg', 'wtf', 'bbq'])
+print reduce(f%(_ + _), [1, 2, 3])
+
+
+adts
+-------
 from macropy.macros.adt import macros
-import math
-def foo():
-    with trace:
-        sum([x + 5 for x in range(3)])
+from macropy.macros.adt import *
+
+@case
+class Point(x, y): pass
+
+p = Point(1, 2)
+
+print str(p)
+print p.x
+print p.y
+print Point(1, 2) == Point(1, 2)
 
 
-foo()
+pattern matching
+-------
+
+
+peg
+-------
+
+"""
+
+
