@@ -105,13 +105,29 @@ Furthermore, quasiquotes allow you to _unquote_ things: if you wish to insert th
 
 ```python
 tree = q%(1 + u%(a + b))
-```
-
-the expression `(a + b)` is unquoted. Hence `a + b` gets evaluated to the value of `12`, which is then inserted into the tree, giving the final tree:
-
-```python
 print tree
 #BinOp(Num(1), Add(), Num(12))
+```
+
+the expression `(a + b)` is unquoted. Hence `a + b` gets evaluated to the value of `12`, which is then inserted into the tree, giving the final tree.
+
+Apart from interpolating values in the AST, you can also interpolate:
+
+###Other ASTs
+
+```python
+a = q%(1 + 2)
+b = q%(ast%a + 3)
+print b
+#BinOp(BinOp(Num(1), Add(), Num(2)), Add(), Num(3))
+```
+
+###Names
+```python
+n = "x"
+x = 1
+y = q%(name%n + name%n)
+#BinOp(Name('x'), Add(), Name('x'))
 ```
 
 String Interpolation
@@ -524,15 +540,15 @@ Op      <- "+" / "-" / "*" / "/"
 Expr <- Value (Op Value)*
 """
 with peg:
-    value = r('[0-9]+') // int | ('(', expr, ')') // (lambda x: x[1])
+    value = '[0-9]+'.r // int | ('(', expr, ')') // (f%_[1])
     op = '+' | '-' | '*' | '/'
-    expr = (value is first, ~(op, value) is rest) >> reduce_chain([first] + rest)
+    expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
 
-print expr.parse_all("123") #[123]
-print expr.parse_all("((123))") #[123]
-print expr.parse_all("(123+456+789)") #[1368]
-print expr.parse_all("(6/2)") #[3]
-print expr.parse_all("(1+2+3)+2") #[8]
+print expr.parse_all("123")             #[123]
+print expr.parse_all("((123))")         #[123]
+print expr.parse_all("(123+456+789)")   #[1368]
+print expr.parse_all("(6/2)")           #[3]
+print expr.parse_all("(1+2+3)+2")       #[8]
 print expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)") #[1804]
 ```
 
@@ -550,15 +566,15 @@ Anything within a `with peg:` block is transformed into a *parser*. A parser is 
 Parsers are generally built up from a few common building blocks:
 
 - String literals like `'+'` match the input to their literal value (e.g. '+') and return it as the parse result, or fails (returns `None`) if it does not match.
-- Regexes like `r([0-9]+)` match the regex to the input if possible, and return it. Otherwise it fails.
+- Regexes like `'[0-9]+'.r` match the regex to the input if possible, and return it. Otherwise it fails.
 - Tuples like `('(', expr, ')')` match each of the elements within sequentially, and return a list containing the result of each element. It fails if any of its elements fails.
 - Elements separated by `|`, for example `'+' | '-' | '*' | '/'`, attempt to match each of the options from left to right, and return the result of the first success.
-- Elements separated by `&`, for example `r('[1234]') & r('[3456]')`, require both sides succeed, and return the result of the left side.
-- `~parser` attempts to match the `parser` 0 or more times, returning a list of the results from each successful match.
-- `+parser` attempts to match the `parser` 1 or more times, returning a list of the results from each successful match. If `parser` does not succeed at least once, `+parser` fails.
+- Elements separated by `&`, for example `'[1234]'.r & '[3456]'.r`, require both sides succeed, and return the result of the left side.
+- `parser.rep` attempts to match the `parser` 0 or more times, returning a list of the results from each successful match.
+- `parser.rep1` attempts to match the `parser` 1 or more times, returning a list of the results from each successful match. If `parser` does not succeed at least once, `+parser` fails.
 - `-parser` negates the `parser`: if `parser` succeeded (with any result), `-parser` fails. If `parser` failed, `-parser` succeeds with the result `""`, the empty string.
 - `parser * n` attempts to match the `parser` exactly `n` times, returning a list of length `n` containing the result of the `n` successes. Fails otherwise.
-- `opt(parser)` matches the `parser` 0 or 1 times, returning either `[]` or `[result]` where `result` is the result of `parser`.
+- `parser.opt` matches the `parser` 0 or 1 times, returning either `[]` or `[result]` where `result` is the result of `parser`.
 
 ###Transformers
 
@@ -612,7 +628,7 @@ In this case, the `is` keyword is used to bind the result of `expr` to the name 
 with peg:
     ...
     # parses an array and extracts the relevant bits into a Python list
-     array = ('[', (json_exp, ~(',', json_exp)), opt(space), ']') // (lambda x: [x[1][0]] + [y[1] for y in x[1][1]])
+     array = ('[', (json_exp, (',', json_exp).rep), opt(space), ']') // (lambda x: [x[1][0]] + [y[1] for y in x[1][1]])
     ...
 ```
 
@@ -658,30 +674,29 @@ IntegralPart <- "0" / [1-9] [0-9]*
 FractionalPart <- "." [0-9]+
 ExponentPart <- ( "e" / "E" ) ( "+" / "-" )? [0-9]+
 S <- [ U+0009 U+000A U+000D U+0020 ]+
-
 """
 with peg:
-    json_exp = (opt(space), (obj | array | string | true | false | null | number) is exp, opt(space)) >> exp
+    json_exp = (space.opt, (obj | array | string | true | false | null | number) is exp, space.opt) >> exp
 
     pair = (string is k, ':', json_exp is v) >> (k, v)
-    obj = ('{', pair is first, ~((',', pair is rest)), opt(space), '}') >> dict([first] + rest)
-    array = ('[', json_exp is first, ~(',', json_exp is rest), opt(space), ']') >> [first] + rest
+    obj = ('{', pair is first, (',', pair is rest).rep, space.opt, '}') >> dict([first] + rest)
+    array = ('[', json_exp is first, (',', json_exp is rest).rep, space.opt, ']') >> [first] + rest
 
-    string = (opt(space), '"', ~(r('[^"]') | escape) // ("".join) is body, '"') >> "".join(body)
+    string = (space.opt, '"', ('[^"]'.r | escape).rep // ("".join) is body, '"') >> "".join(body)
     escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
-    unicode_escape = 'u', r('[0-9A-Fa-f]') * 4
+    unicode_escape = 'u', '[0-9A-Fa-f]'.r * 4
 
     true = 'true' >> True
     false = 'false' >> False
     null = 'null' >> None
 
-    number = (opt(minus), integral, opt(fractional), opt(exponent)) // (f%float("".join(_)))
+    number = (minus.opt, integral, fractional.opt, exponent.opt) // (f%float("".join(_)))
     minus = '-'
-    integral = '0' | r('[1-9][0-9]*')
-    fractional = ('.', r('[0-9]+')) // "".join
-    exponent = (('e' | 'E'), opt('+' | '-'), r("[0-9]+")) // "".join
+    integral = '0' | '[1-9][0-9]*'.r
+    fractional = ('.', '[0-9]+'.r) // "".join
+    exponent = (('e' | 'E'), ('+' | '-').opt, "[0-9]+".r) // "".join
 
-    space = r('\s+')
+    space = '\s+'.r
 
 test_string = """
     {
