@@ -18,7 +18,7 @@ MacroPy is tested to run on:
 - [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython)
 - [PyPy 1.9](http://pypy.org/)
 
-It does not yet work on [Jython](http://www.jython.org/)
+It does not yet work on [Jython](http://www.jython.org/), and is available on [PyPI](https://pypi.python.org/pypi/MacroPy)
 
 All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 40 lines of code.
 
