@@ -102,11 +102,16 @@ def _expand_ast(node, modules):
     def macro_expand(node):
         for module in [m.macros for m in modules]:
 
-            if (isinstance(node, With)
-                    and type(node.context_expr) is Name
-                    and node.context_expr.id in module.block_registry):
-
-                return module.block_registry[node.context_expr.id](node), True
+            if (isinstance(node, With)):
+                if (isinstance(node.context_expr, Name)
+                        and node.context_expr.id in module.block_registry):
+                    return module.block_registry[node.context_expr.id](node), True
+# these expressions seemed too long to merge into an "or" :/ change it if you
+# don't like it
+                if (isinstance(node.context_expr, Call)
+                        and isinstance(node.context_expr.func, Name)
+                        and node.context_expr.func.id in module.block_registry):
+                    return module.block_registry[node.context_expr.id](node), True
 
             if  (isinstance(node, BinOp)
                     and type(node.left) is Name
