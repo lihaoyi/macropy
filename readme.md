@@ -79,7 +79,7 @@ Quasiquotes
 a = 10
 b = 2
 tree = q%(1 + u%(a + b))
-print tree
+print ast.dump(tree)
 #BinOp(Num(1), Add(), Num(12))
 ```
 
@@ -105,7 +105,7 @@ Furthermore, quasiquotes allow you to _unquote_ things: if you wish to insert th
 
 ```python
 tree = q%(1 + u%(a + b))
-print tree
+print ast.dump(tree)
 #BinOp(Num(1), Add(), Num(12))
 ```
 
@@ -118,17 +118,23 @@ Apart from interpolating values in the AST, you can also interpolate:
 ```python
 a = q%(1 + 2)
 b = q%(ast%a + 3)
-print b
+print ast.dump(b)
 #BinOp(BinOp(Num(1), Add(), Num(2)), Add(), Num(3))
 ```
+
+This is necessary to join together ASTs directly, without converting the interpolated AST into its `repr`. If we had used the `u%` interpolator, it fails with an error
 
 ###Names
 ```python
 n = "x"
 x = 1
 y = q%(name%n + name%n)
+print ast.dump(y)
 #BinOp(Name('x'), Add(), Name('x'))
 ```
+
+This is convenient in order to interpolate a string variable as an identifier, rather than interpolating it as a string literal.
+
 
 String Interpolation
 --------------------

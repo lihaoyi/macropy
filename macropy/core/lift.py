@@ -2,7 +2,6 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-
 def u(node):
     """Stub to make the IDE happy"""
 
