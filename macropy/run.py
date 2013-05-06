@@ -18,7 +18,7 @@ run(literals_test.Tests)
 from macropy.macros import string_interp_test
 run(string_interp_test.Tests)
 
-from macropy.macros2 import tracing_test, literals_test
+from macropy.macros2 import tracing_test
 run(tracing_test.Tests)
 
 from macropy.macros2 import linq_test
