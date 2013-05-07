@@ -9,7 +9,6 @@ for line in open("macros2/linq_test_dataset.sql").read().split(";"):
 
 
 
-
 db = generate_schema(engine)
 
 
@@ -143,4 +142,46 @@ class Tests(unittest.TestCase):
                     if w.region == x.region
                 ) > 100000000
             )
+        )
+
+    def test_join(self):
+        compare_queries(
+            """
+            SELECT name
+            FROM movie m
+            JOIN actor a
+            JOIN casting c
+            WHERE m.title = 'Casablanca'
+            AND m.id = c.movieid
+            AND a.id = c.actorid
+            """,
+            sql%(
+                a.name
+                for m in db.movie
+                for a in db.actor
+                for c in db.casting
+                if m.title == 'Casablanca'
+                if m.id == c.movieid
+                if a.id == c.actorid
+            )
+        )
+
+        (
+            """
+            SELECT mm.title
+            FROM movie mm
+            JOIN actor aa
+            JOIN casting cc
+            WHERE mm.id = cc.movieid
+            AND aa.id = cc.actorid
+            AND mm.title IN (
+                SELECT m.title
+                FROM movie m
+                JOIN actor a
+                JOIN casting c
+                WHERE m.id = c.movieid
+                AND a.id = c.actorid
+                AND a.name = 'Julie Andrews'
+            )
+            """
         )

@@ -3,9 +3,9 @@
 CREATE TABLE bbc(
    name VARCHAR(50) NOT NULL
    ,region VARCHAR(60)
-   ,area DECIMAL(10)
-   ,population DECIMAL(11)
-   ,gdp DECIMAL(14)
+   ,area INTEGER(10)
+   ,population INTEGER(11)
+   ,gdp INTEGER(14)
    ,PRIMARY KEY (name)
    );
 
@@ -379,6 +379,7 @@ insert into casting values (10003,	43,	10);
 insert into casting values (10003,	44,	13);
 insert into casting values (10003,	45,	14);
 insert into casting values (10003,	46,	15);
+
 insert into casting values (10003,	47,	16);
 insert into casting values (10003,	48,	17);
 insert into casting values (10004,	50,	1);

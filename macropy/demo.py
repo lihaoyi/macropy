@@ -1,6 +1,4 @@
 
-
-print (lambda x: x + x)(1 + 2)
 """
 Demos
 =====
@@ -44,21 +42,31 @@ pattern matching
 
 LINQ
 ----
-import sqlite3
-conn = sqlite3.connect(":memory:")
-cursor = conn.cursor()
+from sqlalchemy import *
+from macropy.macros2.linq import macros, sql, generate_schema
+
+engine = create_engine("sqlite://")
 for line in open("macros2/linq_test_dataset.sql").read().split(";"):
-    cursor.execute(line.strip())
+    engine.execute(line.strip())
 
+db = generate_schema(engine)
 
-from macropy.macros2.linq import macros, sql
+results = engine.execute(
+    sql%((x.name, x.area) for x in db.bbc if x.area > 10000000)
+).fetchall()
 
-string = sql%(x.name for x in bbc if x.population > 100000000)
-print string
-for line in cursor.execute(string).fetchall():
-    print line
+results = engine.execute(
+    sql%(
+        x.name for x in db.bbc
+        if x.gdp / x.population > (
+            y.gdp / y.population for y in db.bbc
+            if y.name == 'United Kingdom'
+        )
+        if (x.region == 'Europe')
+    )
+).fetchall()
 
-
+for line in results: print line
 
 peg
 -------
