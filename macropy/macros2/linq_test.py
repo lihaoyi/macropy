@@ -1,26 +1,22 @@
+from sqlalchemy import *
 import unittest
-import sqlite3
 
 from macropy.macros2.linq import macros, sql
 
-
-conn = sqlite3.connect(":memory:")
-cursor = conn.cursor()
-
+engine = create_engine("sqlite://")
 for line in open("macros2/linq_test_dataset.sql").read().split(";"):
-    cursor.execute(line.strip())
+    engine.execute(line.strip())
 
-conn.commit()
+metadata = MetaData(engine)
+metadata.reflect()
 
-def raw_query(string):
-    cursor = conn.cursor()
-    cursor.execute(string)
-    return cursor.fetchall()
+bbc = Table('bbc', metadata, autoload=True)
+
 
 def compare_queries(query1, query2):
+    res1 = engine.execute(query1).fetchall()
+    res2 = engine.execute(query2).fetchall()
     try:
-        res1 = raw_query(query1)
-        res2 = raw_query(query2)
         assert res1 == res2
     except Exception, e:
         print "FAILURE"
@@ -58,7 +54,7 @@ class Tests(unittest.TestCase):
             """,
             sql%(
                 x.name for x in bbc if x.population > (
-                    y.population for y in bbc if name == 'Russia'
+                    y.population for y in bbc if y.name == 'Russia'
                 )
             )
         )
@@ -79,6 +75,25 @@ class Tests(unittest.TestCase):
                 )
             )
         )
+        compare_queries(
+            """
+            SELECT w.name, w.region
+            FROM bbc w
+            WHERE w.region in (
+                SELECT z.region
+                FROM bbc z
+                WHERE z.name = 'Belize' OR z.name = 'Belgium'
+            )
+            """,
+            sql%(
+                (c.name, c.region) for c in bbc
+                if c.region in (
+                    x.region for x in bbc
+                    if (x.name == 'Belize') | (x.name == 'Belgium')
+                )
+            )
+        )
+
     def test_operators(self):
         compare_queries(
             """
@@ -94,12 +109,32 @@ class Tests(unittest.TestCase):
                 if x.gdp / x.population > (
                     y.gdp / y.population for y in bbc
                     if y.name == 'United Kingdom'
-                ) and x.region == 'Europe'
+                )
+                if (x.region == 'Europe')
             )
         )
 
     def test_aggregate(self):
-        """
-        print raw_query("SELECT SUM(population) FROM bbc")
-        print sql%sum(x.population for x in bbc)
-        """
+        compare_queries(
+            "SELECT SUM(population) FROM bbc",
+            sql%(func.sum(x.population) for x in bbc)
+        )
+    def tsest_aliased(self):
+        compare_queries(
+            """
+            SELECT DISTINCT(x.region)
+            FROM bbc x
+            WHERE 100000000 < (
+                SELECT SUM(w.population)
+                from bbc w
+                WHERE w.region = x.region
+            )
+            """,
+            sql%(
+                func.distinct(x.region) for x in bbc
+                if (
+                    func.sum(w.population) for w in bbc
+                    if w.region == x.region
+                ) > 100000000
+            )
+        )

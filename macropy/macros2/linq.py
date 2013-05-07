@@ -1,5 +1,7 @@
 from macropy.core.macros import Macros
 from macropy.core.core import *
+from macropy.core.lift import macros, q, u, name, ast
+from macropy.macros.quicklambda import macros, f
 from ast import *
 from macropy.core.util import *
 
@@ -61,110 +63,79 @@ Core Functions:
     zeroblob(n)
 """
 macros = Macros()
-
 @macros.expr
 def sql(tree):
-    def recurse(tree):
+    def recurse(tree, scope):
+        if type(tree) is Compare and type(tree.ops[0]) is In:
+            return q%(ast%recurse(tree.left, scope)).in_(ast%recurse(tree.comparators[0], scope))
 
-        if type(tree) is BoolOp:
-            boolop_map = type_dict({
-                And: "AND",
-                Or: "OR"
-            })
-
-            return (" " + boolop_map(tree.op) + " ").join(recurse(value) for value in tree.values)
-        if type(tree) is BinOp:
-            binop_map = type_dict({
-                Add: "+",
-                Sub: "-",
-                Mult: "*",
-                Div: "/",
-                Mod: "%",
-                Pow: "**",
-                LShift: "<<",
-                RShift: ">>",
-                BitOr: "|",
-                BitXor: "",
-                BitAnd: "&",
-                FloorDiv: "/"
-            })
-            return recurse(tree.left) + " " + binop_map(tree.op) + " " + recurse(tree.right)
-
-        if type(tree) is UnaryOp:
-            unaryop_map = type_dict({
-                Invert: "~",
-                Not: "NOT ",
-                UAdd: "+",
-                USub: "-"
-            })
-            return unaryop_map(tree.op) + recurse(tree.operand)
-
-        if type(tree) is IfExp:
-            return "CASE WHEN " + recurse(tree.test) + " THEN " + recurse(tree.body) + " ELSE " + recurse(tree.orelse) + " END"
         if type(tree) is Compare:
-
-            cmpop_map = type_dict({
-                Eq: "=",
-                NotEq: "!=",
-                Lt: "<",
-                LtE: "<=",
-                Gt: ">",
-                GtE: ">=",
-                Is: "=",
-                IsNot: "!=",
-                In: "IN",
-                NotIn: "NOT IN"
-            })
-
-
-            return recurse(tree.left) + " " + cmpop_map(tree.ops[0]) + " " + recurse(tree.comparators[0])
+            tree.left = recurse(tree.left, scope)
+            tree.comparators = map(f%recurse(_, scope), tree.comparators)
+            return tree
 
         if type(tree) is Call:
-            """func_map = {
-                "len": "COUNT",
-                "min": "MIN",
-                "max": "MAX",
-                "sum": "SUM",
-            }
-            if type(tree.args[0]) is GeneratorExp:
+            tree.func = recurse(tree.func, scope)
+            tree.args = map(f%recurse(_, scope), tree.args)
+            return tree
 
-            else:
-                func_map[tree.func.id] + "(" + ", ".join(map(recurse, tree.args)) + ")" """
-        if type(tree) is Num:
-            return repr(tree.n)
+        if type(tree) is BinOp:
+            tree.left = recurse(tree.left, scope)
+            tree.right = recurse(tree.right, scope)
+            return tree
 
-        if type(tree) is Str:
-            return repr(tree.s)
-
-        if type(tree) is Attribute:
-            return tree.value.id + "." + tree.attr
-
-        if type(tree) is Name:
-            return tree.id
-
-        if type(tree) is List:
-            return "(" + ", ".join(recurse(e) for e in tree.elts) + ")"
+        if type(tree) is BoolOp:
+            tree.values = map(f%recurse(_, scope), tree.values)
+            return tree
 
         if type(tree) is Tuple:
-            return ", ".join([recurse(e) for e in tree.elts])
+            tree.elts = map(f%recurse(_, scope), tree.elts)
+
+        if type(tree) is Attribute:
+            if tree.value.id in map(f%_[0], scope):
+                column_getter = Attribute(
+                    value=Name(id = dict(scope)[tree.value.id]),
+                    attr='c',
+                    ctx = Load()
+                )
+                tree.value = column_getter
+                return tree
+            else:
+                return tree
+
         if type(tree) is GeneratorExp:
+
+            aliases = map(f%_.target, tree.generators)
+            tables = map(f%_.iter, tree.generators)
+            import random
+
+            aliased_tables = map(lambda x: q%((ast%x).alias().c), tables)
+
+            ifs = [
+                recurse(ifcond, scope)
+                for gen in tree.generators
+                for ifcond in gen.ifs
+            ]
+
             elt = tree.elt
+            if type(elt) is Tuple:
 
-            sel = recurse(elt)
+                sel = q%(ast_list%recurse(elt, scope).elts)
+            else:
+                sel = q%[ast%recurse(elt, scope)]
 
-            frm = " JOIN ".join(
-                gen.iter.id + " " + gen.target.id
-                for gen in tree.generators
-            )
 
-            all_guards = "AND".join(
-                recurse(ifexp)
-                for gen in tree.generators
-                for ifexp in gen.ifs
-            )
+            out = q%select(ast%sel)
 
-            whr = "" if all_guards == "" else "WHERE " + all_guards
+            for cond in ifs:
+                out = q%(ast%out).where(ast%cond)
+            out = q%(lambda x: ast%out)()
+            out.func.args.args = aliases
+            out.args = aliased_tables
+            return out
 
-            return "(SELECT %s FROM %s %s)" % (sel, frm, whr)
-        raise Exception("No handler for " + str(tree))
-    return ast_repr(recurse(tree)[1:-1])
+        return tree
+
+    x = recurse(tree, [])
+    return x
+

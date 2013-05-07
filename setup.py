@@ -34,7 +34,8 @@ Quick Lambdas
     print map(f%_[0], ['omg', 'wtf', 'bbq'])
     # ['o', 'w', 'b']
 
-
+    print reduce(f%(_ + _), ['omg', 'wtf', 'bbq'])
+    # 'omgwtfbbq
 
 Case Classes
 ````````````
@@ -51,10 +52,9 @@ Case Classes
     print p.y       #2
     print Point(1, 2) == Point(1, 2) # True
 
-Links
------
 
-For more details, see the `GitHub page <https://github.com/lihaoyi/macropy>`_
+
+And more! All this runs perfectly on vanilla Python 2.7 or PyPy 1.9. For more details, see the `GitHub page <https://github.com/lihaoyi/macropy>`_
 
 
 """

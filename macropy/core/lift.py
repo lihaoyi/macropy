@@ -4,6 +4,8 @@ macros = Macros()
 
 def u(node):
     """Stub to make the IDE happy"""
+def name(node):
+    """Stub to make the IDE happy"""
 
 
 class Literal(object):
