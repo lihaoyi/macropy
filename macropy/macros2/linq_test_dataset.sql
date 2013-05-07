@@ -9,8 +9,6 @@ CREATE TABLE bbc(
    ,PRIMARY KEY (name)
    );
 
-CREATE INDEX bbc_region ON bbc(region);
-
 --- tabbbc, 1, 50
 insert into bbc values ('Afghanistan','South Asia',652225,26000000,NULL);
 insert into bbc values ('Albania','Europe',28728,3200000,6656000000);
@@ -208,3 +206,180 @@ insert into bbc values ('Vietnam','Asia-Pacific',329247,83600000,45980000000);
 insert into bbc values ('Yemen','Middle East',536869,21500000,12255000000);
 insert into bbc values ('Zambia','Africa',752614,11000000,4950000000);
 insert into bbc values ('Zimbabwe','Africa',390759,12900000,6192000000);
+
+
+CREATE TABLE movie (
+  id int(11) NOT NULL,
+  title varchar(50) DEFAULT NULL,
+  yr int(11) DEFAULT NULL,
+  director int(11) DEFAULT NULL,
+  budget int(11) DEFAULT NULL,
+  gross int(11) DEFAULT NULL,
+  PRIMARY KEY (id)
+);
+
+insert into movie values (10001, '$', 1971, 3, null, null);
+insert into movie values (10002, '"Crocodile" Dundee', 1986, 19, null, 328203506);
+insert into movie values (10003, '"Crocodile" Dundee II', 1988, 36, 15800000, 239606210);
+insert into movie values (10004, 'Til There Was You', 1997, 49, 10000000, null);
+insert into movie values (10005, 'Til We Meet Again', 1940, 65, null, null);
+insert into movie values (10006, 'Adalen 31', 1969, 77, null, null);
+insert into movie values (10007, 'Eon Flux', 2005, 82, 62000000, 52304001);
+insert into movie values (10008, '500 Days of Summer', 2009, 95, 7500000, 60722734);
+insert into movie values (10009, '(Untitled)', 2009, 107, null, null);
+insert into movie values (10010, '*batteries not included', 1987, 115, 25000000, 65088797);
+insert into movie values (10011, '10,000 BC', 2008, 121, 105000000, null);
+insert into movie values (10012, '101 Dalmatians', 1996, 139, null, 320689294);
+insert into movie values (10013, '101 Dalmatians II: Patchs London Adventure', 2003, 148, null, null);
+insert into movie values (10014, '101 Reykjavík', 2000, 163, null, 126404);
+insert into movie values (10015, '102 Dalmatians', 2000, 169, 85000000, 183611771);
+insert into movie values (10016, '10', 1979, 177, 74856000, null);
+insert into movie values (10017, '10 Rillington Place', 1971, 184, null, null);
+insert into movie values (10018, '10 Things I Hate About You', 1999, 204, 16000000, 53478166);
+insert into movie values (10019, '10 to Midnight', 1983, 219, null, null);
+insert into movie values (10020, '11:14', 2003, 228, 6000000, null);
+insert into movie values (10021, '127 Hours', 2011, 242, 18000000, 60738797);
+insert into movie values (10022, '12', 2007, 250, 2500000, 4000000);
+insert into movie values (10023, '12 Angry Men', 1957, 261, 350000, null);
+insert into movie values (10024, '12 Monkeys', 1995, 273, 29500000, 168839459);
+insert into movie values (10025, '12 Rounds', 2009, 289, 20000000, 18184083);
+insert into movie values (10026, '12th & Delaware', 2010, 296, null, null);
+insert into movie values (10027, '13 Ghosts', 1960, 297, null, null);
+insert into movie values (10028, '13 Going on 30', 2004, 305, 37000000, 96455697);
+insert into movie values (10029, '13 Moons', 2002, 323, null, null);
+insert into movie values (10030, '13 Rue Madeleine', 1947, 330, null, null);
+insert into movie values (10031, '1408', 2007, 339, 25000000, 131998242);
+insert into movie values (10032, '1492: Conquest of Paradise', 1992, 351, null, null);
+insert into movie values (10033, '15 Maiden Lane', 1936, 355, null, null);
+insert into movie values (10034, '15 Minutes', 2001, 363, null, 56359980);
+insert into movie values (10035, '16 Blocks', 2006, 383, null, 65664721);
+insert into movie values (10036, '1732 Høtten', 1998, 397, null, null);
+insert into movie values (10037, '1776', 1972, 401, null, null);
+insert into movie values (10038, '17 Again', 2009, 426, 20000000, 136267476);
+insert into movie values (10039, '17th Parallel: Vietnam in War', 1968, 447, null, null);
+insert into movie values (10040, '1900', 1976, 464, 9000000, 6064026);
+insert into movie values (10041, '1969', 1988, 501, null, null);
+insert into movie values (10042, 'THE AMaZING 1984', 1956, 505, null, null);
+insert into movie values (10043, '1991: The Year Punk Broke', 1992, 519, null, null);
+insert into movie values (10044, '20000 Leagues Under the Sea', 1916, 544, null, null);
+insert into movie values (10045, '20,000 Leagues Under the Sea', 1954, 184, 4300000, 11267000);
+insert into movie values (10046, '20,000 Years in Sing Sing', 1932, 559, null, null);
+insert into movie values (10047, '2001: A Space Odyssey', 1968, 565, 10500000, 56715371);
+insert into movie values (10048, '200 Motels', 1971, 580, 679000, null);
+insert into movie values (10049, '2010', 1984, 584, 28000000, null);
+insert into movie values (10050, '2012', 2009, 121, 200000000, 769679473);
+
+CREATE TABLE actor (
+  id int(11) NOT NULL,
+  name varchar(50) DEFAULT NULL,
+  PRIMARY KEY (id)
+);
+
+insert into actor values (30509, 'Tori Amos');
+insert into actor values (2, '');
+insert into actor values (35329, 'Barbara Leake');
+insert into actor values (12445, 'Don Pike');
+insert into actor values (41202, 'Jill Remez');
+insert into actor values (29400, 'Elsa Peterson');
+insert into actor values (14241, 'Mary-Kate and Ashley Olsen');
+insert into actor values (2131, 'Eve Brent');
+insert into actor values (690, 'Christopher Eccleston');
+insert into actor values (27966, 'Sir Ian McKellen');
+insert into actor values (20773, 'Tony Genaro');
+insert into actor values (43733, 'Christopher Witty');
+insert into actor values (35232, 'Roland Gift');
+insert into actor values (20205, 'Phil Davis');
+insert into actor values (25790, 'Alexandra Monvoisin');
+insert into actor values (24003, 'Suzanne Barnes');
+insert into actor values (25730, 'Dominique Blanc');
+insert into actor values (13640, 'Laraine Humphrys');
+insert into actor values (45069, 'The Guard Brothers');
+insert into actor values (15185, 'Philip Quast');
+insert into actor values (41214, 'Myrtle Anderson');
+insert into actor values (35763, 'Phillip Jarrett');
+insert into actor values (2838, 'Whit Hertford');
+insert into actor values (18714, 'Robert Conway');
+insert into actor values (2487, 'Salli Richardson');
+insert into actor values (44061, 'Lev Atamanov');
+insert into actor values (29767, 'Ashley Williams');
+insert into actor values (7743, 'Patrick Aherne');
+insert into actor values (116, 'Hume Cronyn');
+insert into actor values (38875, 'Kevin McKenzie');
+insert into actor values (33430, 'Klaus Voormann');
+insert into actor values (29933, 'Joel Gordon');
+insert into actor values (8352, 'Hugh Quarshie');
+insert into actor values (31272, 'Denzel Whitaker');
+insert into actor values (41840, 'Ben Hollingsworth');
+insert into actor values (40090, 'Jonathan Estrin');
+insert into actor values (22067, 'Harold Waite');
+insert into actor values (18406, 'Richard Panebianco');
+insert into actor values (35292, 'Yoshiaki Hanayagi');
+insert into actor values (22659, 'Alan North');
+insert into actor values (2179, 'Michael Vale');
+insert into actor values (22859, 'Risë Stevens');
+insert into actor values (39507, 'Bill Hayes');
+insert into actor values (19225, 'Kulbhushan Kharbanda');
+insert into actor values (4358, 'Wendie Malick');
+insert into actor values (21949, 'Katherine Bailess');
+insert into actor values (6518, 'Jay Johnston');
+insert into actor values (17700, 'Michael Cimino');
+insert into actor values (11672, 'Tyrone Power, Sr.');
+insert into actor values (334, 'Frank Latimore');
+
+CREATE TABLE casting (
+  movieid int(11) NOT NULL DEFAULT '0',
+  actorid int(11) NOT NULL DEFAULT '0',
+  ord int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (movieid,actorid,ord)
+);
+
+insert into casting values (10001,	4,	1);
+insert into casting values (10001,	5,	2);
+insert into casting values (10001,	6,	3);
+insert into casting values (10001,	7,	4);
+insert into casting values (10001,	8,	5);
+insert into casting values (10001,	9,	6);
+insert into casting values (10001,	10,	7);
+insert into casting values (10001,	11,	8);
+insert into casting values (10001,	12,	9);
+insert into casting values (10001,	13,	10);
+insert into casting values (10001,	14,	11);
+insert into casting values (10001,	15,	12);
+insert into casting values (10001,	16,	13);
+insert into casting values (10001,	17,	14);
+insert into casting values (10001,	18,	15);
+insert into casting values (10002,	20,	1);
+insert into casting values (10002,	21,	2);
+insert into casting values (10002,	22,	3);
+insert into casting values (10002,	23,	4);
+insert into casting values (10002,	24,	5);
+insert into casting values (10002,	25,	6);
+insert into casting values (10002,	26,	7);
+insert into casting values (10002,	27,	8);
+insert into casting values (10002,	28,	9);
+insert into casting values (10002,	29,	10);
+insert into casting values (10002,	30,	11);
+insert into casting values (10002,	31,	12);
+insert into casting values (10002,	32,	13);
+insert into casting values (10002,	33,	14);
+insert into casting values (10002,	34,	15);
+insert into casting values (10002,	35,	16);
+insert into casting values (10003,	20,	4);
+insert into casting values (10003,	21,	2);
+insert into casting values (10003,	22,	3);
+insert into casting values (10003,	25,	11);
+insert into casting values (10003,	26,	12);
+insert into casting values (10003,	37,	1);
+insert into casting values (10003,	38,	5);
+insert into casting values (10003,	39,	6);
+insert into casting values (10003,	40,	7);
+insert into casting values (10003,	41,	8);
+insert into casting values (10003,	42,	9);
+insert into casting values (10003,	43,	10);
+insert into casting values (10003,	44,	13);
+insert into casting values (10003,	45,	14);
+insert into casting values (10003,	46,	15);
+insert into casting values (10003,	47,	16);
+insert into casting values (10003,	48,	17);
+insert into casting values (10004,	50,	1);
+insert into casting values (10004,	51,	2);
