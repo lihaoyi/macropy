@@ -413,27 +413,32 @@ As the classes `Nil` are `Cons` are nested within `List`, both of them get trans
 
 Pattern Matching
 ----------------
-```python
-@case
-class List:
-  def Nil():
-    pass
-
-  def Cons(x, xs):
-    pass
-
-def foldl1(my_list, op):
-  with matching:
-    if Cons(x, Nil()) << my_list:
-      return x
-    elif Cons(x, xs) << my_list:
-      return op(x, foldl1(xs, op))
-```
-
 Pattern matching is taken from many functional languages, including Haskell,
 ML, and Scala, all of which allow a convenient syntax for extracting elements
-out of a complex data structure.  One can also override the way in which a
-pattern is matched.
+out of a complex data structure.  The most basic way of matching an object
+against a pattern is to use the patterns block macro, and use the left shit
+operator, as shown.
+
+
+```python
+with patterns:
+  Foo(x, Bar(3, z)) << Foo(4, Bar(3, 8))
+  print x   # 4
+  print z   # 8
+```
+
+If the match fails, a PatternMatchException() will be thrown.
+
+```python
+with patterns:
+  # Throws a PatternMatchException
+  Foo(x, 4) << Foo(5, 5)
+```
+
+One can also override the way in which a pattern is matched by defining an
+`__unapply__` class method of the class which you are pattern matching.  The
+'class' need not actually be the type of the matched object, as in the following
+example borrowed from Scala.
 
 ```python
 class Twice(object):
@@ -448,6 +453,24 @@ with patterns:
   Twice(n) << 8
   print n     # 4
 ```
+
+```python
+@case
+class List:
+  class Nil():
+    pass
+
+  class Cons(x, xs):
+    pass
+
+def foldl1(my_list, op):
+  with switch(my_list):
+    if Cons(x, Nil()):
+      return x
+    elif Cons(x, xs):
+      return op(x, foldl1(xs, op))
+```
+
 
 
 Tail-call Optimization
