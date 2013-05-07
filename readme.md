@@ -482,6 +482,11 @@ with patterns:
   print n     # 4
 ```
 
+In addition to pattern matching which may throw an exception, there is a nice
+macro called `switch` which provides syntactic sugar for the common case when
+you want to simultaneously extract variables and check whether there was a
+match.
+
 ```python
 @case
 class List:
@@ -499,6 +504,23 @@ def foldl1(my_list, op):
       return op(x, foldl1(xs, op))
 ```
 
+`foldl1` is approximtely desugared into the following, with one important
+caveat: the bodies of the if statements are not subject to pattern matching,
+in case you actually want to use bitshifts in your code.
+```python
+def foldl1(my_list, op):
+  with patterns:
+    tmp = my_list
+    try:
+      Cons(x, Nil()) << tmp
+      return x
+    except PatternMatchException:
+      try:
+        Cons(x, xs) << tmp
+        return op(x, foldl1(xs, op))
+      except PatternMatchException:
+        pass
+```
 
 
 Tail-call Optimization
