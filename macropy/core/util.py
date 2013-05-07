@@ -16,3 +16,8 @@ def singleton(cls):
 
 def type_dict(d):
     return lambda x: d[type(x)]
+
+def gen_sym():
+    import random
+    import string
+    return ''.join([random.choice(string.letters) for _ in range(15)])

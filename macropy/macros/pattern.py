@@ -320,7 +320,7 @@ def switch(node, arg):
     # TODO handle the passing of an argument
     import string
     import random
-    new_id = ''.join([random.choice(string.letters) for _ in range(15)])
+    new_id = util.gen_sym()
     for i in xrange(len(node.body)):
         node.body[i] = _maybe_rewrite_if(node.body[i], new_id)
     node.body = [Assign([Name(new_id, Store())], arg)] + node.body
