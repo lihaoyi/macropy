@@ -4,6 +4,7 @@ from macropy.core.lift import macros, q, u, name, ast
 from macropy.macros.quicklambda import macros, f
 from ast import *
 from macropy.core.util import *
+import sqlalchemy
 
 """
 Aggregate Functions:
@@ -92,16 +93,9 @@ def sql(tree):
             tree.elts = map(f%recurse(_, scope), tree.elts)
 
         if type(tree) is Attribute:
-            if tree.value.id in map(f%_[0], scope):
-                column_getter = Attribute(
-                    value=Name(id = dict(scope)[tree.value.id]),
-                    attr='c',
-                    ctx = Load()
-                )
-                tree.value = column_getter
-                return tree
-            else:
-                return tree
+
+            tree.value = recurse(tree.value, scope)
+            return tree
 
         if type(tree) is GeneratorExp:
 
@@ -112,7 +106,7 @@ def sql(tree):
             aliased_tables = map(lambda x: q%((ast%x).alias().c), tables)
 
             ifs = [
-                recurse(ifcond, scope)
+                recurse(ifcond, None)
                 for gen in tree.generators
                 for ifcond in gen.ifs
             ]
@@ -120,15 +114,21 @@ def sql(tree):
             elt = tree.elt
             if type(elt) is Tuple:
 
-                sel = q%(ast_list%recurse(elt, scope).elts)
+                sel = q%(ast_list%recurse(elt, None).elts)
             else:
-                sel = q%[ast%recurse(elt, scope)]
+                sel = q%[ast%recurse(elt, None)]
+
 
 
             out = q%select(ast%sel)
 
+
             for cond in ifs:
                 out = q%(ast%out).where(ast%cond)
+
+            if scope != []:
+                out = q%(ast%out).as_scalar()
+
             out = q%(lambda x: ast%out)()
             out.func.args.args = aliases
             out.args = aliased_tables
@@ -139,3 +139,12 @@ def sql(tree):
     x = recurse(tree, [])
     return x
 
+
+def generate_schema(engine):
+    metadata = sqlalchemy.MetaData(engine)
+    metadata.reflect()
+    class Db: pass
+    db = Db()
+    for table in metadata.sorted_tables:
+        setattr(db, table.name, table)
+    return db

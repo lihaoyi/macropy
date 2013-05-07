@@ -1,16 +1,17 @@
 from sqlalchemy import *
 import unittest
 
-from macropy.macros2.linq import macros, sql
+from macropy.macros2.linq import macros, sql, generate_schema
 
 engine = create_engine("sqlite://")
 for line in open("macros2/linq_test_dataset.sql").read().split(";"):
     engine.execute(line.strip())
 
-metadata = MetaData(engine)
-metadata.reflect()
 
-bbc = Table('bbc', metadata, autoload=True)
+
+
+db = generate_schema(engine)
+
 
 
 def compare_queries(query1, query2):
@@ -36,11 +37,11 @@ class Tests(unittest.TestCase):
     def test_basic(self):
         compare_queries(
             "SELECT name FROM bbc WHERE region = 'Europe'",
-            sql%(x.name for x in bbc if x.region == 'Europe')
+            sql%(x.name for x in db.bbc if x.region == 'Europe')
         )
         compare_queries(
             "SELECT name, area FROM bbc WHERE area > 10000000",
-            sql%((x.name, x.area) for x in bbc if x.area > 10000000)
+            sql%((x.name, x.area) for x in db.bbc if x.area > 10000000)
         )
 
     def test_nested(self):
@@ -53,8 +54,8 @@ class Tests(unittest.TestCase):
             )
             """,
             sql%(
-                x.name for x in bbc if x.population > (
-                    y.population for y in bbc if y.name == 'Russia'
+                x.name for x in db.bbc if x.population > (
+                    y.population for y in db.bbc if y.name == 'Russia'
                 )
             )
         )
@@ -68,9 +69,9 @@ class Tests(unittest.TestCase):
             )
             """,
             sql%(
-                (x.name, x.region) for x in bbc
+                (x.name, x.region) for x in db.bbc
                 if x.region in (
-                    y.region for y in bbc
+                    y.region for y in db.bbc
                     if y.name in ['India', 'Iran']
                 )
             )
@@ -86,9 +87,9 @@ class Tests(unittest.TestCase):
             )
             """,
             sql%(
-                (c.name, c.region) for c in bbc
+                (c.name, c.region) for c in db.bbc
                 if c.region in (
-                    x.region for x in bbc
+                    x.region for x in db.bbc
                     if (x.name == 'Belize') | (x.name == 'Belgium')
                 )
             )
@@ -105,9 +106,9 @@ class Tests(unittest.TestCase):
             AND region = 'Europe'
             """,
             sql%(
-                x.name for x in bbc
+                x.name for x in db.bbc
                 if x.gdp / x.population > (
-                    y.gdp / y.population for y in bbc
+                    y.gdp / y.population for y in db.bbc
                     if y.name == 'United Kingdom'
                 )
                 if (x.region == 'Europe')
@@ -117,9 +118,14 @@ class Tests(unittest.TestCase):
     def test_aggregate(self):
         compare_queries(
             "SELECT SUM(population) FROM bbc",
-            sql%(func.sum(x.population) for x in bbc)
+            sql%(func.sum(x.population) for x in db.bbc)
         )
-    def tsest_aliased(self):
+
+    def test_aliased(self):
+        compare_queries(
+            "select count(*) from bbc where area >= 1000000",
+            sql%(func.count(x.name) for x in db.bbc if x.area >= 1000000)
+        )
         compare_queries(
             """
             SELECT DISTINCT(x.region)
@@ -131,9 +137,9 @@ class Tests(unittest.TestCase):
             )
             """,
             sql%(
-                func.distinct(x.region) for x in bbc
+                func.distinct(x.region) for x in db.bbc
                 if (
-                    func.sum(w.population) for w in bbc
+                    func.sum(w.population) for w in db.bbc
                     if w.region == x.region
                 ) > 100000000
             )
