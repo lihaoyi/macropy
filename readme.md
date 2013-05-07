@@ -435,15 +435,43 @@ with patterns:
   Foo(x, 4) << Foo(5, 5)
 ```
 
-One can also override the way in which a pattern is matched by defining an
-`__unapply__` class method of the class which you are pattern matching.  The
-'class' need not actually be the type of the matched object, as in the following
-example borrowed from Scala.
+When you pattern match `Foo(x, y)` against a value `Foo(3, 4)`, what happens behind the
+scenes is that the constructor of `Foo` is inspected.  We may find that it takes
+two parameters `a` and `b`.  We assume that the constructor then contains lines
+like:
+```python
+self.a = a
+self.b = b
+```
+(We don't have access to the source of Foo, so this is the best we can do).
+Then `Foo(x, y) << Foo(3, 4)` is transformed into
+
+```python
+tmp = Foo(3,4)
+x = tmp.a
+y = tmp.b
+```
+
+In some cases, constructors will not be so standard.  In this case, we can use
+keyword arguments to pattern match against named fields.  For example, an
+equivalent to the above which doesn't rely on the constructor is `Foo(a=x, b=y)
+<< Foo(3, 4)`.  Here the semantics are that the field `a` is extracted from
+`Foo(3,4)` to be matched against the simple pattern `x`.  We could also replace
+`x` with a more complex pattern, as in `Foo(a=Bar(z), b=y) << Foo(Bar(2), 4)`.
+
+It is also possible to completely override the way in which a pattern is matched
+by defining an `__unapply__` class method of the class which you are pattern
+matching.  The 'class' need not actually be the type of the matched object, as
+in the following example borrowed from Scala.  The `__unapply__` method takes as
+arguments the value being matched, as well as a list of keywords.
+
+The method should then return a tuple of a list of positional matches, and a
+dictionary of the keyword matches.
 
 ```python
 class Twice(object):
   @classmethod
-  def __unapply__(x):
+  def __unapply__(clazz, x, kw_keys):
     if not isinstance(x, int) or x % 2 != 0:
       raise PatternMatchException()
     else:
