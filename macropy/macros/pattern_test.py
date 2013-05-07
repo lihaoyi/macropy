@@ -112,20 +112,20 @@ class Tests(unittest.TestCase):
             self.assertEquals(6, y)
 
     def test_switch(self):
-        with case_switch:
-            if Bar(5) << Bar(6):
+        with switch(Bar(6)):
+            if Bar(5):
                 self.assertTrue(False)
             else:
                 pass
 
     def test_instance_checking(self):
         blah = Baz(5)
-        with case_switch:
-            if Foo(lol, wat) << blah:
+        with switch(blah):
+            if Foo(lol, wat):
                 self.assertTrue(False)
-            elif Bar(4) << blah:
+            elif Bar(4):
                 self.assertTrue(False)
-            elif Baz(x) << blah:
+            elif Baz(x):
                 self.assertEquals(5, x)
             self.assertEquals(8, 1 << 3)
 
@@ -167,6 +167,13 @@ class Tests(unittest.TestCase):
                 self.assertEquals(2, n)
             else:
                 self.assertTrue(False)
+
+    def test_parallel_matching(self):
+        with _matching:
+            (x&(a,b)) << (4, 5)
+            self.assertEquals((4, 5), x)
+            self.assertEquals(4, a)
+            self.assertEquals(5, b)
 
 
 if __name__ == '__main__':

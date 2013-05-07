@@ -8,6 +8,7 @@ from macropy.core.lift import *
 
 macros = Macros()
 
+
 class PatternMatchException(Exception):
     """
     Thrown when a nonrefutable pattern match fails
@@ -90,6 +91,26 @@ class TupleMatcher(Matcher):
                     (len(self.matchers),))
         for (matcher, sub_matchee) in zip(self.matchers, matchee):
             match = matcher.match(sub_matchee)
+            updates.extend(match)
+        return updates
+
+
+class ParallelMatcher(Matcher):
+    def __init__(self, matcher1, matcher2):
+        self.matcher1 = matcher1
+        self.matcher2 = matcher2
+        if not _vars_are_disjoint(util.flatten([matcher1.var_names(),
+            matcher2.var_names()])):
+            raise PatternVarConflict()
+
+    def var_names(self):
+        return util.flatten([self.matcher1.var_names(),
+            self.matcher2.var_names()])
+
+    def match(self, matchee):
+        updates = []
+        for matcher in [self.matcher1, self.matcher2]:
+            match = matcher.match(matchee)
             updates.extend(match)
         return updates
 
@@ -216,8 +237,11 @@ def build_matcher(node, modified):
         return Call(Name('ClassMatcher', Load()), [node.func,
             positional_matchers], kw_matchers, None, None)
     if (isinstance(node, BinOp) and isinstance(node.op, BitAnd)):
-        # TODO parallel matching
-        pass
+        sub1 = build_matcher(node.left, modified)
+        sub2 = build_matcher(node.right, modified)
+        return Call(Name('ParallelMatcher', Load()), [sub1, sub2], [], None,
+                None)
+
     raise Exception("Unrecognized node " + repr(node))
 
 
@@ -257,7 +281,7 @@ def _matching(node):
     return node.body
 
 
-def _rewrite_if(node):
+def _rewrite_if(node, var_name=None):
     # with q as rewritten:
     #     try:
     #         with matching:
@@ -269,30 +293,39 @@ def _rewrite_if(node):
     handler = ExceptHandler(Name('PatternMatchException',
         Load()), None, node.orelse)
     try_stmt = TryExcept(node.body, [handler], [])
+    if var_name:
+        node.test = BinOp(node.test, LShift(), Name(var_name, Load()))
     macroed_match = With(Name('_matching', Load()), None, Expr(node.test))
     try_stmt.body = [macroed_match] + try_stmt.body
     if len(handler.body) == 1:
-        handler.body = [_maybe_rewrite_if(handler.body[0])]
+        handler.body = [_maybe_rewrite_if(handler.body[0], var_name)]
     elif not handler.body:
         handler.body = [Pass()]
     return try_stmt
 
 
-def _maybe_rewrite_if(stmt):
-    if isinstance(stmt, If) and _is_pattern_match_expr(stmt.test):
-        return _rewrite_if(stmt)
+def _maybe_rewrite_if(stmt, var_name=None):
+    if isinstance(stmt, If):
+        return _rewrite_if(stmt, var_name)
     return stmt
 
+
 @macros.block
-def case_switch(node):
+def switch(node, arg):
     """
     This only enables (refutable) pattern matching in top-level if statements.
     The advantage of this is the limited reach ensures less interference with
     existing code.
     """
+    # TODO handle the passing of an argument
+    import string
+    import random
+    new_id = ''.join([random.choice(string.letters) for _ in range(15)])
     for i in xrange(len(node.body)):
-        node.body[i] = _maybe_rewrite_if(node.body[i])
+        node.body[i] = _maybe_rewrite_if(node.body[i], new_id)
+    node.body = [Assign([Name(new_id, Store())], arg)] + node.body
     return node.body
+
 
 @macros.block
 def patterns(node):

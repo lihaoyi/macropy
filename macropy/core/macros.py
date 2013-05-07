@@ -1,5 +1,6 @@
 import sys
 import imp
+import inspect
 import ast
 from ast import *
 from macropy.core.core import *
@@ -106,12 +107,14 @@ def _expand_ast(node, modules):
                 if (isinstance(node.context_expr, Name)
                         and node.context_expr.id in module.block_registry):
                     return module.block_registry[node.context_expr.id](node), True
-# these expressions seemed too long to merge into an "or" :/ change it if you
-# don't like it
+
+# When passing arguments to a macro.  TODO arity-checking?
                 if (isinstance(node.context_expr, Call)
                         and isinstance(node.context_expr.func, Name)
                         and node.context_expr.func.id in module.block_registry):
-                    return module.block_registry[node.context_expr.id](node), True
+                    the_macro = module.block_registry[node.context_expr.func.id]
+
+                    return the_macro(node, *(node.context_expr.args)), True
 
             if  (isinstance(node, BinOp)
                     and type(node.left) is Name

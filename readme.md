@@ -9,6 +9,7 @@ MacroPy
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts)
 - [Case Classes](#case-classes), easy [Algebraic Data Types](https://en.wikipedia.org/wiki/Algebraic_data_type) from Scala
 - [Pattern Matching](#pattern-matching) from the Functional Programming world
+- [Tail-call Optimization](#tco)
 - [LINQ to SQL](#linq-to-sql) from C#
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy,
 - [Parser Combinators](#parser-combinators), inspired by [Scala's](http://www.suryasuravarapu.com/2011/04/scala-parser-combinators-win.html).
@@ -447,6 +448,11 @@ with patterns:
   Twice(n) << 8
   print n     # 4
 ```
+
+
+Tail-call Optimization
+-----------
+Work-in-progress
 
 LINQ to SQL
 -----------
