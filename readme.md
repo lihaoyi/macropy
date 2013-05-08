@@ -580,7 +580,7 @@ query = select([db.bbc.c.name]).where(
 
 Already we are bumping into edge cases: the `db.bbc` in the nested query is referred to the same way as the `db.bbc` in the outer query, although they are clearly different! One may wonder, what if, in the inner query, we wish to refer to the outer query's values?
 
-Naturally, there will be solutions to all of these requirements. However, SQLAlchemy ends up effectively creating its own programming language, with its own scoping, its own name binding, etc.. This strange, extremely loose scoping is something inherited from SQL, but eventually you find it re-inventing a mini programming language inside its queries.
+Naturally, there will be solutions to all of these requirements. In the end, SQLAlchemy ends up effectively creating its own programming language, with its own scoping, its own name binding, etc..
 
 In the equivalent LINQ code, the scoping of which `db.bbc` you are referring to is much more explicit, and closely follows Python's scoping rules:
 
