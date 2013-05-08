@@ -30,7 +30,9 @@ Rough Overview
 Macro functions are defined in three ways:
 
 ```python
+
 macros = Macros()
+
 @macros.expr
 def my_expr_macro(tree):
     ...
@@ -47,9 +49,15 @@ def my_decorator_macro(tree):
     return new_tree
 ```
 
-These three types of macros are called via
+The line `macros = Macros()` is required to mark the file as using macros, and the `macros` object then provides the methods `expr`, `block` and `decorator` which can be used to decorate functions to mark them out as the three different kinds of macros.
+
+Each macro function is passed a `tree`. The `tree` is an `AST` object, the sort provided by Python's [ast module](http://docs.python.org/2/library/ast.html). The macro is able to do whatever transformations it wants, and it returns a modified (or even an entirely new) `AST` object which MacroPy will use to replace the original macro invocation.
+
+These three types of macros are called via:
 
 ```python
+from my_macro_module import macros, ...
+
 val = my_expr_macro%(...)
 
 with my_block_macro:
@@ -60,7 +68,9 @@ class X():
     ...
 ```
 
-Any time any of these syntactic forms is seen, if a matching macro exists, the abstract syntax tree captured by these forms (the `...` in the code above) is given to the respective macro to handle. The macro can then return a new tree, which is substituted into the original code in-place.
+Where the line `from my_macro_module import macros, ...` is necessary to tell MacroPy which macros these module relies on. Multiple things can be imported from each module (the `...`) but `macros` must come first for macros from that module to be used.
+
+Any time any of these syntactic forms is seen, if a matching macro exists in any of the packages from which `macros` has been imported from, the abstract syntax tree captured by these forms (the `...` in the code above) is given to the respective macro to handle. The tree (new, modified, or even unchanged) which the macro returns is substituted into the original code in-place.
 
 MacroPy intercepts the module-loading workflow, via the functionality provided by [PEP 302: New Import Hooks](http://www.python.org/dev/peps/pep-0302/). The workflow is roughly:
 
@@ -71,7 +81,9 @@ MacroPy intercepts the module-loading workflow, via the functionality provided b
 
 ![Workflow](media/Workflow.png)
 
-Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) folder.
+Examples
+========
+Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/core/macros/string_interp.py) or [Quick Lambda](macropy/core/macros/quicklambda.py) macros for some small (<30 lines), self contained examples.
 
 Quasiquotes
 -----------
@@ -917,6 +929,7 @@ pp.pprint(parser.parse_all(string)[0])
 ```
 
 As you can see, the full parser parses that non-trivial blob of JSON into an identical structure as the in-built `json` package. In addition, the source of the parser looks almost identical to the PEG grammar it is parsing, shown above. Pretty neat!
+
 
 Credits
 =======

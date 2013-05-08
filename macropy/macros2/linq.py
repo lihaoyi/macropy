@@ -126,8 +126,6 @@ def recurse(tree, scope):
         else:
             sel = q%[ast%recurse(elt, None)]
 
-
-
         out = q%select(ast%sel)
 
 
@@ -151,3 +149,4 @@ def generate_schema(engine):
     for table in metadata.sorted_tables:
         setattr(db, table.name, table)
     return db
+
