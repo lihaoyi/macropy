@@ -66,81 +66,83 @@ Core Functions:
 macros = Macros()
 @macros.expr
 def sql(tree):
-    def recurse(tree, scope):
-        if type(tree) is Compare and type(tree.ops[0]) is In:
-            return q%(ast%recurse(tree.left, scope)).in_(ast%recurse(tree.comparators[0], scope))
-
-        if type(tree) is Compare:
-            tree.left = recurse(tree.left, scope)
-            tree.comparators = map(f%recurse(_, scope), tree.comparators)
-            return tree
-
-        if type(tree) is Call:
-            tree.func = recurse(tree.func, scope)
-            tree.args = map(f%recurse(_, scope), tree.args)
-            return tree
-
-        if type(tree) is BinOp:
-            tree.left = recurse(tree.left, scope)
-            tree.right = recurse(tree.right, scope)
-            return tree
-
-        if type(tree) is BoolOp:
-            tree.values = map(f%recurse(_, scope), tree.values)
-            return tree
-
-        if type(tree) is Tuple:
-            tree.elts = map(f%recurse(_, scope), tree.elts)
-
-        if type(tree) is Attribute:
-
-            tree.value = recurse(tree.value, scope)
-            return tree
-
-        if type(tree) is GeneratorExp:
-
-            aliases = map(f%_.target, tree.generators)
-            tables = map(f%_.iter, tree.generators)
-            import random
-
-            aliased_tables = map(lambda x: q%((ast%x).alias().c), tables)
-
-            ifs = [
-                recurse(ifcond, None)
-                for gen in tree.generators
-                for ifcond in gen.ifs
-            ]
-
-            elt = tree.elt
-            if type(elt) is Tuple:
-
-                sel = q%(ast_list%recurse(elt, None).elts)
-            else:
-                sel = q%[ast%recurse(elt, None)]
-
-
-
-            out = q%select(ast%sel)
-
-
-            for cond in ifs:
-                out = q%(ast%out).where(ast%cond)
-
-            if scope != []:
-                out = q%(ast%out).as_scalar()
-
-            out = q%(lambda x: ast%out)()
-            out.func.args.args = aliases
-            out.args = aliased_tables
-            return out
-
-        return tree
-
     x = recurse(tree, [])
-    print unparse_ast(x)
     return x
 
+@macros.expr
+def query(tree):
+    x = recurse(tree, [])
+    return q%(lambda query: query.bind.execute(query).fetchall())(ast%x)
 
+def recurse(tree, scope):
+    if type(tree) is Compare and type(tree.ops[0]) is In:
+        return q%(ast%recurse(tree.left, scope)).in_(ast%recurse(tree.comparators[0], scope))
+
+    if type(tree) is Compare:
+        tree.left = recurse(tree.left, scope)
+        tree.comparators = map(f%recurse(_, scope), tree.comparators)
+        return tree
+
+    if type(tree) is Call:
+        tree.func = recurse(tree.func, scope)
+        tree.args = map(f%recurse(_, scope), tree.args)
+        return tree
+
+    if type(tree) is BinOp:
+        tree.left = recurse(tree.left, scope)
+        tree.right = recurse(tree.right, scope)
+        return tree
+
+    if type(tree) is BoolOp:
+        tree.values = map(f%recurse(_, scope), tree.values)
+        return tree
+
+    if type(tree) is Tuple:
+        tree.elts = map(f%recurse(_, scope), tree.elts)
+
+    if type(tree) is Attribute:
+
+        tree.value = recurse(tree.value, scope)
+        return tree
+
+    if type(tree) is GeneratorExp:
+
+        aliases = map(f%_.target, tree.generators)
+        tables = map(f%_.iter, tree.generators)
+        import random
+
+        aliased_tables = map(lambda x: q%((ast%x).alias().c), tables)
+
+        ifs = [
+            recurse(ifcond, None)
+            for gen in tree.generators
+            for ifcond in gen.ifs
+        ]
+
+        elt = tree.elt
+        if type(elt) is Tuple:
+
+            sel = q%(ast_list%recurse(elt, None).elts)
+        else:
+            sel = q%[ast%recurse(elt, None)]
+
+
+
+        out = q%select(ast%sel)
+
+
+        for cond in ifs:
+            out = q%(ast%out).where(ast%cond)
+
+        if scope != []:
+            out = q%(ast%out).as_scalar()
+
+        out = q%(lambda x: ast%out)()
+        out.func.args.args = aliases
+        out.args = aliased_tables
+        return out
+
+    return tree
 def generate_schema(engine):
     metadata = sqlalchemy.MetaData(engine)
     metadata.reflect()

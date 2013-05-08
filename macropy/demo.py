@@ -1,6 +1,6 @@
 
 from sqlalchemy import *
-from macropy.macros2.linq import macros, sql, generate_schema
+from macropy.macros2.linq import macros, sql, query, generate_schema
 
 engine = create_engine("sqlite://")
 for line in open("macros2/linq_test_dataset.sql").read().split(";"):
@@ -8,29 +8,9 @@ for line in open("macros2/linq_test_dataset.sql").read().split(";"):
 
 db = generate_schema(engine)
 
-query = sql%(
-    x.name for x in db.bbc
-    if x.gdp / x.population > (
-        y.gdp / y.population for y in db.bbc
-        if y.name == 'United Kingdom'
-    )
-    if (x.region == 'Europe')
-)
-
-query = select([db.bbc.c.name]).where(
-    db.bbc.c.gdp / db.bbc.c.population > select(
-        [(db.bbc.c.gdp / db.bbc.c.population)]
-    ).where(
-            db.bbc.c.name == 'United Kingdom'
-    )
-).where(
-    db.bbc.c.region == 'Europe'
-)
-results = engine.execute(query).fetchall()
-
-print query
-
-for line in results: print line
+query_string = sql%((x.name, x.area) for x in db.bbc if x.area > 10000000)
+print type(query_string)
+print query_string
 
 """
 Demos

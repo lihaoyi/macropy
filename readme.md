@@ -535,34 +535,53 @@ LINQ to SQL
 ```python
 db = generate_schema(engine)
 
-query = sql%((x.name, x.area) for x in db.bbc if x.area > 10000000)
-results = engine.execute(query).fetchall()
+results = query%(
+    x.name for x in db.bbc
+    if x.gdp / x.population > (
+        y.gdp / y.population for y in db.bbc
+        if y.name == 'United Kingdom'
+    )
+    if (x.region == 'Europe')
+)
 
-print query
+for line in results: print line
+# (u'Denmark',)
+# (u'Iceland',)
+# (u'Ireland',)
+# (u'Luxembourg',)
+# (u'Norway',)
+# (u'Sweden',)
+# (u'Switzerland',)
+```
+
+This feature is inspired by [C#'s LINQ to SQL](http://msdn.microsoft.com/en-us/library/bb386976.aspx). In short, code used to manipulate lists is lifted into an AST which is then cross-compiled into a snippet of [SQL](http://en.wikipedia.org/wiki/SQL). In this case, it is the `query%` macro which does this lifting and cross-compilation. Instead of performing the manipulation locally on some data structure, the compiled query is sent to a remote database to be performed there.
+
+This allows you to write queries to a database in the same way you would write queries on in-memory lists, which is really very nice. The translation is a relatively thin layer of over the [SQLAlchemy](http://www.sqlalchemy.org/) Query Language, which does the heavy lifting of converting the query into a raw SQL string:. If we start with a simple query
+
+```python
+print query%((x.name, x.area) for x in db.bbc if x.area > 10000000)
+# [(u'Russia', 17000000)]
+```
+
+This is to the equivalent SQLAlchemy query:
+
+```python
+print engine.execute(select([bbc.c.name, bbc.c.area]).where(bbc.c.area > 10000000)).fetchall()
+```
+
+To verify that LINQ to SQL is actually cross-compiling the python to SQL, and not simply requesting everything and performing the manipulation locally, we can use the `sql%` macro to perform the lifting of the query without executing it:
+
+```python
+query_string = sql%((x.name, x.area) for x in db.bbc if x.area > 10000000)
+print type(query_string)
+# <class 'sqlalchemy.sql.expression.Select'>
+print query_string
 # SELECT bbc_1.name, bbc_1.area
 # FROM bbc AS bbc_1
 # WHERE bbc_1.area > ?
-
-
-for line in results: print line
-# (u'Russia', 17000000)
 ```
 
-This feature is inspired by [C#'s LINQ to SQL](http://msdn.microsoft.com/en-us/library/bb386976.aspx). In short, code used to manipulate lists is lifted into an AST which is then cross-compiled into a snippet of [SQL](http://en.wikipedia.org/wiki/SQL). This preserves the manipulation, but instead of performing it locally on some data structure, sends the query to a remote database to be performed there.
-
-This allows you to write queries to a database in the same way you would write queries on in-memory lists, which is really very nice. Although this implementation is just a thin facade over [SQLAlchemy](http://www.sqlalchemy.org/), compare the query above:
-
-```python
-sql%((x.name, x.area) for x in db.bbc if x.area > 10000000)
-```
-
-to the equivalent SQLAlchemy query:
-
-```python
-select([bbc.c.name, bbc.c.area]).where(bbc.c.area > 10000000)
-```
-
-The SQLAlchemy query looks pretty odd, for somebody who knows python but isn't familiar with the library. This is because SQLAlchemy cannot "lift" Python code into an AST to manipulate, and instead have to construct the AST manually using python objects. Although it works pretty well, the syntax and semantics of the queries is completely different from python. In more complex examples, the way the semantics of an SQLAlchemy query diverge from normal python becomes much more pronounced.
+As we can see, LINQ to SQL converts the python list-comprehension into a SQLAlchemy `Select`, which when stringified becomes a valid SQL string.
 
 Consider a less trivial example: we want to find all countries in europe who have a GDP per Capita greater than the United Kingdom. This is the SQLAlchemy code to do so:
 
@@ -578,11 +597,11 @@ query = select([db.bbc.c.name]).where(
 )
 ```
 
-Already we are bumping into edge cases: the `db.bbc` in the nested query is referred to the same way as the `db.bbc` in the outer query, although they are clearly different! One may wonder, what if, in the inner query, we wish to refer to the outer query's values?
+The SQLAlchemy query looks pretty odd, for somebody who knows python but isn't familiar with the library. This is because SQLAlchemy cannot "lift" Python code into an AST to manipulate, and instead have to construct the AST manually using python objects. Although it works pretty well, the syntax and semantics of the queries is completely different from python.
 
-Naturally, there will be solutions to all of these requirements. In the end, SQLAlchemy ends up effectively creating its own programming language, with its own scoping, its own name binding, etc..
+Already we are bumping into edge cases: the `db.bbc` in the nested query is referred to the same way as the `db.bbc` in the outer query, although they are clearly different! One may wonder, what if, in the inner query, we wish to refer to the outer query's values? Naturally, there will be solutions to all of these requirements. In the end, SQLAlchemy ends up effectively creating its own mini programming language, with its own concept of scoping, name binding, etc., basically duplicating what Python already has but with messier syntax.
 
-In the equivalent LINQ code, the scoping of which `db.bbc` you are referring to is much more explicit, and closely follows Python's scoping rules:
+In the equivalent LINQ code, the scoping of which `db.bbc` you are referring to is much more explicit, and in general the semantics are identical to a typical python comprehension:
 
 ```python
 query = sql%(
@@ -618,7 +637,8 @@ for line in results: print line
 # (u'Sweden',)
 # (u'Switzerland',)
 ```
-This clone of LINQ to SQL still does not support the vast capabilities of the SQL language. Nevertheless, it demonstrates how easy it is to use macros to lift python snippets into an AST and cross-compile it into another language.
+
+This clone of LINQ to SQL still does not support the vast capabilities of the SQL language. Nevertheless, it demonstrates how easy it is to use macros to lift python snippets into an AST and cross-compile it into another language, and how nice the syntax and semantics can be for these embedded DSLs.
 
 Quick Lambdas
 -------------

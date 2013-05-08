@@ -144,6 +144,24 @@ class Tests(unittest.TestCase):
             )
         )
 
+    def test_query_macro(self):
+        query = sql%(
+            func.distinct(x.region) for x in db.bbc
+            if (
+                func.sum(w.population) for w in db.bbc
+                if w.region == x.region
+            ) > 100000000
+        )
+        sql_results = engine.execute(query).fetchall()
+        query_macro_results = query%(
+            func.distinct(x.region) for x in db.bbc
+            if (
+                func.sum(w.population) for w in db.bbc
+                if w.region == x.region
+            ) > 100000000
+        )
+        assert sql_results == query_macro_results
+
     def test_join(self):
         compare_queries(
             """
