@@ -7,11 +7,7 @@ engine = create_engine("sqlite://")
 for line in open("macros2/linq_test_dataset.sql").read().split(";"):
     engine.execute(line.strip())
 
-
-
 db = generate_schema(engine)
-
-
 
 def compare_queries(query1, query2):
     res1 = engine.execute(query1).fetchall()
@@ -26,7 +22,6 @@ def compare_queries(query1, query2):
         print query2
         print res2
         raise e
-
 
 class Tests(unittest.TestCase):
     """
