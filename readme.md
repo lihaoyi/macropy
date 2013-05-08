@@ -83,7 +83,7 @@ MacroPy intercepts the module-loading workflow, via the functionality provided b
 
 Examples
 ========
-Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/core/macros/string_interp.py) or [Quick Lambda](macropy/core/macros/quicklambda.py) macros for some small (<30 lines), self contained examples.
+Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for some small (<30 lines), self contained examples.
 
 Quasiquotes
 -----------
