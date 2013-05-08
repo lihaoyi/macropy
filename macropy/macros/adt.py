@@ -1,4 +1,3 @@
-from macropy.core.core import *
 from macropy.core.macros import *
 from macropy.core.lift import macros, q, u
 

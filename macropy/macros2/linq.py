@@ -1,5 +1,4 @@
 from macropy.core.macros import Macros
-from macropy.core.core import *
 from macropy.core.lift import macros, q, u, name, ast
 from macropy.macros.quicklambda import macros, f
 from ast import *

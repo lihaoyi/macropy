@@ -1,5 +1,5 @@
 from macropy.core.macros import *
-
+from macropy.core import *
 macros = Macros()
 
 def u(tree):

@@ -3,9 +3,8 @@ import imp
 import inspect
 import ast
 from ast import *
-from macropy.core.core import *
 from util import *
-
+from macropy.core import *
 
 class Macros(object):
     def __init__(self):
