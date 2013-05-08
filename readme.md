@@ -548,7 +548,7 @@ for line in results: print line
 # (u'Russia', 17000000)
 ```
 
-This feature is inspired by [C#'s LINQ to SQL](http://msdn.microsoft.com/en-us/library/bb386976.aspx). In short, code used to manipulate lists is lifted into an AST which is then cross-compiled into a snippet of [SQL](http://en.wikipedia.org/wiki/SQL).
+This feature is inspired by [C#'s LINQ to SQL](http://msdn.microsoft.com/en-us/library/bb386976.aspx). In short, code used to manipulate lists is lifted into an AST which is then cross-compiled into a snippet of [SQL](http://en.wikipedia.org/wiki/SQL). This preserves the manipulation, but instead of performing it locally on some data structure, sends the query to a remote database to be performed there.
 
 This allows you to write queries to a database in the same way you would write queries on in-memory lists, which is really very nice. Although this implementation is just a thin facade over [SQLAlchemy](http://www.sqlalchemy.org/), compare the query above:
 
