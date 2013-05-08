@@ -562,13 +562,25 @@ to the equivalent SQLAlchemy query:
 select([bbc.c.name, bbc.c.area]).where(bbc.c.area > 10000000)
 ```
 
-The SQLAlchemy query looks pretty odd, for somebody who knows python but isn't familiar with the library. This is because SQLAlchemy cannot "lift" Python code into an AST to manipulate, and instead have to construct the AST manually using python objects. Although it works prett well, the syntax and semantics of the queries is completely different from python.
+The SQLAlchemy query looks pretty odd, for somebody who knows python but isn't familiar with the library. This is because SQLAlchemy cannot "lift" Python code into an AST to manipulate, and instead have to construct the AST manually using python objects. Although it works prett well, the syntax and semantics of the queries is completely different from python. In more complex examples, the way the semantics of an SQLAlchemy query diverge from normal python becomes much more pronounced.
 
-This is a less trivial example: we want to find all countries in europe who have a GDP per Capita greater than the United Kingdom:
+Consider a less trivial example: we want to find all countries in europe who have a GDP per Capita greater than the United Kingdom. This is the SQLAlchemy code to do so:
 
 ```python
-db = generate_schema(engine)
+query = select([db.bbc.c.name]).where(
+    db.bbc.c.gdp / db.bbc.c.population > select(
+        [(db.bbc.c.gdp / db.bbc.c.population)]
+    ).where(
+            db.bbc.c.name == 'United Kingdom'
+    )
+).where(
+    db.bbc.c.region == 'Europe'
+)
+```
 
+And here is the equivalent LINQ code:
+
+```python
 query = sql%(
     x.name for x in db.bbc
     if x.gdp / x.population > (

@@ -16,6 +16,16 @@ query = sql%(
     )
     if (x.region == 'Europe')
 )
+
+query = select([db.bbc.c.name]).where(
+    db.bbc.c.gdp / db.bbc.c.population > select(
+        [(db.bbc.c.gdp / db.bbc.c.population)]
+    ).where(
+            db.bbc.c.name == 'United Kingdom'
+    )
+).where(
+    db.bbc.c.region == 'Europe'
+)
 results = engine.execute(query).fetchall()
 
 print query

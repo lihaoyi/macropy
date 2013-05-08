@@ -137,6 +137,7 @@ def sql(tree):
         return tree
 
     x = recurse(tree, [])
+    print unparse_ast(x)
     return x
 
 
