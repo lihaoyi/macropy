@@ -8,21 +8,21 @@ _ = None  # makes IDE happy
 macros = Macros()
 
 @macros.expr
-def f(node):
+def f(tree):
     names = ('quickfuncvar' + str(i) for i in xrange(100))
     used_names = []
 
     @Walker
-    def underscore_search(node):
-        if isinstance(node, Name) and node.id == "_":
+    def underscore_search(tree):
+        if isinstance(tree, Name) and tree.id == "_":
             name = names.next()
             used_names.append(name)
-            node.id = name
+            tree.id = name
 
-        return node
+        return tree
 
-    node = underscore_search.recurse(node)
+    tree = underscore_search.recurse(tree)
 
-    new_node = q%(lambda: ast%node)
-    new_node.args.args = [Name(id = x) for x in used_names]
-    return new_node
+    new_tree = q%(lambda: ast%tree)
+    new_tree.args.args = [Name(id = x) for x in used_names]
+    return new_tree

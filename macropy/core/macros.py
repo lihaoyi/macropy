@@ -28,35 +28,35 @@ class Walker(object):
         self.func = func
         self.autorecurse = autorecurse
 
-    def walk_children(self, node):
-        for field, old_value in list(iter_fields(node)):
-            old_value = getattr(node, field, None)
+    def walk_children(self, tree):
+        for field, old_value in list(iter_fields(tree)):
+            old_value = getattr(tree, field, None)
             new_value = self.recurse(old_value)
-            setattr(node, field, new_value)
+            setattr(tree, field, new_value)
 
-    def recurse(self, node):
-        if isinstance(node, list):
+    def recurse(self, tree):
+        if isinstance(tree, list):
 
             return flatten([
                 self.recurse(x)
-                for x in node
+                for x in tree
             ])
 
-        elif isinstance(node, comprehension):
-            self.walk_children(node)
-            return node
-        elif isinstance(node, AST):
-            node = self.func(node)
+        elif isinstance(tree, comprehension):
+            self.walk_children(tree)
+            return tree
+        elif isinstance(tree, AST):
+            tree = self.func(tree)
             if self.autorecurse:
-                if type(node) is list:
-                    return self.recurse(node)
+                if type(tree) is list:
+                    return self.recurse(tree)
                 else:
-                    self.walk_children(node)
-                    return node
+                    self.walk_children(tree)
+                    return tree
             else:
-                return node
+                return tree
         else:
-            return node
+            return tree
 
 
 class _MacroLoader(object):
@@ -88,9 +88,9 @@ class _MacroLoader(object):
         return mod
 
 
-def _detect_macros(node):
+def _detect_macros(tree):
     required_pkgs = []
-    for stmt in node.body:
+    for stmt in tree.body:
         if  (isinstance(stmt, ImportFrom)
                 and stmt.names[0].name == 'macros'
                 and stmt.names[0].asname is  None):
@@ -99,49 +99,48 @@ def _detect_macros(node):
     return required_pkgs
 
 
-def _expand_ast(node, modules):
-    def macro_expand(node):
+def _expand_ast(tree, modules):
+    def macro_expand(tree):
         for module in [m.macros for m in modules]:
 
-            if (isinstance(node, With)):
-                if (isinstance(node.context_expr, Name)
-                        and node.context_expr.id in module.block_registry):
-                    return module.block_registry[node.context_expr.id](node), True
+            if (isinstance(tree, With)):
+                if (isinstance(tree.context_expr, Name)
+                        and tree.context_expr.id in module.block_registry):
+                    return module.block_registry[tree.context_expr.id](tree), True
 
-# When passing arguments to a macro.  TODO arity-checking?
-                if (isinstance(node.context_expr, Call)
-                        and isinstance(node.context_expr.func, Name)
-                        and node.context_expr.func.id in module.block_registry):
-                    the_macro = module.block_registry[node.context_expr.func.id]
+                if (isinstance(tree.context_expr, Call)
+                        and isinstance(tree.context_expr.func, Name)
+                        and tree.context_expr.func.id in module.block_registry):
+                    the_macro = module.block_registry[tree.context_expr.func.id]
 
-                    return the_macro(node, *(node.context_expr.args)), True
+                    return the_macro(tree, *(tree.context_expr.args)), True
 
-            if  (isinstance(node, BinOp)
-                    and type(node.left) is Name
-                    and type(node.op) is Mod
-                    and node.left.id in module.expr_registry):
+            if  (isinstance(tree, BinOp)
+                    and type(tree.left) is Name
+                    and type(tree.op) is Mod
+                    and tree.left.id in module.expr_registry):
 
-                return module.expr_registry[node.left.id](node.right), True
+                return module.expr_registry[tree.left.id](tree.right), True
 
-            if  (isinstance(node, ClassDef)
-                    and len(node.decorator_list) == 1
-                    and node.decorator_list[0]
-                    and type(node.decorator_list[0]) is Name
-                    and node.decorator_list[0].id in module.decorator_registry):
+            if  (isinstance(tree, ClassDef)
+                    and len(tree.decorator_list) == 1
+                    and tree.decorator_list[0]
+                    and type(tree.decorator_list[0]) is Name
+                    and tree.decorator_list[0].id in module.decorator_registry):
 
-                return module.decorator_registry[node.decorator_list[0].id](node), True
+                return module.decorator_registry[tree.decorator_list[0].id](tree), True
 
-        return node, False
+        return tree, False
 
     @Walker
-    def macro_searcher(node):
+    def macro_searcher(tree):
         modified = True
         while modified:
-            node, modified = macro_expand(node)
-        return node
+            tree, modified = macro_expand(tree)
+        return tree
 
-    node = macro_searcher.recurse(node)
-    return node
+    tree = macro_searcher.recurse(tree)
+    return tree
 
 
 @singleton

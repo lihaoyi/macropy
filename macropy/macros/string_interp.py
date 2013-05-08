@@ -6,10 +6,10 @@ from macropy.core.lift import macros, q, u
 macros = Macros()
 
 @macros.expr
-def s(node):
+def s(tree):
     captured = []
     new_string = ""
-    chunks = re.split("%{(.*?)}", node.s)
+    chunks = re.split("%{(.*?)}", tree.s)
     for i in range(0, len(chunks)):
         if i % 2 == 0:
             new_string += chunks[i]

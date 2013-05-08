@@ -205,83 +205,83 @@ class ClassMatcher(Matcher):
         return updates
 
 
-def build_matcher(node, modified):
-    if isinstance(node, Num):
-        return q%(LiteralMatcher(u%(node.n)))
-    if isinstance(node, Str):
-        return q%(LiteralMatcher(u%(node.s)))
-    if isinstance(node, Name):
-        if node.id in ['True', 'False']:
-            return q%(LiteralMatcher(ast%(node)))
-        modified.add(node.id)
-        return q%(NameMatcher(u%(node.id)))
-    if isinstance(node, List):
+def build_matcher(tree, modified):
+    if isinstance(tree, Num):
+        return q%(LiteralMatcher(u%(tree.n)))
+    if isinstance(tree, Str):
+        return q%(LiteralMatcher(u%(tree.s)))
+    if isinstance(tree, Name):
+        if tree.id in ['True', 'False']:
+            return q%(LiteralMatcher(ast%(tree)))
+        modified.add(tree.id)
+        return q%(NameMatcher(u%(tree.id)))
+    if isinstance(tree, List):
         sub_matchers = []
-        for child in node.elts:
+        for child in tree.elts:
             sub_matchers.append(build_matcher(child, modified))
         return Call(Name('ListMatcher', Load()), sub_matchers, [], None, None)
-    if isinstance(node, Tuple):
+    if isinstance(tree, Tuple):
         sub_matchers = []
-        for child in node.elts:
+        for child in tree.elts:
             sub_matchers.append(build_matcher(child, modified))
         return Call(Name('TupleMatcher', Load()), sub_matchers, [], None, None)
-    if isinstance(node, Call):
+    if isinstance(tree, Call):
         sub_matchers = []
-        for child in node.args:
+        for child in tree.args:
             sub_matchers.append(build_matcher(child, modified))
         positional_matchers = List(sub_matchers, Load())
         kw_matchers = []
-        for kw in node.keywords:
+        for kw in tree.keywords:
             kw_matchers.append(
                     keyword(kw.arg, build_matcher(kw.value, modified)))
-        return Call(Name('ClassMatcher', Load()), [node.func,
+        return Call(Name('ClassMatcher', Load()), [tree.func,
             positional_matchers], kw_matchers, None, None)
-    if (isinstance(node, BinOp) and isinstance(node.op, BitAnd)):
-        sub1 = build_matcher(node.left, modified)
-        sub2 = build_matcher(node.right, modified)
+    if (isinstance(tree, BinOp) and isinstance(tree.op, BitAnd)):
+        sub1 = build_matcher(tree.left, modified)
+        sub2 = build_matcher(tree.right, modified)
         return Call(Name('ParallelMatcher', Load()), [sub1, sub2], [], None,
                 None)
 
-    raise Exception("Unrecognized node " + repr(node))
+    raise Exception("Unrecognized tree " + repr(tree))
 
 
-def _is_pattern_match_stmt(node):
-    return (isinstance(node, Expr) and 
-            _is_pattern_match_expr(node.value))
+def _is_pattern_match_stmt(tree):
+    return (isinstance(tree, Expr) and
+            _is_pattern_match_expr(tree.value))
             
 
-def _is_pattern_match_expr(node):
-    return (isinstance(node, BinOp) and
-            isinstance(node.op, LShift))
+def _is_pattern_match_expr(tree):
+    return (isinstance(tree, BinOp) and
+            isinstance(tree.op, LShift))
 
 
 @macros.block
-def _matching(node):
+def _matching(tree):
     """
     This macro will enable non-refutable pattern matching.  If a pattern match
     fails, an exception will be thrown.
     """
     @Walker
-    def func(node):
-        if _is_pattern_match_stmt(node):
+    def func(tree):
+        if _is_pattern_match_stmt(tree):
             modified = set()
-            matcher = build_matcher(node.value.left, modified) 
+            matcher = build_matcher(tree.value.left, modified)
             # lol random names for hax
             with q as assignment:
                 xsfvdy = ast%(matcher)
             statements = [assignment,
-                          Expr(q%(xsfvdy.match_value(ast%(node.value.right))))]
+                          Expr(q%(xsfvdy.match_value(ast%(tree.value.right))))]
             for var_name in modified:
                 statements.append(Assign([Name(var_name, Store())],
                     q%(xsfvdy.get_var(u%var_name))))
             return statements
         else:
-            return node
-    func.recurse(node)
-    return node.body
+            return tree
+    func.recurse(tree)
+    return tree.body
 
 
-def _rewrite_if(node, var_name=None):
+def _rewrite_if(tree, var_name=None):
     # with q as rewritten:
     #     try:
     #         with matching:
@@ -291,11 +291,11 @@ def _rewrite_if(node, var_name=None):
     #         u%(_maybe_rewrite_if(failBody))
     # return rewritten
     handler = ExceptHandler(Name('PatternMatchException',
-        Load()), None, node.orelse)
-    try_stmt = TryExcept(node.body, [handler], [])
+        Load()), None, tree.orelse)
+    try_stmt = TryExcept(tree.body, [handler], [])
     if var_name:
-        node.test = BinOp(node.test, LShift(), Name(var_name, Load()))
-    macroed_match = With(Name('_matching', Load()), None, Expr(node.test))
+        tree.test = BinOp(tree.test, LShift(), Name(var_name, Load()))
+    macroed_match = With(Name('_matching', Load()), None, Expr(tree.test))
     try_stmt.body = [macroed_match] + try_stmt.body
     if len(handler.body) == 1:
         handler.body = [_maybe_rewrite_if(handler.body[0], var_name)]
@@ -311,7 +311,7 @@ def _maybe_rewrite_if(stmt, var_name=None):
 
 
 @macros.block
-def switch(node, arg):
+def switch(tree, arg):
     """
     This only enables (refutable) pattern matching in top-level if statements.
     The advantage of this is the limited reach ensures less interference with
@@ -321,14 +321,14 @@ def switch(node, arg):
     import string
     import random
     new_id = util.gen_sym()
-    for i in xrange(len(node.body)):
-        node.body[i] = _maybe_rewrite_if(node.body[i], new_id)
-    node.body = [Assign([Name(new_id, Store())], arg)] + node.body
-    return node.body
+    for i in xrange(len(tree.body)):
+        tree.body[i] = _maybe_rewrite_if(tree.body[i], new_id)
+    tree.body = [Assign([Name(new_id, Store())], arg)] + tree.body
+    return tree.body
 
 
 @macros.block
-def patterns(node):
+def patterns(tree):
     """
     This enables patterns everywhere!  NB if you use this macro, you will not be
     able to use real left shifts anywhere.
@@ -336,8 +336,8 @@ def patterns(node):
     # First transform all if-matches, then wrap the whole thing in a "with
     # _matching" block
     @Walker
-    def if_rewriter(node):
-        return _maybe_rewrite_if(node)
-    if_rewriter.recurse(node)
-    node.context_expr = Name('_matching', Load())
-    return node
+    def if_rewriter(tree):
+        return _maybe_rewrite_if(tree)
+    if_rewriter.recurse(tree)
+    tree.context_expr = Name('_matching', Load())
+    return tree

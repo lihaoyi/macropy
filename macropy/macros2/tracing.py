@@ -13,9 +13,9 @@ def wrap(printer, txt, x):
 
 
 @macros.expr
-def log(node):
-    new_node = q%(wrap(log, u%unparse_ast(node), ast%node))
-    return new_node
+def log(tree):
+    new_tree = q%(wrap(log, u%unparse_ast(tree), ast%tree))
+    return new_tree
 
 
 
@@ -32,45 +32,45 @@ class _TraceWalker(Walker):
         self.autorecurse = False
         self.registry = registry
 
-        def func(node):
+        def func(tree):
 
-            if isinstance(node, expr) and \
-                            node._fields != () and \
-                            type(node) is not Num and \
-                            type(node) is not Str and \
-                            type(node) is not Name:
+            if isinstance(tree, expr) and \
+                            tree._fields != () and \
+                            type(tree) is not Num and \
+                            type(tree) is not Str and \
+                            type(tree) is not Name:
 
                 try:
-                    literal_eval(node)
-                    return node
+                    literal_eval(tree)
+                    return tree
                 except ValueError:
-                    txt = unparse_ast(node)
-                    self.walk_children(node)
+                    txt = unparse_ast(tree)
+                    self.walk_children(tree)
                     if self.registry is not None:
-                        self.registry.append([txt, node])
-                        return node
+                        self.registry.append([txt, tree])
+                        return tree
                     else:
-                        wrapped = q%(wrap(log, u%txt, ast%node))
+                        wrapped = q%(wrap(log, u%txt, ast%tree))
                         return wrapped
-            elif isinstance(node, stmt):
-                txt = unparse_ast(node).strip()
-                self.walk_children(node)
+            elif isinstance(tree, stmt):
+                txt = unparse_ast(tree).strip()
+                self.walk_children(tree)
                 with q as code:
                     log(u%txt)
 
-                return [code, node]
+                return [code, tree]
             else:
-                return node
+                return tree
         self.func = func
 
 @macros.expr
-def trace(node):
-    ret = _TraceWalker().recurse(node)
+def trace(tree):
+    ret = _TraceWalker().recurse(tree)
     return ret
 
 @macros.block
-def trace(node):
-    ret = _TraceWalker().recurse(node.body)
+def trace(tree):
+    ret = _TraceWalker().recurse(tree.body)
     return ret
 
 
@@ -78,25 +78,25 @@ def require_log(stuff):
     s = "\n".join(txt + " -> " + str(tree) for [txt, tree] in stuff)
     raise AssertionError("Require Failed\n" + s)
 
-def _require_transform(node):
+def _require_transform(tree):
 
     walker = _TraceWalker([])
-    walker.recurse(node)
+    walker.recurse(tree)
 
     registry = [List(elts = [ast_repr(s), t]) for s, t in walker.registry]
-    new = q%(ast%node or require_log([ast%registry]))
+    new = q%(ast%tree or require_log([ast%registry]))
 
     return new
 
 @macros.expr
-def require(node):
-    return _require_transform(node)
+def require(tree):
+    return _require_transform(tree)
 
 @macros.block
-def require(node):
-    for expr in node.body:
+def require(tree):
+    for expr in tree.body:
         expr.value = _require_transform(expr.value)
 
-    return node.body
+    return tree.body
 
 def log(x): print x
