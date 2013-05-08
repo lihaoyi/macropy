@@ -578,7 +578,11 @@ query = select([db.bbc.c.name]).where(
 )
 ```
 
-And here is the equivalent LINQ code:
+Already we are bumping into edge cases: the `db.bbc` in the nested query is referred to the same way as the `db.bbc` in the outer query, although they are clearly different! One may wonder, what if, in the inner query, we wish to refer to the outer query's values?
+
+Naturally, there will be solutions to all of these requirements. However, SQLAlchemy ends up effectively creating its own programming language, with its own scoping, its own name binding, etc.. This strange, extremely loose scoping is something inherited from SQL, but eventually you find it re-inventing a mini programming language inside its queries.
+
+In the equivalent LINQ code, the scoping of which `db.bbc` you are referring to is much more explicit, and closely follows Python's scoping rules:
 
 ```python
 query = sql%(
@@ -589,14 +593,22 @@ query = sql%(
     )
     if (x.region == 'Europe')
 )
-results = engine.execute(query).fetchall()
+```
 
+As we can see, rather than mysteriously referring to the `db.bbc` all over the place, we clearly bind it in two places: once to the variable `x` in the outer query, once to the variable `y` in the inner query. Overall, we make use of Python's syntax and semantics (scoping, names, etc.) rather than having to re-invent our own, which is a big win for anybody who already understands Python.
+
+Executing either of these will give us the same answer:
+
+```python
 print query
 # SELECT bbc_1.name
 # FROM bbc AS bbc_1
 # WHERE bbc_1.gdp / bbc_1.population > (SELECT bbc_2.gdp / bbc_2.population AS anon_1
 # FROM bbc AS bbc_2
 # WHERE bbc_2.name = ?) AND bbc_1.region = ?
+
+results = engine.execute(query).fetchall()
+
 for line in results: print line
 # (u'Denmark',)
 # (u'Iceland',)
@@ -606,7 +618,6 @@ for line in results: print line
 # (u'Sweden',)
 # (u'Switzerland',)
 ```
-
 This clone of LINQ to SQL still does not support the vast capabilities of the SQL language. Nevertheless, it demonstrates how easy it is to use macros to lift python snippets into an AST and cross-compile it into another language.
 
 Quick Lambdas
