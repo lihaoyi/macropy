@@ -1,4 +1,4 @@
-from macropy.macro_tests.macro_b import macros, g
+from macropy.core_tests.macro_b import macros, g
 
 def run():
     f = 90
