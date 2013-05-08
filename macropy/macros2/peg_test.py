@@ -1,6 +1,5 @@
 import unittest
 from macropy.macros2.peg import macros
-from macropy.macros2.peg import *
 
 from macropy.macros.quicklambda import macros, f, _
 class Tests(unittest.TestCase):

@@ -1,3 +1,11 @@
+from macropy.core.lift import macros, q
+
+print q%(1 + 2)
+
+
+
+
+
 
 """
 Demos
@@ -6,7 +14,7 @@ Demos
 tracing
 -------
 from macropy.macros2.tracing import macros
-from macropy.macros2.tracing import *
+from macropy.macros2.t  racing import *
 with trace:
     x = (1 + 2)
     y = x * x + 7
@@ -68,65 +76,26 @@ results = engine.execute(
 
 for line in results: print line
 
-peg
--------
-from macropy.macros.quicklambda import macros, f
-from macropy.macros2.peg import macros
-from macropy.macros2.peg import *
-with peg:
-    value = '[0-9]+'.r | ('(', expr, ')')
-    op = '+' | '-' | '*' | '/'
-    expr = (value, (op, value).rep )
-
-print expr.parse_all("123")
-print expr.parse_all("123boo")
-print expr.parse_all("((123))")
-print expr.parse_all("((123)")
-print expr.parse_all("(123+456+789)")
-print expr.parse_all("(6/2)")
-print expr.parse_all("(1+2+3)+2")
-print expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)")
 
 
-from macropy.macros.quicklambda import macros, f
-from macropy.macros2.peg import macros
-from macropy.macros2.peg import *
 
-def reduce_chain(chain):
-    chain = list(reversed(chain))
-    o_dict = {
-        "+": f%(_+_),
-        "-": f%(_-_),
-        "*": f%(_*_),
-        "/": f%(_/_),
-    }
-    while len(chain) > 1:
-        a, [o, b] = chain.pop(), chain.pop()
-        chain.append(o_dict[o](a, b))
-    return chain[0]
+from macropy.macros.adt import macros
+from macropy.macros.adt import *
+from macropy.macros.pattern import macros
+from macropy.macros.pattern import *
 
-with peg:
-    value = '[0-9]+'.r // int | ('(', expr, ')') // (f%_[1])
-    op = '+' | '-' | '*' | '/'
-    expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
-
-print expr.parse_all("123")             #[123]
-print expr.parse_all("((123))")         #[123]
-print expr.parse_all("(123+456+789)")   #[1368]
-print expr.parse_all("(6/2)")           #[3]
-print expr.parse_all("(1+2+3)+2")       #[8]
-print expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)") #[1804]
 
 @case
-class ArithExpr(object):
-    class Add(left, right):
-        pass
+class Add(left, right):
+    pass
 
-    class Mul(left, right):
-        pass
+@case
+class Mul(left, right):
+    pass
 
-    class Num(x):
-        pass
+@case
+class Num(x):
+    pass
 
 def compute(expr):
     with switch(expr):

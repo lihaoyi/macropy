@@ -1,10 +1,6 @@
 import unittest
 
-from macropy.core.macros import *
-from macropy.core.lift import *
-from macropy.macros.string_interp import *
 from macropy.macros.pattern import macros
-from macropy.macros.pattern import *
 
 
 class Foo(object):

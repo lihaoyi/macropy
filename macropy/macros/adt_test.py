@@ -1,4 +1,4 @@
-from macropy.macros.adt import macros, case, NO_ARG
+from macropy.macros.adt import macros, case
 
 import unittest
 

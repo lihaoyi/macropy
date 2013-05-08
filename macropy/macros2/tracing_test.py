@@ -1,7 +1,6 @@
 import unittest
 
 from macropy.macros2.tracing import macros
-from macropy.macros2.tracing import *
 
 
 result = []

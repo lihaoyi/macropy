@@ -60,17 +60,18 @@ class Walker(object):
 
 
 class _MacroLoader(object):
-    def __init__(self, module_name, tree, file_name):
+    def __init__(self, module_name, tree, file_name, required_pkgs):
         self.module_name = module_name
         self.tree = tree
         self.file_name = file_name
+        self.required_pkgs = required_pkgs
 
     def load_module(self, fullname):
-        required_pkgs = _detect_macros(self.tree)
-        for p in required_pkgs:
+
+        for p in self.required_pkgs:
             __import__(p)
 
-        modules = [sys.modules[p] for p in required_pkgs]
+        modules = [sys.modules[p] for p in self.required_pkgs]
         tree = _expand_ast(self.tree, modules)
 
         code = unparse_ast(tree)
@@ -93,9 +94,8 @@ def _detect_macros(node):
         if  (isinstance(stmt, ImportFrom)
                 and stmt.names[0].name == 'macros'
                 and stmt.names[0].asname is  None):
-
             required_pkgs.append(stmt.module)
-
+            stmt.names = [alias(name='*', asname=None)]
     return required_pkgs
 
 
@@ -151,8 +151,9 @@ class _MacroFinder(object):
             (file, pathname, description) = imp.find_module(module_name.split('.')[-1], package_path)
             txt = file.read()
             tree = ast.parse(txt)
-            if _detect_macros(tree) == []: return
-            else: return _MacroLoader(module_name, tree, file.name)
+            required_pkgs = _detect_macros(tree)
+            if required_pkgs == []: return
+            else: return _MacroLoader(module_name, tree, file.name, required_pkgs)
         except Exception, e:
             pass
 

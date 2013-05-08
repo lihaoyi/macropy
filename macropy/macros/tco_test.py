@@ -1,6 +1,5 @@
 import unittest
 from macropy.macros.tco import macros
-from macropy.macros.tco import *
 
 
 class Tests(unittest.TestCase):
