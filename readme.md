@@ -522,6 +522,9 @@ def foldl1(my_list, op):
         pass
 ```
 
+I think you can agree that the first version is much easier to read, and the
+second version hasn't even been fully expanded yet!
+
 
 Tail-call Optimization
 -----------
