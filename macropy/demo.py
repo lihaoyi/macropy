@@ -1,11 +1,26 @@
-from macropy.core.lift import macros, q
 
-print q%(1 + 2)
+from sqlalchemy import *
+from macropy.macros2.linq import macros, sql, generate_schema
 
+engine = create_engine("sqlite://")
+for line in open("macros2/linq_test_dataset.sql").read().split(";"):
+    engine.execute(line.strip())
 
+db = generate_schema(engine)
 
+query = sql%(
+    x.name for x in db.bbc
+    if x.gdp / x.population > (
+        y.gdp / y.population for y in db.bbc
+        if y.name == 'United Kingdom'
+    )
+    if (x.region == 'Europe')
+)
+results = engine.execute(query).fetchall()
 
+print query
 
+for line in results: print line
 
 """
 Demos

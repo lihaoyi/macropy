@@ -533,24 +533,69 @@ Work-in-progress
 LINQ to SQL
 -----------
 ```python
-print sql%(
-    x.name for x in bbc
-    if x.gdp / x.population > (
-        y.gdp / y.population for y in bbc
-        if y.name == 'United Kingdom'
-    ) and x.region == 'Europe'
-)
-#SELECT name FROM bbc
-#WHERE gdp/population > (
-#    SELECT gdp/population FROM bbc
-#    WHERE name = 'United Kingdom'
-#)
-#AND region = 'Europe'
+db = generate_schema(engine)
+
+query = sql%((x.name, x.area) for x in db.bbc if x.area > 10000000)
+results = engine.execute(query).fetchall()
+
+print query
+# SELECT bbc_1.name, bbc_1.area
+# FROM bbc AS bbc_1
+# WHERE bbc_1.area > ?
+
+
+for line in results: print line
+# (u'Russia', 17000000)
 ```
 
 This feature is inspired by [C#'s LINQ to SQL](http://msdn.microsoft.com/en-us/library/bb386976.aspx). In short, code used to manipulate lists is lifted into an AST which is then cross-compiled into a snippet of [SQL](http://en.wikipedia.org/wiki/SQL).
 
-This allows you to write queries to a database in the same way you would write queries on in-memory lists. *WIP*
+This allows you to write queries to a database in the same way you would write queries on in-memory lists, which is really very nice. Although this implementation is just a thin facade over [SQLAlchemy](http://www.sqlalchemy.org/), compare the query above:
+
+```python
+sql%((x.name, x.area) for x in db.bbc if x.area > 10000000)
+```
+
+to the equivalent SQLAlchemy query:
+
+```python
+select([bbc.c.name, bbc.c.area]).where(bbc.c.area > 10000000)
+```
+
+The SQLAlchemy query looks pretty odd, for somebody who knows python but isn't familiar with the library. This is because SQLAlchemy cannot "lift" Python code into an AST to manipulate, and instead have to construct the AST manually using python objects. Although it works prett well, the syntax and semantics of the queries is completely different from python.
+
+This is a less trivial example: we want to find all countries in europe who have a GDP per Capita greater than the United Kingdom:
+
+```python
+db = generate_schema(engine)
+
+query = sql%(
+    x.name for x in db.bbc
+    if x.gdp / x.population > (
+        y.gdp / y.population for y in db.bbc
+        if y.name == 'United Kingdom'
+    )
+    if (x.region == 'Europe')
+)
+results = engine.execute(query).fetchall()
+
+print query
+# SELECT bbc_1.name
+# FROM bbc AS bbc_1
+# WHERE bbc_1.gdp / bbc_1.population > (SELECT bbc_2.gdp / bbc_2.population AS anon_1
+# FROM bbc AS bbc_2
+# WHERE bbc_2.name = ?) AND bbc_1.region = ?
+for line in results: print line
+# (u'Denmark',)
+# (u'Iceland',)
+# (u'Ireland',)
+# (u'Luxembourg',)
+# (u'Norway',)
+# (u'Sweden',)
+# (u'Switzerland',)
+```
+
+This clone of LINQ to SQL still does not support the vast capabilities of the SQL language. Nevertheless, it demonstrates how easy it is to use macros to lift python snippets into an AST and cross-compile it into another language.
 
 Quick Lambdas
 -------------
