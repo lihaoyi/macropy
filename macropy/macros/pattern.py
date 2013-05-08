@@ -176,7 +176,7 @@ class ClassMatcher(Matcher):
         kw_dict = {}
         arg_spec = inspect.getargspec(self.clazz.__init__)
         for arg in arg_spec.args:
-            if arg is not 'self':
+            if arg != 'self':
                 pos_values.append(getattr(matchee, arg, None))
         # if arg_spec.varargs:
         #     pos_values.extend(getattr(matchee, varargs, []))
@@ -196,7 +196,6 @@ class ClassMatcher(Matcher):
         else:
             pos_vals, kw_dict = self.default_unapply(matchee,
                     self.kwMatchers.keys())
-
         for (matcher, sub_matchee) in zip(self.positionalMatchers,
                 pos_vals):
             updates.extend(matcher.match(sub_matchee))
