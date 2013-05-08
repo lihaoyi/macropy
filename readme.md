@@ -59,7 +59,7 @@ def my_decorator_macro(tree):
     return new_tree
 ```
 
-The line `macros = Macros()` is required to mark the file as using macros, and the `macros` object then provides the methods `expr`, `block` and `decorator` which can be used to decorate functions to mark them out as the three different kinds of macros.
+The line `macros = Macros()` is required to mark the file as providing macros, and the `macros` object then provides the methods `expr`, `block` and `decorator` which can be used to decorate functions to mark them out as the three different kinds of macros.
 
 Each macro function is passed a `tree`. The `tree` is an `AST` object, the sort provided by Python's [ast module](http://docs.python.org/2/library/ast.html). The macro is able to do whatever transformations it wants, and it returns a modified (or even an entirely new) `AST` object which MacroPy will use to replace the original macro invocation.
 
@@ -781,7 +781,7 @@ So far, these building blocks all return the raw parse tree: all the things like
 
 ```python
 with peg:
-    num = r('[0-9]+')
+    num = '[0-9]+'.r
 
 print num.parse_all("123") # ["123"]
 ```
@@ -790,7 +790,7 @@ which returns the a string of digits, and convert it into a parser which returns
 
 ```python
 with peg:
-    num = r('[0-9]+') // int
+    num = '[0-9]+'.r // int
 
 print num.parse_all("123") # [123]
 ```
@@ -941,6 +941,13 @@ pp.pprint(parser.parse_all(string)[0])
 
 As you can see, the full parser parses that non-trivial blob of JSON into an identical structure as the in-built `json` package. In addition, the source of the parser looks almost identical to the PEG grammar it is parsing, shown above. Pretty neat!
 
+Detailed Overview
+=================
+*WIP*
+
+Conclusion
+==========
+*WIP*
 
 Credits
 =======
