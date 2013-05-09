@@ -19,7 +19,7 @@ Apart from this, MacroPy has been used to implement features such as:
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts)
 - [Case Classes](#case-classes), easy [Algebraic Data Types](https://en.wikipedia.org/wiki/Algebraic_data_type) from Scala
 - [Pattern Matching](#pattern-matching) from the Functional Programming world
-- [Tail-call Optimization](#tco)
+- [Tail-call Optimization](#tail-call-optimization)
 - [LINQ to SQL](#linq-to-sql) from C#
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy,
 - [Parser Combinators](#parser-combinators), inspired by [Scala's](http://www.suryasuravarapu.com/2011/04/scala-parser-combinators-win.html).
@@ -554,7 +554,33 @@ second version hasn't even been fully expanded yet!
 
 Tail-call Optimization
 -----------
-Work-in-progress
+We have also implemented a macro which will optimize away the stack usage of
+functions which are actually implemented in a tail-recursive fashion.  This even
+works for mutually recursive functions by using trampolining.
+
+```python
+from macropy.macros.tco import macros
+from macropy.macros.tco import *
+
+@tco
+def odd(n):
+if n < 0:
+  return odd(-n)
+elif n == 0:
+  return False
+else:
+  return even(n - 1)
+
+@tco
+def even(n):
+  if n == 0:
+    return True
+  else:
+    return odd(n-1)
+
+assert(even(100000))  # No stack overflow
+```
+
 
 LINQ to SQL
 -----------
