@@ -11,15 +11,15 @@ print p.x   # 1
 print p     # Point(1, 2)
 ```
 
-Apart from this, MacroPy has been used to implement features such as:
+MacroPy has been used to implement features such as:
 
+- [Case Classes](#case-classes), easy [Algebraic Data Types](https://en.wikipedia.org/wiki/Algebraic_data_type) from Scala
+- [Pattern Matching](#pattern-matching) from the Functional Programming world
+- [Tail-call Optimization](#tail-call-optimization)
 - [Quasiquotes](#quasiquotes), a quick way to manipulate fragments of a program
 - [String Interpolation](#string-interpolation), a common feature in many languages
 - [Pyxl](#pyxl-integration), integrating XML markup into a Python program
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts)
-- [Case Classes](#case-classes), easy [Algebraic Data Types](https://en.wikipedia.org/wiki/Algebraic_data_type) from Scala
-- [Pattern Matching](#pattern-matching) from the Functional Programming world
-- [Tail-call Optimization](#tail-call-optimization)
 - [LINQ to SQL](#linq-to-sql) from C#
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy,
 - [Parser Combinators](#parser-combinators), inspired by [Scala's](http://www.suryasuravarapu.com/2011/04/scala-parser-combinators-win.html).
@@ -94,232 +94,6 @@ MacroPy intercepts the module-loading workflow, via the functionality provided b
 Examples
 ========
 Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for some small (<30 lines), self contained examples. Their [unit](macropy/macros/string_interp_test.py) [tests](macropy/macros/quicklambda_test.py) demonstrate how these macros are used.
-
-Quasiquotes
------------
-
-```python
-a = 10
-b = 2
-tree = q%(1 + u%(a + b))
-print ast.dump(tree)
-#BinOp(Num(1), Add(), Num(12))
-```
-
-Quasiquotes are the foundation for many macro systems, such as that found in [LISP](http://en.wikipedia.org/wiki/LISP). Quasiquotes save you from having to manually construct code trees from the nodes they are made of. For example, if you want the code tree for 
-
-```python
-(1 + 2)
-```
-
-Without quasiquotes, you would have to build it up by hand:
-
-```python
-tree = BinOp(Num(1), Add(), Num(2))
-```
-
-But with quasiquotes, you can simply write the code `(1 + 2)`, quoting it with `q%` to lift it from an expression (to be evaluated) to a tree (to be returned):
-
-```python
-tree = q%(1 + 2)
-```
-
-Furthermore, quasiquotes allow you to _unquote_ things: if you wish to insert the **value** of an expression into the tree, rather than the **tree** making up the expression, you unquote it using `u%`. In the example above:
-
-```python
-tree = q%(1 + u%(a + b))
-print ast.dump(tree)
-#BinOp(Num(1), Add(), Num(12))
-```
-
-the expression `(a + b)` is unquoted. Hence `a + b` gets evaluated to the value of `12`, which is then inserted into the tree, giving the final tree.
-
-Apart from interpolating values in the AST, you can also interpolate:
-
-###Other ASTs
-
-```python
-a = q%(1 + 2)
-b = q%(ast%a + 3)
-print ast.dump(b)
-#BinOp(BinOp(Num(1), Add(), Num(2)), Add(), Num(3))
-```
-
-This is necessary to join together ASTs directly, without converting the interpolated AST into its `repr`. If we had used the `u%` interpolator, it fails with an error
-
-###Names
-```python
-n = "x"
-x = 1
-y = q%(name%n + name%n)
-print ast.dump(y)
-#BinOp(Name('x'), Add(), Name('x'))
-```
-
-This is convenient in order to interpolate a string variable as an identifier, rather than interpolating it as a string literal.
-
-Overall, quasiquotes are an incredibly useful tool for assembling or manipulating the ASTs, and are used in the implementation in all of the following examples. See the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for short, practical examples of their usage.
-
-String Interpolation
---------------------
-
-```python
-a, b = 1, 2
-c = s%"%{a} apple and %{b} bananas"
-print c
-#1 apple and 2 bananas
-```
-
-Unlike the normal string interpolation in Python, MacroPy's string interpolation allows the programmer to specify the variables to be interpolated _inline_ inside the string. The macro `s%` then takes the string literal
-
-```python
-"%{a} apple and %{b} bananas"
-```
-
-and expands it into the expression
-
-```python
-"%s apple and %s bananas" % (a, b)
-```
-
-Which is evaluated at run-time in the local scope, using whatever the values `a` and `b` happen to hold at the time. The contents of the `%{...}` can be any arbitrary python expression, and is not limited to variable names.
-
-Pyxl Integration
-----------------
-
-```python
-image_name = "bolton.png"
-image = p%'<img src="/static/images/{image_name}" />'
-
-text = "Michael Bolton"
-block = p%'<div>{image}{text}</div>'
-
-element_list = [image, text]
-block2 = p%'<div>{element_list}</div>'
-
-assert block2.to_string() == '<div><img src="/static/images/bolton.png" />Michael Bolton</div>'
-```
-
-[Pyxl](https://github.com/dropbox/pyxl) is a way of integrating XML markup into your Python code. By default, pyxl hooks into the python UTF-8 decoder in order to transform the source files at load-time. In this, it is similar to how MacroPy transforms source files at import time.
-
-A major difference is that Pyxl by default leaves the HTML fragments directly in the source code:
-
-```python
-image_name = "bolton.png"
-image = <img src="/static/images/{image_name}" />
-
-text = "Michael Bolton"
-block = <div>{image}{text}</div>
-
-element_list = [image, text]
-block2 = <div>{element_list}</div>
-```
-
-While the MacroPy version requires each snippet to be wrapped in a `p%"..."` wrapper. This [three-line-of-code macro](https://github.com/lihaoyi/macropy/blob/master/macropy/macros2/pyxl_strings.py) simply uses pyxl as a macro (operating on string literals), rather than hooking into the UTF-8 decoder. In general, this demonstrates how easy it is to integrate an "external" DSL into your python program: MacroPy handles all the intricacies of hooking into the interpreter and intercepting the import workflow. The programmer simply needs to provide the source-to-source transformation, which in this case was already provided.
-
-Tracing
--------
-
-```python
-log%(1 + 2)
-#(1 + 2) -> 3
-
-log%("omg" * 3)
-#('omg' * 3) -> 'omgomgomg'
-```
-
-Tracing allows you to easily see what is happening inside your code. Many a time programmers have written code like
-
-```python
-print "value", value
-print "sqrt(x)", sqrt(x)
-```
-
-and the `log%` macro (shown above) helps remove this duplication by automatically expanding `log%(1 + 2)` into `wrap("(1 + 2)", (1 + 2))`. `wrap` then evaluates the expression, printing out the source code and final value of the computation.
-
-In addition to simple logging, MacroPy provides the `trace%` macro. This macro not only logs the source and result of the given expression, but also the source and result of all sub-expressions nested within it:
-
-```python
-trace%[len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]]
-#('b' * 2) -> 'bb'
-#(('b' * 2) + 'q') -> 'bbq'
-#('lo' * 3) -> 'lololo'
-#(('lo' * 3) + 'l') -> 'lololol'
-#['omg', 'wtf', (('b' * 2) + 'q'), (('lo' * 3) + 'l')] -> ['omg', 'wtf', 'bbq', 'lololol']
-#len(x) -> 3
-#(len(x) * 3) -> 9
-#len(x) -> 3
-#(len(x) * 3) -> 9
-#len(x) -> 3
-#(len(x) * 3) -> 9
-#len(x) -> 7
-#(len(x) * 3) -> 21
-#[(len(x) * 3) for x in ['omg', 'wtf', (('b' * 2) + 'q'), (('lo' * 3) + 'l')]] -> [9, 9, 9, 21]
-```
-
-As you can see, `trace%` logs the source and value of all sub-expressions that get evaluated in the course of evaluating the list comprehension.
-
-Lastly, `trace` can be used as a block macro:
-
-
-```python
-with trace:
-    sum = 0
-    for i in range(0, 5):
-        sum = sum + 5
-
-    square = sum * sum
-#sum = 0
-#for i in range(0, 5):
-#   sum = (sum + 5)
-#range(0, 5) -> [0, 1, 2, 3, 4]
-#sum = (sum + 5)
-#(sum + 5) -> 5
-#sum = (sum + 5)
-#(sum + 5) -> 10
-#sum = (sum + 5)
-#(sum + 5) -> 15
-#sum = (sum + 5)
-#(sum + 5) -> 20
-#sum = (sum + 5)
-#(sum + 5) -> 25
-#square = (sum * sum)
-#(sum * sum) -> 625
-```
-
-Used this way, `trace` will print out the source code of every _statement_ that gets executed, in addition to tracing the evaluation of any expressions within those statements.
-
-Smart Asserts
--------------
-```python
-require%(3**2 + 4**2 != 5**2)
-#AssertionError: Require Failed
-#(3 ** 2) -> 9
-#(4 ** 2) -> 16
-#((3 ** 2) + (4 ** 2)) -> 25
-#(5 ** 2) -> 25
-#(((3 ** 2) + (4 ** 2)) != (5 ** 2)) -> False
-```
-
-MacroPy provides a variant on the `assert` keyword called `require%`. Like `assert`, `require%` throws an `AssertionError` if the condition is false.
-
-Unlike `assert`, `require%` automatically tells you what code failed the condition, and traces all the sub-expressions within the code so you can more easily see what went wrong. Pretty handy!
-
-`require% can also be used in block form:
-
-```python
-a = 10
-b = 2
-with require:
-    a > 5
-    a * b == 20
-    a < 2
-#AssertionError: Require Failed
-#(a < 2) -> False
-```
-
-This requires every statement in the block to be a boolean expression. Each expression will then be wrapped in a `require%`, throwing an `AssertionError` with a nice trace when a condition fails.
-
 
 Case Classes
 ------------
@@ -580,6 +354,232 @@ def even(n):
 
 assert(even(100000))  # No stack overflow
 ```
+
+
+Quasiquotes
+-----------
+
+```python
+a = 10
+b = 2
+tree = q%(1 + u%(a + b))
+print ast.dump(tree)
+#BinOp(Num(1), Add(), Num(12))
+```
+
+Quasiquotes are the foundation for many macro systems, such as that found in [LISP](http://en.wikipedia.org/wiki/LISP). Quasiquotes save you from having to manually construct code trees from the nodes they are made of. For example, if you want the code tree for 
+
+```python
+(1 + 2)
+```
+
+Without quasiquotes, you would have to build it up by hand:
+
+```python
+tree = BinOp(Num(1), Add(), Num(2))
+```
+
+But with quasiquotes, you can simply write the code `(1 + 2)`, quoting it with `q%` to lift it from an expression (to be evaluated) to a tree (to be returned):
+
+```python
+tree = q%(1 + 2)
+```
+
+Furthermore, quasiquotes allow you to _unquote_ things: if you wish to insert the **value** of an expression into the tree, rather than the **tree** making up the expression, you unquote it using `u%`. In the example above:
+
+```python
+tree = q%(1 + u%(a + b))
+print ast.dump(tree)
+#BinOp(Num(1), Add(), Num(12))
+```
+
+the expression `(a + b)` is unquoted. Hence `a + b` gets evaluated to the value of `12`, which is then inserted into the tree, giving the final tree.
+
+Apart from interpolating values in the AST, you can also interpolate:
+
+###Other ASTs
+
+```python
+a = q%(1 + 2)
+b = q%(ast%a + 3)
+print ast.dump(b)
+#BinOp(BinOp(Num(1), Add(), Num(2)), Add(), Num(3))
+```
+
+This is necessary to join together ASTs directly, without converting the interpolated AST into its `repr`. If we had used the `u%` interpolator, it fails with an error
+
+###Names
+```python
+n = "x"
+x = 1
+y = q%(name%n + name%n)
+print ast.dump(y)
+#BinOp(Name('x'), Add(), Name('x'))
+```
+
+This is convenient in order to interpolate a string variable as an identifier, rather than interpolating it as a string literal.
+
+Overall, quasiquotes are an incredibly useful tool for assembling or manipulating the ASTs, and are used in the implementation in all of the following examples. See the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for short, practical examples of their usage.
+
+String Interpolation
+--------------------
+
+```python
+a, b = 1, 2
+c = s%"%{a} apple and %{b} bananas"
+print c
+#1 apple and 2 bananas
+```
+
+Unlike the normal string interpolation in Python, MacroPy's string interpolation allows the programmer to specify the variables to be interpolated _inline_ inside the string. The macro `s%` then takes the string literal
+
+```python
+"%{a} apple and %{b} bananas"
+```
+
+and expands it into the expression
+
+```python
+"%s apple and %s bananas" % (a, b)
+```
+
+Which is evaluated at run-time in the local scope, using whatever the values `a` and `b` happen to hold at the time. The contents of the `%{...}` can be any arbitrary python expression, and is not limited to variable names.
+
+Pyxl Integration
+----------------
+
+```python
+image_name = "bolton.png"
+image = p%'<img src="/static/images/{image_name}" />'
+
+text = "Michael Bolton"
+block = p%'<div>{image}{text}</div>'
+
+element_list = [image, text]
+block2 = p%'<div>{element_list}</div>'
+
+assert block2.to_string() == '<div><img src="/static/images/bolton.png" />Michael Bolton</div>'
+```
+
+[Pyxl](https://github.com/dropbox/pyxl) is a way of integrating XML markup into your Python code. By default, pyxl hooks into the python UTF-8 decoder in order to transform the source files at load-time. In this, it is similar to how MacroPy transforms source files at import time.
+
+A major difference is that Pyxl by default leaves the HTML fragments directly in the source code:
+
+```python
+image_name = "bolton.png"
+image = <img src="/static/images/{image_name}" />
+
+text = "Michael Bolton"
+block = <div>{image}{text}</div>
+
+element_list = [image, text]
+block2 = <div>{element_list}</div>
+```
+
+While the MacroPy version requires each snippet to be wrapped in a `p%"..."` wrapper. This [three-line-of-code macro](https://github.com/lihaoyi/macropy/blob/master/macropy/macros2/pyxl_strings.py) simply uses pyxl as a macro (operating on string literals), rather than hooking into the UTF-8 decoder. In general, this demonstrates how easy it is to integrate an "external" DSL into your python program: MacroPy handles all the intricacies of hooking into the interpreter and intercepting the import workflow. The programmer simply needs to provide the source-to-source transformation, which in this case was already provided.
+
+Tracing
+-------
+
+```python
+log%(1 + 2)
+#(1 + 2) -> 3
+
+log%("omg" * 3)
+#('omg' * 3) -> 'omgomgomg'
+```
+
+Tracing allows you to easily see what is happening inside your code. Many a time programmers have written code like
+
+```python
+print "value", value
+print "sqrt(x)", sqrt(x)
+```
+
+and the `log%` macro (shown above) helps remove this duplication by automatically expanding `log%(1 + 2)` into `wrap("(1 + 2)", (1 + 2))`. `wrap` then evaluates the expression, printing out the source code and final value of the computation.
+
+In addition to simple logging, MacroPy provides the `trace%` macro. This macro not only logs the source and result of the given expression, but also the source and result of all sub-expressions nested within it:
+
+```python
+trace%[len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]]
+#('b' * 2) -> 'bb'
+#(('b' * 2) + 'q') -> 'bbq'
+#('lo' * 3) -> 'lololo'
+#(('lo' * 3) + 'l') -> 'lololol'
+#['omg', 'wtf', (('b' * 2) + 'q'), (('lo' * 3) + 'l')] -> ['omg', 'wtf', 'bbq', 'lololol']
+#len(x) -> 3
+#(len(x) * 3) -> 9
+#len(x) -> 3
+#(len(x) * 3) -> 9
+#len(x) -> 3
+#(len(x) * 3) -> 9
+#len(x) -> 7
+#(len(x) * 3) -> 21
+#[(len(x) * 3) for x in ['omg', 'wtf', (('b' * 2) + 'q'), (('lo' * 3) + 'l')]] -> [9, 9, 9, 21]
+```
+
+As you can see, `trace%` logs the source and value of all sub-expressions that get evaluated in the course of evaluating the list comprehension.
+
+Lastly, `trace` can be used as a block macro:
+
+
+```python
+with trace:
+    sum = 0
+    for i in range(0, 5):
+        sum = sum + 5
+
+    square = sum * sum
+#sum = 0
+#for i in range(0, 5):
+#   sum = (sum + 5)
+#range(0, 5) -> [0, 1, 2, 3, 4]
+#sum = (sum + 5)
+#(sum + 5) -> 5
+#sum = (sum + 5)
+#(sum + 5) -> 10
+#sum = (sum + 5)
+#(sum + 5) -> 15
+#sum = (sum + 5)
+#(sum + 5) -> 20
+#sum = (sum + 5)
+#(sum + 5) -> 25
+#square = (sum * sum)
+#(sum * sum) -> 625
+```
+
+Used this way, `trace` will print out the source code of every _statement_ that gets executed, in addition to tracing the evaluation of any expressions within those statements.
+
+Smart Asserts
+-------------
+```python
+require%(3**2 + 4**2 != 5**2)
+#AssertionError: Require Failed
+#(3 ** 2) -> 9
+#(4 ** 2) -> 16
+#((3 ** 2) + (4 ** 2)) -> 25
+#(5 ** 2) -> 25
+#(((3 ** 2) + (4 ** 2)) != (5 ** 2)) -> False
+```
+
+MacroPy provides a variant on the `assert` keyword called `require%`. Like `assert`, `require%` throws an `AssertionError` if the condition is false.
+
+Unlike `assert`, `require%` automatically tells you what code failed the condition, and traces all the sub-expressions within the code so you can more easily see what went wrong. Pretty handy!
+
+`require% can also be used in block form:
+
+```python
+a = 10
+b = 2
+with require:
+    a > 5
+    a * b == 20
+    a < 2
+#AssertionError: Require Failed
+#(a < 2) -> False
+```
+
+This requires every statement in the block to be a boolean expression. Each expression will then be wrapped in a `require%`, throwing an `AssertionError` with a nice trace when a condition fails.
 
 
 LINQ to SQL
