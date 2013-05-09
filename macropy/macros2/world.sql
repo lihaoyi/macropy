@@ -8,24 +8,24 @@ CREATE TABLE city (
   CONSTRAINT city_ibfk_1 FOREIGN KEY (country_code) REFERENCES country (code)
 );
 
-CREATE TABLE country (
-  code char(3) NOT NULL DEFAULT '',
-  name char(52) NOT NULL DEFAULT '',
-  continent char(20) NOT NULL DEFAULT 'Asia',
-  region char(26) NOT NULL DEFAULT '',
-  surface_area float(10,2) NOT NULL DEFAULT '0.00',
-  indep_year smallint(6) DEFAULT NULL,
-  population int(11) NOT NULL DEFAULT '0',
-  life_expectency float(3,1) DEFAULT NULL,
-  gnp float(10,2) DEFAULT NULL,
-  gnp_old float(10,2) DEFAULT NULL,
-  local_name char(45) NOT NULL DEFAULT '',
-  government_form char(45) NOT NULL DEFAULT '',
-  head_of_state char(60) DEFAULT NULL,
-  capital int(11) DEFAULT NULL,
-  code2 char(2) NOT NULL DEFAULT '',
-  PRIMARY KEY (code)
-);
+    CREATE TABLE country (
+      code char(3) NOT NULL DEFAULT '',
+      name char(52) NOT NULL DEFAULT '',
+      continent char(20) NOT NULL DEFAULT 'Asia',
+      region char(26) NOT NULL DEFAULT '',
+      surface_area float(10,2) NOT NULL DEFAULT '0.00',
+      indep_year smallint(6) DEFAULT NULL,
+      population int(11) NOT NULL DEFAULT '0',
+      life_expectency float(3,1) DEFAULT NULL,
+      gnp float(10,2) DEFAULT NULL,
+      gnp_old float(10,2) DEFAULT NULL,
+      local_name char(45) NOT NULL DEFAULT '',
+      government_form char(45) NOT NULL DEFAULT '',
+      head_of_state char(60) DEFAULT NULL,
+      capital int(11) DEFAULT NULL,
+      code2 char(2) NOT NULL DEFAULT '',
+      PRIMARY KEY (code)
+    );
 
 CREATE TABLE country_language (
   country_code char(3) NOT NULL DEFAULT '',

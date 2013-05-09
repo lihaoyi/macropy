@@ -193,3 +193,30 @@ class Tests(unittest.TestCase):
             ),
             lambda x: sorted(map(str, x))
         )
+    def test_join_complicated(self):
+
+        compare_queries(
+            """
+            SELECT t.name, t.population, c.name, c.population
+            FROM country c
+            JOIN city t
+            ON t.country_code = c.code
+            AND t.population * 1.0 / c.population = (
+                SELECT MAX(tt.population * 1.0 / c.population)
+                FROM city tt
+                WHERE tt.country_code = t.country_code
+            )
+            """,
+            sql%(
+                (t.name, t.population, c.name, c.population)
+                for c in db.country
+                for t in db.city
+                if t.country_code == c.code
+                if t.population * 1.0 / c.population == (
+                    func.max(tt.population * 1.0 / c.population)
+                    for tt in db.city
+                    if tt.country_code == t.country_code
+                )
+            ),
+            lambda x: sorted(map(str, x))
+        )
