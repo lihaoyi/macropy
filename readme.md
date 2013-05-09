@@ -442,7 +442,7 @@ Pattern Matching
 Pattern matching is taken from many functional languages, including Haskell,
 ML, and Scala, all of which allow a convenient syntax for extracting elements
 out of a complex data structure.  The most basic way of matching an object
-against a pattern is to use the patterns block macro, and use the left shit
+against a pattern is to use the patterns block macro, and use the left shift
 operator, as shown.
 
 
