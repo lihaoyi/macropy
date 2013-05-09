@@ -29,6 +29,8 @@ def trampoline(func, args):
     ignoring = False
     while True:
         result = func(*args)
+        if result is None:
+            return None
         with switch(result[0]):
             if 'call':
                 (func, args) = (result[1], result[2])
@@ -38,6 +40,7 @@ def trampoline(func, args):
             elif 'return':
                 if ignoring:
                     _exit_trampoline()
+                    print "hi"
                     return None
                 else:
                     _exit_trampoline()
@@ -45,8 +48,9 @@ def trampoline(func, args):
 
 @macros.decorator
 def tco(node):
+
     @Walker
-    def func(node):
+    def return_replacer(node):
         if isinstance(node, Return): 
             if isinstance(node.value, Call):
                 with q as code:
@@ -63,10 +67,27 @@ def tco(node):
                 return node
         else:
             return node
+
+    def replace_tc_pos(node):
+        if isinstance(node, Expr) and isinstance(node.value, Call):
+            with q as code:
+                return ('ignore', ast%(node.value.func), 
+                        ast%(List(node.value.args, Load())))
+            return code
+        elif isinstance(node, If):
+            node.body[-1] = replace_tc_pos(node.body[-1])
+            if node.orelse:
+                node.orelse[-1] = replace_tc_pos(node.orelse[-1])
+            return node
+        return node
+
+    # We need to remove ourselves from the decorator list so we don't have
+    # infinite expansion
     new_decorator_list = []
     for decorator in node.decorator_list:
         if not (isinstance(decorator, Name) and decorator.id == 'tco'):
             new_decorator_list.append(decorator)
+    node.decorator_list = new_decorator_list
 
     arg_list_node = List(node.args.args, Load())
     for x in arg_list_node.elts:
@@ -77,7 +98,7 @@ def tco(node):
         if not in_trampoline():
             return trampoline(name%(node.name), ast%(arg_list_node))
 
-    node.decorator_list = new_decorator_list
-    node = func.recurse(node)
+    node = return_replacer.recurse(node)
     node.body = [prelude] + node.body
+    node.body[-1] = replace_tc_pos(node.body[-1])
     return node

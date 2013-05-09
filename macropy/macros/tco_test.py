@@ -38,9 +38,22 @@ class Tests(unittest.TestCase):
                 else:
                     return oddLength(xs.rest)
 
-        self.assertTrue(True, evenLength(my_range(50000)))
+        self.assertTrue(True, evenLength(my_range(20000)))
+        self.assertTrue(True, oddLength(my_range(20001)))
         # if we get here, then we haven't thrown a stack overflow.  success.
 
+    def test_implicit_tailcall(self):
+        """Tests for when there is an implicit return None"""
+        blah = []
+
+        @tco
+        def appendStuff(n):
+            if n != 0:
+                blah.append(n)
+                appendStuff(n-1)
+
+        appendStuff(10000)
+        self.assertEquals(10000, len(blah))
 
 if __name__ == '__main__':
     unittest.main()

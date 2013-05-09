@@ -210,7 +210,7 @@ def build_matcher(tree, modified):
     if isinstance(tree, Str):
         return q%(LiteralMatcher(u%(tree.s)))
     if isinstance(tree, Name):
-        if tree.id in ['True', 'False']:
+        if tree.id in ['True', 'False', 'None']:
             return q%(LiteralMatcher(ast%(tree)))
         modified.add(tree.id)
         return q%(NameMatcher(u%(tree.id)))
