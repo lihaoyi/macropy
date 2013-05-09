@@ -121,7 +121,7 @@ def _expand_ast(tree, modules):
 
                 return module.expr_registry[tree.left.id](tree.right), True
 
-            if  (isinstance(tree, ClassDef)
+            if  ((isinstance(tree, ClassDef) or isinstance(tree, FunctionDef))
                     and len(tree.decorator_list) == 1
                     and tree.decorator_list[0]
                     and type(tree.decorator_list[0]) is Name
