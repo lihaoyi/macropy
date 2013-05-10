@@ -560,6 +560,17 @@ with trace:
 
 Used this way, `trace` will print out the source code of every _statement_ that gets executed, in addition to tracing the evaluation of any expressions within those statements.
 
+Apart from simply printing out the traces, you can also redirect the traces wherever you want by having a `log()` function in scope:
+
+```python
+result = []
+
+def log(x):
+    result.append(x)
+```
+
+The tracer uses whatever `log()` function it finds, falling back on printing only if none exists. Instead of printing, this `log()` function appends the traces to a list, and is used in our unit tests.
+
 ###Smart Asserts
 ```python
 require%(3**2 + 4**2 != 5**2)
@@ -599,6 +610,7 @@ from macropy.macros2.linq import macros, sql, query, generate_schema
 
 db = generate_schema(engine)
 
+# Countries in Europe with a GNP per Capita greater than the UK
 results = query%(
     x.name for x in db.country
     if x.gnp / x.population > (
@@ -628,6 +640,7 @@ PINQ (Python INtegrated Query) to SQLAlchemy is inspired by [C#'s LINQ to SQL](h
 This allows you to write queries to a database in the same way you would write queries on in-memory lists, which is really very nice. The translation is a relatively thin layer of over the [SQLAlchemy Query Language](http://docs.sqlalchemy.org/ru/latest/core/tutorial.html), which does the heavy lifting of converting the query into a raw SQL string:. If we start with a simple query:
 
 ```python
+# Countries with a land area greater than 10 million square kilometers
 print query%((x.name, x.surface_area) for x in db.country if x.surface_area > 10000000)
 # [(u'Antarctica', Decimal('13120000.0000000000')), (u'Russian Federation', Decimal('17075400.0000000000'))]
 ```
@@ -716,6 +729,7 @@ for line in results: print line
 Although PINQ does not support the vast capabilities of the SQL language, it supports a useful subset, like `JOIN`s:
 
 ```python
+# The number of cities in all of Asia
 query = sql%(
     func.count(t.name)
     for c in db.country
@@ -737,6 +751,7 @@ print result
 As well as `ORDER BY`, with `LIMIT` and `OFFSET`s:
 
 ```python
+# The top 10 largest countries in the world by population
 query = sql%(
     c.name for c in db.country
 ).order_by(c.population.desc()).limit(10)
