@@ -21,6 +21,7 @@ class Macros(object):
     def block(self, f):
         self.block_registry[f.func_name] = f
 
+stop = object()
 class ContextWalker(object):
     def __init__(self, func):
         self.func = func
@@ -50,7 +51,7 @@ class ContextWalker(object):
             return tree, flatten(aggregates)
         elif isinstance(tree, AST):
             tree, new_ctx, aggregate = self.func(tree, ctx)
-            if self.autorecurse:
+            if self.autorecurse and new_ctx is not stop:
                 if type(tree) is list:
                     tree, aggregate2 = self.recurse_real(tree, new_ctx)
                     return tree, flatten(aggregate + aggregate2)

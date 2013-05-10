@@ -35,7 +35,6 @@ def _recurse(tree):
     if type(tree) is BinOp and type(tree.op) is RShift:
         tree.left, b_left = _recurse(tree.left)
         tree.right = q%(lambda bindings: ast%tree.right)
-        print flatten(b_left)
         tree.right.args.args = map(f%Name(id = _), flatten(b_left))
         return tree, []
 
@@ -85,7 +84,7 @@ Ordered choice: e1 / e2     |   7       Or
 Zero-or-more: e*            ~   13      Rep
 One-or-more: e+             +   13      rep1
 Optional: e?                            opt
-And-predicate: &e           &   9       And
+And-(predicate: &e           &   9       And
 Not-predicate: !e           -   13      Not
 """
 

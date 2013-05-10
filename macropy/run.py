@@ -1,4 +1,6 @@
 import unittest
+import macropy.core.macros
+#import scratch
 
 runner = unittest.TextTestRunner()
 def run(x):

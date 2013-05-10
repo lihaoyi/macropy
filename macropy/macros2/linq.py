@@ -153,30 +153,21 @@ def generate_schema(engine):
 
 
 
-class _LetSearch(Walker):
-    def __init__(self):
-        self.out = []
-        self.autorecurse = False
-        cow = self.func
-        self.func = lambda tree, ctx: (cow(tree), [], [])
+@ContextWalker
+def cfunc(tree, ctx):
+    if type(tree) is Call and type(tree.func) is Lambda:
+        return tree.func.body, stop, [tree]
 
-    def func(self, tree):
-        if type(tree) is Call and type(tree.func) is Lambda:
-            self.out.append(tree)
-            return tree.func.body
-        if type(tree) in [Lambda, GeneratorExp, ListComp, SetComp, DictComp]:
-            return tree
+    if type(tree) in [Lambda, GeneratorExp, ListComp, SetComp, DictComp]:
+        return tree, stop, []
 
-        self.walk_children(tree)
-        return tree
+    return tree, [], []
 
 @Walker
 def replace_walk(tree):
-    searcher = _LetSearch()
-    tree = searcher.recurse(tree)
-    for v in searcher.out:
+    tree, chunks = cfunc.recurse(tree)
+    for v in chunks:
         let_tree = v
         let_tree.func.body = tree
         tree = let_tree
-
     return tree

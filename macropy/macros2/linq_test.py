@@ -4,7 +4,7 @@ import ast
 from sqlalchemy import *
 from macropy.macros2.linq import macros, sql, generate_schema
 from macropy.core.lift import macros, q
-
+from macropy.core import unparse_ast
 
 engine = create_engine("sqlite://")
 
