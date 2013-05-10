@@ -28,22 +28,27 @@ def compare_queries(query1, query2, post_process=lambda x: x):
         raise e
 
 class Tests(unittest.TestCase):
+
     def test_expand_lets(self):
+        """
+        This tests the sorta knotty logic involved in making the for-
+        comprehension variable available *outside* of the comprehension
+        when used in PINQ
+        """
         tree = q%(lambda x: x + (lambda y: y + 1)(3))(5)
         goal = q%(lambda x: (lambda y: (x + (y + 1)))(3))(5)
 
         new_tree = replace_walk.recurse(tree)
         assert ast.dump(new_tree) == ast.dump(goal)
 
-
         tree = q%(lambda x: x + (lambda y: y + 1)(3) + (lambda z: z + 2)(4))(5)
-        goal = q%(lambda x: (lambda y: (lambda z: ((x + (y + 1)) + (z + 2)))(4))(3))(5)
+        goal = q%(lambda x: (lambda z: (lambda y: ((x + (y + 1)) + (z + 2)))(3))(4))(5)
 
         new_tree = replace_walk.recurse(tree)
         assert ast.dump(new_tree) == ast.dump(goal)
 
         tree = q%(lambda x: (x, lambda w: (lambda y: y + 1)(3) + (lambda z: z + 2)(4)))(5)
-        goal = q%(lambda x: (x, (lambda w: (lambda y: (lambda z: ((y + 1) + (z + 2)))(4))(3))))(5)
+        goal = q%(lambda x: (x, (lambda w: (lambda z: (lambda y: ((y + 1) + (z + 2)))(3))(4))))(5)
 
         new_tree = replace_walk.recurse(tree)
         assert ast.dump(new_tree) == ast.dump(goal)

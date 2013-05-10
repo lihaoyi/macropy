@@ -152,25 +152,27 @@ def generate_schema(engine):
     return db
 
 
-_out = []
-@identity(lambda x: Walker(x, False))
-def _let_search(tree):
-    if type(tree) is Call and type(tree.func) is Lambda:
-        _out.append(tree)
-        return tree.func.body
-    if type(tree) in [Lambda, GeneratorExp, ListComp, SetComp, DictComp]:
-        return tree
 
-    Walker.walk_children(_let_search, tree)
-    return tree
+class _LetSearch(Walker):
+    def __init__(self):
+        self.out = []
+        self.autorecurse = False
+    def func(self, tree):
+        if type(tree) is Call and type(tree.func) is Lambda:
+            self.out.append(tree)
+            return tree.func.body
+        if type(tree) in [Lambda, GeneratorExp, ListComp, SetComp, DictComp]:
+            return tree
+
+        self.walk_children(tree)
+        return tree
 
 @Walker
 def replace_walk(tree):
-
-    tree = _let_search.recurse(tree)
-
-    while len(_out) > 0:
-        let_tree = _out.pop()
+    searcher = _LetSearch()
+    tree = searcher.recurse(tree)
+    for v in searcher.out:
+        let_tree = v
         let_tree.func.body = tree
         tree = let_tree
 
