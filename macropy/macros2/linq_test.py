@@ -2,8 +2,8 @@ import unittest
 import ast
 
 from sqlalchemy import *
-from macropy.macros2.linq import sql, generate_schema
-from macropy.core.lift import q
+from macropy.macros2.linq import macros, sql, generate_schema
+from macropy.core.lift import macros, q
 
 
 engine = create_engine("sqlite://")

@@ -2,7 +2,7 @@ from ast import Call
 
 from macropy.core.macros import *
 from macropy.core.lift import macros, q, ast
-from macropy.macros.quicklambda import f
+from macropy.macros.quicklambda import macros, f
 import sqlalchemy
 
 
@@ -66,12 +66,12 @@ Core Functions:
 macros = Macros()
 @macros.expr
 def sql(tree):
-    x = _replace_walk.recurse(recurse(tree, []))
+    x = replace_walk.recurse(recurse(tree, []))
     return x
 
 @macros.expr
 def query(tree):
-    x = _replace_walk.recurse(recurse(tree, []))
+    x = replace_walk.recurse(recurse(tree, []))
     return q%(lambda query: query.bind.execute(query).fetchall())(ast%x)
 
 
@@ -165,7 +165,7 @@ def _let_search(tree):
     return tree
 
 @Walker
-def _replace_walk(tree):
+def replace_walk(tree):
 
     tree = _let_search.recurse(tree)
 
