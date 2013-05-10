@@ -7,22 +7,24 @@ import sqlalchemy
 
 
 macros = Macros()
+
 @macros.expr
 def sql(tree):
-    x = replace_walk.recurse(recurse.recurse(tree, []))[0]
-    print x
+    x = recurse.recurse(tree)
+    x = expand_let_bindings.recurse(x)
     return x
 
 @macros.expr
 def query(tree):
-    x = replace_walk.recurse(recurse.recurse(tree, []))[0]
+    x = recurse.recurse(tree)
+    x = expand_let_bindings.recurse(x)
     return q%(lambda query: query.bind.execute(query).fetchall())(ast%x)
 
 
-@ContextWalker
-def recurse(tree, scope):
+@Walker
+def recurse(tree):
     if type(tree) is Compare and type(tree.ops[0]) is In:
-        return q%(ast%recurse(tree.left)).in_(ast%recurse(tree.comparators[0])), [], []
+        return q%(ast%tree.left).in_(ast%tree.comparators[0])
 
     if type(tree) is GeneratorExp:
 
@@ -31,33 +33,25 @@ def recurse(tree, scope):
 
         aliased_tables = map(lambda x: q%((ast%x).alias().c), tables)
 
-        ifs = [
-            recurse.recurse(ifcond, [])[0]
-            for gen in tree.generators
-            for ifcond in gen.ifs
-        ]
-
         elt = tree.elt
         if type(elt) is Tuple:
-            sel = q%(ast_list%recurse.recurse(elt, [])[0].elts)
+            sel = q%(ast_list%elt.elts)
         else:
-            sel = q%[ast%recurse.recurse(elt, [])[0]]
+            sel = q%[ast%elt]
 
         out = q%select(ast%sel)
 
+        for gen in tree.generators:
+            for cond in gen.ifs:
+                out = q%(ast%out).where(ast%cond)
 
-        for cond in ifs:
-            out = q%(ast%out).where(ast%cond)
-
-        if scope != []:
-            out = q%(ast%out).as_scalar()
 
         out = q%(lambda x: ast%out)()
         out.func.args.args = aliases
         out.args = aliased_tables
-        return out, stop, []
+        return out
 
-    return tree, [], []
+    return tree
 
 def generate_schema(engine):
     metadata = sqlalchemy.MetaData(engine)
@@ -69,9 +63,8 @@ def generate_schema(engine):
     return db
 
 
-
-@ContextWalker
-def cfunc(tree, ctx):
+@GenericWalker
+def find_let_bindings(tree, ctx):
     if type(tree) is Call and type(tree.func) is Lambda:
         return tree.func.body, stop, [tree]
 
@@ -81,8 +74,8 @@ def cfunc(tree, ctx):
     return tree, [], []
 
 @Walker
-def replace_walk(tree):
-    tree, chunks = cfunc.recurse(tree)
+def expand_let_bindings(tree):
+    tree, chunks = find_let_bindings.recurse(tree)
     for v in chunks:
         let_tree = v
         let_tree.func.body = tree

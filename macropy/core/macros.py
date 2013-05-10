@@ -22,7 +22,7 @@ class Macros(object):
         self.block_registry[f.func_name] = f
 
 stop = object()
-class ContextWalker(object):
+class GenericWalker(object):
     def __init__(self, func):
         self.func = func
         self.autorecurse = True
@@ -57,14 +57,15 @@ class ContextWalker(object):
                     return tree, flatten(aggregate + aggregate2)
                 else:
                     aggregates = self.walk_children(tree, new_ctx)
-                    return tree, flatten(aggregate + aggregates)
+                    return tree, flatten([aggregate] + aggregates)
             else:
                 return tree, aggregate
         else:
             return tree, []
 
 
-class AggregateWalker(ContextWalker):
+
+class AggregateWalker(GenericWalker):
     def __init__(self, func):
         self.autorecurse = True
         self.func = lambda tree, ctx: (lambda x: (x[0], [], x[1]))(func(tree))
@@ -72,15 +73,21 @@ class AggregateWalker(ContextWalker):
     def recurse(self, tree):
         return self.recurse_real(tree)
 
+class ContextWalker(GenericWalker):
+    def __init__(self, func):
+        self.autorecurse = True
+        self.func = lambda tree, ctx: (lambda x: (x[0], [], x[1]))(func(tree, ctx))
 
-class Walker(ContextWalker):
+    def recurse(self, tree, ctx):
+        return self.recurse_real(tree, ctx)[0]
+
+class Walker(GenericWalker):
     def __init__(self, func):
         self.autorecurse = True
         self.func = lambda tree, ctx: (func(tree), [], [])
 
     def recurse(self, tree):
         res, agg = self.recurse_real(tree)
-
         return res
 
 class _MacroLoader(object):
