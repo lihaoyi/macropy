@@ -157,6 +157,8 @@ class _LetSearch(Walker):
     def __init__(self):
         self.out = []
         self.autorecurse = False
+        cow = self.func
+        self.func = lambda tree, ctx: (cow(tree), [], [])
     def func(self, tree):
         if type(tree) is Call and type(tree.func) is Lambda:
             self.out.append(tree)

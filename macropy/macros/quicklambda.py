@@ -10,18 +10,19 @@ macros = Macros()
 @macros.expr
 def f(tree):
     names = ('quickfuncvar' + str(i) for i in xrange(100))
-    used_names = []
 
-    @Walker
-    def underscore_search(tree):
+
+    @ContextWalker
+    def underscore_search(tree, ctx):
         if isinstance(tree, Name) and tree.id == "_":
             name = names.next()
-            used_names.append(name)
             tree.id = name
+            return tree, ctx, [name]
+        else:
+            return tree, ctx, []
 
-        return tree
 
-    tree = underscore_search.recurse(tree)
+    tree, used_names= underscore_search.recurse(tree, None)
 
     new_tree = q%(lambda: ast%tree)
     new_tree.args.args = [Name(id = x) for x in used_names]

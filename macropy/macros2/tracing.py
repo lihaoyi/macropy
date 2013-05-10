@@ -33,36 +33,36 @@ class _TraceWalker(Walker):
         self.registry = registry
 
 
-    def func(self, tree):
+        def func(tree):
 
-        if isinstance(tree, expr) and \
-                        tree._fields != () and \
-                        type(tree) is not Num and \
-                        type(tree) is not Str and \
-                        type(tree) is not Name:
+            if isinstance(tree, expr) and \
+                            tree._fields != () and \
+                            type(tree) is not Num and \
+                            type(tree) is not Str and \
+                            type(tree) is not Name:
 
-            try:
-                literal_eval(tree)
-                return tree
-            except ValueError:
-                txt = unparse_ast(tree)
-                self.walk_children(tree)
-                if self.registry is not None:
-                    self.registry.append([txt, tree])
+                try:
+                    literal_eval(tree)
                     return tree
-                else:
-                    wrapped = q%(wrap(log, u%txt, ast%tree))
-                    return wrapped
-        elif isinstance(tree, stmt):
-            txt = unparse_ast(tree).strip()
-            self.walk_children(tree)
-            with q as code:
-                log(u%txt)
+                except ValueError:
+                    txt = unparse_ast(tree)
+                    self.walk_children(tree)
+                    if self.registry is not None:
+                        self.registry.append([txt, tree])
+                        return tree
+                    else:
+                        wrapped = q%(wrap(log, u%txt, ast%tree))
+                        return wrapped
+            elif isinstance(tree, stmt):
+                txt = unparse_ast(tree).strip()
+                self.walk_children(tree)
+                with q as code:
+                    log(u%txt)
 
-            return [code, tree]
-        else:
-            return tree
-
+                return [code, tree]
+            else:
+                return tree
+        self.func = lambda tree, ctx: (func(tree), [], [])
 @macros.expr
 def trace(tree):
     ret = _TraceWalker().recurse(tree)
