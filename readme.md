@@ -713,7 +713,7 @@ for line in results: print line
 # (u'Sweden',)
 ```
 
-Although PINQ does not support the vast capabilities of the SQL language, but it supports a useful subset, like `JOIN`s:
+Although PINQ does not support the vast capabilities of the SQL language, it supports a useful subset, like `JOIN`s:
 
 ```python
 query = sql%(
@@ -734,7 +734,7 @@ print result
 [(1766,)]
 ```
 
-as well as `ORDER BY`, with `LIMIT` and `OFFSET`s:
+As well as `ORDER BY`, with `LIMIT` and `OFFSET`s:
 
 ```python
 query = sql%(
