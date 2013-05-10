@@ -14,7 +14,6 @@ def peg(tree):
         if type(statement) is Assign:
             new_tree, bindings = _recurse(statement.value)
             statement.value = q%(Lazy(lambda: ast%new_tree))
-        print unparse_ast(statement)
 
     return tree.body
 

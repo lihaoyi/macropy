@@ -63,6 +63,15 @@ class ContextWalker(object):
             return tree, []
 
 
+class AggregateWalker(ContextWalker):
+    def __init__(self, func):
+        self.autorecurse = True
+        self.func = lambda tree, ctx: (lambda x: (x[0], [], x[1]))(func(tree))
+
+    def recurse(self, tree):
+        return self.recurse_real(tree)
+
+
 class Walker(ContextWalker):
     def __init__(self, func):
         self.autorecurse = True
