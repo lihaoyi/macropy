@@ -98,6 +98,8 @@ Below are a few example uses of macros that are implemented (together with test 
 Case Classes
 ------------
 ```python
+from macropy.macros.adt import macros, case
+
 @case
 class Point(x, y): pass
 
@@ -213,26 +215,27 @@ Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.
 
 Pattern Matching
 ----------------
+```python
+from macropy.macros.adt import macros, patterns
+
+with patterns:
+    Foo(x, Bar(3, z)) << Foo(4, Bar(3, 8))
+    print x   # 4
+    print z   # 8
+```
+
 Pattern matching is taken from many functional languages, including Haskell,
 ML, and Scala, all of which allow a convenient syntax for extracting elements
 out of a complex data structure.  The most basic way of matching an object
 against a pattern is to use the patterns block macro, and use the left shift
 operator, as shown.
 
-
-```python
-with patterns:
-  Foo(x, Bar(3, z)) << Foo(4, Bar(3, 8))
-  print x   # 4
-  print z   # 8
-```
-
 If the match fails, a PatternMatchException() will be thrown.
 
 ```python
 with patterns:
-  # Throws a PatternMatchException
-  Foo(x, 4) << Foo(5, 5)
+    # Throws a PatternMatchException
+    Foo(x, 4) << Foo(5, 5)
 ```
 
 When you pattern match `Foo(x, y)` against a value `Foo(3, 4)`, what happens behind the
@@ -270,16 +273,16 @@ dictionary of the keyword matches.
 
 ```python
 class Twice(object):
-  @classmethod
-  def __unapply__(clazz, x, kw_keys):
-    if not isinstance(x, int) or x % 2 != 0:
-      raise PatternMatchException()
-    else:
-      return ([x/2], {})
+    @classmethod
+    def __unapply__(clazz, x, kw_keys):
+        if not isinstance(x, int) or x % 2 != 0:
+            raise PatternMatchException()
+        else:
+            return ([x/2], {})
 
 with patterns:
-  Twice(n) << 8
-  print n     # 4
+    Twice(n) << 8
+    print n     # 4
 ```
 
 In addition to pattern matching which may throw an exception, there is a nice
@@ -290,41 +293,41 @@ match.
 ```python
 @case
 class List:
-  class Nil():
-    pass
+    class Nil():
+        pass
 
-  class Cons(x, xs):
-    pass
+    class Cons(x, xs):
+        pass
 
 def foldl1(my_list, op):
-  with switch(my_list):
-    if Cons(x, Nil()):
-      return x
-    elif Cons(x, xs):
-      return op(x, foldl1(xs, op))
+    with switch(my_list):
+        if Cons(x, Nil()):
+            return x
+        elif Cons(x, xs):
+            return op(x, foldl1(xs, op))
 ```
 
 `foldl1` is approximtely desugared into the following, with one important
 caveat: the bodies of the if statements are not subject to pattern matching,
 in case you actually want to use bitshifts in your code.
+
 ```python
 def foldl1(my_list, op):
-  with patterns:
-    tmp = my_list
-    try:
-      Cons(x, Nil()) << tmp
-      return x
-    except PatternMatchException:
-      try:
-        Cons(x, xs) << tmp
-        return op(x, foldl1(xs, op))
-      except PatternMatchException:
-        pass
+    with patterns:
+        tmp = my_list
+        try:
+            Cons(x, Nil()) << tmp
+            return x
+        except PatternMatchException:
+            try:
+                Cons(x, xs) << tmp
+                return op(x, foldl1(xs, op))
+            except PatternMatchException:
+                pass
 ```
 
 I think you can agree that the first version is much easier to read, and the
 second version hasn't even been fully expanded yet!
-
 
 Tail-call Optimization
 -----------
@@ -333,24 +336,23 @@ functions which are actually implemented in a tail-recursive fashion.  This even
 works for mutually recursive functions by using trampolining.
 
 ```python
-from macropy.macros.tco import macros
-from macropy.macros.tco import *
+from macropy.macros.tco import macros, tco
 
 @tco
 def odd(n):
 if n < 0:
-  return odd(-n)
+    return odd(-n)
 elif n == 0:
-  return False
+    return False
 else:
-  return even(n - 1)
+    return even(n - 1)
 
 @tco
 def even(n):
-  if n == 0:
-    return True
-  else:
-    return odd(n-1)
+    if n == 0:
+        return True
+    else:
+        return odd(n-1)
 
 assert(even(100000))  # No stack overflow
 ```
@@ -360,6 +362,8 @@ Quasiquotes
 -----------
 
 ```python
+from macropy.core.lift import macros, q, name, ast
+
 a = 10
 b = 2
 tree = q%(1 + u%(a + b))
@@ -417,7 +421,7 @@ print ast.dump(y)
 #BinOp(Name('x'), Add(), Name('x'))
 ```
 
-This is convenient in order to interpolate a string variable as an identifier, rather than interpolating it as a string literal.
+This is convenient in order to interpolate a string variable as an identifier, rather than interpolating it as a string literal. In this case, I want the syntax tree for the expression `x + x`, and not `'x' + 'x'`, so I use the `name%` macro to unquote it.
 
 Overall, quasiquotes are an incredibly useful tool for assembling or manipulating the ASTs, and are used in the implementation in all of the following examples. See the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for short, practical examples of their usage.
 
@@ -425,6 +429,8 @@ String Interpolation
 --------------------
 
 ```python
+from macropy.macros.string_interp import macros, s
+
 a, b = 1, 2
 c = s%"%{a} apple and %{b} bananas"
 print c
@@ -449,6 +455,8 @@ Pyxl Integration
 ----------------
 
 ```python
+from macropy.macros2.pyxl_strings import macros, p
+
 image_name = "bolton.png"
 image = p%'<img src="/static/images/{image_name}" />'
 
@@ -482,6 +490,8 @@ Tracing
 -------
 
 ```python
+from macropy.macros2.tracing import macros, trace, log, require
+
 log%(1 + 2)
 #(1 + 2) -> 3
 
@@ -585,6 +595,8 @@ If you want to write your own custom logging, tracing or debugging macros, take 
 PINQ to SQLAlchemy
 ------------------
 ```python
+from macropy.macros2.linq import macros, sql, query, generate_schema
+
 db = generate_schema(engine)
 
 results = query%(
@@ -757,6 +769,8 @@ PINQ demonstrates how easy it is to use macros to lift python snippets into an A
 Quick Lambdas
 -------------
 ```python
+from macropy.macros.quicklambda import macros, f, _
+
 map(f%(_ + 1), [1, 2, 3])
 #[2, 3, 4]
 
@@ -810,6 +824,8 @@ This cuts out reduces the number of characters needed to make a thunk from 7 to 
 Parser Combinators
 ------------------
 ```python
+from macropy.macros2.peg import macros, peg
+
 def reduce_chain(chain):
     chain = list(reversed(chain))
     o_dict = {
