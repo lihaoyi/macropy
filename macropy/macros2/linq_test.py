@@ -1,8 +1,10 @@
-from sqlalchemy import *
 import unittest
 import ast
-from macropy.macros2.linq import macros, sql, generate_schema
-from macropy.core.lift import macros, q
+
+from sqlalchemy import *
+from macropy.macros2.linq import sql, generate_schema
+from macropy.core.lift import q
+
 
 engine = create_engine("sqlite://")
 
@@ -258,5 +260,24 @@ class Tests(unittest.TestCase):
                 (t.country_code, func.sum(t.population)) for t in db.city
             ).group_by(t.country_code)
              .order_by(func.sum(t.population))
+        )
+
+    def test_limit_offset(self):
+        # bottom 10 countries by population
+        compare_queries(
+            "SELECT c.name FROM country c ORDER BY c.population LIMIT 10",
+            sql%(c.name for c in db.country).order_by(c.population).limit(10)
+        )
+
+        # bottom 100 to 110 countries by population
+        compare_queries(
+            "SELECT c.name FROM country c ORDER BY c.population LIMIT 10 OFFSET 100",
+            sql%(c.name for c in db.country).order_by(c.population).limit(10).offset(100)
+        )
+
+        # top 10 countries by population
+        compare_queries(
+            "SELECT c.name FROM country c ORDER BY c.population DESC LIMIT 10",
+            sql%(c.name for c in db.country).order_by(c.population.desc()).limit(10)
         )
 
