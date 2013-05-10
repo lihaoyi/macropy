@@ -19,7 +19,7 @@ MacroPy has been used to implement features such as:
 - [Quasiquotes](#quasiquotes), a quick way to manipulate fragments of a program
 - [String Interpolation](#string-interpolation), a common feature in many languages, and [Pyxl](#pyxl-integration).
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts)
-- [PINQ](#pinq), a clone of LINQ to SQL from C#
+- [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), a clone of LINQ to SQL from C#
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy,
 - [Parser Combinators](#parser-combinators), inspired by [Scala's](http://www.suryasuravarapu.com/2011/04/scala-parser-combinators-win.html).
 
