@@ -17,76 +17,58 @@ def log(tree):
     new_tree = q%(wrap(log, u%unparse_ast(tree), ast%tree))
     return new_tree
 
+@ContextWalker
+def trace_walk(tree, ctx):
+    if isinstance(tree, expr) and \
+            tree._fields != () and \
+            type(tree) is not Num and \
+            type(tree) is not Str and \
+            type(tree) is not Name:
 
+        try:
+            literal_eval(tree)
+            return tree, stop
+        except ValueError:
+            txt = unparse_ast(tree)
+            trace_walk.walk_children(tree)
 
-class _TraceWalker(Walker):
-    """
-    If registry=None, this transforms the expression tree such that each
-    individual subtree is traced as it is evaluated
+            wrapped = q%(wrap(log, u%txt, ast%tree))
+            return wrapped, stop
 
-    If registry=[], the tree is unchanged, and instead a list of individual
-    subtrees together with their string representation is placed into the
-    registry. This can be retrieved after the recursion is complete.
-    """
-    def __init__(self, registry=None):
-        self.autorecurse = False
-        self.registry = registry
+    elif isinstance(tree, stmt):
+        txt = unparse_ast(tree).strip()
+        trace_walk.walk_children(tree)
+        with q as code:
+            log(u%txt)
 
+        return [code, tree], stop
 
-        def func(tree):
-
-            if isinstance(tree, expr) and \
-                            tree._fields != () and \
-                            type(tree) is not Num and \
-                            type(tree) is not Str and \
-                            type(tree) is not Name:
-
-                try:
-                    literal_eval(tree)
-                    return tree
-                except ValueError:
-                    txt = unparse_ast(tree)
-                    self.walk_children(tree)
-                    if self.registry is not None:
-                        self.registry.append([txt, tree])
-                        return tree
-                    else:
-                        wrapped = q%(wrap(log, u%txt, ast%tree))
-                        return wrapped
-            elif isinstance(tree, stmt):
-                txt = unparse_ast(tree).strip()
-                self.walk_children(tree)
-                with q as code:
-                    log(u%txt)
-
-                return [code, tree]
-            else:
-                return tree
-        self.func = lambda tree, ctx: (func(tree), [], [])
+    return tree, ctx
 @macros.expr
 def trace(tree):
-    ret = _TraceWalker().recurse(tree)
+    ret = trace_walk.recurse(tree, None)
     return ret
 
 @macros.block
 def trace(tree):
-    ret = _TraceWalker().recurse(tree.body)
+    ret = trace_walk.recurse(tree.body, None)
     return ret
 
 
-def require_log(stuff):
-    s = "\n".join(txt + " -> " + str(tree) for [txt, tree] in stuff)
-    raise AssertionError("Require Failed\n" + s)
-
 def _require_transform(tree):
 
-    walker = _TraceWalker([])
-    walker.recurse(tree)
 
-    registry = [List(elts = [ast_repr(s), t]) for s, t in walker.registry]
-    new = q%(ast%tree or require_log([ast%registry]))
+    import copy
+    ret = trace_walk.recurse(copy.deepcopy(tree), None)
+    trace_walk.recurse(tree, None)
+    new = q%(ast%tree or handle(lambda log: ast%ret))
 
     return new
+
+def handle(thunk):
+    out = []
+    thunk(out.append)
+    raise AssertionError("Require Failed\n" + "\n".join(out))
 
 @macros.expr
 def require(tree):

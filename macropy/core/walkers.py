@@ -60,7 +60,7 @@ class AggregateWalker(GenericWalker):
 class ContextWalker(GenericWalker):
     def __init__(self, func):
         self.autorecurse = True
-        self.func = lambda tree, ctx: (lambda x: (x[0], [], x[1]))(func(tree, ctx))
+        self.func = lambda tree, ctx: (lambda x: (x[0], x[1], []))(func(tree, ctx))
 
     def recurse(self, tree, ctx):
         return self.recurse_real(tree, ctx)[0]

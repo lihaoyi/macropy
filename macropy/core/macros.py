@@ -6,6 +6,8 @@ from ast import *
 from util import *
 from macropy.core import *
 from walkers import *
+
+
 class Macros(object):
     def __init__(self):
         self.expr_registry = {}

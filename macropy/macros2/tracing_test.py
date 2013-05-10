@@ -33,6 +33,7 @@ class Tests(unittest.TestCase):
 
         def test_fancy(self):
             trace%([len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]])
+
             assert(result[-14:] == [
                 "('b' * 2) -> 'bb'",
                 "(('b' * 2) + 'q') -> 'bbq'",
