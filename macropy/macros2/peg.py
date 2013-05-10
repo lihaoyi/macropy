@@ -12,68 +12,71 @@ macros = Macros()
 def peg(tree):
     for statement in tree.body:
         if type(statement) is Assign:
-            new_tree, bindings = _recurse(statement.value, [])
+            new_tree, bindings = _recurse(statement.value)
             statement.value = q%(Lazy(lambda: ast%new_tree))
-
+        print unparse_ast(statement)
 
     return tree.body
 
 
 @macros.expr
 def peg(tree):
-    new_tree, bindings = _recurse(tree, [])
+    new_tree, bindings = _recurse(tree)
     return new_tree
 
 
-def _recurse(tree, bindings):
+def _recurse(tree):
     if type(tree) is Str:
-        return q%Raw(ast%tree), bindings
+        return q%Raw(ast%tree), []
 
     if type(tree) is UnaryOp:
-        (tree.operand, bindings) = _recurse(tree.operand, bindings)
+        (tree.operand, bindings) = _recurse(tree.operand)
         return tree, bindings
 
     if type(tree) is BinOp and type(tree.op) is RShift:
-        tree.left, b_left = _recurse(tree.left, [])
+        tree.left, b_left = _recurse(tree.left)
         tree.right = q%(lambda bindings: ast%tree.right)
-
-        tree.right.args.args = map(f%Name(id = _), b_left)
-        return tree, b_left
+        print flatten(b_left)
+        tree.right.args.args = map(f%Name(id = _), flatten(b_left))
+        return tree, []
 
     if type(tree) is BinOp and type(tree.op) is FloorDiv:
-        tree.left, b_left = _recurse(tree.left, bindings)
+        tree.left, b_left = _recurse(tree.left)
         return tree, b_left
 
     if type(tree) is BinOp:
-        tree.left, b_left = _recurse(tree.left, bindings)
-        tree.right, b_right = _recurse(tree.right, b_left)
-        return tree, b_right
+        tree.left, b_left = _recurse(tree.left)
+        tree.right, b_right = _recurse(tree.right)
+        return tree, b_left + b_right
 
     if type(tree) is Tuple:
         result = q%Seq([])
 
         result.args[0].elts = tree.elts
+        all_bindings = []
         for i, elt in enumerate(tree.elts):
-            result.args[0].elts[i], bindings = _recurse(tree.elts[i], bindings)
-
-        return result, bindings
+            result.args[0].elts[i], bindings = _recurse(tree.elts[i])
+            all_bindings.append(bindings)
+        return result, all_bindings
 
     if type(tree) is Call:
+        all_bindings = []
         for i, elt in enumerate(tree.args):
-            tree.args[i], bindings = _recurse(tree.args[i], bindings)
-        tree.func, bindings = _recurse(tree.func, bindings)
+            tree.args[i], bindings = _recurse(tree.args[i])
+            all_bindings.append(bindings)
+        tree.func, bindings = _recurse(tree.func)
         return tree, bindings
 
     if type(tree) is Attribute:
-        tree.value, bindings = _recurse(tree.value, bindings)
+        tree.value, bindings = _recurse(tree.value)
         return tree, bindings
 
     if type(tree) is Compare and type(tree.ops[0]) is Is:
-        left_tree, bindings = _recurse(tree.left, bindings)
-        new_tree = q%(ast%left_tree).bind_to(u%len(bindings))
+        left_tree, bindings = _recurse(tree.left)
+        new_tree = q%(ast%left_tree).bind_to(u%tree.comparators[0].id)
         return new_tree, bindings + [tree.comparators[0].id]
 
-    return tree, bindings
+    return tree, []
 
 """
 PEG Parser Atoms
@@ -215,7 +218,8 @@ class Parser:
 
                 while True:
                     res = self.parser.parse_input(current_input)
-                    if res is None: return (results, result_dict, current_input)
+                    if res is None:
+                        return (results, result_dict, current_input)
 
                     (res, bindings, current_input) = res
 
@@ -232,7 +236,8 @@ class Parser:
 
                 for i in range(self.n):
                     res = self.parser.parse_input(current_input)
-                    if res is None: return None
+                    if res is None:
+                        return None
 
                     (res, bindings, current_input) = res
 
@@ -259,9 +264,10 @@ class Parser:
                 if result is None:
                     return None
                 else:
+
                     res, bindings, new_input = result
-                    binding_list = map(f%_[1], sorted(bindings.items()))
-                    return self.func(*binding_list), {}, new_input
+
+                    return self.func(**bindings), {}, new_input
 
         class Binder(parser, name):
             def parse_input(self, input):
