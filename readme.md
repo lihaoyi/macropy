@@ -92,13 +92,15 @@ MacroPy intercepts the module-loading workflow, via the functionality provided b
 
 Note that this means **you cannot use macros in a file that is run directly**, as it will not be passed through the import hooks. Hence the minimum viable setup is:
 
-    # run.py
-    import macropy.core.macros  # sets up macro import hooks
-    import other                # imports other.py and passes it through import hooks
+```python
+# run.py
+import macropy.core.macros  # sets up macro import hooks
+import other                # imports other.py and passes it through import hooks
 
-    # other.py
-    from macropy.macros.my_macro_module import macros, ...
-    ... do stuff with macros ...
+# other.py
+from macropy.macros.my_macro_module import macros, ...
+... do stuff with macros ...
+```
 
 Examples
 ========
