@@ -1,7 +1,8 @@
 from sqlalchemy import *
 import unittest
-
+import ast
 from macropy.macros2.linq import macros, sql, generate_schema
+from macropy.core.lift import macros, q
 
 engine = create_engine("sqlite://")
 
@@ -25,6 +26,25 @@ def compare_queries(query1, query2, post_process=lambda x: x):
         raise e
 
 class Tests(unittest.TestCase):
+    def test_expand_lets(self):
+        tree = q%(lambda x: x + (lambda y: y + 1)(3))(5)
+        goal = q%(lambda x: (lambda y: (x + (y + 1)))(3))(5)
+
+        new_tree = replace_walk.recurse(tree)
+        assert ast.dump(new_tree) == ast.dump(goal)
+
+
+        tree = q%(lambda x: x + (lambda y: y + 1)(3) + (lambda z: z + 2)(4))(5)
+        goal = q%(lambda x: (lambda y: (lambda z: ((x + (y + 1)) + (z + 2)))(4))(3))(5)
+
+        new_tree = replace_walk.recurse(tree)
+        assert ast.dump(new_tree) == ast.dump(goal)
+
+        tree = q%(lambda x: (x, lambda w: (lambda y: y + 1)(3) + (lambda z: z + 2)(4)))(5)
+        goal = q%(lambda x: (x, (lambda w: (lambda y: (lambda z: ((y + 1) + (z + 2)))(4))(3))))(5)
+
+        new_tree = replace_walk.recurse(tree)
+        assert ast.dump(new_tree) == ast.dump(goal)
     """
     Most examples taken from
     http://sqlzoo.net/wiki/Main_Page
@@ -194,7 +214,6 @@ class Tests(unittest.TestCase):
             lambda x: sorted(map(str, x))
         )
     def test_join_complicated(self):
-
         compare_queries(
             """
             SELECT t.name, t.population, c.name, c.population
@@ -220,3 +239,24 @@ class Tests(unittest.TestCase):
             ),
             lambda x: sorted(map(str, x))
         )
+
+    def test_order_group(self):
+        # the name of every country sorted in order
+        compare_queries(
+            "SELECT c.name FROM country c ORDER BY c.population",
+            sql%(c.name for c in db.country).order_by(c.population)
+        )
+
+        # sum up the population of every country using GROUP BY instead of a JOIN
+        compare_queries(
+            """
+            SELECT t.country_code, sum(t.population)
+            FROM city t GROUP BY t.country_code
+            ORDER BY sum(t.population)
+            """,
+            sql%(
+                (t.country_code, func.sum(t.population)) for t in db.city
+            ).group_by(t.country_code)
+             .order_by(func.sum(t.population))
+        )
+

@@ -24,8 +24,6 @@ from unparser import Unparser
 
 import StringIO
 
-
-
 def ast_repr(x):
     """Similar to repr(), but returns an AST instead of a String, which when
     evaluated will return the given value."""

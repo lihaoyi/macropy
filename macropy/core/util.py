@@ -21,3 +21,6 @@ def gen_sym():
     import random
     import string
     return ''.join([random.choice(string.letters) for _ in range(15)])
+
+def identity(x):
+    return x

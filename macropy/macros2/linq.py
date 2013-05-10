@@ -1,7 +1,7 @@
 from macropy.core.macros import *
+from ast import Call
 from macropy.core.lift import macros, q, u, name, ast
 from macropy.macros.quicklambda import macros, f
-from ast import *
 from macropy.core.util import *
 import sqlalchemy
 
@@ -66,13 +66,14 @@ Core Functions:
 macros = Macros()
 @macros.expr
 def sql(tree):
-    x = recurse(tree, [])
+    x = replace_walk.recurse(recurse(tree, []))
     return x
 
 @macros.expr
 def query(tree):
-    x = recurse(tree, [])
+    x = replace_walk.recurse(recurse(tree, []))
     return q%(lambda query: query.bind.execute(query).fetchall())(ast%x)
+
 
 def recurse(tree, scope):
     if type(tree) is Compare and type(tree.ops[0]) is In:
@@ -141,6 +142,7 @@ def recurse(tree, scope):
         return out
 
     return tree
+
 def generate_schema(engine):
     metadata = sqlalchemy.MetaData(engine)
     metadata.reflect()
@@ -150,3 +152,27 @@ def generate_schema(engine):
         setattr(db, table.name, table)
     return db
 
+
+out = []
+@identity(lambda x: Walker(x, False))
+def let_search(tree):
+    if type(tree) is Call and type(tree.func) is Lambda:
+        out.append(tree)
+        return tree.func.body
+    if type(tree) in [Lambda, GeneratorExp, ListComp, SetComp, DictComp]:
+        return tree
+
+    Walker.walk_children(let_search, tree)
+    return tree
+
+@Walker
+def replace_walk(tree):
+
+    tree = let_search.recurse(tree)
+
+    while len(out) > 0:
+        let_tree = out.pop()
+        let_tree.func.body = tree
+        tree = let_tree
+
+    return tree
