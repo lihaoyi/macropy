@@ -2,9 +2,7 @@ import unittest
 
 from macropy.macros2.tracing import trace, log, require
 
-
 result = []
-
 
 def log(x):
     result.append(x)

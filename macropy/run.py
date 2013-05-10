@@ -10,9 +10,6 @@ run(core_tests.Tests)
 from macropy.core import lift_test
 run(lift_test.Tests)
 
-from macropy.macros2 import literals_test
-run(literals_test.Tests)
-
 from macropy.macros import string_interp_test
 run(string_interp_test.Tests)
 
