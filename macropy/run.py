@@ -21,8 +21,8 @@ run(string_interp_test.Tests)
 from macropy.macros2 import tracing_test
 run(tracing_test.Tests)
 
-from macropy.macros2 import linq_test
-run(linq_test.Tests)
+# from macropy.macros2 import linq_test
+# run(linq_test.Tests)
 
 from macropy.macros import quicklambda_test
 run(quicklambda_test.Tests)
@@ -38,3 +38,6 @@ run(peg_test.Tests)
 
 from macropy.macros2 import pyxl_strings_test
 run(pyxl_strings_test.Tests)
+
+from macropy.macros import tco_test
+run(tco_test.Tests)
