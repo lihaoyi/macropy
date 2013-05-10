@@ -629,7 +629,7 @@ results = query%(
     if x.gnp / x.population > (
         y.gnp / y.population for y in db.country
         if y.name == 'United Kingdom'
-    )
+    ).as_scalar()
     if (x.continent == 'Europe')
 )
 for line in results: print line
@@ -686,7 +686,7 @@ query = select([db.country.c.name]).where(
         [(db.country.c.gnp / db.country.c.population)]
     ).where(
             db.country.c.name == 'United Kingdom'
-    )
+    ).as_scalar()
 ).where(
     db.country.c.continent == 'Europe'
 )
@@ -704,7 +704,7 @@ query = sql%(
     if x.gnp / x.population > (
         y.gnp / y.population for y in db.country
         if y.name == 'United Kingdom'
-    )
+    ).as_scalar()
     if (x.continent == 'Europe')
 )
 ```

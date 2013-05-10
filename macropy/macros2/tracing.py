@@ -2,7 +2,7 @@
 from macropy.core.macros import *
 from macropy.core.lift import macros, q, u
 import ast
-
+import copy
 
 macros = Macros()
 
@@ -56,13 +56,9 @@ def trace(tree):
 
 
 def _require_transform(tree):
-
-
-    import copy
     ret = trace_walk.recurse(copy.deepcopy(tree), None)
     trace_walk.recurse(tree, None)
     new = q%(ast%tree or handle(lambda log: ast%ret))
-
     return new
 
 def handle(thunk):
