@@ -99,8 +99,11 @@ import other                # imports other.py and passes it through import hook
 
 # other.py
 from macropy.macros.my_macro_module import macros, ...
+
 ... do stuff with macros ...
 ```
+
+Where you run `run.py` instead of `other.py`.
 
 Examples
 ========
