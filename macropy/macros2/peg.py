@@ -12,7 +12,7 @@ macros = Macros()
 def peg(tree):
     for statement in tree.body:
         if type(statement) is Assign:
-            new_tree, bindings = PegWalker.recurse(statement.value)
+            new_tree, bindings = _PegWalker.recurse(statement.value)
             statement.value = q%(Lazy(lambda: ast%new_tree))
 
     return tree.body
@@ -20,23 +20,23 @@ def peg(tree):
 
 @macros.expr
 def peg(tree):
-    new_tree, bindings = PegWalker.recurse(tree)
+    new_tree, bindings = _PegWalker.recurse(tree)
     return new_tree
 
 
 @GenericWalker
-def PegWalker(tree, ctx):
+def _PegWalker(tree, ctx):
     if type(tree) is Str:
         return q%Raw(ast%tree), stop, []
 
     if type(tree) is BinOp and type(tree.op) is RShift:
-        tree.left, b_left = PegWalker.recurse(tree.left)
+        tree.left, b_left = _PegWalker.recurse(tree.left)
         tree.right = q%(lambda bindings: ast%tree.right)
         tree.right.args.args = map(f%Name(id = _), flatten(b_left))
         return tree, stop, []
 
     if type(tree) is BinOp and type(tree.op) is FloorDiv:
-        tree.left, b_left = PegWalker.recurse(tree.left)
+        tree.left, b_left = _PegWalker.recurse(tree.left)
         return tree, stop, b_left
 
     if type(tree) is Tuple:
@@ -45,12 +45,12 @@ def PegWalker(tree, ctx):
         result.args[0].elts = tree.elts
         all_bindings = []
         for i, elt in enumerate(tree.elts):
-            result.args[0].elts[i], bindings = PegWalker.recurse(tree.elts[i])
+            result.args[0].elts[i], bindings = _PegWalker.recurse(tree.elts[i])
             all_bindings.append(bindings)
         return result, stop, all_bindings
 
     if type(tree) is Compare and type(tree.ops[0]) is Is:
-        left_tree, bindings = PegWalker.recurse(tree.left)
+        left_tree, bindings = _PegWalker.recurse(tree.left)
         new_tree = q%(ast%left_tree).bind_to(u%tree.comparators[0].id)
         return new_tree, stop, bindings + [tree.comparators[0].id]
 

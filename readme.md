@@ -90,6 +90,16 @@ MacroPy intercepts the module-loading workflow, via the functionality provided b
 
 ![Workflow](media/Workflow.png)
 
+Note that this means **you cannot use macros in a file that is run directly**, as it will not be passed through the import hooks. Hence the minimum viable setup is:
+
+    # run.py
+    import macropy.core.macros  # sets up macro import hooks
+    import other                # imports other.py and passes it through import hooks
+
+    # other.py
+    from macropy.macros.my_macro_module import macros, ...
+    ... do stuff with macros ...
+
 Examples
 ========
 Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for some small (<30 lines), self contained examples. Their [unit](macropy/macros/string_interp_test.py) [tests](macropy/macros/quicklambda_test.py) demonstrate how these macros are used.

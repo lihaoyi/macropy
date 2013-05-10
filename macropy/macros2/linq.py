@@ -10,19 +10,19 @@ macros = Macros()
 
 @macros.expr
 def sql(tree):
-    x = recurse.recurse(tree)
+    x = _recurse.recurse(tree)
     x = expand_let_bindings.recurse(x)
     return x
 
 @macros.expr
 def query(tree):
-    x = recurse.recurse(tree)
+    x = _recurse.recurse(tree)
     x = expand_let_bindings.recurse(x)
     return q%(lambda query: query.bind.execute(query).fetchall())(ast%x)
 
 
 @Walker
-def recurse(tree):
+def _recurse(tree):
     if type(tree) is Compare and type(tree.ops[0]) is In:
         return q%(ast%tree.left).in_(ast%tree.comparators[0])
 
@@ -64,7 +64,7 @@ def generate_schema(engine):
 
 
 @GenericWalker
-def find_let_bindings(tree, ctx):
+def _find_let_bindings(tree, ctx):
     if type(tree) is Call and type(tree.func) is Lambda:
         return tree.func.body, stop, [tree]
 
@@ -75,7 +75,7 @@ def find_let_bindings(tree, ctx):
 
 @Walker
 def expand_let_bindings(tree):
-    tree, chunks = find_let_bindings.recurse(tree)
+    tree, chunks = _find_let_bindings.recurse(tree)
     for v in chunks:
         let_tree = v
         let_tree.func.body = tree
