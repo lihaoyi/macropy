@@ -20,7 +20,7 @@ MacroPy has been used to implement features such as:
 - [String Interpolation](#string-interpolation), a common feature in many languages
 - [Pyxl](#pyxl-integration), integrating XML markup into a Python program
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts)
-- [LINQ to SQL](#linq-to-sql) from C#
+- [PINQ](#pinq), a clone of LINQ to SQL from C#
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy,
 - [Parser Combinators](#parser-combinators), inspired by [Scala's](http://www.suryasuravarapu.com/2011/04/scala-parser-combinators-win.html).
 
@@ -550,8 +550,7 @@ with trace:
 
 Used this way, `trace` will print out the source code of every _statement_ that gets executed, in addition to tracing the evaluation of any expressions within those statements.
 
-Smart Asserts
--------------
+###Smart Asserts
 ```python
 require%(3**2 + 4**2 != 5**2)
 #AssertionError: Require Failed
@@ -581,116 +580,179 @@ with require:
 
 This requires every statement in the block to be a boolean expression. Each expression will then be wrapped in a `require%`, throwing an `AssertionError` with a nice trace when a condition fails.
 
+If you want to write your own custom logging, tracing or debugging macros, take a look at the [100 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/macros2/tracing.py) that implements all the functionality shown above.
 
-LINQ to SQL
------------
+PINQ to SQLAlchemy
+------------------
 ```python
 db = generate_schema(engine)
 
 results = query%(
-    x.name for x in db.bbc
-    if x.gdp / x.population > (
-        y.gdp / y.population for y in db.bbc
+    x.name for x in db.country
+    if x.gnp / x.population > (
+        y.gnp / y.population for y in db.country
         if y.name == 'United Kingdom'
     )
-    if (x.region == 'Europe')
+    if (x.continent == 'Europe')
 )
-
 for line in results: print line
+# (u'Austria',)
+# (u'Belgium',)
+# (u'Switzerland',)
+# (u'Germany',)
 # (u'Denmark',)
+# (u'Finland',)
+# (u'France',)
 # (u'Iceland',)
-# (u'Ireland',)
+# (u'Liechtenstein',)
 # (u'Luxembourg',)
+# (u'Netherlands',)
 # (u'Norway',)
 # (u'Sweden',)
-# (u'Switzerland',)
 ```
 
-This feature is inspired by [C#'s LINQ to SQL](http://msdn.microsoft.com/en-us/library/bb386976.aspx). In short, code used to manipulate lists is lifted into an AST which is then cross-compiled into a snippet of [SQL](http://en.wikipedia.org/wiki/SQL). In this case, it is the `query%` macro which does this lifting and cross-compilation. Instead of performing the manipulation locally on some data structure, the compiled query is sent to a remote database to be performed there.
+PINQ (Python INtegrated Query) to SQLAlchemy is inspired by [C#'s LINQ to SQL](http://msdn.microsoft.com/en-us/library/bb386976.aspx). In short, code used to manipulate lists is lifted into an AST which is then cross-compiled into a snippet of [SQL](http://en.wikipedia.org/wiki/SQL). In this case, it is the `query%` macro which does this lifting and cross-compilation. Instead of performing the manipulation locally on some data structure, the compiled query is sent to a remote database to be performed there.
 
-This allows you to write queries to a database in the same way you would write queries on in-memory lists, which is really very nice. The translation is a relatively thin layer of over the [SQLAlchemy](http://www.sqlalchemy.org/) Query Language, which does the heavy lifting of converting the query into a raw SQL string:. If we start with a simple query
+This allows you to write queries to a database in the same way you would write queries on in-memory lists, which is really very nice. The translation is a relatively thin layer of over the [SQLAlchemy Query Language](http://docs.sqlalchemy.org/ru/latest/core/tutorial.html), which does the heavy lifting of converting the query into a raw SQL string:. If we start with a simple query:
 
 ```python
-print query%((x.name, x.area) for x in db.bbc if x.area > 10000000)
-# [(u'Russia', 17000000)]
+print query%((x.name, x.surface_area) for x in db.country if x.surface_area > 10000000)
+# [(u'Antarctica', Decimal('13120000.0000000000')), (u'Russian Federation', Decimal('17075400.0000000000'))]
 ```
 
 This is to the equivalent SQLAlchemy query:
 
 ```python
-print engine.execute(select([bbc.c.name, bbc.c.area]).where(bbc.c.area > 10000000)).fetchall()
+print engine.execute(select([country.c.name, country.c.surface_area]).where(country.c.surface_area > 10000000)).fetchall()
 ```
 
-To verify that LINQ to SQL is actually cross-compiling the python to SQL, and not simply requesting everything and performing the manipulation locally, we can use the `sql%` macro to perform the lifting of the query without executing it:
+To verify that PINQ is actually cross-compiling the python to SQL, and not simply requesting everything and performing the manipulation locally, we can use the `sql%` macro to perform the lifting of the query without executing it:
 
 ```python
-query_string = sql%((x.name, x.area) for x in db.bbc if x.area > 10000000)
+query_string = sql%((x.name, x.surface_area) for x in db.country if x.surface_area > 10000000)
 print type(query_string)
 # <class 'sqlalchemy.sql.expression.Select'>
 print query_string
-# SELECT bbc_1.name, bbc_1.area
-# FROM bbc AS bbc_1
-# WHERE bbc_1.area > ?
+# SELECT country_1.name, country_1.surface_area 
+# FROM country AS country_1 
+# WHERE country_1.surface_area > ?
 ```
 
-As we can see, LINQ to SQL converts the python list-comprehension into a SQLAlchemy `Select`, which when stringified becomes a valid SQL string.
+As we can see, PINQ converts the python list-comprehension into a SQLAlchemy `Select`, which when stringified becomes a valid SQL string. The `?`s are there because SQLAlchemy uses [parametrized queries](http://en.wikipedia.org/wiki/Prepared_statement), and doesn't interpolate values into the query itself.
 
-Consider a less trivial example: we want to find all countries in europe who have a GDP per Capita greater than the United Kingdom. This is the SQLAlchemy code to do so:
+Consider a less trivial example: we want to find all countries in europe who have a [GNP per Capita](http://en.wikipedia.org/wiki/Gross_national_product) greater than the United Kingdom. This is the SQLAlchemy code to do so:
 
 ```python
-query = select([db.bbc.c.name]).where(
-    db.bbc.c.gdp / db.bbc.c.population > select(
-        [(db.bbc.c.gdp / db.bbc.c.population)]
+query = select([db.country.c.name]).where(
+    db.country.c.gnp / db.country.c.population > select(
+        [(db.country.c.gnp / db.country.c.population)]
     ).where(
-            db.bbc.c.name == 'United Kingdom'
+            db.country.c.name == 'United Kingdom'
     )
 ).where(
-    db.bbc.c.region == 'Europe'
+    db.country.c.continent == 'Europe'
 )
 ```
 
 The SQLAlchemy query looks pretty odd, for somebody who knows python but isn't familiar with the library. This is because SQLAlchemy cannot "lift" Python code into an AST to manipulate, and instead have to construct the AST manually using python objects. Although it works pretty well, the syntax and semantics of the queries is completely different from python.
 
-Already we are bumping into edge cases: the `db.bbc` in the nested query is referred to the same way as the `db.bbc` in the outer query, although they are clearly different! One may wonder, what if, in the inner query, we wish to refer to the outer query's values? Naturally, there will be solutions to all of these requirements. In the end, SQLAlchemy ends up effectively creating its own mini programming language, with its own concept of scoping, name binding, etc., basically duplicating what Python already has but with messier syntax.
+Already we are bumping into edge cases: the `db.country` in the nested query is referred to the same way as the `db.country` in the outer query, although they are clearly different! One may wonder, what if, in the inner query, we wish to refer to the outer query's values? Naturally, there will be solutions to all of these requirements. In the end, SQLAlchemy ends up effectively creating its own mini programming language, with its own concept of scoping, name binding, etc., basically duplicating what Python already has but with messier syntax and subtly different semantics.
 
-In the equivalent LINQ code, the scoping of which `db.bbc` you are referring to is much more explicit, and in general the semantics are identical to a typical python comprehension:
+In the equivalent PINQ code, the scoping of which `db.country` you are referring to is much more explicit, and in general the semantics are identical to a typical python comprehension:
 
 ```python
 query = sql%(
-    x.name for x in db.bbc
-    if x.gdp / x.population > (
-        y.gdp / y.population for y in db.bbc
+    x.name for x in db.country
+    if x.gnp / x.population > (
+        y.gnp / y.population for y in db.country
         if y.name == 'United Kingdom'
     )
-    if (x.region == 'Europe')
+    if (x.continent == 'Europe')
 )
 ```
 
-As we can see, rather than mysteriously referring to the `db.bbc` all over the place, we clearly bind it in two places: once to the variable `x` in the outer query, once to the variable `y` in the inner query. Overall, we make use of Python's syntax and semantics (scoping, names, etc.) rather than having to re-invent our own, which is a big win for anybody who already understands Python.
+As we can see, rather than mysteriously referring to the `db.country` all over the place, we clearly bind it in two places: once to the variable `x` in the outer query, once to the variable `y` in the inner query. Overall, we make use of Python's syntax and semantics (scoping, names, etc.) rather than having to re-invent our own, which is a big win for anybody who already understands Python.
 
 Executing either of these will give us the same answer:
 
 ```python
 print query
-# SELECT bbc_1.name
-# FROM bbc AS bbc_1
-# WHERE bbc_1.gdp / bbc_1.population > (SELECT bbc_2.gdp / bbc_2.population AS anon_1
-# FROM bbc AS bbc_2
-# WHERE bbc_2.name = ?) AND bbc_1.region = ?
+# SELECT country_1.name
+# FROM country AS country_1
+# WHERE country_1.gnp / country_1.population > (SELECT country_2.gnp / country_2.population AS anon_1
+# FROM country AS country_2
+# WHERE country_2.name = ?) AND country_1.continent = ?
 
 results = engine.execute(query).fetchall()
 
 for line in results: print line
+# (u'Austria',)
+# (u'Belgium',)
+# (u'Switzerland',)
+# (u'Germany',)
 # (u'Denmark',)
+# (u'Finland',)
+# (u'France',)
 # (u'Iceland',)
-# (u'Ireland',)
+# (u'Liechtenstein',)
 # (u'Luxembourg',)
+# (u'Netherlands',)
 # (u'Norway',)
 # (u'Sweden',)
-# (u'Switzerland',)
 ```
 
-This clone of LINQ to SQL still does not support the vast capabilities of the SQL language. Nevertheless, it demonstrates how easy it is to use macros to lift python snippets into an AST and cross-compile it into another language, and how nice the syntax and semantics can be for these embedded DSLs.
+Although PINQ does not support the vast capabilities of the SQL language, but it supports a useful subset, like `JOIN`s:
+
+```python
+query = sql%(
+    func.count(t.name)
+    for c in db.country
+    for t in db.city
+    if t.country_code == c.code
+    if c.continent == 'Asia'
+)
+print query
+# SELECT count(city_1.name) AS count_1
+# FROM city AS city_1, country AS country_1
+# WHERE city_1.country_code = country_1.code AND country_1.continent = ?
+
+result = engine.execute(query).fetchall()
+
+print result
+[(1766,)]
+```
+
+as well as `ORDER BY`, with `LIMIT` and `OFFSET`s:
+
+```python
+query = sql%(
+    c.name for c in db.country
+).order_by(c.population.desc()).limit(10)
+
+print query
+# SELECT country_1.name
+# FROM country AS country_1
+# ORDER BY country_1.population DESC
+# LIMIT ? OFFSET ?
+
+res = engine.execute(query).fetchall()
+for line in res:
+    print line
+# (u'China',)
+# (u'India',)
+# (u'United States',)
+# (u'Indonesia',)
+# (u'Brazil',)
+# (u'Pakistan',)
+# (u'Russian Federation',)
+# (u'Bangladesh',)
+# (u'Japan',)
+# (u'Nigeria',)
+```
+
+In general, apart from the translation of generator expressions (and their guards) into `SELECT` an `WHERE` clauses, the rest of the functionality of SQL (like the `.order_by()`, `.limit()`, etc. functions shown above) is accessed as in the [SQLAlchemy Expression Language](http://docs.sqlalchemy.org/ru/latest/core/tutorial.html#ordering-grouping-limiting-offset-ing). See the [unit tests](https://github.com/lihaoyi/macropy/blob/master/macropy/macros2/linq_test.py) for a fuller set of examples of what PINQ can do, or browse the docs for the [SQLAlchemy Expression Language](http://docs.sqlalchemy.org/ru/latest/core/tutorial.html)
+
+PINQ demonstrates how easy it is to use macros to lift python snippets into an AST and cross-compile it into another language, and how nice the syntax and semantics can be for these embedded DSLs. PINQ's entire implementation comprises about [100 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/macros2/linq.py), which really isn't much considering how much it does for you!
 
 Quick Lambdas
 -------------
@@ -743,7 +805,7 @@ print thunk()
 #0.3068253802774531
 ```
 
-This cuts out reduces the number of characters needed to make a thunk from 7 to 2, making it much easier to use thunks to do things like emulating [by name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html).
+This cuts out reduces the number of characters needed to make a thunk from 7 to 2, making it much easier to use thunks to do things like emulating [by name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html). The implementation of quicklambda is about [30 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/macros/quicklambda.py), and is worth a look if you want to see how a simple (but extremely useful!) macro can be written.
 
 Parser Combinators
 ------------------

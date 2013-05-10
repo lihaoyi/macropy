@@ -178,7 +178,7 @@ class Tests(unittest.TestCase):
 
 
     def test_join(self):
-        # names of all cities in Asia
+        # number of cities in Asia
         compare_queries(
             """
             SELECT COUNT(t.name)
@@ -280,4 +280,3 @@ class Tests(unittest.TestCase):
             "SELECT c.name FROM country c ORDER BY c.population DESC LIMIT 10",
             sql%(c.name for c in db.country).order_by(c.population.desc()).limit(10)
         )
-
