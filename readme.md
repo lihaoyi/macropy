@@ -17,8 +17,7 @@ MacroPy has been used to implement features such as:
 - [Pattern Matching](#pattern-matching) from the Functional Programming world
 - [Tail-call Optimization](#tail-call-optimization)
 - [Quasiquotes](#quasiquotes), a quick way to manipulate fragments of a program
-- [String Interpolation](#string-interpolation), a common feature in many languages
-- [Pyxl](#pyxl-integration), integrating XML markup into a Python program
+- [String Interpolation](#string-interpolation), a common feature in many languages, and [Pyxl](#pyxl-integration).
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts)
 - [PINQ](#pinq), a clone of LINQ to SQL from C#
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy,
@@ -451,8 +450,7 @@ and expands it into the expression
 
 Which is evaluated at run-time in the local scope, using whatever the values `a` and `b` happen to hold at the time. The contents of the `%{...}` can be any arbitrary python expression, and is not limited to variable names.
 
-Pyxl Integration
-----------------
+###Pyxl Integration
 
 ```python
 from macropy.macros2.pyxl_strings import macros, p
