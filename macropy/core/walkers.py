@@ -54,16 +54,17 @@ class GenericWalker(object):
     def recurse_real(self, tree, ctx=None):
         if ctx is stop:
             return tree, []
-        else:
-            x = self.func(tree, ctx)
-            if x is not None :
-                tree, new_ctx, aggregate = x
-                assert type(aggregate) is list
-                aggregates = self.walk_children(tree, new_ctx)
 
-                return tree, aggregate + aggregates
-            else:
-                return tree, []
+        x = self.func(tree, ctx)
+
+        if x is None :
+            return tree, []
+
+        tree, new_ctx, aggregate = x
+        assert type(aggregate) is list
+        aggregates = self.walk_children(tree, new_ctx)
+        return tree, aggregate + aggregates
+
 
 
 class AggregateWalker(GenericWalker):
