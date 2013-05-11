@@ -9,7 +9,6 @@ stop = object()
 class GenericWalker(object):
     def __init__(self, func):
         self.func = func
-        self.autorecurse = True
 
     def walk_children(self, tree, ctx=None):
         aggregates = []
@@ -35,7 +34,7 @@ class GenericWalker(object):
             return tree, flatten(aggregates)
         elif isinstance(tree, AST):
             tree, new_ctx, aggregate = self.func(tree, ctx)
-            if self.autorecurse and new_ctx is not stop:
+            if new_ctx is not stop:
                 if type(tree) is list:
                     tree, aggregate2 = self.recurse_real(tree, new_ctx)
                     return tree, flatten(aggregate + aggregate2)
@@ -50,7 +49,6 @@ class GenericWalker(object):
 
 class AggregateWalker(GenericWalker):
     def __init__(self, func):
-        self.autorecurse = True
         self.func = lambda tree, ctx: (lambda x: (x[0], [], x[1]))(func(tree))
 
     def recurse(self, tree):
@@ -59,7 +57,6 @@ class AggregateWalker(GenericWalker):
 
 class ContextWalker(GenericWalker):
     def __init__(self, func):
-        self.autorecurse = True
         self.func = lambda tree, ctx: (lambda x: (x[0], x[1], []))(func(tree, ctx))
 
     def recurse(self, tree, ctx):
@@ -68,7 +65,6 @@ class ContextWalker(GenericWalker):
 
 class Walker(GenericWalker):
     def __init__(self, func):
-        self.autorecurse = True
         self.func = lambda tree, ctx: (func(tree), [], [])
 
     def recurse(self, tree):
