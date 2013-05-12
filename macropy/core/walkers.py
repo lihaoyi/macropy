@@ -33,18 +33,21 @@ class GenericWalker(object):
     def walk_children(self, tree, ctx=None):
         if isinstance(tree, AST):
             aggregates = []
+
             for field, old_value in iter_fields(tree):
                 old_value = getattr(tree, field, None)
                 new_value, new_aggregate = self.recurse_real(old_value, ctx)
                 aggregates.extend(new_aggregate)
-
                 setattr(tree, field, new_value)
+
             return aggregates
+
         elif isinstance(tree, list) and len(tree) > 0:
             x = zip(*map(lambda x: self.recurse_real(x, ctx), tree))
             [trees, aggregates] = x
             tree[:] = flatten(trees)
             return [x for y in aggregates for x in y]
+
         else:
             return []
 
@@ -54,16 +57,19 @@ class GenericWalker(object):
     def recurse_real(self, tree, ctx=None):
         if ctx is stop:
             return tree, []
+        if isinstance(tree, AST):
+            x = self.func(tree, ctx)
 
-        x = self.func(tree, ctx)
+            if x is None:
+                return tree, []
 
-        if x is None :
-            return tree, []
-
-        tree, new_ctx, aggregate = x
-        assert type(aggregate) is list
-        aggregates = self.walk_children(tree, new_ctx)
-        return tree, aggregate + aggregates
+            tree, new_ctx, aggregate = x
+            assert type(aggregate) is list
+            aggregates = self.walk_children(tree, new_ctx)
+            return tree, aggregate + aggregates
+        else:
+            aggregates = self.walk_children(tree, ctx)
+            return tree, aggregates
 
 
 
