@@ -24,7 +24,7 @@ def query(tree):
 @Walker
 def _recurse(tree):
     if type(tree) is Compare and type(tree.ops[0]) is In:
-        yield q%(ast%tree.left).in_(ast%tree.comparators[0])
+        return q%(ast%tree.left).in_(ast%tree.comparators[0])
 
     elif type(tree) is GeneratorExp:
 
@@ -49,7 +49,7 @@ def _recurse(tree):
         out = q%(lambda x: ast%out)()
         out.func.args.args = aliases
         out.args = aliased_tables
-        yield out
+        return out
 
 
 def generate_schema(engine):
@@ -65,13 +65,10 @@ def generate_schema(engine):
 @Walker
 def _find_let_bindings(tree, ctx):
     if type(tree) is Call and type(tree.func) is Lambda:
-        yield tree.func.body
-        yield stop
-        yield collect(tree)
+        return tree.func.body, stop, collect(tree)
 
     elif type(tree) in [Lambda, GeneratorExp, ListComp, SetComp, DictComp]:
-        yield tree
-        yield stop
+        return tree, stop
 
 @Walker
 def expand_let_bindings(tree):
@@ -80,4 +77,4 @@ def expand_let_bindings(tree):
         let_tree = v
         let_tree.func.body = tree
         tree = let_tree
-    yield tree
+    return tree

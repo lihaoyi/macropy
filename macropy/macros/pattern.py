@@ -336,7 +336,7 @@ def patterns(tree):
     # _matching" block
     @Walker
     def if_rewriter(tree):
-        yield _maybe_rewrite_if(tree)
+        return  _maybe_rewrite_if(tree)
     if_rewriter.recurse(tree)
     tree.context_expr = Name('_matching', Load())
     return tree

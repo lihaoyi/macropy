@@ -17,10 +17,9 @@ def f(tree):
         if isinstance(tree, Name) and tree.id == "_":
             name = names.next()
             tree.id = name
-            yield tree
-            yield collect(name)
+            return tree, collect(name)
         else:
-            yield tree
+            return tree
 
 
     tree, used_names = underscore_search.recurse_real(tree)

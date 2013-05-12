@@ -27,22 +27,17 @@ def peg(tree):
 @Walker
 def _PegWalker(tree, ctx):
     if type(tree) is Str:
-        yield q%Raw(ast%tree)
-        yield stop
+        return q%Raw(ast%tree), stop
 
     if type(tree) is BinOp and type(tree.op) is RShift:
         tree.left, b_left = _PegWalker.recurse_real(tree.left)
         tree.right = q%(lambda bindings: ast%tree.right)
         tree.right.args.args = map(f%Name(id = _), flatten(b_left))
-        yield tree
-
-        yield stop
+        return tree, stop
 
     if type(tree) is BinOp and type(tree.op) is FloorDiv:
         tree.left, b_left = _PegWalker.recurse_real(tree.left)
-        yield tree
-        yield stop
-        yield collect(b_left)
+        return tree, stop, collect(b_left)
 
     if type(tree) is Tuple:
         result = q%Seq([])
@@ -52,16 +47,12 @@ def _PegWalker(tree, ctx):
         for i, elt in enumerate(tree.elts):
             result.args[0].elts[i], bindings = _PegWalker.recurse_real(tree.elts[i])
             all_bindings.append(bindings)
-        yield result
-        yield stop
-        yield collect(all_bindings)
+        return result, stop, collect(all_bindings)
 
     if type(tree) is Compare and type(tree.ops[0]) is Is:
         left_tree, bindings = _PegWalker.recurse_real(tree.left)
         new_tree = q%(ast%left_tree).bind_to(u%tree.comparators[0].id)
-        yield new_tree
-        yield stop
-        yield collect(bindings + [tree.comparators[0].id])
+        return new_tree, stop, collect(bindings + [tree.comparators[0].id])
 
 """
 PEG Parser Atoms

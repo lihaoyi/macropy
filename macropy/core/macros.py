@@ -102,7 +102,7 @@ def _expand_ast(tree, modules):
         modified = True
         while modified:
             tree, modified = macro_expand(tree)
-        yield tree
+        return tree
 
     tree = macro_searcher.recurse(tree)
 

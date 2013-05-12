@@ -24,17 +24,17 @@ def _unquote_search(tree):
         if 'u' == tree.left.id:
             x = parse_expr("ast_repr(x)")
             x.args[0] = tree.right
-            yield Literal(x)
+            return Literal(x)
         elif 'name' == tree.left.id:
             x = parse_expr("Name(id = x)")
             x.keywords[0].value = tree.right
-            yield Literal(x)
+            return Literal(x)
         elif 'ast' == tree.left.id:
-            yield Literal(tree.right)
+            return Literal(tree.right)
         elif 'ast_list' == tree.left.id:
             x = parse_expr("List(elts = x)")
             x.keywords[0].value = tree.right
-            yield Literal(x)
+            return Literal(x)
 
 
 @macros.expr

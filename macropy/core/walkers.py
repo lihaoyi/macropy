@@ -68,6 +68,10 @@ class Walker(object):
                 gen = self.func(tree, ctx)
             except:
                 gen = self.func(tree)
+            if gen is None:
+                gen = ()
+            if type(gen) is not tuple:
+                gen = (gen,)
 
             for x in gen:
                 if x is stop:

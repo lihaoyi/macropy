@@ -27,15 +27,13 @@ def trace_walk(tree, ctx):
 
         try:
             literal_eval(tree)
-            yield tree
-            yield stop
+            return tree, stop
         except ValueError:
             txt = unparse_ast(tree)
             trace_walk.walk_children(tree)
 
             wrapped = q%(wrap(log, u%txt, ast%tree))
-            yield wrapped
-            yield stop
+            return wrapped, stop
 
     elif isinstance(tree, stmt):
         txt = unparse_ast(tree).strip()
@@ -43,8 +41,7 @@ def trace_walk(tree, ctx):
         with q as code:
             log(u%txt)
 
-        yield [code, tree]
-        yield stop
+        return [code, tree], stop
 
 @macros.expr
 def trace(tree):
