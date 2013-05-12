@@ -104,9 +104,9 @@ class Walker(object):
             if not stop_now:
                 aggregates.extend(self.walk_children(tree, ctx))
 
-            return tree, aggregates
         else:
             aggregates = self.walk_children(tree, ctx)
-            return tree, aggregates
+
+        return tree, aggregates
 
 
