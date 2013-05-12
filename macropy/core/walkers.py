@@ -15,23 +15,37 @@ class collect(object):
 
 class Walker(object):
     """
-    Decorates a function of the form
+    Decorates a function of the form:
 
-    @GenericWalker
+    @Walker
     def transform(tree, ctx):
         ...
-        return new_tree, new_ctx, aggregate
+        return new_tree
+        return new_tree, set_ctx(new_ctx), collect(value), stop
 
-    new_tree, all_aggregates = transform.recurse(old_tree, initial_ctx)
+    Which is used via:
 
-    Where `aggregate` is a `list` of 0 or more elements, which will be
-    aggregated into one final list (`all_aggregates`) when recurse returns.
-    `new_ctx` is an arbitrary value which is passed down from a tree to its
-    children automatically by the recursion, who will receive it in the `ctx`
-    parameter when they are recursed upon.
+    new_tree = transform.recurse(old_tree, initial_ctx)
+    new_tree = transform.recurse(old_tree)
+    new_tree, collected = transform.recurse_real(old_tree, initial_ctx)
+    new_tree, collected = transform.recurse_real(old_tree)
 
-    The decorated function can also terminate the recursion by returning the
-    singleton value `stop` as `new_ctx`.
+    The `transform` function takes either:
+
+    - the `tree` to be transformed, or
+    - the `tree` to be transformed and a `ctx` variable
+
+    The `transform` function can return:
+
+    - a single `new_tree`, which is the new AST to replace the original
+    - a tuple which contains:
+        - a `new_tree` AST, as above
+        - `set_ctx(new_ctx)`, which causes the recursion on all child nodes to receive
+          the new_ctx
+        - `collect(value)`, which adds `value` to the list of collected values
+          returned by `recurse_real`
+        - `stop`, which prevents recursion on the children of the current tree
+
     """
     def __init__(self, func):
         self.func = func
@@ -62,8 +76,12 @@ class Walker(object):
 
     def recurse_real(self, tree, ctx=None):
         if isinstance(tree, AST):
-            func_aggregates = []
+            aggregates = []
             stop_now = False
+
+            # Be loose enough to work whether the function takes 1 or 2 args,
+            # and whether it returns a tuple or a single tree. The types should
+            # still be sound, since the various possibilities are all disjoint.
             try:
                 gen = self.func(tree, ctx)
             except:
@@ -79,14 +97,14 @@ class Walker(object):
                 elif isinstance(x, set_ctx):
                     ctx = x.ctx
                 elif isinstance(x, collect):
-                    func_aggregates.append(x.ctx)
+                    aggregates.append(x.ctx)
                 else:
                     tree = x
-            if stop_now:
-                return tree, func_aggregates
-            else:
-                aggregates = self.walk_children(tree, ctx)
-                return tree, func_aggregates + aggregates
+
+            if not stop_now:
+                aggregates.extend(self.walk_children(tree, ctx))
+
+            return tree, aggregates
         else:
             aggregates = self.walk_children(tree, ctx)
             return tree, aggregates

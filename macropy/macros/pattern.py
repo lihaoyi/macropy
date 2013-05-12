@@ -273,9 +273,9 @@ def _matching(tree):
             for var_name in modified:
                 statements.append(Assign([Name(var_name, Store())],
                     q%(xsfvdy.get_var(u%var_name))))
-            yield statements
+            return statements
         else:
-            yield tree
+            return tree
     func.recurse(tree)
     return tree.body
 

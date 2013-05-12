@@ -65,7 +65,7 @@ def tco(node):
                 return code
             else:
                 return node
-
+        return node
     def replace_tc_pos(node):
         if isinstance(node, Expr) and isinstance(node.value, Call):
             with q as code:
