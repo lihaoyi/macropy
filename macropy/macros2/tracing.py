@@ -17,7 +17,7 @@ def log(tree):
     new_tree = q%(wrap(log, u%unparse_ast(tree), ast%tree))
     return new_tree
 
-@ContextWalker
+@Walker
 def trace_walk(tree, ctx):
     if isinstance(tree, expr) and \
             tree._fields != () and \
@@ -27,13 +27,15 @@ def trace_walk(tree, ctx):
 
         try:
             literal_eval(tree)
-            return tree, stop
+            yield tree
+            yield stop
         except ValueError:
             txt = unparse_ast(tree)
             trace_walk.walk_children(tree)
 
             wrapped = q%(wrap(log, u%txt, ast%tree))
-            return wrapped, stop
+            yield wrapped
+            yield stop
 
     elif isinstance(tree, stmt):
         txt = unparse_ast(tree).strip()
@@ -41,9 +43,9 @@ def trace_walk(tree, ctx):
         with q as code:
             log(u%txt)
 
-        return [code, tree], stop
+        yield [code, tree]
+        yield stop
 
-    return tree, ctx
 @macros.expr
 def trace(tree):
     ret = trace_walk.recurse(tree, None)

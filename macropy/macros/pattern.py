@@ -273,9 +273,9 @@ def _matching(tree):
             for var_name in modified:
                 statements.append(Assign([Name(var_name, Store())],
                     q%(xsfvdy.get_var(u%var_name))))
-            return statements
+            yield statements
         else:
-            return tree
+            yield tree
     func.recurse(tree)
     return tree.body
 
@@ -336,7 +336,7 @@ def patterns(tree):
     # _matching" block
     @Walker
     def if_rewriter(tree):
-        return _maybe_rewrite_if(tree)
+        yield _maybe_rewrite_if(tree)
     if_rewriter.recurse(tree)
     tree.context_expr = Name('_matching', Load())
     return tree

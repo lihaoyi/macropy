@@ -12,7 +12,7 @@ macros = Macros()
 def peg(tree):
     for statement in tree.body:
         if type(statement) is Assign:
-            new_tree, bindings = _PegWalker.recurse(statement.value)
+            new_tree, bindings = _PegWalker.recurse_real(statement.value)
             statement.value = q%(Lazy(lambda: ast%new_tree))
 
     return tree.body
@@ -20,24 +20,29 @@ def peg(tree):
 
 @macros.expr
 def peg(tree):
-    new_tree, bindings = _PegWalker.recurse(tree)
+    new_tree, bindings = _PegWalker.recurse_real(tree)
     return new_tree
 
 
-@GenericWalker
+@Walker
 def _PegWalker(tree, ctx):
     if type(tree) is Str:
-        return q%Raw(ast%tree), stop, []
+        yield q%Raw(ast%tree)
+        yield stop
 
     if type(tree) is BinOp and type(tree.op) is RShift:
-        tree.left, b_left = _PegWalker.recurse(tree.left)
+        tree.left, b_left = _PegWalker.recurse_real(tree.left)
         tree.right = q%(lambda bindings: ast%tree.right)
         tree.right.args.args = map(f%Name(id = _), flatten(b_left))
-        return tree, stop, []
+        yield tree
+
+        yield stop
 
     if type(tree) is BinOp and type(tree.op) is FloorDiv:
-        tree.left, b_left = _PegWalker.recurse(tree.left)
-        return tree, stop, b_left
+        tree.left, b_left = _PegWalker.recurse_real(tree.left)
+        yield tree
+        yield stop
+        yield collect(b_left)
 
     if type(tree) is Tuple:
         result = q%Seq([])
@@ -45,16 +50,18 @@ def _PegWalker(tree, ctx):
         result.args[0].elts = tree.elts
         all_bindings = []
         for i, elt in enumerate(tree.elts):
-            result.args[0].elts[i], bindings = _PegWalker.recurse(tree.elts[i])
+            result.args[0].elts[i], bindings = _PegWalker.recurse_real(tree.elts[i])
             all_bindings.append(bindings)
-        return result, stop, all_bindings
+        yield result
+        yield stop
+        yield collect(all_bindings)
 
     if type(tree) is Compare and type(tree.ops[0]) is Is:
-        left_tree, bindings = _PegWalker.recurse(tree.left)
+        left_tree, bindings = _PegWalker.recurse_real(tree.left)
         new_tree = q%(ast%left_tree).bind_to(u%tree.comparators[0].id)
-        return new_tree, stop, bindings + [tree.comparators[0].id]
-
-    return tree, None, []
+        yield new_tree
+        yield stop
+        yield collect(bindings + [tree.comparators[0].id])
 
 """
 PEG Parser Atoms

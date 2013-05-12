@@ -56,17 +56,17 @@ def tco(node):
                 with q as code:
                     return ('call', ast%(node.value.func),
                             ast%(List(node.value.args, Load())))
-                return code
+                yield code
             elif not (isinstance(node.value, Tuple)
                     and isinstance(node.value.elts[0], Str)
                     and node.value.elts[0].s in ['return', 'call']):
                 with q as code:
                     return ('return', ast%(node.value))
-                return code
+                yield code
             else:
-                return node
+                yield node
         else:
-            return node
+            yield node
 
     def replace_tc_pos(node):
         if isinstance(node, Expr) and isinstance(node.value, Call):

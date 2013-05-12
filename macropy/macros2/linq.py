@@ -24,9 +24,9 @@ def query(tree):
 @Walker
 def _recurse(tree):
     if type(tree) is Compare and type(tree.ops[0]) is In:
-        return q%(ast%tree.left).in_(ast%tree.comparators[0])
+        yield q%(ast%tree.left).in_(ast%tree.comparators[0])
 
-    if type(tree) is GeneratorExp:
+    elif type(tree) is GeneratorExp:
 
         aliases = map(f%_.target, tree.generators)
         tables = map(f%_.iter, tree.generators)
@@ -49,9 +49,8 @@ def _recurse(tree):
         out = q%(lambda x: ast%out)()
         out.func.args.args = aliases
         out.args = aliased_tables
-        return out
+        yield out
 
-    return tree
 
 def generate_schema(engine):
     metadata = sqlalchemy.MetaData(engine)
@@ -63,21 +62,22 @@ def generate_schema(engine):
     return db
 
 
-@GenericWalker
+@Walker
 def _find_let_bindings(tree, ctx):
     if type(tree) is Call and type(tree.func) is Lambda:
-        return tree.func.body, stop, [tree]
+        yield tree.func.body
+        yield stop
+        yield collect(tree)
 
-    if type(tree) in [Lambda, GeneratorExp, ListComp, SetComp, DictComp]:
-        return tree, stop, []
-
-    return tree, [], []
+    elif type(tree) in [Lambda, GeneratorExp, ListComp, SetComp, DictComp]:
+        yield tree
+        yield stop
 
 @Walker
 def expand_let_bindings(tree):
-    tree, chunks = _find_let_bindings.recurse(tree)
+    tree, chunks = _find_let_bindings.recurse_real(tree)
     for v in chunks:
         let_tree = v
         let_tree.func.body = tree
         tree = let_tree
-    return tree
+    yield tree
