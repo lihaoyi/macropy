@@ -14,7 +14,7 @@ class Macros(object):
     ```python
     macros = Macros()
 
-    @macros.expr
+    @macros.expr()
     def my_macro(tree):
         ...
     ```
@@ -27,14 +27,20 @@ class Macros(object):
         self.decorator_registry = {}
         self.block_registry = {}
 
-    def expr(self, f):
-        self.expr_registry[f.func_name] = f
+    def expr(self, inside_out=False):
+        def register(f):
+            self.expr_registry[f.func_name] = (f, inside_out)
+        return register
 
-    def decorator(self, f):
-        self.decorator_registry[f.func_name] = f
+    def decorator(self, inside_out=False):
+        def register(f):
+            self.decorator_registry[f.func_name] = (f, inside_out)
+        return register
 
-    def block(self, f):
-        self.block_registry[f.func_name] = f
+    def block(self, inside_out=False):
+        def register(f):
+            self.block_registry[f.func_name] = (f, inside_out)
+        return register
 
 
 def fill_line_numbers(tree, lineno, col_offset):
@@ -147,7 +153,11 @@ def _expand_ast(tree, modules):
                 if (isinstance(tree.context_expr, Name)
                         and tree.context_expr.id in module.block_registry):
                     pos = (tree.lineno, tree.col_offset) if hasattr(tree, "lineno") and hasattr(tree, "col_offset") else None
-                    new_tree = module.block_registry[tree.context_expr.id](tree)
+                    the_macro, inside_out = module.block_registry[
+                            tree.context_expr.id]
+                    if inside_out:
+                        tree.body = macro_expand(tree.body)
+                    new_tree = the_macro(tree)
                     if pos:
                         if type(new_tree) is list:
                             (new_tree[0].lineno, new_tree[0].col_offset) = pos
@@ -158,8 +168,10 @@ def _expand_ast(tree, modules):
                 if (isinstance(tree.context_expr, Call)
                         and isinstance(tree.context_expr.func, Name)
                         and tree.context_expr.func.id in module.block_registry):
-                    the_macro = module.block_registry[tree.context_expr.func.id]
-
+                    the_macro, inside_out = module.block_registry[
+                            tree.context_expr.func.id]
+                    if inside_out:
+                        tree.body = macro_expand(tree.body)
                     return the_macro(tree, *(tree.context_expr.args)), True
 
             if  (isinstance(tree, BinOp)
@@ -167,7 +179,10 @@ def _expand_ast(tree, modules):
                     and type(tree.op) is Mod
                     and tree.left.id in module.expr_registry):
                 pos = (tree.lineno, tree.col_offset)
-                new_tree = module.expr_registry[tree.left.id](tree.right)
+                the_macro, inside_out = module.expr_registry[tree.left.id]
+                if inside_out:
+                    tree.right = macro_expand(tree.right)
+                new_tree = the_macro(tree.right)
                 (new_tree.lineno, new_tree.col_offset) = pos
                 return new_tree, True
 
@@ -177,7 +192,13 @@ def _expand_ast(tree, modules):
                     and type(tree.decorator_list[0]) is Name
                     and tree.decorator_list[0].id in module.decorator_registry):
 
-                return module.decorator_registry[tree.decorator_list[0].id](tree), True
+                the_macro, inside_out = module.decorator_registry[
+                        tree.decorator_list[0].id]
+                # Strip off the first decorator now - we don't need it
+                tree.decorator_list = tree.decorator_list[1:]
+                if inside_out:
+                    tree = macro_expand(tree)
+                return the_macro(tree), True
 
         return tree, False
 

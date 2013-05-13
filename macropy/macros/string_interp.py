@@ -5,7 +5,7 @@ from macropy.core.lift import macros, q, u
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def s(tree):
     captured = []
     new_string = ""

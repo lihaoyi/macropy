@@ -27,7 +27,8 @@ def _vars_are_disjoint(var_names):
     # We don't count _'s as being conflicting names, because these just stand
     # for 'ignore'
     real_names = set(var_names)
-    real_names.remove('_')
+    if '_' in real_names:
+        real_names.remove('_')
     num_incl_dups = 0
     for name in var_names:
         if name != '_':
@@ -269,7 +270,7 @@ def _is_pattern_match_expr(tree):
             isinstance(tree.op, LShift))
 
 
-@macros.block
+@macros.block()
 def _matching(tree):
     """
     This macro will enable non-refutable pattern matching.  If a pattern match
@@ -324,7 +325,7 @@ def _maybe_rewrite_if(stmt, var_name=None):
     return stmt
 
 
-@macros.block
+@macros.block()
 def switch(tree, arg):
     """
     This only enables (refutable) pattern matching in top-level if statements.
@@ -340,7 +341,7 @@ def switch(tree, arg):
     return tree.body
 
 
-@macros.block
+@macros.block()
 def patterns(tree):
     """
     This enables patterns everywhere!  NB if you use this macro, you will not be

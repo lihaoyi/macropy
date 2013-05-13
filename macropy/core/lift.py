@@ -37,13 +37,13 @@ def _unquote_search(tree):
             return Literal(x)
 
 
-@macros.expr
+@macros.expr()
 def q(tree):
     tree = _unquote_search.recurse(tree)
     return parse_expr(real_repr(tree))
 
 
-@macros.block
+@macros.block()
 def q(tree):
     body = _unquote_search.recurse(tree.body)
     return parse_stmt(tree.optional_vars.id + " = " + real_repr(body))

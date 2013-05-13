@@ -6,6 +6,8 @@ from macropy.core.lift import macros
 from macropy.core.lift import *
 from ast import *
 
+macros = Macros()
+
 # stupid read-only closures
 _in_trampoline = [False]
 
@@ -47,7 +49,7 @@ def trampoline(func, args, varargs, kwargs):
                     return result
 
 
-@macros.decorator
+@macros.decorator()
 def tco(node):
 
     @Walker

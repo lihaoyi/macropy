@@ -12,7 +12,7 @@ def wrap(printer, txt, x):
     return x
 
 
-@macros.expr
+@macros.expr()
 def log(tree):
     new_tree = q%(wrap(log, u%unparse_ast(tree), ast%tree))
     return new_tree
@@ -43,12 +43,12 @@ def trace_walk(tree, ctx):
 
         return [code, tree], stop
 
-@macros.expr
+@macros.expr()
 def trace(tree):
     ret = trace_walk.recurse(tree, None)
     return ret
 
-@macros.block
+@macros.block()
 def trace(tree):
     ret = trace_walk.recurse(tree.body, None)
     return ret
@@ -65,11 +65,11 @@ def handle(thunk):
     thunk(out.append)
     raise AssertionError("Require Failed\n" + "\n".join(out))
 
-@macros.expr
+@macros.expr()
 def require(tree):
     return _require_transform(tree)
 
-@macros.block
+@macros.block()
 def require(tree):
     for expr in tree.body:
         expr.value = _require_transform(expr.value)

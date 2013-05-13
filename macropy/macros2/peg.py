@@ -8,7 +8,7 @@ import re
 from collections import defaultdict
 macros = Macros()
 
-@macros.block
+@macros.block()
 def peg(tree):
     for statement in tree.body:
         if type(statement) is Assign:
@@ -18,7 +18,7 @@ def peg(tree):
     return tree.body
 
 
-@macros.expr
+@macros.expr()
 def peg(tree):
     new_tree, bindings = _PegWalker.recurse_real(tree)
     return new_tree

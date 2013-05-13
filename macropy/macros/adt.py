@@ -82,6 +82,6 @@ def _case_transform(tree, parents):
 
     return out
 
-@macros.decorator
+@macros.decorator()
 def case(tree):
     return _case_transform(tree, [q%object])

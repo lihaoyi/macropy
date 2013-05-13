@@ -2,7 +2,7 @@ from macropy.core.macros import *
 from macropy.core.lift import macros, q
 macros = Macros()
 
-@macros.block
+@macros.block()
 def my_macro(tree):
     with q as code:
         x = x / 2
