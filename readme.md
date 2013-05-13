@@ -228,6 +228,7 @@ As the classes `Nil` are `Cons` are nested within `List`, both of them get trans
 Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.org/2/library/collections.html#collections.namedtuple), but on steroids (methods, inheritence, etc.), and provides the programmer with a much better experience.
 
 Pattern Matching
+
 ----------------
 One important thing you might want to do with case classes is match them against some patterns.
 For example, suppose that you are writing a function to transform an AST.  You want to try to macro-expand
@@ -243,7 +244,7 @@ def expand_macros(node):
         return node
 ```
 
-With pattern matching, we could instead write:
+With pattern matching (specifically, using the switch macro), we could instead write:
 
 ```python
 def expand_macros(node):
@@ -257,12 +258,8 @@ def expand_macros(node):
 Once you're used to this, it is much simpler both to read and to write,
 and the benefits of pattern matching only grow as the matched data structures get more complex.
 
-Here is another, more self-contained example:
-###Switch Macro
-In addition to pattern matching which may throw an exception, there is a nice
-macro called `switch` which provides syntactic sugar for the common case when
-you want to simultaneously extract variables and check whether there was a
-match.
+Here is another, more self-contained example of an implementation of a <a href="http://en.wikipedia.org/wiki/Fold_(higher-order_function)">
+left fold</a> from functional programming:
 
 ```python
 @case
@@ -281,6 +278,7 @@ def foldl1(my_list, op):
             return op(x, foldl1(xs, op))
 ```
 
+The switch macro is actually just syntactic sugar for using the more general patterns macro.
 `foldl1` is approximtely desugared into the following, with one important
 caveat: the bodies of the if statements are not subject to pattern matching,
 in case you actually want to use bitshifts in your code.
@@ -333,17 +331,19 @@ self.a = a
 self.b = b
 ```
 (We don't have access to the source of Foo, so this is the best we can do).
-Then `Foo(x, y) << Foo(3, 4)` is transformed into
+Then `Foo(x, y) << Foo(3, 4)` is transformed roughly into
 
 ```python
 tmp = Foo(3,4)
-x = tmp.a
-y = tmp.b
+tmp_matcher = ClassMatcher(Foo, [NameMatcher('x'), NameMatcher('y')])
+tmp_matcher.match(tmp)
+x = tmp_matcher.getVar('x')
+y = tmp_matcher.getVar('y')
 ```
 
 In some cases, constructors will not be so standard.  In this case, we can use
 keyword arguments to pattern match against named fields.  For example, an
-equivalent to the above which doesn't rely on the constructor is `Foo(a=x, b=y)
+equivalent to the above which doesn't rely on the specific implementation of th constructor is `Foo(a=x, b=y)
 << Foo(3, 4)`.  Here the semantics are that the field `a` is extracted from
 `Foo(3,4)` to be matched against the simple pattern `x`.  We could also replace
 `x` with a more complex pattern, as in `Foo(a=Bar(z), b=y) << Foo(Bar(2), 4)`.
