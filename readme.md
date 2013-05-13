@@ -1367,7 +1367,8 @@ NameError: name 'arg0' is not defined
 
 At runtime, because the names we put into the tree (`arg0` and `arg1`) haven't actually been defined in `target.py`! We will see how we can fix that.
 
-###More Walking
+More Walking
+------------
 The function being passed to the Walker can return a variety of things. In this case, let's say we want to collect the names we extracted from the `names` generator, so we can use them to populate the arguments of the `lambda`.
 
 The Walker function can return `collect(item)`, in addition to a `new_tree`. This will hand `item` over to the Walker, which will aggregate them all in one large list which you can extract by using `recurse_real` instead of `real`:
