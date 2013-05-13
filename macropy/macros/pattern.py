@@ -149,6 +149,8 @@ class NameMatcher(Matcher):
         self.name = name
 
     def var_names(self):
+        if self.name == '_':
+            return []
         return [self.name]
 
     def match(self, matchee):
