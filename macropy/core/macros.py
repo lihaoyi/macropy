@@ -7,6 +7,7 @@ from util import *
 from macropy.core import *
 from walkers import *
 
+
 class Macros(object):
     """A registry of macros belonging to a module; used via
 
@@ -34,6 +35,7 @@ class Macros(object):
 
     def block(self, f):
         self.block_registry[f.func_name] = f
+
 
 def fill_line_numbers(tree, lineno, col_offset):
     """Fill in line numbers somewhat more cleverly than the
@@ -190,6 +192,7 @@ def _expand_ast(tree, modules):
 
     return tree
 
+
 @sys.meta_path.append
 @singleton
 class _MacroFinder(object):
@@ -197,7 +200,8 @@ class _MacroFinder(object):
     it finds some."""
     def find_module(self, module_name, package_path):
         try:
-            (file, pathname, description) = imp.find_module(module_name.split('.')[-1], package_path)
+            (file, pathname, description) = imp.find_module(
+                    module_name.split('.')[-1], package_path)
             txt = file.read()
             tree = ast.parse(txt)
             required_pkgs = _detect_macros(tree)
