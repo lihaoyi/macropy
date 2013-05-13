@@ -9,14 +9,18 @@ from ast import *
 # stupid read-only closures
 _in_trampoline = [False]
 
+
 def _enter_trampoline():
     _in_trampoline[0] = True
+
 
 def _exit_trampoline():
     _in_trampoline[0] = False
 
+
 def in_trampoline():
     return _in_trampoline[0]
+
 
 def trampoline(func, args, varargs, kwargs):
     """
@@ -41,6 +45,7 @@ def trampoline(func, args, varargs, kwargs):
                 else:
                     _exit_trampoline()
                     return result
+
 
 @macros.decorator
 def tco(node):
@@ -91,8 +96,6 @@ def tco(node):
     for x in arg_list_node.elts:
         assert isinstance(x, Name)
         x.ctx = Load()
-
-#TODO kw_args and star_args
 
     with q as prelude:
         if not in_trampoline():
