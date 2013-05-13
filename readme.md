@@ -229,76 +229,36 @@ Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.
 
 Pattern Matching
 ----------------
-```python
-from macropy.macros.adt import macros, patterns
+One important thing you might want to do with case classes is match them against some patterns.
+For example, suppose that you are writing a function to transform an AST.  You want to try to macro-expand
+with-blocks which represent macro invocation, but not affect anything else.
 
-with patterns:
-    Foo(x, Bar(3, z)) << Foo(4, Bar(3, 8))
-    print x   # 4
-    print z   # 8
+The code for this without pattern matching might look something like:
+```python
+def expand_macros(node):
+    if (isinstance(node, With) and isinstance(node.context_expr, Name)
+        and node.context_expr.id in macros.block_registry:
+        return macros.block_registry[node.context_expr.id](node)
+    else:
+        return node
 ```
 
-Pattern matching is taken from many functional languages, including Haskell,
-ML, and Scala, all of which allow a convenient syntax for extracting elements
-out of a complex data structure.  The most basic way of matching an object
-against a pattern is to use the patterns block macro, and use the left shift
-operator, as shown.
-
-If the match fails, a PatternMatchException() will be thrown.
+With pattern matching, we could instead write:
 
 ```python
-with patterns:
-    # Throws a PatternMatchException
-    Foo(x, 4) << Foo(5, 5)
-```
-
-When you pattern match `Foo(x, y)` against a value `Foo(3, 4)`, what happens behind the
-scenes is that the constructor of `Foo` is inspected.  We may find that it takes
-two parameters `a` and `b`.  We assume that the constructor then contains lines
-like:
-```python
-self.a = a
-self.b = b
-```
-(We don't have access to the source of Foo, so this is the best we can do).
-Then `Foo(x, y) << Foo(3, 4)` is transformed into
-
-```python
-tmp = Foo(3,4)
-x = tmp.a
-y = tmp.b
-```
-
-In some cases, constructors will not be so standard.  In this case, we can use
-keyword arguments to pattern match against named fields.  For example, an
-equivalent to the above which doesn't rely on the constructor is `Foo(a=x, b=y)
-<< Foo(3, 4)`.  Here the semantics are that the field `a` is extracted from
-`Foo(3,4)` to be matched against the simple pattern `x`.  We could also replace
-`x` with a more complex pattern, as in `Foo(a=Bar(z), b=y) << Foo(Bar(2), 4)`.
-
-It is also possible to completely override the way in which a pattern is matched
-by defining an `__unapply__` class method of the class which you are pattern
-matching.  The 'class' need not actually be the type of the matched object, as
-in the following example borrowed from Scala.  The `__unapply__` method takes as
-arguments the value being matched, as well as a list of keywords.
-
-The method should then return a tuple of a list of positional matches, and a
-dictionary of the keyword matches.
-
-```python
-class Twice(object):
-    @classmethod
-    def __unapply__(clazz, x, kw_keys):
-        if not isinstance(x, int) or x % 2 != 0:
-            raise PatternMatchException()
+def expand_macros(node):
+    with switch(node):
+        if With(Name(macro_name)):
+            return macros.block_registry[macro_name](node)
         else:
-            return ([x/2], {})
-
-with patterns:
-    Twice(n) << 8
-    print n     # 4
+            return node
 ```
 
+Once you're used to this, it is much simpler both to read and to write,
+and the benefits of pattern matching only grow as the matched data structures get more complex.
+
+Here is another, more self-contained example:
+###Switch Macro
 In addition to pattern matching which may throw an exception, there is a nice
 macro called `switch` which provides syntactic sugar for the common case when
 you want to simultaneously extract variables and check whether there was a
@@ -342,6 +302,76 @@ def foldl1(my_list, op):
 
 I think you can agree that the first version is much easier to read, and the
 second version hasn't even been fully expanded yet!
+
+It's also possible to do away with the if statements if you know what the structure 
+of your input will be.  This also has the benefits of throwing an exception if your 
+input doesn't match the expected form. 
+
+```python
+from macropy.macros.adt import macros, patterns
+
+def area(rect):
+    with patterns:
+        Rect(Point(x1, y1), Point(x2, y2)) << rect
+        return (x2 - x1) * (y2 - y1)
+```
+
+If the match fails, a PatternMatchException() will be thrown.
+```python
+    # Throws a PatternMatchException
+    area(Line(Point(1, 2), Point(3, 4)))
+```
+
+###Class Matching Details
+
+When you pattern match `Foo(x, y)` against a value `Foo(3, 4)`, what happens behind the
+scenes is that the constructor of `Foo` is inspected.  We may find that it takes
+two parameters `a` and `b`.  We assume that the constructor then contains lines
+like:
+```python
+self.a = a
+self.b = b
+```
+(We don't have access to the source of Foo, so this is the best we can do).
+Then `Foo(x, y) << Foo(3, 4)` is transformed into
+
+```python
+tmp = Foo(3,4)
+x = tmp.a
+y = tmp.b
+```
+
+In some cases, constructors will not be so standard.  In this case, we can use
+keyword arguments to pattern match against named fields.  For example, an
+equivalent to the above which doesn't rely on the constructor is `Foo(a=x, b=y)
+<< Foo(3, 4)`.  Here the semantics are that the field `a` is extracted from
+`Foo(3,4)` to be matched against the simple pattern `x`.  We could also replace
+`x` with a more complex pattern, as in `Foo(a=Bar(z), b=y) << Foo(Bar(2), 4)`.
+
+
+###Custom Patterns
+It is also possible to completely override the way in which a pattern is matched
+by defining an `__unapply__` class method of the class which you are pattern
+matching.  The 'class' need not actually be the type of the matched object, as
+in the following example borrowed from Scala.  The `__unapply__` method takes as
+arguments the value being matched, as well as a list of keywords.
+
+The method should then return a tuple of a list of positional matches, and a
+dictionary of the keyword matches.
+
+```python
+class Twice(object):
+    @classmethod
+    def __unapply__(clazz, x, kw_keys):
+        if not isinstance(x, int) or x % 2 != 0:
+            raise PatternMatchException()
+        else:
+            return ([x/2], {})
+
+with patterns:
+    Twice(n) << 8
+    print n     # 4
+```
 
 Tail-call Optimization
 -----------
