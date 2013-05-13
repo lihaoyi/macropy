@@ -23,6 +23,52 @@ class Macros(object):
     def block(self, f):
         self.block_registry[f.func_name] = f
 
+def fill_line_numbers(tree, lineno, col_offset):
+
+    if type(tree) is list:
+        for sub in tree:
+            if isinstance(sub, AST) and hasattr(sub, "lineno") and hasattr(sub, "col_offset") and (sub.lineno, sub.col_offset) > (lineno, col_offset):
+
+                lineno = sub.lineno
+                col_offset = sub.col_offset
+
+            fill_line_numbers(sub, lineno, col_offset)
+    elif isinstance(tree, AST):
+        if not (hasattr(tree, "lineno") and hasattr(tree, "col_offset")):
+            tree.lineno = lineno
+            tree.col_offset = col_offset
+        for name, sub in ast.iter_fields(tree):
+            fill_line_numbers(sub, tree.lineno, tree.col_offset)
+
+@Walker
+def _ast_ctx_fixer(tree, ctx):
+    if "ctx" in type(tree)._fields and not hasattr(tree, "ctx"):
+        tree.ctx = ctx
+
+    if type(tree) is arguments:
+        for arg in tree.args:
+            _ast_ctx_fixer.recurse(arg, Param())
+        for default in tree.defaults:
+            _ast_ctx_fixer.recurse(default, Load())
+
+        return tree, stop
+
+    if type(tree) is AugAssign:
+        _ast_ctx_fixer.recurse(tree.target, AugStore())
+        _ast_ctx_fixer.recurse(tree.value, AugLoad())
+        return tree, stop
+
+    if type(tree) is Assign:
+        for target in tree.targets:
+            _ast_ctx_fixer.recurse(target, Store())
+
+        _ast_ctx_fixer.recurse(tree.value, Load())
+        return tree, stop
+
+    if type(tree) is Delete:
+        for target in tree.targets:
+            _ast_ctx_fixer.recurse(target, Del())
+        return tree, stop
 
 class _MacroLoader(object):
     def __init__(self, module_name, tree, file_name, required_pkgs):
@@ -39,7 +85,9 @@ class _MacroLoader(object):
         modules = [sys.modules[p] for p in self.required_pkgs]
         tree = _expand_ast(self.tree, modules)
 
-        code = unparse_ast(tree)
+        tree = _ast_ctx_fixer.recurse(tree, Load())
+
+        fill_line_numbers(tree, 0, 0)
 
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
@@ -49,7 +97,7 @@ class _MacroLoader(object):
             mod.__package__ = fullname
         else:
             mod.__package__ = fullname.rpartition('.')[0]
-        exec compile(code, self.file_name, "exec") in  mod.__dict__
+        exec compile(tree, self.file_name, "exec") in mod.__dict__
         return mod
 
 
@@ -71,7 +119,14 @@ def _expand_ast(tree, modules):
             if (isinstance(tree, With)):
                 if (isinstance(tree.context_expr, Name)
                         and tree.context_expr.id in module.block_registry):
-                    return module.block_registry[tree.context_expr.id](tree), True
+                    pos = (tree.lineno, tree.col_offset) if hasattr(tree, "lineno") and hasattr(tree, "col_offset") else None
+                    new_tree = module.block_registry[tree.context_expr.id](tree)
+                    if pos:
+                        if type(new_tree) is list:
+                            (new_tree[0].lineno, new_tree[0].col_offset) = pos
+                        else:
+                            (new_tree.lineno, new_tree.col_offset) = pos
+                    return new_tree, True
 
                 if (isinstance(tree.context_expr, Call)
                         and isinstance(tree.context_expr.func, Name)
@@ -84,8 +139,10 @@ def _expand_ast(tree, modules):
                     and type(tree.left) is Name
                     and type(tree.op) is Mod
                     and tree.left.id in module.expr_registry):
-
-                return module.expr_registry[tree.left.id](tree.right), True
+                pos = (tree.lineno, tree.col_offset)
+                new_tree = module.expr_registry[tree.left.id](tree.right)
+                (new_tree.lineno, new_tree.col_offset) = pos
+                return new_tree, True
 
             if  ((isinstance(tree, ClassDef) or isinstance(tree, FunctionDef))
                     and len(tree.decorator_list) == 1

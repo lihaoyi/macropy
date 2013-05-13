@@ -84,7 +84,8 @@ class Walker(object):
             # still be sound, since the various possibilities are all disjoint.
             try:
                 gen = self.func(tree, ctx)
-            except:
+            except TypeError:
+
                 gen = self.func(tree)
             if gen is None:
                 gen = ()

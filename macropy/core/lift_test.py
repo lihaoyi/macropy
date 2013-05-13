@@ -75,5 +75,3 @@ class Tests(unittest.TestCase):
         a, b = None, None
         exec(unparse_ast(code))
         assert(c == [None, 10, 'a', 'b', 'c'])
-
-
