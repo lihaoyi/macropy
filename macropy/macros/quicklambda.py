@@ -1,7 +1,5 @@
-import re
-
 from macropy.core.macros import *
-from macropy.core.lift import macros, q, u
+from macropy.core.lift import macros, q
 
 _ = None  # makes IDE happy
 
@@ -11,16 +9,12 @@ macros = Macros()
 def f(tree):
     names = ('quickfuncvar' + str(i) for i in xrange(100))
 
-
     @Walker
     def underscore_search(tree):
         if isinstance(tree, Name) and tree.id == "_":
             name = names.next()
             tree.id = name
             return tree, collect(name)
-        else:
-            return tree
-
 
     tree, used_names = underscore_search.recurse_real(tree)
 

@@ -1134,9 +1134,320 @@ pp.pprint(parser.parse_all(string)[0])
 
 As you can see, the full parser parses that non-trivial blob of JSON into an identical structure as the in-built `json` package. In addition, the source of the parser looks almost identical to the PEG grammar it is parsing, shown above. Pretty neat!
 
-Detailed Overview
-=================
-*WIP*
+Detailed Guide
+==============
+
+As mentioned earlier, MacroPy uses PEP 302 for much of its functionality. It looks out in particular for the syntactic forms (`import macros, ...`, `my_macro%...`, `with my_macro:`, `@my_macro`) to decide which parts of the AST need to be expanded by which macros. MacroPy uses the inbuilt Python infrastructure for [parsing the source](http://docs.python.org/2/library/ast.html#ast.parse) and [representing it as an AST](http://docs.python.org/2/library/ast.html#abstract-grammar). You should familiarize yourself with the classes which make up the Python AST, since you will be interacting with them a great deal while writing macros.
+
+Once you have an AST, there are a few possible forms that code can take:
+
+- A **String**
+- An **AST**
+- A computed **Value**
+
+This map maps out how to convert from form to form:
+
+                         parse_stmt
+           ____________  parse_expr  ____________
+          |            |----------->|            |
+          |   Source   |            |    AST     |
+          |____________|<-----------|____________|
+              ^     |   unparse_ast   |        ^
+              |     |                 | eval   | ast_repr
+              |     |                 |        |
+    real_repr |     |    eval        _v________|_
+              |     --------------->|            |
+              |                     |   Value    |
+              ----------------------|____________|
+
+Except for `eval`, these are all functions defined in the `macropy/core/__init__.py`. For instance, in order to convert from a AST back into source code (for example if you want to print out the code which is being run), you would use the `unparse_ast` method.
+
+Writing Your First Macro
+------------------------
+Now, we will go through what it takes to write a simple macro. To begin, we need three files
+
+```python
+# run.py
+# target.py
+# macro_module.py
+```
+
+As mentioned earlier, you cannot use macros in the `__main__` module (the file that is run directly via `python ...`) and so we have to have a separate bootstrap file `run.py`, which will then execute `target.py`, which contains macros defined in `my_macros.py`.
+
+```python
+# run.py
+import macropy.core.macros
+import target
+
+# target.py
+# macro_module.py
+```
+
+Now, let us define a simple macro, in `macros.py`
+
+```python
+# run.py
+import macropy.core.macros
+import target
+
+# target.py
+from macro_module import macros, expand
+
+print expand%(1 + 1)
+
+# macro_module.py
+from macropy.core.macros import *
+
+macros = Macros()
+
+@macros.expr
+def expand(tree):
+    return tree
+```
+
+Running this via `python run.py` will print out `2`; so far `expand` is a simple no-op macro which does not do anything to the tree it is passed. At this point, you can print out the tree you are receiving in various forms just to see what you're getting:
+
+```python
+# macro_module.py
+from macropy.core.macros import *
+
+macros = Macros()
+
+@macros.expr
+def expand(tree):
+    print tree
+    print real_repr(tree)
+    print unparse_ast(tree)
+    return tree
+```
+
+This will print:
+
+```python
+<_ast.BinOp object at 0x000000000206BBA8>
+BinOp(Num(1), Add(), Num(1))
+(1 + 1)
+```
+
+As you can see, the AST objects don't have a nice `__repr__`, but if you use the MacroPy function `real_repr`, you can see that it's made up of the  `BinOp` `Add`, which adds the two numbers `Num(1)` and `Num(1)`. Unparsing it into source code via `unparse()` gives you `(1 + 1)`, which is what you would expect. In general, unparsing may not give you exactly the source of the original file (it may have more or fewer parentheses or have the indentation changed) but it should be semantically equivalent when executed.
+
+One (trivial) example of modifying the tree is to simply replace it with a new tree, for example:
+
+```python
+# macro_module.py
+from macropy.core.macros import *
+
+macros = Macros()
+
+@macros.expr
+def expand(tree):
+    return Num(100)
+```
+This replaces the binary operation `(1 + 1)` with the literal number `100`. When you run `run.py`, this will print out `100`, as the original expression `(1 + 1)` has now been replaced by the literal `100`. Another possible operation would be to replace the expression with the square of itself:
+
+```python
+# macro_module.py
+from macropy.core.macros import *
+
+macros = Macros()
+
+@macros.expr
+def expand(tree):
+    newtree = BinOp(tree, Mul(), tree)
+    return newtree
+```
+
+This will replace the expression `(1 + 1)` with `((1 + 1) * (1 + 1))`; you can similarly print out newtree via `unparse` or `real_repr` to see what's it looks like.
+
+Quasiquotes
+-----------
+Building up the new tree manually, as shown above, works reasonably well. However, it can quickly get unwieldy, particularly for more complex expressions. For example, let's say we wanted to make `expand` wrap the expression `(1 + 1)` in a lambda, like `lambda x: x * (1 + 1) + 10`. Ignore, for the moment, that this transform is not very useful. Doing so manually is quite a pain:
+
+```python
+# macro_module.py
+from macropy.core.macros import *
+
+macros = Macros()
+
+@macros.expr
+def expand(tree):
+    return Lambda(arguments([Name("x")], None, None, []), BinOp(BinOp(Name('x'), Mul(), tree), Add(), Num(10)))
+```
+
+As mentioned in the examples, quasiquotes let you quote sections of code as ASTs, letting us substitute in sections dynamically. Quasiquotes let us turn the above code into:
+
+```python
+# macro_module.py
+from macropy.core.macros import *
+
+macros = Macros()
+
+@macros.expr
+def expand(tree):
+    return q%(lambda x: x * ast%tree + 10)
+```
+
+the `q%(..)` syntax means that the section following it is quoted as an AST, while the unquote `ast%` syntax means to place the *value* of `tree` into that part of the quoted AST, rather than simply the node `Name("tree")`. The other unquotes `name%` and `u%` allow us to dynamically set the identifier `x` and the value `10` to other things at run time:
+
+```python
+# macro_module.py
+from macropy.core.macros import *
+
+macros = Macros()
+
+@macros.expr
+def expand(tree):
+    identifier = "y"
+    addition = 100
+    return q%(lambda name%identifier: name%identifier * ast%tree + u%addition)
+```
+
+This will replace the argument to the lambda `x` with whatever is the string value of `identifier`, in this case `y`, and replace the literal `10` with a literal representing the value of `addition`, in this case `100`.
+Apart from using the `%u`, `%ast` and `%name` unquotes to put things into the AST, good old fashioned assignment works too:
+
+```python
+# macro_module.py
+from macropy.core.macros import *
+
+macros = Macros()
+
+@macros.expr
+def expand(tree):
+    newtree = q%(lambda x: x * None + 10)
+    newtree.body.left.right = tree          # replace the None in the AST with the given tree
+    return newtree
+```
+
+Walkers
+-------
+Quasiquotes make it much easier for you to manipulate sections of code, allowing you to quickly put together snippets that look however you want. However, they do not provide any support for a very common use case: that of recursively traversing the AST and replacing sections of it at a time.
+
+For example, if we look at the **quicklambda** macro in the examples, we want to take code which looks like this:
+
+```python
+f%(_ + (1 * _))
+```
+
+and turn it into:
+
+```python
+(arg0 + (1 * arg1))
+```
+
+We actually also need to wrap this in a `lambda ...: ...`, but we will get to that later. For now, in order to replace all the underscores with variables, we would need to recurse over the AST in order to search for the uses of `_`. A simple attempt may be:
+
+```python
+# macro_module.py
+
+from macropy.core.macros import *
+
+macros = Macros()
+
+@macros.expr
+def f(tree):
+    names = ('quickfuncvar' + str(i) for i in xrange(100))
+
+    def rec(tree):
+        if type(tree) is Name and tree.id == '_':
+            tree.id = names.next()
+        if type(tree) is BinOp:
+            rec(tree.left)
+            rec(tree.right)
+        if type(tree) is List:
+            map(rec, tree.elts)
+        if type(tree) is UnaryOp:
+            rec(tree.operand)
+        ...
+
+    return rec(newtree)
+````
+
+Note that we use `f` instead of `expand`. Also note that writing out the recursion manually is pretty tricky, and it's easy to get wrong. It turns out that this behavior, of walking over the AST and doing something to it, is an extremely common operation, common enough that MacroPy provides the `Walker` class to do this for you:
+
+```python
+# macro_module.py
+
+from macropy.core.macros import *
+
+macros = Macros()
+
+@macros.expr
+def expand(tree):
+    def get_name(id = [0]):
+        id[0] = id[0] + 1
+        return "arg" + str(id[0]-1)
+
+    @Walker
+    def underscore_search(tree):
+        if type(tree) is Name and tree.id == '_':
+            tree.id = get_name()
+
+    return underscore_search.recurse(newtree)
+```
+
+This snippet of code is equivalent to the one earlier, except that with a `Walker`, you only need to specify the AST nodes you are interested in (in this case `Name`s) and the `Walker` will do the recursion automatically.
+
+###More Walking
+The function being passed to the Walker can return a variety of things. In this case, let's say we want to collect the names we extracted from the `names` generator, so we can use them to populate the arguments of the `lambda`.
+
+The Walker function can return `collect(item)`, in addition to a `new_tree`. This will hand `item` over to the Walker, which will aggregate them all in one large list which you can extract by using `recurse_real` instead of `real`:
+
+```python
+from macropy.core.macros import *
+from macropy.core.lift import macros, q, u
+
+macros = Macros()
+
+@macros.expr
+def f(tree):
+    names = ('quickfuncvar' + str(i) for i in xrange(100))
+
+    @Walker
+    def underscore_search(tree):
+        if isinstance(tree, Name) and tree.id == "_":
+            name = names.next()
+            tree.id = name
+            return tree, collect(name)
+
+    new_tree, used_names = underscore_search.recurse_real(tree)
+
+    return new_tree
+```
+
+Now we have available both the `new_tree` as well as a list of `used_names`, which were the names that got substituted in place of the underscores within the AST. All we need now is to wrap everything in a `lambda`, set the arguments properly:
+
+```python
+from macropy.core.macros import *
+from macropy.core.lift import macros, q, u
+
+    _ = None  # makes IDE happy
+
+    macros = Macros()
+
+    @macros.expr
+    def f(tree):
+        names = ('quickfuncvar' + str(i) for i in xrange(100))
+
+        @Walker
+        def underscore_search(tree):
+            if isinstance(tree, Name) and tree.id == "_":
+                name = names.next()
+                tree.id = name
+                return tree, collect(name)
+
+        tree, used_names = underscore_search.recurse_real(tree)
+
+        new_tree = q%(lambda: ast%tree)
+        new_tree.args.args = [Name(id = x) for x in used_names]
+        return new_tree
+```
+
+And we're done!
+
+```python
+reduce(f%(_ + _), [1, 2, 3])
+#6
+```
 
 Conclusion
 ==========
