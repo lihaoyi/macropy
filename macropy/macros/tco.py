@@ -49,7 +49,7 @@ def trampoline(func, args, varargs, kwargs):
                     return result
 
 
-@macros.decorator()
+@macros.decorator(inside_out=True)
 def tco(node):
 
     @Walker
