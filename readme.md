@@ -16,14 +16,16 @@ MacroPy has been used to implement features such as:
 - [Case Classes](#case-classes), easy Algebraic Data Types from Scala
 - [Pattern Matching](#pattern-matching) from the Functional Programming world
 - [Tail-call Optimization](#tail-call-optimization)
-- [Quasiquotes](#quasiquotes), a quick way to manipulate fragments of a program
 - [String Interpolation](#string-interpolation), a common feature in many languages, and [Pyxl](#pyxl-integration).
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts)
 - [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), a clone of LINQ to SQL from C#
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy
 - [Parser Combinators](#parser-combinators), inspired by Scala's
 
-The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through creating a simple macro ([Quick Lambdas](#quick-lambdas))
+The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through creating a simple macro ([Quick Lambdas](#quick-lambdas)) as well as containing documentation for [Tools](#tools)  such as 
+
+- [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
+- The [Walker](#walker), a flexible tool to traverse and transform ASTs
 
 MacroPy is tested to run on:
 
@@ -37,7 +39,7 @@ All of these are advanced language features that each would have been a massive 
 *MacroPy is very much a work in progress, for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/). Although it is constantly in flux, all of the examples with source code represent already-working functionality. The rest will be filled in over the coming weeks.*
 
 Rough Overview
---------------
+==============
 Macro functions are defined in three ways:
 
 ```python
@@ -432,72 +434,7 @@ instead of running `f` directly, we run `trampoline(f)`, which will call `f`,
 call the result of `f`, call the result of that `f`, etc. until finally some
 call returns an actual value.
 
-Quasiquotes
------------
 
-```python
-from macropy.core.lift import macros, q, name, ast
-
-a = 10
-b = 2
-tree = q%(1 + u%(a + b))
-print ast.dump(tree)
-#BinOp(Num(1), Add(), Num(12))
-```
-
-Quasiquotes are the foundation for many macro systems, such as that found in [LISP](http://en.wikipedia.org/wiki/LISP). Quasiquotes save you from having to manually construct code trees from the nodes they are made of. For example, if you want the code tree for 
-
-```python
-(1 + 2)
-```
-
-Without quasiquotes, you would have to build it up by hand:
-
-```python
-tree = BinOp(Num(1), Add(), Num(2))
-```
-
-But with quasiquotes, you can simply write the code `(1 + 2)`, quoting it with `q%` to lift it from an expression (to be evaluated) to a tree (to be returned):
-
-```python
-tree = q%(1 + 2)
-```
-
-Furthermore, quasiquotes allow you to _unquote_ things: if you wish to insert the **value** of an expression into the tree, rather than the **tree** making up the expression, you unquote it using `u%`. In the example above:
-
-```python
-tree = q%(1 + u%(a + b))
-print ast.dump(tree)
-#BinOp(Num(1), Add(), Num(12))
-```
-
-the expression `(a + b)` is unquoted. Hence `a + b` gets evaluated to the value of `12`, which is then inserted into the tree, giving the final tree.
-
-Apart from interpolating values in the AST, you can also interpolate:
-
-###Other ASTs
-
-```python
-a = q%(1 + 2)
-b = q%(ast%a + 3)
-print ast.dump(b)
-#BinOp(BinOp(Num(1), Add(), Num(2)), Add(), Num(3))
-```
-
-This is necessary to join together ASTs directly, without converting the interpolated AST into its `repr`. If we had used the `u%` interpolator, it fails with an error
-
-###Names
-```python
-n = "x"
-x = 1
-y = q%(name%n + name%n)
-print ast.dump(y)
-#BinOp(Name('x'), Add(), Name('x'))
-```
-
-This is convenient in order to interpolate a string variable as an identifier, rather than interpolating it as a string literal. In this case, I want the syntax tree for the expression `x + x`, and not `'x' + 'x'`, so I use the `name%` macro to unquote it.
-
-Overall, quasiquotes are an incredibly useful tool for assembling or manipulating the ASTs, and are used in the implementation in all of the following examples. See the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for short, practical examples of their usage.
 
 String Interpolation
 --------------------
@@ -1294,7 +1231,7 @@ print (expand%(1 + 2))(5)
 
 It prints `25`, as you would expect.
 
-As mentioned in the examples, quasiquotes let you quote sections of code as ASTs, letting us substitute in sections dynamically. Quasiquotes let us turn the above code into:
+[Quasiquotes](#quasiquotes) are a special structure that lets you quote sections of code as ASTs, letting us substitute in sections dynamically. Quasiquotes let us turn the above code into:
 
 ```python
 # macro_module.py
@@ -1325,7 +1262,9 @@ def expand(tree):
     return q%(lambda x: x * (ast%tree) + u%addition)
 ```
 
-This will insert the a literal representing the value of `addition` into the position of the `u%addition`, in this case `10`. This *also* prints 25. Apart from using the `%u` and `%ast` unquotes to put things into the AST, good old fashioned assignment works too:
+This will insert the a literal representing the value of `addition` into the position of the `u%addition`, in this case `10`. This *also* prints 25. For a more detailed description of how quoting and unquoting works, and what more you can do with it, check out the documentation for [Quaasiquotes](#quasiquotes).
+
+Apart from using the `%u` and `%ast` unquotes to put things into the AST, good old fashioned assignment works too:
 
 ```python
 # macro_module.py
@@ -1343,8 +1282,8 @@ def expand(tree):
 
 If you run this, it will also print `25`.
 
-Walkers
--------
+Walking the AST
+---------------
 Quasiquotes make it much easier for you to manipulate sections of code, allowing you to quickly put together snippets that look however you want. However, they do not provide any support for a very common use case: that of recursively traversing the AST and replacing sections of it at a time.
 
 Now that you know how to make basic macros, I will walk you through the implementation of a less trivial (and extremely useful!) macro: [quicklambda](#quick-lambda).
@@ -1420,11 +1359,10 @@ def f(tree):
     return newtree
 ```
 
-This snippet of code is equivalent to the one earlier, except that with a `Walker`, you only need to specify the AST nodes you are interested in (in this case `Name`s) and the `Walker` will do the recursion automatically. As you can see, when we print out the unparsed newtree, we can see that the transformed code looks like what we expect. This code then fails with a 
+This snippet of code is equivalent to the one earlier, except that with a [Walker](#walkers), you only need to specify the AST nodes you are interested in (in this case `Name`s) and the Walker will do the recursion automatically. As you can see, when we print out the unparsed newtree, we can see that the transformed code looks like what we expect. This code then fails with a 
 
 ```
 NameError: name 'arg0' is not defined
-
 ```
 
 At runtime, because the names we put into the tree (`arg0` and `arg1`) haven't actually been defined in `target.py`! We will see how we can fix that.
@@ -1456,7 +1394,9 @@ def f(tree):
     return new_tree
 ```
 
-Now we have available both the `new_tree` as well as a list of `used_names`. When we print out `used_names`, we see it is the names that got substituted in place of the underscores within the AST. This still fails at runtime, but now all we need now is to wrap everything in a `lambda`, set the arguments properly:
+Now we have available both the `new_tree` as well as a list of `used_names`. When we print out `used_names`, we see it is the names that got substituted in place of the underscores within the AST. If you're wondering about how the return values (tuple? AST? None?) of the `underscore_search` function are interpreted, check out the section on [Walkers](#walkers).
+
+This still fails at runtime, but now all we need now is to wrap everything in a `lambda`, set the arguments properly:
 
 ```python
 from macropy.core.macros import *
@@ -1520,6 +1460,170 @@ print map(f%(_  * 10), [1, 2, 3])  # [10, 20, 30]
 ```
 
 Mission Accomplished! You can see the completed macro defined in [macropy/macros/quicklambda.py](macropy/macros/quicklambda.py), along with a suite of [unit tests](macropy/macros/quicklambda_test.py). It is also used throughout the implementation of the other macros.
+
+Tools
+=====
+This section describes tools that can be used to help you define your macros and their transformations. Although it is perfectly possible to write macros which only use conditionals and for-loops, life gets so much easier using these abstractions that I would consider them a "must have".
+
+Quasiquotes
+-----------
+
+```python
+from macropy.core.lift import macros, q, name, ast
+
+a = 10
+b = 2
+tree = q%(1 + u%(a + b))
+print ast.dump(tree)
+#BinOp(Num(1), Add(), Num(12))
+```
+
+Quasiquotes are the foundation for many macro systems, such as that found in [LISP](http://en.wikipedia.org/wiki/LISP). Quasiquotes save you from having to manually construct code trees from the nodes they are made of. For example, if you want the code tree for 
+
+```python
+(1 + 2)
+```
+
+Without quasiquotes, you would have to build it up by hand:
+
+```python
+tree = BinOp(Num(1), Add(), Num(2))
+```
+
+But with quasiquotes, you can simply write the code `(1 + 2)`, quoting it with `q%` to lift it from an expression (to be evaluated) to a tree (to be returned):
+
+```python
+tree = q%(1 + 2)
+```
+
+Furthermore, quasiquotes allow you to _unquote_ things: if you wish to insert the **value** of an expression into the tree, rather than the **tree** making up the expression, you unquote it using `u%`. In the example above:
+
+```python
+tree = q%(1 + u%(a + b))
+print ast.dump(tree)
+#BinOp(Num(1), Add(), Num(12))
+```
+
+the expression `(a + b)` is unquoted. Hence `a + b` gets evaluated to the value of `12`, which is then inserted into the tree, giving the final tree.
+
+Apart from interpolating values in the AST, you can also interpolate:
+
+###Other ASTs
+
+```python
+a = q%(1 + 2)
+b = q%(ast%a + 3)
+print ast.dump(b)
+#BinOp(BinOp(Num(1), Add(), Num(2)), Add(), Num(3))
+```
+
+This is necessary to join together ASTs directly, without converting the interpolated AST into its `repr`. If we had used the `u%` interpolator, it fails with an error
+
+###Names
+```python
+n = "x"
+x = 1
+y = q%(name%n + name%n)
+print ast.dump(y)
+#BinOp(Name('x'), Add(), Name('x'))
+```
+
+This is convenient in order to interpolate a string variable as an identifier, rather than interpolating it as a string literal. In this case, I want the syntax tree for the expression `x + x`, and not `'x' + 'x'`, so I use the `name%` macro to unquote it.
+
+Overall, quasiquotes are an incredibly useful tool for assembling or manipulating the ASTs, and are used in the implementation in all of the following examples. See the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for short, practical examples of their usage.
+
+Walkers
+-------
+
+The Walker is a uniform abstraction to use for recursively traversing a Python AST. Defined in [macropy/core/walkers.py](macropy/core/walkers.py), it is used throughout MacroPy, both in the core logic as well as the implementation of most of the macros.
+
+In its most basic form, a Walker is used as follows:
+```python
+@Walker
+def transform(tree):
+    ...
+    return new_tree
+```
+
+This walker applies the `transform` function to every node in the AST it recurses over, and is called via:
+
+```python
+new_tree = transform.recurse(old_tree)
+```
+
+The `transform` function can either mutate the given `tree` (e.g. by changing its attributes, swapping out children, etc.) or replace it by returning a new one (like in the example above). Returning `None` leaves the tree as-is without replacing it (although it still could have been mutated).
+
+###Contexts
+
+The Walker allows the programmer to provide a *context*:
+
+```python
+@Walker
+def transform(tree, ctx):
+    ...
+    return new_tree
+    or
+    return new_tree, set_ctx(new_ctx)
+
+new_tree = transform.recurse(old_tree)
+new_tree = transform.recurse(old_tree, init_ctx)
+```
+
+If the `transform` function takes an additional argument, it will be given the `init_ctx` that is passed in as the second argument to the `.recurse()` method. This defaults to `None` if no `init_ctx` is given. Furthermore, the `transform` function can return a tuple including a `set_ctx(new_ctx)` object, and the Walker will provide the `new_ctx` to all descendents (children, grandchildren, et.c) of the current AST node.
+
+###Collections
+
+The Walker provides an easy way for  the programmer to aggregate data as it recurses over the AST. This is done by returning an *additional* value: a `collect(value)` object:
+
+```python
+@Walker
+def transform(tree, ctx):
+    ...
+    return new_tree, collect(value)
+new_tree, collected = transform.recurse_real(old_tree)
+```
+
+Using the `recurse_real` instead of the `recurse` method to return both the new `tree` as well as the collected data, as a list. This is a simple way of aggregating values as you traverse the AST.
+
+###Stop
+
+Lastly, the Walker provides a way to end the recursion, via the `stop` value:
+
+```python
+@Walker
+def transform(tree, ctx):
+    ...
+    if ...:
+        return new_tree
+    else:
+        return stop
+```
+
+Returning `stop` prevents the `Walker` from recursing over the children of the current node. This is useful, for example, if you know that the current node's AST subtree does not contain anything of interest to you and wish to save some computation. Another use case would be if you wish to delimit your transformation: if you want any code within a certain construct to be passed over by `transform`, you can simply have `transform` return `stop` when it sees that construct.
+
+###A Flexible Tool
+As shown in some of the examples, the `transform` function given to a Walker can return multiple of values together. For example, you could have a walker such as:
+
+```python
+@Walker
+def transform(tree, ctx):
+    ...
+    return new_tree, set_ctx(new_ctx), collect(value), stop
+
+new_tree, collected = transform.recurse_real(old_tree, initial_ctx)
+```
+
+Which will do all of:
+
+- Replacing the current AST node with new_tree
+- Setting the `ctx` that all its children will receive
+- Collecting some value that will get returned in `collected`
+- Preventing recursion on sub-trees
+
+It is a bit silly to have both the second and fourth items, since if it doesn't recurse on sub-trees then setting the new `ctx` is moot. Nonetheless, the point is that you can return any combination of these results from `transform`, and in any order, in order to gain some control about how the recursive traversal is performed.
+
+The Walker is an incredibly versatile tool, used to recursively traverse and transform Python ASTs. If you inspect the source code of the macros in the [macropy/macros](macropy/macros) and [macropy/macros](macropy/macros2) folders, you will see most of them make extensive use of Walkers in order to concisely perform their transformations. If you find yourself needing a recursive traversal, you should think hard about why you cannot use a Walker before writing the recursion yourself.
+
 
 Conclusion
 ==========
