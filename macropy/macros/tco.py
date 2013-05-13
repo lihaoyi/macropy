@@ -18,7 +18,7 @@ def _exit_trampoline():
 def in_trampoline():
     return _in_trampoline[0]
 
-def trampoline(func, args):
+def trampoline(func, args, varargs, kwargs):
     """
     Repeatedly apply a function until it returns a value.
 
@@ -34,12 +34,13 @@ def trampoline(func, args):
             elif ('ignore', func, args, varargs, kwargs):
                 ignoring = True
             else:
+                pass # break out of switch >.<
                 if ignoring:
                     _exit_trampoline()
                     return None
                 else:
                     _exit_trampoline()
-                    return val
+                    return result
 
 @macros.decorator
 def tco(node):
@@ -52,17 +53,11 @@ def tco(node):
                 with q as code:
                     return ('call', ast%(node.value.func),
                             ast%(List(node.value.args, Load())),
-                            node.value.starargs or List([], Load()),
-                            node.value.kwargs or Dict([],[]))
+                            ast%(node.value.starargs or List([], Load())),
+                            ast%(node.value.kwargs or Dict([],[])))
                 return code
 # TODO this is a stupid hack - should actually just not recurse once a return
 # statement has been replaced.
-            elif not (isinstance(node.value, Tuple)
-                    and isinstance(node.value.elts[0], Str)
-                    and node.value.elts[0].s in ['return', 'call']):
-                with q as code:
-                    return ('return', ast%(node.value))
-                return code
             else:
                 return node
         return node
@@ -73,9 +68,9 @@ def tco(node):
         if isinstance(node, Expr) and isinstance(node.value, Call):
             with q as code:
                 return ('ignore', ast%(node.value.func), 
-                        ast%(List(node.value.args, Load()))
-                        node.value.starargs or List([], Load()),
-                        node.value.kwargs or Dict([], []))
+                        ast%(List(node.value.args, Load())),
+                        ast%(node.value.starargs or List([], Load())),
+                        ast%(node.value.kwargs or Dict([], [])))
             return code
         elif isinstance(node, If):
             node.body[-1] = replace_tc_pos(node.body[-1])
@@ -97,9 +92,11 @@ def tco(node):
         assert isinstance(x, Name)
         x.ctx = Load()
 
+#TODO kw_args and star_args
+
     with q as prelude:
         if not in_trampoline():
-            return trampoline(name%(node.name), ast%(arg_list_node))
+            return trampoline(name%(node.name), ast%(arg_list_node), [], {})
 
     node = return_replacer.recurse(node)
     node.body = [prelude] + node.body

@@ -15,7 +15,7 @@ class Tests(unittest.TestCase):
             if n == 0:
                 return 1
             return foo(n-1)
-        self.assertEquals(1, foo(10000))
+        self.assertEquals(1, foo(3000))
 
 
     def test_tco_returns(self):
@@ -48,8 +48,8 @@ class Tests(unittest.TestCase):
                 else:
                     return oddLength(xs.rest)
 
-        self.assertTrue(True, evenLength(my_range(20000)))
-        self.assertTrue(True, oddLength(my_range(20001)))
+        self.assertTrue(True, evenLength(my_range(2000)))
+        self.assertTrue(True, oddLength(my_range(2001)))
         # if we get here, then we haven't thrown a stack overflow.  success.
 
     def test_implicit_tailcall(self):
@@ -76,7 +76,7 @@ class Tests(unittest.TestCase):
             else:
                 return f(n-1)
 
-        self.assertEquals(7, f(10000))
+        self.assertEquals(7, f(1000))
 
         def util2():
             return None
@@ -88,7 +88,7 @@ class Tests(unittest.TestCase):
             else:
                 return f2(n-1)
 
-        self.assertEquals(None, f2(10000))
+        self.assertEquals(None, f2(1000))
         
 
 if __name__ == '__main__':
