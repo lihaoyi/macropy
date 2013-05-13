@@ -22,40 +22,41 @@ def trampoline(func, args):
     """
     Repeatedly apply a function until it returns a value.
 
-    The function may return ('call', func, args) or ('ignore', func,
-    args) or ('return', val)
+    The function may return ('call', func, args, varargs, kwargs) or ('ignore', func, args) or ('return', val)
     """
     _enter_trampoline()
     ignoring = False
     while True:
-        result = func(*args)
+        result = func(*(args + varargs), **kwargs)
         with switch(result):
-            if ('call', func, args):
+            if ('call', func, args, varargs, kwargs):
                 pass
-            elif ('ignore', func, args):
+            elif ('ignore', func, args, varargs, kwargs):
                 ignoring = True
-            elif ('return', val):
+            else:
                 if ignoring:
                     _exit_trampoline()
                     return None
                 else:
                     _exit_trampoline()
                     return val
-            else:
-                _exit_trampoline()
-                return result
 
 @macros.decorator
 def tco(node):
 
     @Walker
+    # Replace returns of calls - TODO use pattern matching here
     def return_replacer(node):
         if isinstance(node, Return): 
             if isinstance(node.value, Call):
                 with q as code:
                     return ('call', ast%(node.value.func),
-                            ast%(List(node.value.args, Load())))
+                            ast%(List(node.value.args, Load())),
+                            node.value.starargs or List([], Load()),
+                            node.value.kwargs or Dict([],[]))
                 return code
+# TODO this is a stupid hack - should actually just not recurse once a return
+# statement has been replaced.
             elif not (isinstance(node.value, Tuple)
                     and isinstance(node.value.elts[0], Str)
                     and node.value.elts[0].s in ['return', 'call']):
@@ -65,11 +66,16 @@ def tco(node):
             else:
                 return node
         return node
+
+    # Replace calls (that aren't returned) which happen to be in a tail-call
+    # position
     def replace_tc_pos(node):
         if isinstance(node, Expr) and isinstance(node.value, Call):
             with q as code:
                 return ('ignore', ast%(node.value.func), 
-                        ast%(List(node.value.args, Load())))
+                        ast%(List(node.value.args, Load()))
+                        node.value.starargs or List([], Load()),
+                        node.value.kwargs or Dict([], []))
             return code
         elif isinstance(node, If):
             node.body[-1] = replace_tc_pos(node.body[-1])
