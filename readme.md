@@ -379,6 +379,20 @@ We have also implemented a macro which will optimize away the stack usage of
 functions which are actually implemented in a tail-recursive fashion.  This even
 works for mutually recursive functions by using trampolining.
 
+The 'hello world' of tail-recursive functions is a factorial function, so I'll
+show that first.
+```python
+@tco
+def fact(n, acc):
+    if n == 0:
+        return acc
+    else:
+        return fact(n-1, n * acc)
+
+print fact(10000)  # doesn't stack overflow
+```
+
+More complicated mutually recursive examples also work too.
 ```python
 from macropy.macros.tco import macros, tco
 
@@ -401,6 +415,20 @@ def even(n):
 assert(even(100000))  # No stack overflow
 ```
 
+Note that both `odd` and `even` were both decorated with `@tco`.  All functions
+which would ordinarily use too many stack frames must be decorated.
+
+One thing to be aware of is that right now, for no other reason than that it
+hasn't been implemented yet, the `@tco` macro will not work properly on
+functions with varargs or keyword arguments.
+
+###Trampolining
+How is tail recursion implemented?  The idea is that if a function `f` would
+return the result of a recursive call to some function `g`, it could instead
+return `g`, along with whatever arguments it would have passed to `g`.  Then
+instead of running `f` directly, we run `trampoline(f)`, which will call `f`,
+call the result of `f`, call the result of that `f`, etc. until finally some
+call returns an actual value.
 
 Quasiquotes
 -----------
