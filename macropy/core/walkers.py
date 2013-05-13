@@ -3,13 +3,19 @@ from macropy.core.util import *
 from ast import *
 
 
+# stops the traversal
 stop = object()
 
 class set_ctx(object):
+    """Returned from the Walker function to set the `ctx` used when traversing
+    child nodes."""
     def __init__(self, ctx):
         self.ctx = ctx
 
 class collect(object):
+    """Returned from the Walker function to collect some value during the
+    traversal. A list of values collected is returned from the traveral
+    by the `recurse_real` method."""
     def __init__(self, ctx):
         self.ctx = ctx
 
@@ -72,9 +78,12 @@ class Walker(object):
             return []
 
     def recurse(self, tree, ctx=None):
+        """Traverse the given AST and return the transformed tree."""
         return self.recurse_real(tree, ctx)[0]
 
     def recurse_real(self, tree, ctx=None):
+        """Traverse the given AST and return the transformed tree together
+        with any values which were collected along with way."""
         if isinstance(tree, AST):
             aggregates = []
             stop_now = False

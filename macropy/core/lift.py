@@ -40,7 +40,6 @@ def _unquote_search(tree):
 @macros.expr
 def q(tree):
     tree = _unquote_search.recurse(tree)
-
     return parse_expr(real_repr(tree))
 
 
