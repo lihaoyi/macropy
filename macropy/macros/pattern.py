@@ -69,6 +69,7 @@ class Matcher(object):
         
 
 class LiteralMatcher(Matcher):
+
     def __init__(self, val):
         self.val = val
 
@@ -82,6 +83,7 @@ class LiteralMatcher(Matcher):
     
 
 class TupleMatcher(Matcher):
+
     def __init__(self, *matchers):
         self.matchers = matchers
         if not _vars_are_disjoint(util.flatten([m.var_names() for m in
@@ -104,6 +106,7 @@ class TupleMatcher(Matcher):
 
 
 class ParallelMatcher(Matcher):
+
     def __init__(self, matcher1, matcher2):
         self.matcher1 = matcher1
         self.matcher2 = matcher2
@@ -124,6 +127,7 @@ class ParallelMatcher(Matcher):
 
 
 class ListMatcher(Matcher):
+
     def __init__(self, *matchers):
         self.matchers = matchers
         if not _vars_are_disjoint(util.flatten([m.var_names() for m in
@@ -145,6 +149,7 @@ class ListMatcher(Matcher):
 
 
 class NameMatcher(Matcher):
+
     def __init__(self, name):
         self.name = name
 
@@ -159,6 +164,7 @@ class NameMatcher(Matcher):
 
 # Currently only works for positional arguments
 class ClassMatcher(Matcher):
+
     def __init__(self, clazz, positionalMatchers, **kwMatchers):
         self.clazz = clazz
         self.positionalMatchers = positionalMatchers
