@@ -13,15 +13,15 @@ print p     # Point(1, 2)
 
 MacroPy has been used to implement features such as:
 
-- [Case Classes](#case-classes), easy [Algebraic Data Types](https://en.wikipedia.org/wiki/Algebraic_data_type) from Scala
+- [Case Classes](#case-classes), easy Algebraic Data Types from Scala
 - [Pattern Matching](#pattern-matching) from the Functional Programming world
 - [Tail-call Optimization](#tail-call-optimization)
 - [Quasiquotes](#quasiquotes), a quick way to manipulate fragments of a program
 - [String Interpolation](#string-interpolation), a common feature in many languages, and [Pyxl](#pyxl-integration).
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts)
 - [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), a clone of LINQ to SQL from C#
-- [Quick Lambdas](#quick-lambdas) from Scala and Groovy,
-- [Parser Combinators](#parser-combinators), inspired by [Scala's](http://www.suryasuravarapu.com/2011/04/scala-parser-combinators-win.html).
+- [Quick Lambdas](#quick-lambdas) from Scala and Groovy
+- [Parser Combinators](#parser-combinators), inspired by Scala's
 
 MacroPy is tested to run on:
 
@@ -1458,7 +1458,7 @@ from macropy.core.lift import macros, q, u
 
     @macros.expr
     def f(tree):
-        names = ('quickfuncvar' + str(i) for i in xrange(100))
+        names = ('arg' + str(i) for i in xrange(100))
 
         @Walker
         def underscore_search(tree):
@@ -1498,7 +1498,7 @@ print filter(f%(_ % 2 != 0), [1, 2, 3])  # [1, 3]
 print map(f%(_  * 10), [1, 2, 3])  # [10, 20, 30]
 ```
 
-Mission Accomplished!
+Mission Accomplished! You can see the completed macro defined in [macropy/macros/quicklambda.py](macropy/macros/quicklambda.py), along with a suite of [unit tests](macropy/macros/quicklambda_test.py). It is also used throughout the implementation of the other macros.
 
 Conclusion
 ==========
