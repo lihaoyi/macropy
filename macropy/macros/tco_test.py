@@ -8,6 +8,16 @@ from macropy.macros.pattern import *
 
 
 class Tests(unittest.TestCase):
+
+    def test_tco_basic(self):
+        @tco
+        def foo(n):
+            if n == 0:
+                return 1
+            return foo(n-1)
+        self.assertEquals(1, foo(10000))
+
+
     def test_tco_returns(self):
 
         @case
@@ -54,6 +64,32 @@ class Tests(unittest.TestCase):
 
         appendStuff(10000)
         self.assertEquals(10000, len(blah))
+
+    def test_util_func_compatibility(self):
+        def util():
+            return 3 + 4
+
+        @tco
+        def f(n):
+            if n == 0:
+                return util()
+            else:
+                return f(n-1)
+
+        self.assertEquals(7, f(10000))
+
+        def util2():
+            return None
+
+        @tco
+        def f2(n):
+            if n == 0:
+                return util2()
+            else:
+                return f2(n-1)
+
+        self.assertEquals(None, f2(10000))
+        
 
 if __name__ == '__main__':
     unittest.main()

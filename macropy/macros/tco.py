@@ -29,22 +29,21 @@ def trampoline(func, args):
     ignoring = False
     while True:
         result = func(*args)
-        if result is None:
-            return None
-        with switch(result[0]):
-            if 'call':
-                (func, args) = (result[1], result[2])
-            elif 'ignore':
-                (func, args) = (result[1], result[2])
+        with switch(result):
+            if ('call', func, args):
+                pass
+            elif ('ignore', func, args):
                 ignoring = True
-            elif 'return':
+            elif ('return', val):
                 if ignoring:
                     _exit_trampoline()
-                    print "hi"
                     return None
                 else:
                     _exit_trampoline()
-                    return result[1]
+                    return val
+            else:
+                _exit_trampoline()
+                return result
 
 @macros.decorator
 def tco(node):
