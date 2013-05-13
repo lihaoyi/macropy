@@ -1193,7 +1193,7 @@ import target
 # target.py
 from macro_module import macros, expand
 
-print expand%(1 + 1)
+print expand%(1 + 2)
 
 # macro_module.py
 from macropy.core.macros import *
@@ -1205,7 +1205,7 @@ def expand(tree):
     return tree
 ```
 
-Running this via `python run.py` will print out `2`; so far `expand` is a simple no-op macro which does not do anything to the tree it is passed. At this point, you can print out the tree you are receiving in various forms just to see what you're getting:
+Running this via `python run.py` will print out `3`; so far `expand` is a simple no-op macro which does not do anything to the tree it is passed. At this point, you can print out the tree you are receiving in various forms just to see what you're getting:
 
 ```python
 # macro_module.py
@@ -1225,8 +1225,9 @@ This will print:
 
 ```python
 <_ast.BinOp object at 0x000000000206BBA8>
-BinOp(Num(1), Add(), Num(1))
-(1 + 1)
+BinOp(Num(1), Add(), Num(2))
+(1 + 2)
+3
 ```
 
 As you can see, the AST objects don't have a nice `__repr__`, but if you use the MacroPy function `real_repr`, you can see that it's made up of the  `BinOp` `Add`, which adds the two numbers `Num(1)` and `Num(1)`. Unparsing it into source code via `unparse()` gives you `(1 + 1)`, which is what you would expect. In general, unparsing may not give you exactly the source of the original file (it may have more or fewer parentheses or have the indentation changed) but it should be semantically equivalent when executed.
@@ -1243,7 +1244,7 @@ macros = Macros()
 def expand(tree):
     return Num(100)
 ```
-This replaces the binary operation `(1 + 1)` with the literal number `100`. When you run `run.py`, this will print out `100`, as the original expression `(1 + 1)` has now been replaced by the literal `100`. Another possible operation would be to replace the expression with the square of itself:
+This replaces the binary operation `(1 + 2)` with the literal number `100`. When you run `run.py`, this will print out `100`, as the original expression `(1 + 1)` has now been replaced by the literal `100`. Another possible operation would be to replace the expression with the square of itself:
 
 ```python
 # macro_module.py
@@ -1257,7 +1258,7 @@ def expand(tree):
     return newtree
 ```
 
-This will replace the expression `(1 + 1)` with `((1 + 1) * (1 + 1))`; you can similarly print out newtree via `unparse` or `real_repr` to see what's it looks like.
+This will replace the expression `(1 + 2)` with `((1 + 2) * (1 + 2))`; you can similarly print out newtree via `unparse` or `real_repr` to see what's it looks like.
 
 Quasiquotes
 -----------
