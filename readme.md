@@ -32,6 +32,8 @@ It does not yet work on [Jython](http://www.jython.org/), and is available on [P
 
 All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 40 lines of code.
 
+The [Rough Overview](rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through creating a simple macro ([Quick Lambdas](#quick-lambdas))
+
 *MacroPy is very much a work in progress, for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/). Although it is constantly in flux, all of the examples with source code represent already-working functionality. The rest will be filled in over the coming weeks.*
 
 Rough Overview
