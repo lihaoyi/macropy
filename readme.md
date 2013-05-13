@@ -1221,7 +1221,7 @@ def expand(tree):
     return tree
 ```
 
-This will print:
+When you run `run.py`, This will print:
 
 ```python
 <_ast.BinOp object at 0x000000000206BBA8>
@@ -1244,7 +1244,7 @@ macros = Macros()
 def expand(tree):
     return Num(100)
 ```
-This replaces the binary operation `(1 + 2)` with the literal number `100`. When you run `run.py`, this will print out `100`, as the original expression `(1 + 1)` has now been replaced by the literal `100`. Another possible operation would be to replace the expression with the square of itself:
+When you run `run.py`, this will print out `100`, as the original expression `(1 + 1)` has now been replaced by the literal `100`. Another possible operation would be to replace the expression with the square of itself:
 
 ```python
 # macro_module.py
@@ -1254,7 +1254,7 @@ macros = Macros()
 
 @macros.expr
 def expand(tree):
-    newtree = BinOp(tree, Mul(), tree)
+    newtree = BinOp(tree, Mult(), tree)
     return newtree
 ```
 
@@ -1262,7 +1262,7 @@ This will replace the expression `(1 + 2)` with `((1 + 2) * (1 + 2))`; you can s
 
 Quasiquotes
 -----------
-Building up the new tree manually, as shown above, works reasonably well. However, it can quickly get unwieldy, particularly for more complex expressions. For example, let's say we wanted to make `expand` wrap the expression `(1 + 1)` in a lambda, like `lambda x: x * (1 + 1) + 10`. Ignore, for the moment, that this transform is not very useful. Doing so manually is quite a pain:
+Building up the new tree manually, as shown above, works reasonably well. However, it can quickly get unwieldy, particularly for more complex expressions. For example, let's say we wanted to make `expand` wrap the expression `(1 + 1)` in a lambda, like `lambda x: x * (1 + 2) + 10`. Ignore, for the moment, that this transform is not very useful. Doing so manually is quite a pain:
 
 ```python
 # macro_module.py
@@ -1272,43 +1272,63 @@ macros = Macros()
 
 @macros.expr
 def expand(tree):
-    return Lambda(arguments([Name("x")], None, None, []), BinOp(BinOp(Name('x'), Mul(), tree), Add(), Num(10)))
+    return Lambda(arguments([Name("x", Param())], None, None, []), BinOp(BinOp(Name('x', Load()), Mult(), tree), Add(), Num(10)))
 ```
+
+This works, and when you run `run.py` it prints out:
+
+```python
+<function <lambda> at 0x00000000020A3588>
+```
+
+Because now `target.py` is printing out a lambda function. If we modify `target.py` to call the expanded `lambda` with an argument:
+
+```python
+# target.py
+from macro_module import macros, expand
+
+print (expand%(1 + 2))(5)
+```
+
+It prints `25`, as you would expect.
 
 As mentioned in the examples, quasiquotes let you quote sections of code as ASTs, letting us substitute in sections dynamically. Quasiquotes let us turn the above code into:
 
 ```python
 # macro_module.py
 from macropy.core.macros import *
+from macropy.core.lift import macros, q, ast
 
 macros = Macros()
 
 @macros.expr
 def expand(tree):
-    return q%(lambda x: x * ast%tree + 10)
+    return q%(lambda x: x * (ast%tree) + 10)
 ```
 
-the `q%(..)` syntax means that the section following it is quoted as an AST, while the unquote `ast%` syntax means to place the *value* of `tree` into that part of the quoted AST, rather than simply the node `Name("tree")`. The other unquotes `name%` and `u%` allow us to dynamically set the identifier `x` and the value `10` to other things at run time:
+the `q%(..)` syntax means that the section following it is quoted as an AST, while the unquote `ast%` syntax means to place the *value* of `tree` into that part of the quoted AST, rather than simply the node `Name("tree")`. Running `run.py`, this also prints `25`. 
+
+Another unquote `u%` allow us to dynamically include the value `10` in the AST at run time:
 
 ```python
 # macro_module.py
 from macropy.core.macros import *
+from macropy.core.lift import macros, q, ast, u
 
 macros = Macros()
 
 @macros.expr
 def expand(tree):
-    identifier = "y"
-    addition = 100
-    return q%(lambda name%identifier: name%identifier * ast%tree + u%addition)
+    addition = 10
+    return q%(lambda x: x * (ast%tree) + u%addition)
 ```
 
-This will replace the argument to the lambda `x` with whatever is the string value of `identifier`, in this case `y`, and replace the literal `10` with a literal representing the value of `addition`, in this case `100`.
-Apart from using the `%u`, `%ast` and `%name` unquotes to put things into the AST, good old fashioned assignment works too:
+This will insert the a literal representing the value of `addition` into the position of the `u%addition`, in this case `10`. This *also* prints 25. Apart from using the `%u` and `%ast` unquotes to put things into the AST, good old fashioned assignment works too:
 
 ```python
 # macro_module.py
 from macropy.core.macros import *
+from macropy.core.lift import macros, q
 
 macros = Macros()
 
@@ -1318,6 +1338,8 @@ def expand(tree):
     newtree.body.left.right = tree          # replace the None in the AST with the given tree
     return newtree
 ```
+
+If you run this, it will also print `25`.
 
 Walkers
 -------
@@ -1346,7 +1368,7 @@ macros = Macros()
 
 @macros.expr
 def f(tree):
-    names = ('quickfuncvar' + str(i) for i in xrange(100))
+    names = ('arg' + str(i) for i in xrange(100))
 
     def rec(tree):
         if type(tree) is Name and tree.id == '_':
@@ -1360,33 +1382,40 @@ def f(tree):
             rec(tree.operand)
         ...
 
-    return rec(newtree)
+    newtree = rec(tree)
+    return newtree
 ````
 
 Note that we use `f` instead of `expand`. Also note that writing out the recursion manually is pretty tricky, and it's easy to get wrong. It turns out that this behavior, of walking over the AST and doing something to it, is an extremely common operation, common enough that MacroPy provides the `Walker` class to do this for you:
 
 ```python
 # macro_module.py
-
 from macropy.core.macros import *
 
 macros = Macros()
 
 @macros.expr
-def expand(tree):
-    def get_name(id = [0]):
-        id[0] = id[0] + 1
-        return "arg" + str(id[0]-1)
+def f(tree):
+    names = ('arg' + str(i) for i in xrange(100))
 
     @Walker
     def underscore_search(tree):
         if type(tree) is Name and tree.id == '_':
-            tree.id = get_name()
+            tree.id = names.next()
 
-    return underscore_search.recurse(newtree)
+    newtree = underscore_search.recurse(tree)
+    print unparse_ast(newtree) # (arg0 + (1 * arg1))
+    return newtree
 ```
 
-This snippet of code is equivalent to the one earlier, except that with a `Walker`, you only need to specify the AST nodes you are interested in (in this case `Name`s) and the `Walker` will do the recursion automatically.
+This snippet of code is equivalent to the one earlier, except that with a `Walker`, you only need to specify the AST nodes you are interested in (in this case `Name`s) and the `Walker` will do the recursion automatically. As you can see, when we print out the unparsed newtree, we can see that the transformed code looks like what we expect. This code then fails with a 
+
+```
+NameError: name 'arg0' is not defined
+
+```
+
+At runtime, because the names we put into the tree (`arg0` and `arg1`) haven't actually been defined in `target.py`! We will see how we can fix that.
 
 ###More Walking
 The function being passed to the Walker can return a variety of things. In this case, let's say we want to collect the names we extracted from the `names` generator, so we can use them to populate the arguments of the `lambda`.
@@ -1401,7 +1430,7 @@ macros = Macros()
 
 @macros.expr
 def f(tree):
-    names = ('quickfuncvar' + str(i) for i in xrange(100))
+    names = ('arg' + str(i) for i in xrange(100))
 
     @Walker
     def underscore_search(tree):
@@ -1411,11 +1440,11 @@ def f(tree):
             return tree, collect(name)
 
     new_tree, used_names = underscore_search.recurse_real(tree)
-
+    print used_names # ['arg0', 'arg1']
     return new_tree
 ```
 
-Now we have available both the `new_tree` as well as a list of `used_names`, which were the names that got substituted in place of the underscores within the AST. All we need now is to wrap everything in a `lambda`, set the arguments properly:
+Now we have available both the `new_tree` as well as a list of `used_names`. When we print out `used_names`, we see it is the names that got substituted in place of the underscores within the AST. This still fails at runtime, but now all we need now is to wrap everything in a `lambda`, set the arguments properly:
 
 ```python
 from macropy.core.macros import *
@@ -1443,12 +1472,31 @@ from macropy.core.lift import macros, q, u
         return new_tree
 ```
 
-And we're done!
+And we're done! The original code:
 
 ```python
-reduce(f%(_ + _), [1, 2, 3])
-#6
+# target.py
+from macro_module import macros, f
+
+print f%(_ + (1 * _))
 ```
+
+spits out 
+
+```
+<function <lambda> at 0x000000000203D198>
+```
+
+Showing we have successfully replaced all the underscores with variables and wrapped the expression in a lambda! Now when we try to run it:
+
+```python
+# target.py
+print reduce(f%(_ + _), [1, 2, 3])  # 6
+print filter(f%(_ % 2 != 0), [1, 2, 3])  # [1, 3]
+print map(f%(_  * 10), [1, 2, 3])  # [10, 20, 30]
+```
+
+Mission Accomplished!
 
 Conclusion
 ==========
