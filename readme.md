@@ -1347,7 +1347,9 @@ Walkers
 -------
 Quasiquotes make it much easier for you to manipulate sections of code, allowing you to quickly put together snippets that look however you want. However, they do not provide any support for a very common use case: that of recursively traversing the AST and replacing sections of it at a time.
 
-For example, if we look at the **quicklambda** macro in the examples, we want to take code which looks like this:
+Now that you know how to make basic macros, I will walk you through the implementation of a less trivial (and extremely useful!) macro: [quicklambda](#quick-lambda).
+
+If we look at what [quicklambda](#quick-lambda) does, we see want to take code which looks like this:
 
 ```python
 f%(_ + (1 * _))
@@ -1359,7 +1361,13 @@ and turn it into:
 (arg0 + (1 * arg1))
 ```
 
-We actually also need to wrap this in a `lambda ...: ...`, but we will get to that later. For now, in order to replace all the underscores with variables, we would need to recurse over the AST in order to search for the uses of `_`. A simple attempt may be:
+and wrap it in a lambda to give:
+
+```python
+lambda arg0, arg1: (arg0 + (1 * arg1))
+```
+
+Let's accomplish the first transform first: we need to replace all the `_`s with variables `arg0`, `arg1`, etc.. To do this, we need to recurse over the AST in order to search for the uses of `_`. A simple attempt may be:
 
 ```python
 # macro_module.py
@@ -1382,13 +1390,15 @@ def f(tree):
             map(rec, tree.elts)
         if type(tree) is UnaryOp:
             rec(tree.operand)
+        if type(tree) is BoolOp:
+            map(rec, tree.values)
         ...
 
     newtree = rec(tree)
     return newtree
 ````
 
-Note that we use `f` instead of `expand`. Also note that writing out the recursion manually is pretty tricky, and it's easy to get wrong. It turns out that this behavior, of walking over the AST and doing something to it, is an extremely common operation, common enough that MacroPy provides the `Walker` class to do this for you:
+Note that we use `f` instead of `expand`. Also note that writing out the recursion manually is pretty tricky, there are a ton of cases to consider, and it's easy to get wrong. It turns out that this behavior, of walking over the AST and doing something to it, is an extremely common operation, common enough that MacroPy provides the `Walker` class to do this for you:
 
 ```python
 # macro_module.py
@@ -1452,29 +1462,30 @@ Now we have available both the `new_tree` as well as a list of `used_names`. Whe
 from macropy.core.macros import *
 from macropy.core.lift import macros, q, u
 
-    _ = None  # makes IDE happy
+_ = None  # makes IDE happy
 
-    macros = Macros()
+macros = Macros()
 
-    @macros.expr
-    def f(tree):
-        names = ('arg' + str(i) for i in xrange(100))
+@macros.expr
+def f(tree):
+    names = ('arg' + str(i) for i in xrange(100))
 
-        @Walker
-        def underscore_search(tree):
-            if isinstance(tree, Name) and tree.id == "_":
-                name = names.next()
-                tree.id = name
-                return tree, collect(name)
+    @Walker
+    def underscore_search(tree):
+        if isinstance(tree, Name) and tree.id == "_":
+            name = names.next()
+            tree.id = name
+            return tree, collect(name)
 
-        tree, used_names = underscore_search.recurse_real(tree)
+    tree, used_names = underscore_search.recurse_real(tree)
 
-        new_tree = q%(lambda: ast%tree)
-        new_tree.args.args = [Name(id = x) for x in used_names]
-        return new_tree
+    new_tree = q%(lambda: ast%tree)
+    new_tree.args.args = [Name(id = x) for x in used_names]
+    print unparse_ast(new_tree) # (lambda arg0, arg1: (arg0 + (1 * arg1)))
+    return new_tree
 ```
 
-And we're done! The original code:
+And we're done! The printed `new_tree` looks exactly like what we want. The original code:
 
 ```python
 # target.py
@@ -1490,6 +1501,16 @@ spits out
 ```
 
 Showing we have successfully replaced all the underscores with variables and wrapped the expression in a lambda! Now when we try to run it:
+
+```python
+# target.py
+from macro_module import macros, f
+
+my_func = f%(_ + (1 * _))
+print my_func(10, 20) # 30
+```
+
+It works! We can also use it in some less trivial cases, just to verify that it indeed does what we want:
 
 ```python
 # target.py
