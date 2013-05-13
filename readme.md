@@ -1172,7 +1172,7 @@ Now, we will go through what it takes to write a simple macro. To begin, we need
 # macro_module.py
 ```
 
-As mentioned earlier, you cannot use macros in the `__main__` module (the file that is run directly via `python ...`) and so we have to have a separate bootstrap file `run.py`, which will then execute `target.py`, which contains macros defined in `my_macros.py`.
+As mentioned earlier, you cannot use macros in the `__main__` module (the file that is run directly via `python ...`) and so we have to have a separate bootstrap file `run.py`, which will then execute `target.py`, which contains macros defined in `macro_module.py`.
 
 ```python
 # run.py
@@ -1183,7 +1183,7 @@ import target
 # macro_module.py
 ```
 
-Now, let us define a simple macro, in `macros.py`
+Now, let us define a simple macro, in `macro_module.py`
 
 ```python
 # run.py
