@@ -178,7 +178,6 @@ class ClassMatcher(Matcher):
 
 
     def default_unapply(self, matchee, kw_keys):
-# TODO should it fail if constructor-inspection doesn't work?
         if not isinstance(matchee, self.clazz):
             raise PatternMatchException("Matchee should be of type %r" %
                     (self.clazz,))
@@ -326,7 +325,6 @@ def switch(tree, arg):
     The advantage of this is the limited reach ensures less interference with
     existing code.
     """
-    # TODO handle the passing of an argument
     import string
     import random
     new_id = util.gen_sym()
