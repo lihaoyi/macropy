@@ -103,7 +103,7 @@ from macropy.macros.my_macro_module import macros, ...
 ... do stuff with macros ...
 ```
 
-Where you run `run.py` instead of `other.py`.
+Where you run `run.py` instead of `other.py`. Note that **MacroPy currently does not work in the REPL**.
 
 Examples
 ========
