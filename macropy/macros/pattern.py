@@ -24,7 +24,15 @@ class PatternVarConflict(Exception):
 
 
 def _vars_are_disjoint(var_names):
-    return len(var_names) == len(set(var_names))
+    # We don't count _'s as being conflicting names, because these just stand
+    # for 'ignore'
+    real_names = set(var_names)
+    real_names.remove('_')
+    num_incl_dups = 0
+    for name in var_names:
+        if name != '_':
+            num_incl_dups += 1
+    return num_incl_dups == len(real_names)
 
 
 class Matcher(object):
