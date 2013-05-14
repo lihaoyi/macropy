@@ -1672,22 +1672,136 @@ Macro Subtleties
 
 Expansion Order
 ---------------
+Macros are expanded in an outside-in order, with macros higher up in the AST being expanded before their children. Hence, if we have two macros inside each other, such as:
+
+```python
+>>> from macropy.macros.quicklambda import macros, f
+>>> from macropy.macros2.tracing import macros, trace
+>>> trace%(map(f%(_ + 1), [1, 2, 3])
+... )
+(f % (_ + 1)) -> <function <lambda> at 0x00000000021F9128>
+(_ + 1) -> 2
+(_ + 1) -> 3
+(_ + 1) -> 4
+map((f % (_ + 1)), [1, 2, 3]) -> [2, 3, 4]
+[2, 3, 4]
+>>>
+```
+
+As you can see, the `trace` macro is expanded first, and hence the when it prints out the expressions being executed, we see the un-expanded `(f%(_ + 1))` rather than the expanded `(lammbda arg0: arg0 + 1)`. After the tracing is inserted, the `f%` is finally expanded into a `lambda` and the final output of this expression is `[2, 3, 4]`.
+
+This decision is arbitrary; in the case of [tracing](#tracing), having it outside-in makes things easier, for we generally desire to see the original code being traced, rather than the macro-expanded code. However, there are cases (such as the [tail-call macro](#tail-call-optimization)) where you want the order to be reversed: you want the children of an expression to be macro-expanded first before the macro itself. In this case, you can add an `inside_out` flag to the macro decorator, turning this:
+
+```python
+@macros.expr()
+```
+
+into
+
+```python
+@macros.expr(inside_out=True)
+```
 
 Hygiene
 -------
+[Hygienic](http://en.wikipedia.org/wiki/Hygienic_macro) macros are macros which will not accidentally shadow an identifier, or have the identifiers they introduce shadowed by user code. For example, the [quicklambda](#quick-lambdas) macro takes this:
 
-Composibility
--------------
+```python
+>>> func = f%(_ + 1)
+>>> func(1)
+2
+```
+
+and expands it into this:
+
+```python
+>>> func = lambda arg0: arg0 + 1
+>>> func(1)
+2
+```
+
+However, if we introduce a variable called `arg0` in the enclosing scope:
+
+```python
+>>> arg0 = 10
+>>> func = f%(_ + arg0)
+>>> func(1)
+2
+```
+
+It does not behave as we may expect; we probably want it to produce `11`. this is because the `arg0` identifier introduced by the `f%` macro shadows the `arg0` in our enclosing scope. This could cause weird bugs, for
+
+```python
+>>> arg1 = 10
+>>> func = f%(_ + arg1)
+>>> func(1)
+11
+```
+
+prints `11` as you expect! Hygienic macros would avoid this by choosing a different name if the one desired is already used, but `MacroPy` does not (as of yet) provide any support in making your macros hygienic.
+
 
 Line Numbers
 ------------
+MacroPy makes a best-effort attempt to preserve the line numbers inside the macro-expanded code; generally, line numbers which are not within macros should be unchanged:
 
-__main__
---------
+```python
+# target.py
+from my_macros import macros, expand
 
-Performance
------------
 
+with expand:
+    x = x + 1
+
+if throw:
+    raise Exception("lol")
+
+return x
+
+
+# my_macros.py
+from macropy.core.macros import *
+
+macros = Macros()
+
+@macros.block()
+def expand(tree):
+    import copy
+    return tree.body * 10
+```
+
+This prints
+
+```python
+Traceback (most recent call last):
+  File "target.py", line 22, in <module>
+    raise e
+Exception: lol
+```
+
+As you can see, even though the line `x = x + 1` is expanded into 10 equivalent lines, the traceback for the `Exception("lol")` is unchanged. On the other hand, if the exception happens within the macro expanded code:
+
+```python
+#target.py
+from macropy.core_tests.line_number_macro import macros, expand
+
+y = 0
+with expand:
+    x = x - 1
+    y = 1 / x
+
+return x
+```
+
+The error messages can be rather silly:
+
+```python
+Traceback (most recent call last):
+  File "target.py", line 2311, in <module>
+ZeroDivisionError: integer division or modulo by zero
+```
+
+This may improve in the future, but that's the current state of error reporting in MacroPy.
 
 Lessons
 =======
