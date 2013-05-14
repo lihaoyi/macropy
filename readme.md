@@ -297,7 +297,7 @@ def foldl1(my_list, op):
 ```
 
 The switch macro is actually just syntactic sugar for using the more general patterns macro.
-`foldl1` is approximtely desugared into the following, with one important
+`foldl1` is approximately desugared into the following, with one important
 caveat: the bodies of the if statements are not subject to pattern matching,
 in case you actually want to use bitshifts in your code.
 
