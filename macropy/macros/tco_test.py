@@ -90,16 +90,16 @@ class Tests(unittest.TestCase):
 
         self.assertEquals(None, f2(1000))
 
-#     def test_tailcall_methods(self):
-# 
-#         class Blah(object):
-#             @tco
-#             def foo(self, n):
-#                 if n == 0:
-#                     return 1
-#                 return self.foo(n-1)
-# 
-#         self.assertEquals(1, Blah().foo(5000))
+    def test_tailcall_methods(self):
+
+        class Blah(object):
+            @tco
+            def foo(self, n):
+                if n == 0:
+                    return 1
+                return self.foo(n-1)
+
+        self.assertEquals(1, Blah().foo(5000))
         
 
 if __name__ == '__main__':
