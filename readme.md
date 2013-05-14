@@ -16,8 +16,8 @@ MacroPy has been used to implement features such as:
 - [Case Classes](#case-classes), easy Algebraic Data Types from Scala
 - [Pattern Matching](#pattern-matching) from the Functional Programming world
 - [Tail-call Optimization](#tail-call-optimization)
-- [String Interpolation](#string-interpolation), a common feature in many languages, and [Pyxl](#pyxl-integration).
-- [Tracing](#tracing) and [Smart Asserts](#smart-asserts)
+- [String Interpolation](#string-interpolation), a common feature, and [Pyxl](#pyxl-integration), which is basically XML interpolation.
+- [Tracing](#tracing) and [Smart Asserts](#smart-asserts), from every programmer's wildest dreams.
 - [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), a clone of LINQ to SQL from C#
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy
 - [Parser Combinators](#parser-combinators), inspired by Scala's
@@ -30,10 +30,6 @@ The [Rough Overview](#rough-overview) will give a birds eye view of how it works
 Or just skip ahead to the [Lessons](#lessons) and [Conclusion](#macropy-the-last-refuge-of-the-competent).
 
 MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython). It [almost](https://github.com/lihaoyi/macropy/issues/16) runs on [PyPy 1.9](http://pypy.org/), and does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy).
-
-All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 100 lines of code.
-
-*MacroPy is very much a work in progress, for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/). Although it is constantly in flux, all of the examples with source code represent already-working functionality. The rest will be filled in over the coming weeks.*
 
 Rough Overview
 ==============
@@ -129,6 +125,8 @@ Examples
 Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for some small (<30 lines), self contained examples. Their [unit](macropy/macros/string_interp_test.py) [tests](macropy/macros/quicklambda_test.py) demonstrate how these macros are used.
 
 Note that all of these examples are **macros**; that is, they hold no special place in MacroPy. They are placed in [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2), separate from the Macropy core in [macropy/core](macropy/core). Thus they are on even footing with any macro you may want to write yourself.
+
+All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 100 lines of code.
 
 Case Classes
 ------------
@@ -1793,7 +1791,7 @@ Even looking at the `_ast` module, where all the `ast` nodes are nicely defined 
 
 It turns out that they, too, are generated programmatically! Concatenated together as a bunch of strings! Except this is done at build time rather than import time. The plain old Python, apparently at a *Functions and Classes* level of magic, is revealed to actually be at a _Textual Code Generation_ level of magic.
 
-Macropy: The Last Refuge of the Competent
+MacroPy: The Last Refuge of the Competent
 =========================================
 Macros are always a contentious issue. On one hand, we have the LISP community, which seems to using macros for everything. On the other hand, most mainstream programmers shy away from them, believing them to be extremely powerful and potentially confusing, not to mention extremely difficult to execute.
 
@@ -1803,13 +1801,15 @@ We have a few major takeaways:
 
 - Being a non-LISP does not make macros any harder; having an AST made of objects isn't any harder than an AST made of lists. With an inbuilt parser and unparser, the human-friendly computer-unfriendly syntax of Python (whitespace, etc.) is not an issue **at all**.
 - Python in particular, and other languages in general, do not need macros for many of the use cases the LISPs do. Thanks to inbuilt support for first class functions, dynamism and mutability, simple things like [looping](http://www.gigamonkeys.com/book/loop-for-black-belts.html) can be done pretty easily without resorting to AST rewrites. Macros [should only be used if all these tools have proven inadequete](https://github.com/lihaoyi/macropy#no-macros-necessary), and even then [used as little as possible](https://github.com/lihaoyi/macropy#minimize-macro-magic).
-- In Python, there are use cases which require macros, which are not only completely impossible without macros, but also extremely compelling. Not "here's [another sytax for an if-statement](http://stackoverflow.com/a/16174524/871202)" but "here's [cross-compiling list-comprehensions into SQL queries to be executed on a remote database](#pinq-to-sqlalchemy)". These should be the use cases that macros target.
+- In Python, there are use cases which require macros, which are not only completely impossible without macros, but also extremely compelling. Not "here's [another syntax for an if-statement](http://stackoverflow.com/a/16174524/871202)" but "here's [cross-compiling list-comprehensions into SQL queries to be executed on a remote database](#pinq-to-sqlalchemy)". These should be the use cases that macros target.
 - Macros stand to *reduce* the amount of [magic](#levels-of-magic) in a code base, not increase it. The use cases we propose for macros are at present not satisfied by boring, normal code which macros serve to complicate. They are satisfied by [code being generated by stitching together strings and `exec`ed at runtime](#skeletons-in-the-closet). They are served by special build stages which generate whole blobs of code at build-time to be used later. Replacing these with macros will reduce the total amount of complexity and magic.
 
 Macros may be difficult to write, difficult to compose, difficult to reason about, especially compared to "plain old" Python code. But macros are not meant to replace "plain old" Python! They're aimed at replacing piles of manual duplication or swaths of textual code-generation. Compared to the difficulty of writing, composing and reasoning about the alternatives, MacroPy may well be the lesser evil.
 
 Credits
 =======
+
+*MacroPy is very much a work in progress, for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/). Although it is constantly in flux, all of the examples with source code represent already-working functionality. The rest will be filled in over the coming weeks.*
 
 The MIT License (MIT)
 
