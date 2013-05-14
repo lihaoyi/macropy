@@ -18,7 +18,3 @@ class Tests(unittest.TestCase):
         from random import random
         thunk = f%random()
         assert thunk() != thunk()
-
-
-
-

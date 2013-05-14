@@ -33,7 +33,7 @@ class MacroCompile(Compile):
         self.modules.update(sys.modules[p] for p in required_pkgs)
 
         tree = _expand_ast(tree, self.modules)
-            
+
         tree = _ast_ctx_fixer.recurse(tree, Load())
 
         fill_line_numbers(tree, 0, 0)

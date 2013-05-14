@@ -468,7 +468,7 @@ def trampoline(func, args):
                 else:
                     _exit_trampoline()
                     return result
-  
+
 @trampoline_decorator
 def fact(n, acc):
     if n == 0:
