@@ -1,10 +1,8 @@
 import sys
 import imp
-import inspect
 import ast
 from ast import *
 from util import *
-from macropy.core import *
 from walkers import *
 
 
@@ -112,6 +110,7 @@ class _MacroLoader(object):
             __import__(p)
 
         modules = [sys.modules[p] for p in self.required_pkgs]
+
         tree = _expand_ast(self.tree, modules)
 
         tree = _ast_ctx_fixer.recurse(tree, Load())
@@ -146,7 +145,9 @@ def _detect_macros(tree):
 def _expand_ast(tree, modules):
     """Go through an AST, hunting for macro invocations and expanding any that
     are found"""
+
     def macro_expand(tree):
+
         for module in [m.macros for m in modules]:
 
             if (isinstance(tree, With)):
@@ -233,3 +234,5 @@ class _MacroFinder(object):
         except Exception, e:
             pass
 
+
+#console.MacroConsole().interact()

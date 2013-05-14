@@ -8,13 +8,13 @@ import sqlalchemy
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def sql(tree):
     x = _recurse.recurse(tree)
     x = expand_let_bindings.recurse(x)
     return x
 
-@macros.expr
+@macros.expr()
 def query(tree):
     x = _recurse.recurse(tree)
     x = expand_let_bindings.recurse(x)
@@ -78,3 +78,4 @@ def expand_let_bindings(tree):
         let_tree.func.body = tree
         tree = let_tree
     return tree
+
