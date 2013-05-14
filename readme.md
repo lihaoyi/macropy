@@ -29,7 +29,7 @@ The [Rough Overview](#rough-overview) will give a birds eye view of how it works
 
 Or just skip ahead to the [Lessons](#lessons) and [Conclusion](#macropy-the-last-refuge-of-the-competent).
 
-MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 1.9](http://pypy.org/), but does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy).
+MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but does not yet work on [Jython](http://www.jython.org/) and does not work on older versions of PyPy. MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy).
 
 Rough Overview
 ==============
@@ -101,8 +101,6 @@ from macropy.macros.my_macro_module import macros, ...
 ```
 
 Where you run `run.py` instead of `other.py`. For the same reason, you cannot directly run MacroPy's own unit tests directly using `unittest` or `nose`: you need to run the [macropy/run.py](macropy/run.py) file from the project root for the tests to run.
-
-
 
 MacroPy also works in the REPL:
 
