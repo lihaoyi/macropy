@@ -960,7 +960,7 @@ with peg:
 print num.parse_all("123") # ["123"]
 ```
 
-which returns the a string of digits, and convert it into a parser which returns an `int` with the value of that string. This can be done with the `//` operator:
+which returns a string of digits, and convert it into a parser which returns an `int` with the value of that string. This can be done with the `//` operator:
 
 ```python
 with peg:
