@@ -22,10 +22,12 @@ MacroPy has been used to implement features such as:
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy
 - [Parser Combinators](#parser-combinators), inspired by Scala's
 
-The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through creating a simple macro ([Quick Lambdas](#quick-lambdas)) as well as containing documentation for [Tools](#tools)  such as 
+The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through creating a simple macro ([Quick Lambdas](#quick-lambdas)) as well as containing documentation for [Tools](#tools) such as
 
 - [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
 - The [Walker](#walker), a flexible tool to traverse and transform ASTs
+
+Or just skip ahead to the [Lessons](#lessons) and [Conclusion](#macropy-the-last-refuge-of-the-competent).
 
 MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython). It [almost](https://github.com/lihaoyi/macropy/issues/16) runs on [PyPy 1.9](http://pypy.org/), and does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy).
 
@@ -1744,10 +1746,10 @@ When, then, do you need macros? It turns out you only need macros when *you want
 
 This may seem obvious, but this rules out a lot of things, such as those mentioned earlier. If you need to pass functions around, you can do so without macros. Similarly, if you want to introspect a function and see how many arguments it takes, you can go ahead using `inspect`. `getattr`, `hasattr` and friends are sufficient for all sorts of reflective metaprogramming, dynamically setting and getting attributes.
 
-###Levels of Insanity
+###Levels of Magic
 MacroPy is an extreme measure; there is no doubting that. Intercepting the raw source code as it is being imported, parsing it and performing AST transforms just before loading it is not something to be taken lightly! However, macros are not the most extreme thing that you can do! If you look at an Insanity Scale for the various things you can do in Python, it may look something like this:
 
-    Levels of Insanity
+    Levels of Magic
                                                                                |Stack Introspection
           |Functions                                            |MacroPy       |inspect.stack()
           |Classes                                              |              |
@@ -1763,7 +1765,8 @@ Where basic language constructs are at **0** in the scale of insanity, functions
 
 I would place MacroPy about on par with Metaclasses in terms of their insanity-level: pretty knotty, but still ok. Past that, you are in the realm of `stack.inspect()`, where your function call can look at *what files are in the call stack* and do different things depending on what it sees! And finally, at the **Beyond 9000** level of insanity, is the act of piecing together code via string-interpolation or concatenation and just calling `eval` or `exec` on the whole blob, maybe at import time, maybe at run-time.
 
-Many profess to shun the higher levels of insanity "I would *never* do textual code generation!" you hear them scream! I will do things the simple, Pythonic way, with minimal magic! But if you dig a little deeper, and see the code they use on a regular basis, you may notice some `namedtuple`s in their code base. Looking up the implementation of `namedtuple` brings up this:
+###Skeletons in the Closet
+Many profess to shun the higher levels of magic "I would *never* do textual code generation!" you hear them say. "I will do things the simple, Pythonic way, with minimal magic!". But if you dig a little deeper, and see the code they use on a regular basis, you may notice some `namedtuple`s in their code base. Looking up the implementation of `namedtuple` brings up this:
 
 ```python
 template = '''class %(typename)s(tuple):
@@ -1794,15 +1797,14 @@ Macropy: The Last Refuge of the Competent
 =========================================
 Macros are always a contentious issue. On one hand, we have the LISP community, which seems to using macros for everything. On the other hand, most mainstream programmers shy away from them, believing them to be extremely powerful and potentially confusing, not to mention extremely difficult to execute.
 
-With MacroPy, we believe that we have a powerful, flexible tool that makes it trivially easy to write AST-transforming macros with any level of complexity. We have a compelling suite of use cases demonstrating the utility of such transforms, and (almost) all of it runs perfectly fine on alternative implementations of Python such as PyPy.
+With MacroPy, we believe that we have a powerful, flexible tool that makes it trivially easy to write AST-transforming macros with any level of complexity. We have a [compelling suite of use cases](#examples) demonstrating the utility of such transforms, and ([almost](https://github.com/lihaoyi/macropy/issues/16)) all of it runs perfectly fine on alternative implementations of Python such as PyPy.
 
 With MacroPy, we have a few major takeaways:
 
 - Being a non-LISP does not make macros any harder; having an AST made of objects isn't any harder than an AST made of lists. With an inbuilt parser and unparser, the human-friendly computer-unfriendly syntax of Python (whitespace, etc.) is not an issue **at all**.
-- Python in particular, and other languages in general, do not need macros for many of the use cases the LISPs do. Thanks to inbuilt support for first class functions, dynamism and mutability, simple things like [looping](http://www.gigamonkeys.com/book/loop-for-black-belts.html) can be done pretty easily without resorting to AST rewrites. Macros should only be used if all these tools have proven inadequete.
-- In Python, there are use cases which require macros, which are not only completely impossible without macros, but also extremely compelling. Not "here's [another sytax for an if-statement](http://stackoverflow.com/a/16174524/871202)" but "here's [cross-compiling list-comprehensions into SQL queries to be executed on a remote database](#pinq-to-sqlalchemy)".
-- Macros stand to *reduce* the amount of magic in a code base, not increase it. The use cases we propose for macros are at present not satisfied by boring, normal code which macros serve to complicate. They are satisfied by code being generated by stitching together strings and `exec`ing it at runtime. They are served by special build stages which generate whole blobs of code at build-time to be used later. Replacing these with macros will reduce the total amount of complexity and magic.
-
+- Python in particular, and other languages in general, do not need macros for many of the use cases the LISPs do. Thanks to inbuilt support for first class functions, dynamism and mutability, simple things like [looping](http://www.gigamonkeys.com/book/loop-for-black-belts.html) can be done pretty easily without resorting to AST rewrites. Macros [should only be used if all these tools have proven inadequete](https://github.com/lihaoyi/macropy#no-macros-necessary), and even then [used as little as possible](https://github.com/lihaoyi/macropy#minimize-macro-magic).
+- In Python, there are use cases which require macros, which are not only completely impossible without macros, but also extremely compelling. Not "here's [another sytax for an if-statement](http://stackoverflow.com/a/16174524/871202)" but "here's [cross-compiling list-comprehensions into SQL queries to be executed on a remote database](#pinq-to-sqlalchemy)". These should be the use cases that macros target.
+- Macros stand to *reduce* the amount of [magic](#levels-of-magic) in a code base, not increase it. The use cases we propose for macros are at present not satisfied by boring, normal code which macros serve to complicate. They are satisfied by [code being generated by stitching together strings and `exec`ed at runtime](#skeletons-in-the-closet). They are served by special build stages which generate whole blobs of code at build-time to be used later. Replacing these with macros will reduce the total amount of complexity and magic.
 
 Credits
 =======
