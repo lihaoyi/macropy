@@ -8,7 +8,7 @@ from macropy.core import unparse_ast
 
 engine = create_engine("sqlite://")
 
-for line in open("macros2/world.sql").read().split(";"):
+for line in open("macropy/macros2/world.sql").read().split(";"):
     engine.execute(line.strip())
 
 db = generate_schema(engine)
