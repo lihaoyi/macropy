@@ -198,9 +198,7 @@ def _expand_ast(tree, modules):
                 # Strip off the first decorator now - we don't need it
                 tree.decorator_list = tree.decorator_list[1:]
                 if inside_out:
-                    modified = True
-                    while modified:
-                        tree, modified = macro_expand(tree)
+                    tree = macro_expand(tree)
                 return the_macro(tree), True
 
         return tree, False
@@ -234,5 +232,7 @@ class _MacroFinder(object):
         except Exception, e:
             pass
 
-
-#console.MacroConsole().interact()
+from macropy.core import console
+import inspect
+if inspect.stack()[-1][1] == '<stdin>':
+    console.MacroConsole().interact()
