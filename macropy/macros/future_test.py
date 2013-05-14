@@ -90,7 +90,7 @@ with do:
 = replicateM 10 (do
             conn <- acceptConn
             handleConn conn)
-    
+
 
 assert%(a == 2)   # failure: a == 2
 

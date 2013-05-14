@@ -47,7 +47,7 @@ class Matcher(object):
         successful match.
         """
         pass
-    
+
     def match(self, matchee):
         """
         Returns ([(varname, value)...]) if there is a match.  Otherwise,
@@ -67,7 +67,7 @@ class Matcher(object):
 
     def get_var(self, var_name):
         return self.var_dict[var_name]
-        
+
 
 class LiteralMatcher(Matcher):
 
@@ -81,7 +81,7 @@ class LiteralMatcher(Matcher):
         if self.val != matchee:
             raise PatternMatchException("Literal match failed")
         return []
-    
+
 
 class TupleMatcher(Matcher):
 
@@ -263,7 +263,7 @@ def build_matcher(tree, modified):
 def _is_pattern_match_stmt(tree):
     return (isinstance(tree, Expr) and
             _is_pattern_match_expr(tree.value))
-            
+
 
 def _is_pattern_match_expr(tree):
     return (isinstance(tree, BinOp) and

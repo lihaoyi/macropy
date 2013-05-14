@@ -59,7 +59,7 @@ class Tests(unittest.TestCase):
         with self.assertRaises(PatternVarConflict):
             ListMatcher(NameMatcher('x'), NameMatcher('x'))
         ListMatcher(NameMatcher('y'), NameMatcher('x'))
-    
+
     def test_basic_matching(self):
         with _matching:
             Foo(a, b) << Foo(3, 5)
@@ -80,7 +80,7 @@ class Tests(unittest.TestCase):
             Foo(x, Foo(4, y)) << Foo(2, 7)
         with self.assertRaises(Exception):
             Foo(x, Foo(4, y)) << Foo(2, Foo(5, 7))
-    
+
     def test_disjoint_varnames_assertion(self):
         with _matching:
             with self.assertRaises(PatternVarConflict):

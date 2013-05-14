@@ -100,7 +100,7 @@ class Tests(unittest.TestCase):
                 return self.foo(n-1)
 
         self.assertEquals(1, Blah().foo(5000))
-        
+
 
 if __name__ == '__main__':
     unittest.main()
