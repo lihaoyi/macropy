@@ -16,22 +16,20 @@ MacroPy has been used to implement features such as:
 - [Case Classes](#case-classes), easy Algebraic Data Types from Scala
 - [Pattern Matching](#pattern-matching) from the Functional Programming world
 - [Tail-call Optimization](#tail-call-optimization)
-- [String Interpolation](#string-interpolation), a common feature in many languages, and [Pyxl](#pyxl-integration).
-- [Tracing](#tracing) and [Smart Asserts](#smart-asserts)
+- [String Interpolation](#string-interpolation), a common feature, and [Pyxl](#pyxl-integration), which is basically XML interpolation.
+- [Tracing](#tracing) and [Smart Asserts](#smart-asserts), from every programmer's wildest dreams.
 - [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), a clone of LINQ to SQL from C#
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy
 - [Parser Combinators](#parser-combinators), inspired by Scala's
 
-The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through creating a simple macro ([Quick Lambdas](#quick-lambdas)) as well as containing documentation for [Tools](#tools)  such as 
+The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through creating a simple macro ([Quick Lambdas](#quick-lambdas)) as well as containing documentation for [Tools](#tools) such as
 
 - [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
 - The [Walker](#walker), a flexible tool to traverse and transform ASTs
 
+Or just skip ahead to the [Lessons](#lessons) and [Conclusion](#macropy-the-last-refuge-of-the-competent).
+
 MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython). It [almost](https://github.com/lihaoyi/macropy/issues/16) runs on [PyPy 1.9](http://pypy.org/), and does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy).
-
-All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 40 lines of code.
-
-*MacroPy is very much a work in progress, for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/). Although it is constantly in flux, all of the examples with source code represent already-working functionality. The rest will be filled in over the coming weeks.*
 
 Rough Overview
 ==============
@@ -125,6 +123,10 @@ Although support for the REPL is still experimental, most of the examples on thi
 Examples
 ========
 Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for some small (<30 lines), self contained examples. Their [unit](macropy/macros/string_interp_test.py) [tests](macropy/macros/quicklambda_test.py) demonstrate how these macros are used.
+
+Note that all of these examples are **macros**; that is, they hold no special place in MacroPy. They are placed in [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2), separate from the Macropy core in [macropy/core](macropy/core). Thus they are on even footing with any macro you may want to write yourself.
+
+All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 100 lines of code.
 
 Case Classes
 ------------
@@ -1665,13 +1667,149 @@ It is a bit silly to have both the second and fourth items, since if it doesn't 
 
 The Walker is an incredibly versatile tool, used to recursively traverse and transform Python ASTs. If you inspect the source code of the macros in the [macropy/macros](macropy/macros) and [macropy/macros](macropy/macros2) folders, you will see most of them make extensive use of Walkers in order to concisely perform their transformations. If you find yourself needing a recursive traversal, you should think hard about why you cannot use a Walker before writing the recursion yourself.
 
+Lessons
+=======
 
-Conclusion
-==========
-*WIP*
+Minimize Macro Magic
+--------------------
+This may seem counter-intuitive, but just because you have the ability to do AST transformations does not mean you should use it! In fact, you probably should do as little as is humanely possible in order to hand over control to traditional functions and objects, who can then take over.
+
+For example, let us look at the [Parser Combinator](#parser-combinators) macro, shown in the examples above. You may look at the syntax:
+
+```python
+value = '[0-9]+'.r // int | ('(', expr, ')') // (f%_[1])
+op = '+' | '-' | '*' | '/'
+expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
+```
+
+And think this may be an ideal situation to go all-out, just handle the whole thing using AST transforms and do some code-generation to create a working parser! It turns out, the `peg` module does none of this. It has about 30 lines of code which does a very shallow transform from the above code into:
+
+```python
+value = Raw('[0-9]+').r // int | (Raw('('), expr, Raw(')')) // (f%_[1])
+op = Raw('+') | Raw('-') | Raw('*') | Raw('/')
+expr = (value.bind_to("first"), (op, value).rep.bind_to("rest")) >> reduce_chain([first] + rest)
+```
+
+That's the extent of the macro! It just wraps the raw strings in `Raw`s, and converts the `a is b` syntax into `a.bind_to("b")`. The rest, all the operators `|` `//` `>>`, the `.r` syntax for regexes and `.rep` syntax for repetitions, that's all just implemented on the `Raw` objects using plain-old operator overloading and properties.
+
+Why do this, instead of simply implementing the behavior of `|` `//` and friends as macros? There are a few reasons
+
+- **Maintainability**: tree transforms are messy, methods and operators are pretty simple. If you want to change what `.r` does, for example, you'll have a much easier time if it's a `@property` rather than some macro-defined transform
+- **Consistency**: methods already have a great deal of pre-defined semantics built in: how the arguments are evaluated (eagerly, left to right, by-value), whether they can be assigned to or monkey-patched. All this behavior is what people already come to expect when programming in Python. By greatly limiting the macro transforms, you leave the rest up to the Python language which will behave as people expect.
+
+It's not just the [Parser Combinators](#parser-combinators) which work like this; [PINQ](#pinq-to-sqlalchemy), [Tracing](#tracing), [Pattern Matching](#pattern-matching) all work like this, doing the minimal viable transform and delegating the functionality to objects and functions as soon as possible.
+
+No Macros Necessary
+-------------------
+Python is a remarkably dynamic language. Not only that, but it is also a relatively *large* language, containing many things already built in. A large amount of feedback has been received from the online community, and among it suggestions to use macros for things such as:
+
+- Before and After function advice: code snippets to hook into the function call process
+- Auto parallelizing functions, which run in a forked process
+
+This [stackoverflow question](http://stackoverflow.com/questions/764412/python-macros-use-cases) also explores the use cases of Macros in Python, and comes up with a large number of unimaginative suggestions:
+
+- An `unless blah:` statement, equivalent to an `if not blah:`
+- A `repeat` macro, to replace for-loops
+- A `do while` loop
+
+The last three examples are completely banal: they really don't add anything, don't make anything easier, and add a lot of indirection to no real gain. The first two suggestions, on the other hand, sound impressive, but are actually entirely implementable without Macros.
+
+###Function Advice
+Function advice, part of [AOP](http://en.wikipedia.org/wiki/Aspect-oriented_programming), is a technique of register code snippets to run before or after function calls occur. These could be used for debugging (printing whenever a function is run), caching (intercepting the arguments and returning the value from a cache if it already exists), authentication (checking permissions before the function runs) and a host of other use cases.
+
+Although in the Java world, such a technique requires high-sorcery with [AspectJ](http://www.eclipse.org/aspectj/) and other tools, in Python these are as simple as defining a decorator. For example, here is a decorator that logs invocations and returns of a generic python function:
+
+```python
+def trace(func):
+    def new_func(*args, **kwargs):
+        print "Calling", func.func_name, "with", args, kwargs
+        result = func(*args, **kwargs)
+        print "func.func_name, "returned", result
+        return result
+    return new_func
+
+@trace
+my_func(arg0, arg1):
+    ... do stuff ...
+```
+
+Similar things could be done for the other use cases mentioned. This is not a complete example (it would need a `functools.wraps` or similar to preserve the `argspec` etc.) but the point is that writing such a decorator really is not very difficult. No macros necessary!
+
+###Auto-Forking
+Another suggestion was to make a decorator macro that ships the code within the function into a separate process to execute. While this sounds pretty extreme, it really is not that difficult, for in Python you can easily introspect a function object and retrieve it's `code` attribute. This can pretty easily [be pickled and sent to a child process](http://stackoverflow.com/questions/1253528/is-there-an-easy-way-to-pickle-a-python-function-or-otherwise-serialize-its-cod) to be executed there. Perhaps you may want some sort of Future container to hold the result, or some nice helpers for fork-join style code, but these are all just normal python functions: no macros necessary!
+
+Whither MacroPy
+---------------
+When, then, do you need macros? It turns out you only need macros when *you want access to the syntax tree of a python program*. Whether it be for cross-compilation (like in PINQ) or for debugging (like in Tracing) or for enforcing brand-new python semantics (like in Quick Lambda), it has to be about the AST for you to need macros.
+
+This may seem obvious, but this rules out a lot of things, such as those mentioned earlier. If you need to pass functions around, you can do so without macros. Similarly, if you want to introspect a function and see how many arguments it takes, you can go ahead using `inspect`. `getattr`, `hasattr` and friends are sufficient for all sorts of reflective metaprogramming, dynamically setting and getting attributes.
+
+###Levels of Magic
+MacroPy is an extreme measure; there is no doubting that. Intercepting the raw source code as it is being imported, parsing it and performing AST transforms just before loading it is not something to be taken lightly! However, macros are not the most extreme thing that you can do! If you look at an Insanity Scale for the various things you can do in Python, it may look something like this:
+
+    Levels of Magic
+                                                                               |Stack Introspection
+          |Functions                                            |MacroPy       |inspect.stack()
+          |Classes                                              |              |
+          |                                                     |              |
+    0 ----------------------------------------------------------------------------------------- >9000
+    |                           |                             |                                 |
+    |                           |hasattr                      |                                 |Textual Code
+    |                           |getattr                      |                                 |Generation
+    |Basic Constructs           |__dict__                     |Metaclasses                      |+ Eval
+    |Conditionals, Loops, etc.
+
+Where basic language constructs are at **0** in the scale of insanity, functions and classes can be mildly confusing. `hasattr` and `getattr` are at another level, letting you treat things objects as dictionaries and do all sorts of incredibly dynamic things.
+
+I would place MacroPy about on par with Metaclasses in terms of their insanity-level: pretty knotty, but still ok. Past that, you are in the realm of `stack.inspect()`, where your function call can look at *what files are in the call stack* and do different things depending on what it sees! And finally, at the **Beyond 9000** level of insanity, is the act of piecing together code via string-interpolation or concatenation and just calling `eval` or `exec` on the whole blob, maybe at import time, maybe at run-time.
+
+###Skeletons in the Closet
+Many profess to shun the higher levels of magic "I would *never* do textual code generation!" you hear them say. "I will do things the simple, Pythonic way, with minimal magic!". But if you dig a little deeper, and see the code they use on a regular basis, you may notice some `namedtuple`s in their code base. Looking up the implementation of `namedtuple` brings up this:
+
+```python
+template = '''class %(typename)s(tuple):
+    '%(typename)s(%(argtxt)s)' \n
+    __slots__ = () \n
+    _fields = %(field_names)r \n
+    def __new__(_cls, %(argtxt)s):
+        'Create new instance of %(typename)s(%(argtxt)s)'
+        return _tuple.__new__(_cls, (%(argtxt)s)) \n
+    @classmethod
+    def _make(cls, iterable, new=tuple.__new__, len=len):
+```
+
+Runtime code-generation as strings! It turns out they piece together the class declaration textually and then just `exec` the whole lot. Similar things take place in the new `Enum` that's going to enter the standard library. [Case Classes](#case-classes) may be magical, but are they really any worse than the status quo?
+
+Even looking at the `_ast` module, where all the `ast` nodes are nicely defined in plain old python. We may replace them, too, with case classes, perhaps at a cost of extra magic due to the macros. We may believe this until we see the comment at the top of `_ast.py`:
+
+```python
+# encoding: utf-8
+# module _ast
+# from (built-in)
+# by generator 1.124
+```
+
+It turns out that they, too, are generated programmatically! Concatenated together as a bunch of strings! Except this is done at build time rather than import time. The plain old Python, apparently at a *Functions and Classes* level of magic, is revealed to actually be at a _Textual Code Generation_ level of magic.
+
+MacroPy: The Last Refuge of the Competent
+=========================================
+Macros are always a contentious issue. On one hand, we have the LISP community, which seems to using macros for everything. On the other hand, most mainstream programmers shy away from them, believing them to be extremely powerful and potentially confusing, not to mention extremely difficult to execute.
+
+With MacroPy, we believe that we have a powerful, flexible tool that makes it trivially easy to write AST-transforming macros with any level of complexity. We have a [compelling suite of use cases](#examples) demonstrating the utility of such transforms, and ([almost](https://github.com/lihaoyi/macropy/issues/16)) all of it runs perfectly fine on alternative implementations of Python such as PyPy.
+
+We have a few major takeaways:
+
+- Being a non-LISP does not make macros any harder; having an AST made of objects isn't any harder than an AST made of lists. With an inbuilt parser and unparser, the human-friendly computer-unfriendly syntax of Python (whitespace, etc.) is not an issue **at all**.
+- Python in particular, and other languages in general, do not need macros for many of the use cases the LISPs do. Thanks to inbuilt support for first class functions, dynamism and mutability, simple things like [looping](http://www.gigamonkeys.com/book/loop-for-black-belts.html) can be done pretty easily without resorting to AST rewrites. Macros [should only be used if all these tools have proven inadequete](https://github.com/lihaoyi/macropy#no-macros-necessary), and even then [used as little as possible](https://github.com/lihaoyi/macropy#minimize-macro-magic).
+- In Python, there are use cases which require macros, which are not only completely impossible without macros, but also extremely compelling. Not "here's [another syntax for an if-statement](http://stackoverflow.com/a/16174524/871202)" but "here's [cross-compiling list-comprehensions into SQL queries to be executed on a remote database](#pinq-to-sqlalchemy)". These should be the use cases that macros target.
+- Macros stand to *reduce* the amount of [magic](#levels-of-magic) in a code base, not increase it. The use cases we propose for macros are at present not satisfied by boring, normal code which macros serve to complicate. They are satisfied by [code being generated by stitching together strings and `exec`ed at runtime](#skeletons-in-the-closet). They are served by special build stages which generate whole blobs of code at build-time to be used later. Replacing these with macros will reduce the total amount of complexity and magic.
+
+Macros may be difficult to write, difficult to compose, difficult to reason about, especially compared to "plain old" Python code. But macros are not meant to replace "plain old" Python! They're aimed at replacing piles of manual duplication or swaths of textual code-generation. Compared to the difficulty of writing, composing and reasoning about the alternatives, MacroPy may well be the lesser evil.
 
 Credits
 =======
+
+*MacroPy is very much a work in progress, for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/). Although it is constantly in flux, all of the examples with source code represent already-working functionality. The rest will be filled in over the coming weeks.*
 
 The MIT License (MIT)
 

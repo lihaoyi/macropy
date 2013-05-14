@@ -1,6 +1,7 @@
 import sys
 import imp
 import ast
+import inspect
 from ast import *
 from util import *
 from walkers import *
@@ -252,6 +253,6 @@ class _MacroFinder(object):
             pass
 
 from macropy.core import console
-import inspect
+
 if inspect.stack()[-1][1] == '<stdin>':
     console.MacroConsole().interact("0=[]=====> MacroPy Enabled <=====[]=0")
