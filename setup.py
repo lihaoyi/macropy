@@ -55,6 +55,7 @@ Case Classes
 And more! All this runs perfectly on vanilla Python 2.7 or PyPy 2.0. For more details, see the `GitHub page <https://github.com/lihaoyi/macropy>`_
 """
 from distutils.core import setup
+import setuptools
 
 setup(name='MacroPy',
       version='0.1.6',
