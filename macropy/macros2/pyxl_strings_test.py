@@ -52,7 +52,7 @@ class Tests(unittest.TestCase):
                    {unsafe_value}
                    {rawhtml(safe_value)}
                </div>"""
-        target_blob = '<div class="&quot;&gt;">&lt;script&gt;bad();&lt;/script&gt; <b>Puppies!</b></div>'
+        target_blob = '<div class="&quot;&gt;">&lt;script&gt;bad();&lt;/script&gt;<b>Puppies!</b></div>'
         assert normalize(pyxl_blob.to_string()) == normalize(target_blob)
 
     def test_modules(self):
