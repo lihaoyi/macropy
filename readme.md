@@ -29,7 +29,7 @@ The [Rough Overview](#rough-overview) will give a birds eye view of how it works
 
 MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython). It [almost](https://github.com/lihaoyi/macropy/issues/16) runs on [PyPy 1.9](http://pypy.org/), and does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy).
 
-All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 40 lines of code.
+All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 100 lines of code.
 
 *MacroPy is very much a work in progress, for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/). Although it is constantly in flux, all of the examples with source code represent already-working functionality. The rest will be filled in over the coming weeks.*
 
@@ -125,6 +125,8 @@ Although support for the REPL is still experimental, most of the examples on thi
 Examples
 ========
 Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for some small (<30 lines), self contained examples. Their [unit](macropy/macros/string_interp_test.py) [tests](macropy/macros/quicklambda_test.py) demonstrate how these macros are used.
+
+Note that all of these examples are **macros**; that is, they hold no special place in MacroPy. They are placed in [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2), separate from the Macropy core in [macropy/core](macropy/core). Thus they are on even footing with any macro you may want to write yourself.
 
 Case Classes
 ------------
