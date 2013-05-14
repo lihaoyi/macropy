@@ -1745,23 +1745,13 @@ When, then, do you need macros? It turns out you only need macros when *you want
 This may seem obvious, but this rules out a lot of things, such as those mentioned earlier. If you need to pass functions around, you can do so without macros. Similarly, if you want to introspect a function and see how many arguments it takes, you can go ahead using `inspect`. `getattr`, `hasattr` and friends are sufficient for all sorts of reflective metaprogramming, dynamically setting and getting attributes.
 
 ###Levels of Magic
-MacroPy is an extreme measure; there is no doubting that. Intercepting the raw source code as it is being imported, parsing it and performing AST transforms just before loading it is not something to be taken lightly! However, macros are not the most extreme thing that you can do! If you look at an Insanity Scale for the various things you can do in Python, it may look something like this:
+MacroPy is an extreme measure; there is no doubting that. Intercepting the raw source code as it is being imported, parsing it and performing AST transforms just before loading it is not something to be taken lightly! However, macros are not the most extreme thing that you can do! If you look at an Magic Scale for the various things you can do in Python, it may look something like this:
 
-    Levels of Magic
-                                                                               |Stack Introspection
-          |Functions                                            |MacroPy       |inspect.stack()
-          |Classes                                              |              |
-          |                                                     |              |
-    0 ----------------------------------------------------------------------------------------- >9000
-    |                           |                             |                                 |
-    |                           |hasattr                      |                                 |Textual Code
-    |                           |getattr                      |                                 |Generation
-    |Basic Constructs           |__dict__                     |Metaclasses                      |+ Eval
-    |Conditionals, Loops, etc.
+![Magic](media/Magic.svg)
 
-Where basic language constructs are at **0** in the scale of insanity, functions and classes can be mildly confusing. `hasattr` and `getattr` are at another level, letting you treat things objects as dictionaries and do all sorts of incredibly dynamic things.
+Where basic language constructs are at **0** in the scale of magic, functions and classes can be mildly confusing. `hasattr` and `getattr` are at another level, letting you treat things objects as dictionaries and do all sorts of incredibly dynamic things.
 
-I would place MacroPy about on par with Metaclasses in terms of their insanity-level: pretty knotty, but still ok. Past that, you are in the realm of `stack.inspect()`, where your function call can look at *what files are in the call stack* and do different things depending on what it sees! And finally, at the **Beyond 9000** level of insanity, is the act of piecing together code via string-interpolation or concatenation and just calling `eval` or `exec` on the whole blob, maybe at import time, maybe at run-time.
+I would place MacroPy about on par with Metaclasses in terms of their magic-level: pretty knotty, but still ok. Past that, you are in the realm of `stack.inspect()`, where your function call can look at *what files are in the call stack* and do different things depending on what it sees! And finally, at the **Beyond 9000** level of insanity, is the act of piecing together code via string-interpolation or concatenation and just calling `eval` or `exec` on the whole blob, maybe at import time, maybe at run-time.
 
 ###Skeletons in the Closet
 Many profess to shun the higher levels of magic "I would *never* do textual code generation!" you hear them say. "I will do things the simple, Pythonic way, with minimal magic!". But if you dig a little deeper, and see the code they use on a regular basis, you may notice some `namedtuple`s in their code base. Looking up the implementation of `namedtuple` brings up this:

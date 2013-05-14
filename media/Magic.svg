@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" baseProfile="full" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events" width="840" height="240" xmlns="http://www.w3.org/2000/svg">
+  <g opacity="1">
+    <g style="fill:rgb(0,0,0);stroke-width:2;stroke:rgb(0,0,0);">
+      <path d="M 120,120 Q 137.4291,118.3025 699.9233,121.1512" style="fill:none" />
+    </g>
+    <g style="fill:rgb(0,0,0);stroke-width:2;stroke:rgb(0,0,0);">
+      <path d="M 0,0 Z" />
+    </g>
+    <g style="fill:rgb(0,0,0);stroke-width:2;stroke:rgb(0,0,0);">
+      <path d="M 684.9614,113.5753 L 699.9233,121.1512 L 684.8855,128.5751 Z" />
+    </g>
+  </g>
+  <g transform="matrix(1,-0.0011,0.0011,1,90.1493,106.2411)">
+    <g opacity="1">
+      <rect x="0" y="0" width="28.6159" height="23.6368" style="fill:rgb(255,255,255);stroke-width:1;stroke-opacity:0;stroke:rgb(0,0,0);" rx="0" ry="0" />
+      <rect style="fill:rgb(255,255,255);fill-opacity:0;stroke-width:0;stroke-opacity:0;stroke:rgb(0,0,0);" x="9.5996" y="3.1517" width="9.4167" height="17.3333" />
+      <text y="17.1851" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="14.308" text-anchor="middle">0</text>
+    </g>
+  </g>
+  <g transform="matrix(1,-0.0047,0.0047,1,700,110.3101)">
+    <g opacity="1">
+      <rect x="0" y="0" width="66.4241" height="19.9446" style="fill:rgb(255,255,255);stroke-width:1;stroke-opacity:0;stroke:rgb(0,0,0);" rx="0" ry="0" />
+      <rect style="fill:rgb(255,255,255);fill-opacity:0;stroke-width:0;stroke-opacity:0;stroke:rgb(0,0,0);" x="11.6337" y="1.3056" width="43.1567" height="17.3333" />
+      <text y="15.339" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="33.212" text-anchor="middle">&gt; 9000</text>
+    </g>
+  </g>
+  <g transform="matrix(1,0,0,1,120,170)">
+    <g opacity="1">
+      <g style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);">
+        <path d="M 10,0 L 0,0 L 0,60 L 10,60" style="fill:none" />
+      </g>
+      <line x1="0" y1="30" x2="-0.1771" y2="-50.8898" style="fill:none;stroke-width:1;stroke:rgb(0,0,0);" />
+      <rect style="fill:rgb(255,255,255);fill-opacity:0;stroke-width:0;stroke-opacity:0;stroke:rgb(0,0,0);" x="3" y="6" width="102.0367" height="48" />
+      <text y="20.0333" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">Basic Constructs</text>
+      <text y="35.3667" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">
+Conditionals,</text>
+      <text y="50.7" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">Loops, etc</text>
+    </g>
+  </g>
+  <g transform="matrix(1,0,0,1,160,10)">
+    <g opacity="1">
+      <g style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);">
+        <path d="M 9.9768,0 L 0,0 L 0,40 L 9.9768,40" style="fill:none" />
+      </g>
+      <line x1="0" y1="20" x2="0.1687" y2="109.977" style="fill:none;stroke-width:1;stroke:rgb(0,0,0);" />
+      <rect style="fill:rgb(255,255,255);fill-opacity:0;stroke-width:0;stroke-opacity:0;stroke:rgb(0,0,0);" x="3" y="3.6667" width="78.3233" height="32.6667" />
+      <text y="17.7" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">Functions,</text>
+      <text y="33.0333" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">Classes, etc.</text>
+    </g>
+  </g>
+  <g transform="matrix(1,0,0,1,490,40)">
+    <g opacity="1">
+      <g style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);">
+        <path d="M 9.9768,0 L 0,0 L 0,30 L 9.9768,30" style="fill:none" />
+      </g>
+      <line x1="0" y1="15" x2="-0.4797" y2="79.8206" style="fill:none;stroke-width:1;stroke:rgb(0,0,0);" />
+      <rect style="fill:rgb(255,255,255);fill-opacity:0;stroke-width:0;stroke-opacity:0;stroke:rgb(0,0,0);" x="3" y="6.3333" width="54.6067" height="17.3333" />
+      <text y="20.3667" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">MacroPy</text>
+    </g>
+  </g>
+  <g transform="matrix(1,0,0,1,310,129.878)">
+    <g opacity="1">
+      <g style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);">
+        <path d="M 10,0 L 0,0 L 0,60.122 L 10,60.122" style="fill:none" />
+      </g>
+      <line x1="0" y1="30.061" x2="-0.1009" y2="-9.7447" style="fill:none;stroke-width:1;stroke:rgb(0,0,0);" />
+      <rect style="fill:rgb(255,255,255);fill-opacity:0;stroke-width:0;stroke-opacity:0;stroke:rgb(0,0,0);" x="3" y="6.061" width="54.61" height="48" />
+      <text y="20.0944" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">hasattr,()</text>
+      <text y="35.4277" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">
+getattr()</text>
+      <text y="50.761" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">
+__dict__</text>
+    </g>
+  </g>
+  <g transform="matrix(1,0,0,1,470,190)">
+    <g opacity="1">
+      <g style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);">
+        <path d="M 10,0 L 0,0 L 0,30 L 10,30" style="fill:none" />
+      </g>
+      <line x1="0" y1="15" x2="0.0506" y2="-70.1684" style="fill:none;stroke-width:1;stroke:rgb(0,0,0);" />
+      <rect style="fill:rgb(255,255,255);fill-opacity:0;stroke-width:0;stroke-opacity:0;stroke:rgb(0,0,0);" x="3" y="6.3333" width="76.1067" height="17.3333" />
+      <text y="20.3667" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">Metaclasses</text>
+    </g>
+  </g>
+  <g transform="matrix(1,0,0,1,620,5)">
+    <g opacity="1">
+      <g style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);">
+        <path d="M 9.9768,0 L 0,0 L 0,45 L 9.9768,45" style="fill:none" />
+      </g>
+      <line x1="0" y1="22.5" x2="0.0236" y2="115.279" style="fill:none;stroke-width:1;stroke:rgb(0,0,0);" />
+      <rect style="fill:rgb(255,255,255);fill-opacity:0;stroke-width:0;stroke-opacity:0;stroke:rgb(0,0,0);" x="3" y="6.1667" width="115.3967" height="32.6667" />
+      <text y="20.2" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">Stack Introspection</text>
+      <text y="35.5333" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">
+inspect.stack()</text>
+    </g>
+  </g>
+  <g transform="matrix(1,0,0,1,700,140)">
+    <g opacity="1">
+      <g style="fill:rgb(255,255,255);stroke-width:1;stroke:rgb(0,0,0);">
+        <path d="M 10,0 L 0,0 L 0,60 L 10,60" style="fill:none" />
+      </g>
+      <line x1="0" y1="30" x2="0.012" y2="-19.0402" style="fill:none;stroke-width:1;stroke:rgb(0,0,0);" />
+      <rect style="fill:rgb(255,255,255);fill-opacity:0;stroke-width:0;stroke-opacity:0;stroke:rgb(0,0,0);" x="3" y="6" width="79.8333" height="48" />
+      <text y="20.0333" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">Textual Code </text>
+      <text y="35.3667" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">
+Generation</text>
+      <text y="50.7" font-family="Arial" font-size="13.3333" font-weight="bold" fill="rgb(0,0,0)" x="4" text-anchor="start">
++exec</text>
+    </g>
+  </g>
+</svg>
