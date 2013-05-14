@@ -94,13 +94,22 @@ Note that this means **you cannot use macros in a file that is run directly**, a
 import macropy.core.macros  # sets up macro import hooks
 import other                # imports other.py and passes it through import hooks
 
+
+# my_macro_module.py
+from macropy.core.macros import *
+
+macros = Macros()
+
+... define some macros ...
+
+
 # other.py
 from macropy.macros.my_macro_module import macros, ...
 
 ... do stuff with macros ...
 ```
 
-Where you run `run.py` instead of `other.py`. For the same reason, you cannot directly run MacroPy's own unit tests directly using `unittest` or `nose`: you need to run the [macropy/run.py](macropy/run.py) file from the project root for the tests to run.
+Where you run `run.py` instead of `other.py`. For the same reason, you cannot directly run MacroPy's own unit tests directly using `unittest` or `nose`: you need to run the [macropy/run_tests.py](macropy/run_tests.py) file from the project root for the tests to run.
 
 MacroPy also works in the REPL:
 
