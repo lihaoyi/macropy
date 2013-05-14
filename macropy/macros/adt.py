@@ -76,7 +76,6 @@ def _case_transform(tree, parents):
     tree.body = new_body
     tree.bases = parents
 
-    tree.decorator_list = []
     tree.body += methods
     out = [tree] + new_classes
 
