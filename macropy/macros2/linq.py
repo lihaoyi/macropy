@@ -2,19 +2,19 @@ from ast import Call
 
 from macropy.core.macros import *
 from macropy.core.lift import macros, q, ast
-from macropy.macros.quicklambda import macros, f
+from macropy.macros.quicklambda import f
 import sqlalchemy
 
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def sql(tree):
     x = _recurse.recurse(tree)
     x = expand_let_bindings.recurse(x)
     return x
 
-@macros.expr
+@macros.expr()
 def query(tree):
     x = _recurse.recurse(tree)
     x = expand_let_bindings.recurse(x)
@@ -78,3 +78,4 @@ def expand_let_bindings(tree):
         let_tree.func.body = tree
         tree = let_tree
     return tree
+
