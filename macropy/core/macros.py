@@ -235,4 +235,4 @@ class _MacroFinder(object):
 from macropy.core import console
 import inspect
 if inspect.stack()[-1][1] == '<stdin>':
-    console.MacroConsole().interact()
+    console.MacroConsole().interact("0=[]=====> MacroPy Enabled <=====[]=0")
