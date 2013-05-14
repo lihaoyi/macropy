@@ -33,11 +33,11 @@ def trampoline(func, args, varargs, kwargs):
     _enter_trampoline()
     ignoring = False
     while True:
-        result = func(*(args + varargs), **kwargs)
+        result = func(*(list(args) + varargs), **kwargs)
         with switch(result):
-            if ('call', func, args, varargs, kwargs):
+            if ('macropy-tco-call', func, args, varargs, kwargs):
                 pass
-            elif ('ignore', func, args, varargs, kwargs):
+            elif ('macropy-tco-ignore', func, args, varargs, kwargs):
                 ignoring = True
             else:
                 pass # break out of switch >.<
@@ -49,16 +49,26 @@ def trampoline(func, args, varargs, kwargs):
                     return result
 
 
+def trampoline_decorator(func):
+    import functools
+    @functools.wraps(func)
+    def trampolined(*args, **kwargs):
+        if not in_trampoline():
+            return trampoline(func, args, [], kwargs)
+        return func(*args, **kwargs)
+    return trampolined
+
+
 @macros.decorator(inside_out=True)
 def tco(node):
-
     @Walker
     # Replace returns of calls - TODO use pattern matching here
     def return_replacer(node):
         if isinstance(node, Return): 
             if isinstance(node.value, Call):
                 with q as code:
-                    return ('call', ast%(node.value.func),
+                    return ('macropy-tco-call',
+                            ast%(node.value.func),
                             ast%(List(node.value.args, Load())),
                             ast%(node.value.starargs or List([], Load())),
                             ast%(node.value.kwargs or Dict([],[])))
@@ -74,7 +84,7 @@ def tco(node):
     def replace_tc_pos(node):
         if isinstance(node, Expr) and isinstance(node.value, Call):
             with q as code:
-                return ('ignore', ast%(node.value.func), 
+                return ('macropy-tco-ignore', ast%(node.value.func), 
                         ast%(List(node.value.args, Load())),
                         ast%(node.value.starargs or List([], Load())),
                         ast%(node.value.kwargs or Dict([], [])))
@@ -94,11 +104,8 @@ def tco(node):
         assert isinstance(x, Name)
         x.ctx = Load()
 
-    with q as prelude:
-        if not in_trampoline():
-            return trampoline(name%(node.name), ast%(arg_list_node), [], {})
-
     node = return_replacer.recurse(node)
-    node.body = [prelude] + node.body
+    node.decorator_list = ([Name('trampoline_decorator', Load())] +
+            node.decorator_list)
     node.body[-1] = replace_tc_pos(node.body[-1])
     return node
