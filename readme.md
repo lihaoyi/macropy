@@ -27,12 +27,7 @@ The [Rough Overview](#rough-overview) will give a birds eye view of how it works
 - [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
 - The [Walker](#walker), a flexible tool to traverse and transform ASTs
 
-MacroPy is tested to run on:
-
-- [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython)
-- [PyPy 1.9](http://pypy.org/)
-
-It does not yet work on [Jython](http://www.jython.org/), and is available on [PyPI](https://pypi.python.org/pypi/MacroPy).
+MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython). It *almost* runs on [PyPy 1.9](http://pypy.org/); the new line-number-preserving compilation step causes it to fail, but it can easily be made to work if we are willing to allow line numbers in macro-expanded files to be mangled. It does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy).
 
 All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 40 lines of code.
 
@@ -107,7 +102,25 @@ from macropy.macros.my_macro_module import macros, ...
 ... do stuff with macros ...
 ```
 
-Where you run `run.py` instead of `other.py`. Note that **MacroPy currently does not work in the REPL**.
+Where you run `run.py` instead of `other.py`. MacroPy also works in the REPL:
+
+```python
+PS C:\Dropbox\Workspace\6.945\Project> python
+Python 2.7 (r27:82525, Jul  4 2010, 07:43:08) [MSC v.1500 64 bit (AMD64)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import macropy.core.macros
+0=[]=====> MacroPy Enabled <=====[]=0
+>>> from macropy.macros2.tracing import macros, trace
+>>> trace%[x*2 for x in range(3)]
+range(3) -> [0, 1, 2]
+(x * 2) -> 0
+(x * 2) -> 2
+(x * 2) -> 4
+[(x * 2) for x in range(3)] -> [0, 2, 4]
+[0, 2, 4]
+```
+
+Most of the examples on this page will work when copied and pasted into the REPL verbatim, except those with blank lines in class and function definitions (those seem to confuse it).
 
 Examples
 ========
