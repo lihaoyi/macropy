@@ -120,7 +120,7 @@ range(3) -> [0, 1, 2]
 [0, 2, 4]
 ```
 
-Most of the examples on this page will work when copied and pasted into the REPL verbatim, except those with blank lines in class and function definitions (those seem to confuse it).
+Although support for the REPL is still experimental, most of the examples on this page will work when copied and pasted into the REPL verbatim, except those with blank lines in class and function definitions (those seem to confuse it).
 
 Examples
 ========
@@ -245,7 +245,6 @@ As the classes `Nil` are `Cons` are nested within `List`, both of them get trans
 Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.org/2/library/collections.html#collections.namedtuple), but on steroids (methods, inheritence, etc.), and provides the programmer with a much better experience.
 
 Pattern Matching
-
 ----------------
 One important thing you might want to do with case classes is match them against some patterns.
 For example, suppose that you are writing a function to transform an AST.  You want to try to macro-expand
