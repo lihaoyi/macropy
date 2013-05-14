@@ -100,7 +100,8 @@ from macropy.macros.my_macro_module import macros, ...
 ... do stuff with macros ...
 ```
 
-Where you run `run.py` instead of `other.py`. For the same reason, you cannot directly run MacroPy's own unit tests directly using `unittest` or `nose`: you need to run the [macropy/run.py](macropy/run.py) file from the project root for MacroPy to work.
+Where you run `run.py` instead of `other.py`. For the same reason, you cannot directly run MacroPy's own unit tests directly using `unittest` or `nose`: you need to run the [macropy/run.py](macropy/run.py) file from the project root for the tests to run.
+
 
 
 MacroPy also works in the REPL:
