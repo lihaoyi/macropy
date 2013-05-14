@@ -198,7 +198,9 @@ def _expand_ast(tree, modules):
                 # Strip off the first decorator now - we don't need it
                 tree.decorator_list = tree.decorator_list[1:]
                 if inside_out:
-                    tree = macro_expand(tree)
+                    modified = True
+                    while modified:
+                        tree, modified = macro_expand(tree)
                 return the_macro(tree), True
 
         return tree, False

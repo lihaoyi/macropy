@@ -49,7 +49,7 @@ def trampoline(func, args, varargs, kwargs):
                     return result
 
 
-@macros.decorator()
+@macros.decorator(inside_out=True)
 def tco(node):
 
     @Walker
@@ -88,11 +88,6 @@ def tco(node):
 
     # We need to remove ourselves from the decorator list so we don't have
     # infinite expansion
-    new_decorator_list = []
-    for decorator in node.decorator_list:
-        if not (isinstance(decorator, Name) and decorator.id == 'tco'):
-            new_decorator_list.append(decorator)
-    node.decorator_list = new_decorator_list
 
     arg_list_node = List(node.args.args, Load())
     for x in arg_list_node.elts:

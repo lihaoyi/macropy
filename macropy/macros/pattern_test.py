@@ -171,6 +171,11 @@ class Tests(unittest.TestCase):
             self.assertEquals(4, a)
             self.assertEquals(5, b)
 
+    def wildcard_matching(self):
+        with _matching:
+            (_, _,  x) << (3, 4, 5)
+            self.assertEquals(5, x)
+
 
 if __name__ == '__main__':
     unittest.main()
