@@ -1747,7 +1747,7 @@ This may seem obvious, but this rules out a lot of things, such as those mention
 ###Levels of Magic
 MacroPy is an extreme measure; there is no doubting that. Intercepting the raw source code as it is being imported, parsing it and performing AST transforms just before loading it is not something to be taken lightly! However, macros are not the most extreme thing that you can do! If you look at an Magic Scale for the various things you can do in Python, it may look something like this:
 
-![Magic](media/Magic.svg)
+![Magic](media/Magic.png)
 
 Where basic language constructs are at **0** in the scale of magic, functions and classes can be mildly confusing. `hasattr` and `getattr` are at another level, letting you treat things objects as dictionaries and do all sorts of incredibly dynamic things.
 
