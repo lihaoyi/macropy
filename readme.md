@@ -1,6 +1,6 @@
 MacroPy
 =======
-**MacroPy** is an implementation of [Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (macros) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree)(AST) of Python code at _module import time_. This is an easy way to modify the semantics of a python program in ways which are otherwise impossible, for example providing an extremely concise way of declaring classes:
+**MacroPy** is an implementation of [Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (macros) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree) (AST) of Python code at _module import time_. This is an easy way to modify the semantics of a python program in ways which are otherwise impossible, for example providing an extremely concise way of declaring classes:
 
 ```python
 @case
@@ -1130,7 +1130,7 @@ This map maps out how to convert from form to form:
 
 ![Transforms](media/Transforms.png)
 
-Except for `eval`, these are all functions defined in the `macropy/core/__init__.py`. For instance, in order to convert from a AST back into source code (for example if you want to print out the code which is being run), you would use the `unparse_ast` method.
+Except for `eval`, these are all functions defined in the [macropy/core/__init__.py](macropy/core/__init__.py). For instance, in order to convert from a AST back into source code (for example if you want to print out the code which is being run), you would use the `unparse_ast()` method. These transformations will be used throughout this guide, to convert from one form to another or to print out the AST for inspection.
 
 Writing Your First Macro
 ------------------------
@@ -1317,9 +1317,9 @@ Walking the AST
 ---------------
 Quasiquotes make it much easier for you to manipulate sections of code, allowing you to quickly put together snippets that look however you want. However, they do not provide any support for a very common use case: that of recursively traversing the AST and replacing sections of it at a time.
 
-Now that you know how to make basic macros, I will walk you through the implementation of a less trivial (and extremely useful!) macro: [quicklambda](#quick-lambda).
+Now that you know how to make basic macros, I will walk you through the implementation of a less trivial (and extremely useful!) macro: [quicklambda](#quick-lambdas).
 
-If we look at what [quicklambda](#quick-lambda) does, we see want to take code which looks like this:
+If we look at what [quicklambda](#quick-lambdas) does, we see want to take code which looks like this:
 
 ```python
 f%(_ + (1 * _))
@@ -1671,8 +1671,12 @@ Composibility
 Line Numbers
 ------------
 
+__main__
+--------
+
 Performance
 -----------
+
 
 Lessons
 =======
@@ -1786,11 +1790,12 @@ Even looking at the `_ast` module, where all the `ast` nodes are nicely defined 
 # by generator 1.124
 ```
 
-It turns out that they, too, are generated programmatically! Concatenated together as a bunch of strings! Except this is done at build time rather than import time. The plain old Python, apparently at a *Functions and Classes* level of magic, is revealed to actually be at a _Textual Code Generation_ level of magic.
+It turns out that they, too, are generated programmatically! Concatenated together as a bunch of strings and `exec`ed, except this is done at build time rather than import time. The plain old Python, apparently at a *Functions and Classes* level of magic, is revealed to actually be at a _Textual Code Generation_ level of magic.
 
 MacroPy: The Last Refuge of the Competent
 =========================================
 Macros are always a contentious issue. On one hand, we have the LISP community, which seems to using macros for everything. On the other hand, most mainstream programmers shy away from them, believing them to be extremely powerful and potentially confusing, not to mention extremely difficult to execute.
+
 
 With MacroPy, we believe that we have a powerful, flexible tool that makes it trivially easy to write AST-transforming macros with any level of complexity. We have a [compelling suite of use cases](#examples) demonstrating the utility of such transforms, and
  all of it runs perfectly fine on alternative implementations of Python such as PyPy.
