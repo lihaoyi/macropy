@@ -435,10 +435,6 @@ assert(even(100000))  # No stack overflow
 Note that both `odd` and `even` were both decorated with `@tco`.  All functions
 which would ordinarily use too many stack frames must be decorated.
 
-One thing to be aware of is that right now, for no other reason than that it
-hasn't been implemented yet, the `@tco` macro will not work properly on
-functions with varargs or keyword arguments.
-
 ###Trampolining
 How is tail recursion implemented?  The idea is that if a function `f` would
 return the result of a recursive call to some function `g`, it could instead
@@ -447,6 +443,38 @@ instead of running `f` directly, we run `trampoline(f)`, which will call `f`,
 call the result of `f`, call the result of that `f`, etc. until finally some
 call returns an actual value.
 
+A transformed (and simplified) version of the tail-call optimized factorial
+would look like this
+```python
+def trampoline_decorator(func):
+    def trampolined(*args):
+        if not in_trampoline():
+            return trampoline(func, args)
+        return func(*args)
+    return trampolined
+
+def trampoline(func, args):
+  _enter_trampoline()
+  while True:
+        result = func(*args)
+        with patterns:
+            if ('macropy-tco-call', func, args) << result:
+                pass
+            else:
+                if ignoring:
+                    _exit_trampoline()
+                    return None
+                else:
+                    _exit_trampoline()
+                    return result
+  
+@trampoline_decorator
+def fact(n, acc):
+    if n == 0:
+        return 1
+    else:
+        return ('macropy-tco-call', fact, [n-1, n * acc])
+```
 
 
 String Interpolation
