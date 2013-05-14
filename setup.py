@@ -52,11 +52,7 @@ Case Classes
     print p.y       #2
     print Point(1, 2) == Point(1, 2) # True
 
-
-
-And more! All this runs perfectly on vanilla Python 2.7 or PyPy 1.9. For more details, see the `GitHub page <https://github.com/lihaoyi/macropy>`_
-
-
+And more! All this runs perfectly on vanilla Python 2.7 or PyPy 2.0. For more details, see the `GitHub page <https://github.com/lihaoyi/macropy>`_
 """
 from distutils.core import setup
 
@@ -68,6 +64,6 @@ setup(name='MacroPy',
       author='Li Haoyi, Justin Holmgren',
       author_email='haoyi.sg@gmail.com, justin.holmgren@gmail.com',
       url='https://github.com/lihaoyi/macropy',
-      packages=['macropy', 'macropy.core', 'macropy.macros', 'macropy.macros2'],
+      packages=['macropy', 'macropy.core', 'macropy.macros', 'macropy.macros2', 'macropy.core_tests'],
       classifiers=['Programming Language :: Python :: 2.7']
      )
