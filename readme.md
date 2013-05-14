@@ -1670,6 +1670,35 @@ The Walker is an incredibly versatile tool, used to recursively traverse and tra
 Lessons
 =======
 
+Minimize Macro Magic
+--------------------
+This may seem counter-intuitive, but just because you have the ability to do AST transformations does not mean you should use it! In fact, you probably should do as little as is humanely possible in order to hand over control to traditional functions and objects, who can then take over.
+
+For example, let us look at the [Parser Combinator](#parser-combinators) macro, shown in the examples above. You may look at the syntax:
+
+```python
+value = '[0-9]+'.r // int | ('(', expr, ')') // (f%_[1])
+op = '+' | '-' | '*' | '/'
+expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
+```
+
+And think this may be an ideal situation to go all-out, just handle the whole thing using AST transforms and do some code-generation to create a working parser! It turns out, the `peg` module does none of this. It has about 30 lines of code which does a very shallow transform from the above code into:
+
+```python
+value = Raw('[0-9]+').r // int | (Raw('('), expr, Raw(')')) // (f%_[1])
+op = Raw('+') | Raw('-') | Raw('*') | Raw('/')
+expr = (value.bind_to("first"), (op, value).rep.bind_to("rest")) >> reduce_chain([first] + rest)
+```
+
+That's the extent of the macro! It just wraps the raw strings in `Raw`s, and converts the `a is b` syntax into `a.bind_to("b")`. The rest, all the operators `|` `//` `>>`, the `.r` syntax for regexes and `.rep` syntax for repetitions, that's all just implemented on the `Raw` objects using plain-old operator overloading and properties.
+
+Why do this, instead of simply implementing the behavior of `|` `//` and friends as macros? There are a few reasons
+
+- **Maintainability**: tree transforms are messy, methods and operators are pretty simple. If you want to change what `.r` does, for example, you'll have a much easier time if it's a `@property` rather than some macro-defined transform
+- **Consistency**: methods already have a great deal of pre-defined semantics built in: how the arguments are evaluated (eagerly, left to right, by-value), whether they can be assigned to or monkey-patched. All this behavior is what people already come to expect when programming in Python. By greatly limiting the macro transforms, you leave the rest up to the Python language which will behave as people expect.
+
+It's not just the [Parser Combinators](#parser-combinators) which work like this; [PINQ](#pinq-to-sqlalchemy), [Tracing](#tracing), [Pattern Matching](#pattern-matching) all work like this, doing the minimal viable transform and delegating the functionality to objects and functions as soon as possible.
+
 No Macros Necessary
 -------------------
 Python is a remarkably dynamic language. Not only that, but it is also a relatively *large* language, containing many things already built in. A large amount of feedback has been received from the online community, and among it suggestions to use macros for things such as:
@@ -1734,7 +1763,7 @@ Where basic language constructs are at **0** in the scale of insanity, functions
 
 I would place MacroPy about on par with Metaclasses in terms of their insanity-level: pretty knotty, but still ok. Past that, you are in the realm of `stack.inspect()`, where your function call can look at *what files are in the call stack* and do different things depending on what it sees! And finally, at the **Beyond 9000** level of insanity, is the act of piecing together code via string-interpolation or concatenation and just calling `eval` or `exec` on the whole blob, maybe at import time, maybe at run-time.
 
-Many profess to shun the higher levels of insanity "I would *never* do textual code generation!" you hear them scream! I will do things the simple, Pythonic way, with minimal insanity! But if you dig a little deeper, and see the code they use on a regular basis, you may notice some `namedtuple`s in their code base. Looking up the implementation of `namedtuple` brings up this:
+Many profess to shun the higher levels of insanity "I would *never* do textual code generation!" you hear them scream! I will do things the simple, Pythonic way, with minimal magic! But if you dig a little deeper, and see the code they use on a regular basis, you may notice some `namedtuple`s in their code base. Looking up the implementation of `namedtuple` brings up this:
 
 ```python
 template = '''class %(typename)s(tuple):
@@ -1763,6 +1792,16 @@ It turns out that they, too, are generated programmatically! Concatenated togeth
 
 Macropy: The Last Refuge of the Competent
 =========================================
+Macros are always a contentious issue. On one hand, we have the LISP community, which seems to using macros for everything. On the other hand, most mainstream programmers shy away from them, believing them to be extremely powerful and potentially confusing, not to mention extremely difficult to execute.
+
+With MacroPy, we believe that we have a powerful, flexible tool that makes it trivially easy to write AST-transforming macros with any level of complexity. We have a compelling suite of use cases demonstrating the utility of such transforms, and (almost) all of it runs perfectly fine on alternative implementations of Python such as PyPy.
+
+With MacroPy, we have a few major takeaways:
+
+- Being a non-LISP does not make macros any harder; having an AST made of objects isn't any harder than an AST made of lists. With an inbuilt parser and unparser, the human-friendly computer-unfriendly syntax of Python (whitespace, etc.) is not an issue **at all**.
+- Python in particular, and other languages in general, do not need macros for many of the use cases the LISPs do. Thanks to inbuilt support for first class functions, dynamism and mutability, simple things like [looping](http://www.gigamonkeys.com/book/loop-for-black-belts.html) can be done pretty easily without resorting to AST rewrites. Macros should only be used if all these tools have proven inadequete.
+- In Python, there are use cases which require macros, which are not only completely impossible without macros, but also extremely compelling. Not "here's [another sytax for an if-statement](http://stackoverflow.com/a/16174524/871202)" but "here's [cross-compiling list-comprehensions into SQL queries to be executed on a remote database](#pinq-to-sqlalchemy)".
+- Macros stand to *reduce* the amount of magic in a code base, not increase it. The use cases we propose for macros are at present not satisfied by boring, normal code which macros serve to complicate. They are satisfied by code being generated by stitching together strings and `exec`ing it at runtime. They are served by special build stages which generate whole blobs of code at build-time to be used later. Replacing these with macros will reduce the total amount of complexity and magic.
 
 
 Credits
