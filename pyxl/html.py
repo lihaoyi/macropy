@@ -142,7 +142,7 @@ class x_audio(x_html_element):
     __attrs__ = {
         'src': unicode
         }
-        
+
 class x_b(x_html_element):
    pass
 
