@@ -187,19 +187,33 @@ def _expand_ast(tree, modules):
                 (new_tree.lineno, new_tree.col_offset) = pos
                 return new_tree, True
 
-            if  ((isinstance(tree, ClassDef) or isinstance(tree, FunctionDef))
-                    and len(tree.decorator_list) == 1
-                    and tree.decorator_list[0]
-                    and type(tree.decorator_list[0]) is Name
-                    and tree.decorator_list[0].id in module.decorator_registry):
-
-                the_macro, inside_out = module.decorator_registry[
-                        tree.decorator_list[0].id]
-                # Strip off the first decorator now - we don't need it
-                tree.decorator_list = tree.decorator_list[1:]
-                if inside_out:
-                    tree = macro_expand(tree)
-                return the_macro(tree), True
+            if  (isinstance(tree, ClassDef) or isinstance(tree, FunctionDef)):
+                decorators = tree.decorator_list
+                for i in xrange(len(decorators)):
+# The usual macro expansion order is first decorator is expanded first, and then
+# the rest of the decorators.  However, if the macro says it wants to be
+# expanded inside-out, then 
+                    if (isinstance(decorators[i], Name) and decorators[i].id in
+                        module.decorator_registry):
+                        the_macro, inside_out = module.decorator_registry[
+                                decorators[i].id]
+                        decorator_prefix = decorators[:i]
+                        tree.decorator_list = decorators[i+1:]
+                        if inside_out:
+                            tree, modified  = macro_expand(tree)
+                            if not modified:
+                                # This means there are no sub-macros, so we can
+                                # actually apply the_macro
+                                tree = the_macro(tree)
+                                tree.decorator_list = (decorator_prefix +
+                                        tree.decorator_list)
+                            else:
+# We need to keep our current macro decorator in the running
+                                tree.decorator_list = (decorator_prefix +
+                                        [decorators[i]] + tree.decorator_list)
+                            return tree, True
+                        else:
+                            rreturn the_macro(tree,
 
         return tree, False
 
