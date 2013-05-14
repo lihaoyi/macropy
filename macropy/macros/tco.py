@@ -35,9 +35,9 @@ def trampoline(func, args, varargs, kwargs):
     while True:
         result = func(*(list(args) + varargs), **kwargs)
         with switch(result):
-            if ('call', func, args, varargs, kwargs):
+            if ('macropy-tco-call', func, args, varargs, kwargs):
                 pass
-            elif ('ignore', func, args, varargs, kwargs):
+            elif ('macropy-tco-ignore', func, args, varargs, kwargs):
                 ignoring = True
             else:
                 pass # break out of switch >.<
@@ -67,7 +67,8 @@ def tco(node):
         if isinstance(node, Return): 
             if isinstance(node.value, Call):
                 with q as code:
-                    return ('call', ast%(node.value.func),
+                    return ('macropy-tco-call',
+                            ast%(node.value.func),
                             ast%(List(node.value.args, Load())),
                             ast%(node.value.starargs or List([], Load())),
                             ast%(node.value.kwargs or Dict([],[])))
@@ -83,7 +84,7 @@ def tco(node):
     def replace_tc_pos(node):
         if isinstance(node, Expr) and isinstance(node.value, Call):
             with q as code:
-                return ('ignore', ast%(node.value.func), 
+                return ('macropy-tco-ignore', ast%(node.value.func), 
                         ast%(List(node.value.args, Load())),
                         ast%(node.value.starargs or List([], Load())),
                         ast%(node.value.kwargs or Dict([], [])))
