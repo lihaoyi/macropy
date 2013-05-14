@@ -29,7 +29,7 @@ The [Rough Overview](#rough-overview) will give a birds eye view of how it works
 
 Or just skip ahead to the [Lessons](#lessons) and [Conclusion](#macropy-the-last-refuge-of-the-competent).
 
-MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but does not yet work on [Jython](http://www.jython.org/) and does not work on older versions of PyPy. MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy).
+MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but does not yet work on [Jython](http://www.jython.org/) and does not work on older versions of PyPy. MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy). It uses `setup.py` to manage dependencies and other things, check out [this gist](https://gist.github.com/lihaoyi/5577609) for an example of setting it up on a clean system.
 
 Rough Overview
 ==============
