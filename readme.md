@@ -332,7 +332,7 @@ def area(rect):
         return (x2 - x1) * (y2 - y1)
 ```
 
-If the match fails, a PatternMatchException() will be thrown.
+If the match fails, a `PatternMatchException` will be thrown.
 ```python
     # Throws a PatternMatchException
     area(Line(Point(1, 2), Point(3, 4)))
