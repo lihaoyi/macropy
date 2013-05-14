@@ -1667,10 +1667,103 @@ It is a bit silly to have both the second and fourth items, since if it doesn't 
 
 The Walker is an incredibly versatile tool, used to recursively traverse and transform Python ASTs. If you inspect the source code of the macros in the [macropy/macros](macropy/macros) and [macropy/macros](macropy/macros2) folders, you will see most of them make extensive use of Walkers in order to concisely perform their transformations. If you find yourself needing a recursive traversal, you should think hard about why you cannot use a Walker before writing the recursion yourself.
 
+Lessons
+=======
 
-Conclusion
-==========
-*WIP*
+No Macros Necessary
+-------------------
+Python is a remarkably dynamic language. Not only that, but it is also a relatively *large* language, containing many things already built in. A large amount of feedback has been received from the online community, and among it suggestions to use macros for things such as:
+
+- Before and After function advice: code snippets to hook into the function call process
+- Auto parallelizing functions, which run in a forked process
+
+This [stackoverflow question](http://stackoverflow.com/questions/764412/python-macros-use-cases) also explores the use cases of Macros in Python, and comes up with a large number of unimaginative suggestions:
+
+- An `unless blah:` statement, equivalent to an `if not blah:`
+- A `repeat` macro, to replace for-loops
+- A `do while` loop
+
+The last three examples are completely banal: they really don't add anything, don't make anything easier, and add a lot of indirection to no real gain. The first two suggestions, on the other hand, sound impressive, but are actually entirely implementable without Macros.
+
+###Function Advice
+Function advice, part of [AOP](http://en.wikipedia.org/wiki/Aspect-oriented_programming), is a technique of register code snippets to run before or after function calls occur. These could be used for debugging (printing whenever a function is run), caching (intercepting the arguments and returning the value from a cache if it already exists), authentication (checking permissions before the function runs) and a host of other use cases.
+
+Although in the Java world, such a technique requires high-sorcery with [AspectJ](http://www.eclipse.org/aspectj/) and other tools, in Python these are as simple as defining a decorator. For example, here is a decorator that logs invocations and returns of a generic python function:
+
+```python
+def trace(func):
+    def new_func(*args, **kwargs):
+        print "Calling", func.func_name, "with", args, kwargs
+        result = func(*args, **kwargs)
+        print "func.func_name, "returned", result
+        return result
+    return new_func
+
+@trace
+my_func(arg0, arg1):
+    ... do stuff ...
+```
+
+Similar things could be done for the other use cases mentioned. This is not a complete example (it would need a `functools.wraps` or similar to preserve the `argspec` etc.) but the point is that writing such a decorator really is not very difficult. No macros necessary!
+
+###Auto-Forking
+Another suggestion was to make a decorator macro that ships the code within the function into a separate process to execute. While this sounds pretty extreme, it really is not that difficult, for in Python you can easily introspect a function object and retrieve it's `code` attribute. This can pretty easily [be pickled and sent to a child process](http://stackoverflow.com/questions/1253528/is-there-an-easy-way-to-pickle-a-python-function-or-otherwise-serialize-its-cod) to be executed there. Perhaps you may want some sort of Future container to hold the result, or some nice helpers for fork-join style code, but these are all just normal python functions: no macros necessary!
+
+Whither MacroPy
+---------------
+When, then, do you need macros? It turns out you only need macros when *you want access to the syntax tree of a python program*. Whether it be for cross-compilation (like in PINQ) or for debugging (like in Tracing) or for enforcing brand-new python semantics (like in Quick Lambda), it has to be about the AST for you to need macros.
+
+This may seem obvious, but this rules out a lot of things, such as those mentioned earlier. If you need to pass functions around, you can do so without macros. Similarly, if you want to introspect a function and see how many arguments it takes, you can go ahead using `inspect`. `getattr`, `hasattr` and friends are sufficient for all sorts of reflective metaprogramming, dynamically setting and getting attributes.
+
+###Levels of Insanity
+MacroPy is an extreme measure; there is no doubting that. Intercepting the raw source code as it is being imported, parsing it and performing AST transforms just before loading it is not something to be taken lightly! However, macros are not the most extreme thing that you can do! If you look at an Insanity Scale for the various things you can do in Python, it may look something like this:
+
+    Levels of Insanity
+                                                                               |Stack Introspection
+          |Functions                                            |MacroPy       |inspect.stack()
+          |Classes                                              |              |
+          |                                                     |              |
+    0 ----------------------------------------------------------------------------------------- >9000
+    |                           |                             |                                 |
+    |                           |hasattr                      |                                 |Textual Code
+    |                           |getattr                      |                                 |Generation
+    |Basic Constructs           |__dict__                     |Metaclasses                      |+ Eval
+    |Conditionals, Loops, etc.
+
+Where basic language constructs are at **0** in the scale of insanity, functions and classes can be mildly confusing. `hasattr` and `getattr` are at another level, letting you treat things objects as dictionaries and do all sorts of incredibly dynamic things.
+
+I would place MacroPy about on par with Metaclasses in terms of their insanity-level: pretty knotty, but still ok. Past that, you are in the realm of `stack.inspect()`, where your function call can look at *what files are in the call stack* and do different things depending on what it sees! And finally, at the **Beyond 9000** level of insanity, is the act of piecing together code via string-interpolation or concatenation and just calling `eval` or `exec` on the whole blob, maybe at import time, maybe at run-time.
+
+Many profess to shun the higher levels of insanity "I would *never* do textual code generation!" you hear them scream! I will do things the simple, Pythonic way, with minimal insanity! But if you dig a little deeper, and see the code they use on a regular basis, you may notice some `namedtuple`s in their code base. Looking up the implementation of `namedtuple` brings up this:
+
+```python
+template = '''class %(typename)s(tuple):
+    '%(typename)s(%(argtxt)s)' \n
+    __slots__ = () \n
+    _fields = %(field_names)r \n
+    def __new__(_cls, %(argtxt)s):
+        'Create new instance of %(typename)s(%(argtxt)s)'
+        return _tuple.__new__(_cls, (%(argtxt)s)) \n
+    @classmethod
+    def _make(cls, iterable, new=tuple.__new__, len=len):
+```
+
+Runtime code-generation as strings! It turns out they piece together the class declaration textually and then just `exec` the whole lot. Similar things take place in the new `Enum` that's going to enter the standard library. [Case Classes](#case-classes) may be magical, but are they really any worse than the status quo?
+
+Even looking at the `_ast` module, where all the `ast` nodes are nicely defined in plain old python. We may replace them, too, with case classes, perhaps at a cost of extra magic due to the macros. We may believe this until we see the comment at the top of `_ast.py`:
+
+```python
+# encoding: utf-8
+# module _ast
+# from (built-in)
+# by generator 1.124
+```
+
+It turns out that they, too, are generated programmatically! Concatenated together as a bunch of strings! Except this is done at build time rather than import time. The plain old Python, apparently at a *Functions and Classes* level of magic, is revealed to actually be at a _Textual Code Generation_ level of magic.
+
+Macropy: The Last Refuge of the Competent
+=========================================
+
 
 Credits
 =======
