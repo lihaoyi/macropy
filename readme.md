@@ -1128,18 +1128,7 @@ Once you have an AST, there are a few possible forms that code can take:
 
 This map maps out how to convert from form to form:
 
-                         parse_stmt
-           ____________  parse_expr  ____________
-          |            |----------->|            |
-          |   Source   |            |    AST     |
-          |____________|<-----------|____________|
-              ^     |   unparse_ast   |        ^
-              |     |                 | eval   | ast_repr
-              |     |                 |        |
-    real_repr |     |    eval        _v________|_
-              |     --------------->|            |
-              |                     |   Value    |
-              ----------------------|____________|
+![Transforms](media/Transforms.png)
 
 Except for `eval`, these are all functions defined in the `macropy/core/__init__.py`. For instance, in order to convert from a AST back into source code (for example if you want to print out the code which is being run), you would use the `unparse_ast` method.
 
@@ -1751,7 +1740,7 @@ MacroPy is an extreme measure; there is no doubting that. Intercepting the raw s
 
 Where basic language constructs are at **0** in the scale of magic, functions and classes can be mildly confusing. `hasattr` and `getattr` are at another level, letting you treat things objects as dictionaries and do all sorts of incredibly dynamic things.
 
-I would place MacroPy about on par with Metaclasses in terms of their magic-level: pretty knotty, but still ok. Past that, you are in the realm of `stack.inspect()`, where your function call can look at *what files are in the call stack* and do different things depending on what it sees! And finally, at the **Beyond 9000** level of insanity, is the act of piecing together code via string-interpolation or concatenation and just calling `eval` or `exec` on the whole blob, maybe at import time, maybe at run-time.
+I would place MacroPy about on par with Metaclasses in terms of their magic-level: pretty knotty, but still ok. Past that, you are in the realm of `stack.inspect()`, where your function call can look at *what files are in the call stack* and do different things depending on what it sees! And finally, at the **Beyond 9000** level of magic, is the act of piecing together code via string-interpolation or concatenation and just calling `eval` or `exec` on the whole blob, maybe at import time, maybe at run-time.
 
 ###Skeletons in the Closet
 Many profess to shun the higher levels of magic "I would *never* do textual code generation!" you hear them say. "I will do things the simple, Pythonic way, with minimal magic!". But if you dig a little deeper, and see the code they use on a regular basis, you may notice some `namedtuple`s in their code base. Looking up the implementation of `namedtuple` brings up this:
