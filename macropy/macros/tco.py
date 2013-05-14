@@ -73,8 +73,6 @@ def tco(node):
                             ast%(node.value.starargs or List([], Load())),
                             ast%(node.value.kwargs or Dict([],[])))
                 return code
-# TODO this is a stupid hack - should actually just not recurse once a return
-# statement has been replaced.
             else:
                 return node
         return node
@@ -105,7 +103,11 @@ def tco(node):
         x.ctx = Load()
 
     node = return_replacer.recurse(node)
-    node.decorator_list = ([Name('trampoline_decorator', Load())] +
+    node.decorator_list = ([q%tco.trampoline_decorator] +
             node.decorator_list)
     node.body[-1] = replace_tc_pos(node.body[-1])
     return node
+
+
+# ok, so now you will only need to import tco...
+tco.trampoline_decorator = trampoline_decorator

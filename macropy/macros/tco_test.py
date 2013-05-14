@@ -1,6 +1,6 @@
 import unittest
 from macropy.macros.tco import macros
-from macropy.macros.tco import *
+from macropy.macros.tco import tco
 from macropy.macros.adt import macros
 from macropy.macros.adt import *
 from macropy.macros.pattern import macros
