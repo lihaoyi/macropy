@@ -7,7 +7,7 @@ macros = Macros()
 
 @macros.expr()
 def f(tree):
-    names = ('quickfuncvar' + str(i) for i in xrange(100))
+    names = ('arg' + str(i) for i in xrange(100))
 
     @Walker
     def underscore_search(tree):
