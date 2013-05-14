@@ -27,7 +27,7 @@ The [Rough Overview](#rough-overview) will give a birds eye view of how it works
 - [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
 - The [Walker](#walker), a flexible tool to traverse and transform ASTs
 
-MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython). It *almost* runs on [PyPy 1.9](http://pypy.org/); the new line-number-preserving compilation step causes it to fail, but it can easily be made to work if we are willing to allow line numbers in macro-expanded files to be mangled. It does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy).
+MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython). It [almost](https://github.com/lihaoyi/macropy/issues/16) runs on [PyPy 1.9](http://pypy.org/), and does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy).
 
 All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 40 lines of code.
 
