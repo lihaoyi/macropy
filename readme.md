@@ -297,7 +297,7 @@ def foldl1(my_list, op):
 ```
 
 The switch macro is actually just syntactic sugar for using the more general patterns macro.
-`foldl1` is approximtely desugared into the following, with one important
+`foldl1` is approximately desugared into the following, with one important
 caveat: the bodies of the if statements are not subject to pattern matching,
 in case you actually want to use bitshifts in your code.
 
@@ -332,7 +332,7 @@ def area(rect):
         return (x2 - x1) * (y2 - y1)
 ```
 
-If the match fails, a PatternMatchException() will be thrown.
+If the match fails, a `PatternMatchException` will be thrown.
 ```python
     # Throws a PatternMatchException
     area(Line(Point(1, 2), Point(3, 4)))
@@ -960,7 +960,7 @@ with peg:
 print num.parse_all("123") # ["123"]
 ```
 
-which returns the a string of digits, and convert it into a parser which returns an `int` with the value of that string. This can be done with the `//` operator:
+which returns a string of digits, and convert it into a parser which returns an `int` with the value of that string. This can be done with the `//` operator:
 
 ```python
 with peg:
