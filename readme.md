@@ -29,7 +29,7 @@ The [Rough Overview](#rough-overview) will give a birds eye view of how it works
 
 Or just skip ahead to the [Lessons](#lessons) and [Conclusion](#macropy-the-last-refuge-of-the-competent).
 
-MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython). It [almost](https://github.com/lihaoyi/macropy/issues/16) runs on [PyPy 1.9](http://pypy.org/), and does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy).
+MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 1.9](http://pypy.org/), but does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy).
 
 Rough Overview
 ==============
@@ -1792,7 +1792,8 @@ MacroPy: The Last Refuge of the Competent
 =========================================
 Macros are always a contentious issue. On one hand, we have the LISP community, which seems to using macros for everything. On the other hand, most mainstream programmers shy away from them, believing them to be extremely powerful and potentially confusing, not to mention extremely difficult to execute.
 
-With MacroPy, we believe that we have a powerful, flexible tool that makes it trivially easy to write AST-transforming macros with any level of complexity. We have a [compelling suite of use cases](#examples) demonstrating the utility of such transforms, and ([almost](https://github.com/lihaoyi/macropy/issues/16)) all of it runs perfectly fine on alternative implementations of Python such as PyPy.
+With MacroPy, we believe that we have a powerful, flexible tool that makes it trivially easy to write AST-transforming macros with any level of complexity. We have a [compelling suite of use cases](#examples) demonstrating the utility of such transforms, and
+ all of it runs perfectly fine on alternative implementations of Python such as PyPy.
 
 We have a few major takeaways:
 
