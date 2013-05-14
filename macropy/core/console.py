@@ -1,9 +1,10 @@
+from _ast import Load
 import code
 import ast
 from codeop import CommandCompiler, Compile, _features
 import sys
 
-import macropy.core.macros
+from macropy.core.macros import Load, fill_line_numbers, _ast_ctx_fixer, _expand_ast, _detect_macros
 
 
 class MacroConsole(code.InteractiveConsole):
@@ -24,17 +25,18 @@ class MacroCompile(Compile):
         self.modules = set()
     def __call__(self, source, filename, symbol):
         tree = ast.parse(source)
-        required_pkgs = macropy.core.macros._detect_macros(tree)
+
+        required_pkgs = _detect_macros(tree)
         for p in required_pkgs:
             __import__(p)
 
         self.modules.update(sys.modules[p] for p in required_pkgs)
 
-        tree = macropy.core.macros._expand_ast(tree, self.modules)
+        tree = _expand_ast(tree, self.modules)
             
-        tree = macropy.core.macros._ast_ctx_fixer.recurse(tree, macropy.core.macros.Load())
+        tree = _ast_ctx_fixer.recurse(tree, Load())
 
-        macropy.core.macros.fill_line_numbers(tree, 0, 0)
+        fill_line_numbers(tree, 0, 0)
         tree = ast.Interactive(tree.body)
         codeob = compile(tree, filename, symbol, self.flags, 1)
         for feature in _features:

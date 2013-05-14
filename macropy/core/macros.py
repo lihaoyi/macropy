@@ -232,5 +232,7 @@ class _MacroFinder(object):
         except Exception, e:
             pass
 
-
-#console.MacroConsole().interact()
+from macropy.core import console
+import inspect
+if inspect.stack()[-1][1] == '<stdin>':
+    console.MacroConsole().interact()
