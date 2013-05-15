@@ -66,6 +66,6 @@ setup(name='MacroPy',
       author_email='haoyi.sg@gmail.com, justin.holmgren@gmail.com',
       url='https://github.com/lihaoyi/macropy',
       packages=['macropy', 'macropy.core', 'macropy.macros', 'macropy.macros2', 'macropy.core_tests'],
-      install_requires=['pyxl', 'SQLAlchemy'],
+      install_requires=['pyxl', 'SQLAlchemy', 'pyjaco', 'selenium'],
       classifiers=['Programming Language :: Python :: 2.7']
      )

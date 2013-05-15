@@ -19,6 +19,7 @@ MacroPy has been used to implement features such as:
 - [String Interpolation](#string-interpolation), a common feature, and [Pyxl](#pyxl-integration), which is basically XML interpolation.
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts), from every programmer's wildest dreams.
 - [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), a clone of LINQ to SQL from C#
+- [PJs Integration](#pjs-integration), cross compiling snippets of Python into equivalent Javascript
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy
 - [Parser Combinators](#parser-combinators), inspired by Scala's
 
@@ -1125,6 +1126,74 @@ pp.pprint(parser.parse_all(string)[0])
 ```
 
 As you can see, the full parser parses that non-trivial blob of JSON into an identical structure as the in-built `json` package. In addition, the source of the parser looks almost identical to the PEG grammar it is parsing, shown above. Pretty neat!
+
+PJs Snippets
+------------
+
+```python
+code, javascript = pyjs%(lambda x: x > 5 and x % 2 == 0)
+
+print code
+# <function <lambda> at 0x0000000003515C18>
+
+print javascript
+# $def(function $_lambda(x) {return $b.bool($b.do_ops(x, '>', 5)) && $b.bool($b.do_ops($b.mod(x, 2), '==', 0));})
+
+for i in range(10):
+    print i, code(i), self.exec_js_func(javascript, i)
+
+# 0 False False
+# 1 False False
+# 2 False False
+# 3 False False
+# 4 False False
+# 5 False False
+# 6 True True
+# 7 False False
+# 8 True True
+# 9 False False
+```
+
+[PJs](https://github.com/jabapyth/PJs) is a library designed to cross compile Python files into equivalent Javascript files. The generated Javascript is incredibly ugly, thanks in part to the fact that in order to preserve semantics in the presence of features that Python has but JS lacks (such as [operator overloading](http://en.wikipedia.org/wiki/Operator_overloading)), basically every operation in the Javascript program has to be virtualized into a method call. Furthermore, the translation is not very good, and breaks down around the fringes of the Python language.
+
+Nonetheless, as the above example demonstrates, the translation is entirely acceptable for simple logic. Furthermore, with macros, marking out snippets of Python code to be translated is as simple as prepending either:
+
+- `js%`, if you only want to translate the enclosed python expression into Javascript
+- `pyjs%`, if you want both the original expression as well as the translated Javascript as in the example above). This is given to you as a tuple.
+
+`pyjs%` is particularly interesting, because it brings us closer to the holy grail of HTML form validation: having validation run on both client and server, but still only be expressed once in the code base. with `pyjs%`, it is trivial to fork an expression (such as the conditional function shown above) into both Python and Javascript representations. Rather than using a [menagerie](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Forms/Data_form_validation?redirectlocale=en-US&redirectslug=HTML%2FForms%2FData_form_validation) of [ad-hoc](http://docs.jquery.com/Plugins/validation) [mini-DSLs](https://code.google.com/p/validation-js/wiki/MainDocumentation), this lets you write your validation logic in plain Python.
+
+As mentioned earlier, the PJs translator isn't very robust, and is full of bugs:
+
+```python
+# these work
+assert self.exec_js(js%10) == 10
+assert self.exec_js(js%"i am a cow") == "i am a cow"
+
+# these literals are buggy, and it seems to be PJs' fault
+# ??? all the results seem to turn into strings ???
+assert self.exec_js(js%3.14) == 3.14 # Fails
+assert self.exec_js(js%[1, 2, 'lol']) == [1, 2, 'lol'] # Fails
+assert self.exec_js(js%{"moo": 2, "cow": 1}) == {"moo": 2, "cow": 1} # Fails
+
+# set literals don't work so this throws an exception at macro-expansion time
+# self.exec_js(js%{1, 2, 'lol'})
+```
+
+Even as such basic things fail, other, more complex operations work flawlessly:
+
+```python
+script = js%sum([x for x in range(10) if x > 5])
+print script
+# "$b.sum($b.listcomp([$b.range(10)], function (x) {return x;}, [function (x) { return $b.do_ops(x, '>', 5); }]))"
+print self.exec_js(script)
+# 30
+```
+These examples are all taken from the [unit tests](macropy/macros2/javascript_test.py).
+
+Like [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), PJs Snippets demonstrates the feasibility, the convenience of being able to mark out sections of code using macros, to be cross-compiled into another language and run remotely. Unlike PINQ, which is built on top of the stable, battle-tested and widely used [SQLAlchemy](http://www.sqlalchemy.org/) library, PJs snippets is built on top of an buggy, unknown and untested Python to Javascript cross-compiler, making it far from production ready.
+
+Nonetheless, PJs Snippets demonstrate the promise of being able to cross-compile bits of your program and being able to run parts of it remotely. The code which performs the integration of PJs and MacroPy is a scant [25 lines long](macropy/macros2/javascript). If a better, more robust Python to Javascript cross-compiler appears some day, we could easily make use of it to provide a stable, seamless developer experience of sharing code between (web) client and server.
 
 Detailed Guide
 ==============
