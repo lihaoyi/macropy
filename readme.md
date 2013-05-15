@@ -19,9 +19,9 @@ MacroPy has been used to implement features such as:
 - [String Interpolation](#string-interpolation), a common feature, and [Pyxl](#pyxl-integration), which is basically XML interpolation.
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts), from every programmer's wildest dreams.
 - [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), a clone of LINQ to SQL from C#
-- [JS Snippets](#js-snippets), cross compiling snippets of Python into equivalent Javascript
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy
 - [Parser Combinators](#parser-combinators), inspired by Scala's
+- [JS Snippets](#js-snippets), cross compiling snippets of Python into equivalent Javascript
 
 The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through creating a simple macro ([Quick Lambdas](#quick-lambdas)) as well as containing documentation for [Tools](#tools) such as
 
