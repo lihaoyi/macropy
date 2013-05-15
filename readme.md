@@ -1593,7 +1593,7 @@ Mission Accomplished! You can see the completed macro defined in [macropy/macros
 
 Tools
 =====
-This section describes tools that can be used to help you define your macros and their transformations. Although it is perfectly possible to write macros which only use conditionals and for-loops, life gets so much easier using these abstractions that I would consider them a "must have".
+This section describes tools ([Quasiquotes](#quasiquotes), [Walkers](#walkers)) that can be used to help you define your macros and their transformations. Although it is perfectly possible to write macros which only use conditionals and for-loops, life gets so much easier using these abstractions that I would consider them a "must have".
 
 Quasiquotes
 -----------
@@ -1756,7 +1756,7 @@ The Walker is an incredibly versatile tool, used to recursively traverse and tra
 
 Macro Subtleties
 ================
-When writing AST-transforming macros, there are some edge cases and subtleties which you don't notice at first, but eventually you will have to come around to. Here are some of them:
+When writing AST-transforming macros, there are some edge cases and subtleties which you don't notice at first, but eventually you will have to come around to. Things such as the [macro expansion order](#expansion-order), [hygiene](#hygiene) and [line numbers in error messages](#line-numbers):
 
 Expansion Order
 ---------------
@@ -1887,7 +1887,7 @@ Line 2311! In a 7 line file! This may improve in the future, but that's the curr
 
 Lessons
 =======
-Writing macros is not easy, to say the least. Thus, although you could theoretically "do whatever the hell you want" when writing macros, you probably don't want to. Here are some of the lessons learned in creating the suite of demos included with MacroPy.
+Writing macros is not easy, to say the least. Thus, although you could theoretically "do whatever the hell you want" when writing macros, you probably don't want to. Instead, you should [minimize what the macros do](#minimize-macro-magic), [avoid them entirely when not necessary](#no-macros-necessary), be concious of [the amount of "magic" you introduce](#levels-of-magic) and [why, exactly, you want to use macros](#whither-macropy).
 
 Minimize Macro Magic
 --------------------
@@ -1970,7 +1970,7 @@ Where basic language constructs are at **0** in the scale of magic, functions an
 I would place MacroPy about on par with Metaclasses in terms of their magic-level: pretty knotty, but still ok. Past that, you are in the realm of `stack.inspect()`, where your function call can look at *what files are in the call stack* and do different things depending on what it sees! And finally, at the **Beyond 9000** level of magic, is the act of piecing together code via string-interpolation or concatenation and just calling `eval` or `exec` on the whole blob, maybe at import time, maybe at run-time.
 
 ###Skeletons in the Closet
-Many profess to shun the higher levels of magic "I would *never* do textual code generation!" you hear them say. "I will do things the simple, Pythonic way, with minimal magic!". But if you dig a little deeper, and see the code they use on a regular basis, you may notice some `namedtuple`s in their code base. Looking up the implementation of `namedtuple` brings up this:
+Many profess to shun the higher levels of magic "I would *never* do textual code generation!" you hear them say. "I will do things the simple, Pythonic way, with minimal magic!". But if you dig a little deeper, and see the code they use on a regular basis, you may notice some `namedtuple`s in their code base. Looking up the [implementation of namedtuple](http://hg.python.org/cpython/file/2.7/Lib/collections.py#l234) brings up this:
 
 ```python
 template = '''class %(typename)s(tuple):
@@ -1985,17 +1985,6 @@ template = '''class %(typename)s(tuple):
 ```
 
 Runtime code-generation as strings! It turns out they piece together the class declaration textually and then just `exec` the whole lot. Similar things take place in the new `Enum` that's going to enter the standard library. [Case Classes](#case-classes) may be magical, but are they really any worse than the status quo?
-
-Even looking at the `_ast` module, where all the `ast` nodes are nicely defined in plain old python. We may replace them, too, with case classes, perhaps at a cost of extra magic due to the macros. We may believe this until we see the comment at the top of `_ast.py`:
-
-```python
-# encoding: utf-8
-# module _ast
-# from (built-in)
-# by generator 1.124
-```
-
-It turns out that they, too, are generated programmatically! Concatenated together as a bunch of strings and `exec`ed, except this is done at build time rather than import time. The plain old Python, apparently at a *Functions and Classes* level of magic, is revealed to actually be at a _Textual Code Generation_ level of magic.
 
 Beyond Python, you have the widely used [.NET](http://en.wikipedia.org/wiki/.NET_Framework)'s [T4 Text Templates](http://msdn.microsoft.com/en-us/library/bb126445.aspx) and [Ruby on Rails](http://rubyonrails.org/) code-generation tools. This demonstrates that in any language, there will be situations where dynamic generation/compilation/execution of source code begin to look attractive, or even necessary. In these situations, syntactic macros provide a safer, easier to use and more maintainable alternative to this kind of string-trickery.
 
