@@ -1957,13 +1957,10 @@ Similar things could be done for the other use cases mentioned. This is not a co
 ###Auto-Forking
 Another suggestion was to make a decorator macro that ships the code within the function into a separate process to execute. While this sounds pretty extreme, it really is not that difficult, for in Python you can easily introspect a function object and retrieve it's `code` attribute. This can pretty easily [be pickled and sent to a child process](http://stackoverflow.com/questions/1253528/is-there-an-easy-way-to-pickle-a-python-function-or-otherwise-serialize-its-cod) to be executed there. Perhaps you may want some sort of Future container to hold the result, or some nice helpers for fork-join style code, but these are all just normal python functions: no macros necessary!
 
-Whither MacroPy
+Thus, you can accomplish a lot of things in Python without using macros. If you need to pass functions around, you can do so without macros. Similarly, if you want to introspect a function and see how many arguments it takes, you can go ahead using `inspect`. `getattr`, `hasattr` and friends are sufficient for all sorts of reflective metaprogramming, dynamically setting and getting attributes. Beyond that, you have the abilities to access the `locals` an `globals` dictionaries, reflecting on the call stack via `inspect.stack()` and `eval` or `exec`ing source code. Whether this is a good idea is another question.
+
+Levels of Magic
 ---------------
-When, then, do you need macros? It turns out you only need macros when *you want access to the syntax tree of a python program*. Whether it be for cross-compilation (like in PINQ) or for debugging (like in Tracing) or for enforcing brand-new python semantics (like in Quick Lambda), it has to be about the AST for you to need macros.
-
-This may seem obvious, but this rules out a lot of things, such as those mentioned earlier. If you need to pass functions around, you can do so without macros. Similarly, if you want to introspect a function and see how many arguments it takes, you can go ahead using `inspect`. `getattr`, `hasattr` and friends are sufficient for all sorts of reflective metaprogramming, dynamically setting and getting attributes.
-
-###Levels of Magic
 MacroPy is an extreme measure; there is no doubting that. Intercepting the raw source code as it is being imported, parsing it and performing AST transforms just before loading it is not something to be taken lightly! However, macros are not the most extreme thing that you can do! If you look at an Magic Scale for the various things you can do in Python, it may look something like this:
 
 ![Magic](media/Magic.png)
@@ -2002,12 +1999,36 @@ It turns out that they, too, are generated programmatically! Concatenated togeth
 
 Beyond Python, you have the widely used [.NET](http://en.wikipedia.org/wiki/.NET_Framework)'s [T4 Text Templates](http://msdn.microsoft.com/en-us/library/bb126445.aspx) and [Ruby on Rails](http://rubyonrails.org/) code-generation tools. This demonstrates that in any language, there will be situations where dynamic generation/compilation/execution of source code begin to look attractive, or even necessary. In these situations, syntactic macros provide a safer, easier to use and more maintainable alternative to this kind of string-trickery.
 
+Whither MacroPy
+---------------
+When, then, do you need macros? We believe that the macros shown above are a compelling set of functionality that would be impossible without macros. These macros fall broadly into a few categories:
+
+- [Mobile Code](#mobile-code)
+- [Boilerplate Shaving](#boilerplate-shaving)
+- [Heavy AST Manipulation](#heavy-ast-manipulation)
+
+###Mobile Code
+Macros such as [PINQ](#pinq-to-sqlalchemy), [JS Snippets](#js-snippets), [Tracing](#tracing) and potential extensions such as the [Fork-Join](issues/25) macros are all about using macros to shuttle code between domains, while still allowing it to be written together in a single code base. PINQ and JS Snippets are all about taking sections of a Python program and executing it either on a remote database or in a browser, while the Tracing macro ships sections of code into the console for debugging purposes and the Fork-Join macro would shuttle sections of code between Python processes in order to run them in parallel.
+
+This idea of _mobile code_ is not commonly seen in most domains; more often, code written in a single file is run in a single place, and if you want to write a distributed system, you'll need to manually break up your code even though conceptually it all belongs together. Allowing you to have a single code-base and semi-transparently (translucently?) ship the code to somewhere else to run would be a big step forward.
+
+###Boilerplate Shaving
+[Parser Combinators](#parser-combinators) and [Quick Lambdas](#quick-lambdas) are examples _of boilerplate shaving_, where macros are used to reduce the amount of boilerplate necessary to perform some logic below the level that can be achieved by traditional means (methods, operator overloading, etc.). With the Parser Combinators, for example, the macro transform that is performed is [extremely simple and superficial](#minimize-macro-magic). This is also the case with the other boilerplate shaving macros.
+
+In these macros, the boilerplate that the macro removes is trivial but extremely important. Looking again at the [Parser Combinator](#minimize-macro-magic) transformation, it is clear that removing the boilerplate is a huge improvement: rather than having to dig through the code to figure out what happens, the PEG-like structure of the code jumps right out at you making it far easier to see, at a glance, what is going on.
+
+###Heavy AST Manipulation
+The last category that macros fall into are those such as [Case Classes](#case-classes), [Pattern Matching](#pattern-matching) and [Tail Call Optimization](#tail-call-optimization). These are macros that do massive transformations to large sections of a Python program, completely changing the semantics from what they were before.
+
+Of all the macros shown, these are probably the most risky. In the [mobile code](#mobile-code) macros, the code being transformed is usually clearly delimited and separate from the rest of the program. In the [boilerplate shaving](#boilerplate-shaving) macros, the transformation is simple to the point of being superficial. In these AST Manipulation macros, not only is the transformation being performed extremely complex, it also affects a large section of your program and is interleaved with lots of "untransformed" Python code.
+
+For example, with [Case Classes](#case-classes), the case class definition may contain method definitions, which you would hope can continue to function perfectly and not get messed up by the case class transform.
+
 MacroPy: The Last Refuge of the Competent
 =========================================
 Macros are always a contentious issue. On one hand, we have the [LISP](https://en.wikipedia.org/wiki/LISP) community, which seems to using macros for everything. On the other hand, most mainstream programmers shy away from them, believing them to be extremely powerful and potentially confusing, not to mention extremely difficult to execute.
 
-With MacroPy, we believe that we have a powerful, flexible tool that makes it trivially easy to write AST-transforming macros with any level of complexity. We have a [compelling suite of use cases](#examples) demonstrating the utility of such transforms, and
- all of it runs perfectly fine on alternative implementations of Python such as PyPy.
+With MacroPy, we believe that we have a powerful, flexible tool that makes it trivially easy to write AST-transforming macros with any level of complexity. We have a [compelling suite of use cases](#examples) demonstrating the utility of such transforms, and all of it runs perfectly fine on alternative implementations of Python such as PyPy.
 
 We have a few major takeaways:
 
