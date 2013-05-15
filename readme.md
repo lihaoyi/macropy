@@ -1998,7 +1998,9 @@ Even looking at the `_ast` module, where all the `ast` nodes are nicely defined 
 # by generator 1.124
 ```
 
-It turns out that they, too, are generated programmatically! Concatenated together as a bunch of strings and `exec`ed, except this is done at build time rather than import time. The plain old Python, apparently at a *Functions and Classes* level of magic, is revealed to actually be at a _Textual Code Generation_ level of magic. Beyond Python, you have the widely used [.NET](http://en.wikipedia.org/wiki/.NET_Framework)'s [T4 Text Templates](http://msdn.microsoft.com/en-us/library/bb126445.aspx) and [Ruby on Rails](http://rubyonrails.org/) code-generation tools. This demonstrates that in any language, there will be situations where dynamic generation/compilation/execution of source code begin to look attractive, or even necessary. In these situations, syntactic macros provide a safer, easier to use and more maintainable alternative to this kind of string-trickery.
+It turns out that they, too, are generated programmatically! Concatenated together as a bunch of strings and `exec`ed, except this is done at build time rather than import time. The plain old Python, apparently at a *Functions and Classes* level of magic, is revealed to actually be at a _Textual Code Generation_ level of magic.
+
+Beyond Python, you have the widely used [.NET](http://en.wikipedia.org/wiki/.NET_Framework)'s [T4 Text Templates](http://msdn.microsoft.com/en-us/library/bb126445.aspx) and [Ruby on Rails](http://rubyonrails.org/) code-generation tools. This demonstrates that in any language, there will be situations where dynamic generation/compilation/execution of source code begin to look attractive, or even necessary. In these situations, syntactic macros provide a safer, easier to use and more maintainable alternative to this kind of string-trickery.
 
 MacroPy: The Last Refuge of the Competent
 =========================================
