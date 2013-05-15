@@ -1298,7 +1298,7 @@ BinOp(Num(1), Add(), Num(2))
 3
 ```
 
-As you can see, the AST objects don't have a nice `__repr__`, but if you use the MacroPy function `real_repr`, you can see that it's made up of the  `BinOp` `Add`, which adds the two numbers `Num(1)` and `Num(1)`. Unparsing it into source code via `unparse()` gives you `(1 + 1)`, which is what you would expect. In general, unparsing may not give you exactly the source of the original file (it may have more or fewer parentheses or have the indentation changed) but it should be semantically equivalent when executed.
+As you can see, the AST objects don't have a nice `__repr__`, but if you use the MacroPy function `real_repr`, you can see that it's made up of the  `BinOp` `Add`, which adds the two numbers `Num(1)` and `Num(2)`. Unparsing it into source code via `unparse()` gives you `(1 + 2)`, which is what you would expect. In general, unparsing may not give you exactly the source of the original file (it may have more or fewer parentheses or have the indentation changed) but it should be semantically equivalent when executed.
 
 One (trivial) example of modifying the tree is to simply replace it with a new tree, for example:
 
@@ -1312,7 +1312,7 @@ macros = Macros()
 def expand(tree):
     return Num(100)
 ```
-When you run `run.py`, this will print out `100`, as the original expression `(1 + 1)` has now been replaced by the literal `100`. Another possible operation would be to replace the expression with the square of itself:
+When you run `run.py`, this will print out `100`, as the original expression `(1 + 2)` has now been replaced by the literal `100`. Another possible operation would be to replace the expression with the square of itself:
 
 ```python
 # macro_module.py
