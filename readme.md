@@ -1904,12 +1904,12 @@ expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
 And think this may be an ideal situation to go all-out, just handle the whole thing using AST transforms and do some code-generation to create a working parser! It turns out, the `peg` module does none of this. It has about 30 lines of code which does a very shallow transform from the above code into:
 
 ```python
-value = Raw('[0-9]+').r // int | (Raw('('), expr, Raw(')')) // (f%_[1])
+value = Raw('[0-9]+').r // int | Seq(Raw('('), expr, Raw(')')) // (lambda x: x[1])
 op = Raw('+') | Raw('-') | Raw('*') | Raw('/')
-expr = (value.bind_to("first"), (op, value).rep.bind_to("rest")) >> reduce_chain([first] + rest)
+expr = Seq(value.bind_to("first"), (op, value).rep.bind_to("rest")) >> (lambda first, rest: reduce_chain([first] + rest))
 ```
 
-That's the extent of the macro! It just wraps the raw strings in `Raw`s, and converts the `a is b` syntax into `a.bind_to("b")`. The rest, all the operators `|` `//` `>>`, the `.r` syntax for regexes and `.rep` syntax for repetitions, that's all just implemented on the `Raw` objects using plain-old operator overloading and properties.
+That's the extent of the macro! It just wraps the raw strings in `Raw`s, tuples in `Seq`s and converts the `a is b` syntax into `a.bind_to("b")`. The rest, all the operators `|` `//` `>>`, the `.r` syntax for regexes and `.rep` syntax for repetitions, that's all just implemented on the `Raw` objects using plain-old operator overloading and properties.
 
 Why do this, instead of simply implementing the behavior of `|` `//` and friends as macros? There are a few reasons
 
