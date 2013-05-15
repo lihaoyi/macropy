@@ -38,5 +38,5 @@ run(tco_test.Tests)
 from macropy.macros2 import linq_test
 run(linq_test.Tests)
 
-#from macropy.macros2 import javascript_test
-#run(javascript_test.Tests)
+from macropy.macros2 import javascript_test
+run(javascript_test.Tests)

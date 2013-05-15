@@ -43,10 +43,19 @@ class Tests(unittest.TestCase):
         assert self.exec_js(js%sum([x for x in range(10) if x > 5])) == 30
 
     def test_pyjs(self):
+        # cross-compiling a trivial predicate
         code, javascript = pyjs%(lambda x: x > 5 and x % 2 == 0)
-        print code
+
         for i in range(10):
-            print i, code(i), self.exec_js_func(javascript, i)
+            assert code(i) == self.exec_js_func(javascript, i)
 
 
-        print self.exec_js(js%[y for x in range(5) for y in range(x)])
+        code, javascript = pyjs%(lambda n: [
+            x for x in range(n)
+            if 0 == len([
+                y for y in range(2, x-2)
+                if x % y == 0
+            ])
+        ])
+        # this is also wrongly stringifying the result =(
+        assert str(code(20)) == str(self.exec_js_func(javascript, 20))

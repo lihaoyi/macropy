@@ -1129,7 +1129,6 @@ As you can see, the full parser parses that non-trivial blob of JSON into an ide
 
 JS Snippets
 ------------
-
 ```python
 from macropy.macros2.javascript import macros, pyjs
 
@@ -1191,6 +1190,23 @@ print script
 print self.exec_js(script)
 # 30
 ```
+
+Here's another, less trivial use case: cross compiling a function that checks for the [primality](http://en.wikipedia.org/wiki/Prime_number) of a number:
+
+```python
+code, javascript = pyjs%(lambda n: [
+    x for x in range(n)
+    if 0 == len([
+        y for y in range(2, x-2)
+        if x % y == 0
+    ])
+])
+print code(20)
+# [0, 1, 2, 3, 4, 5, 7, 11, 13, 17, 19]
+print self.exec_js_func(javascript, 20)
+# [0, 1, 2, 3, 4, 5, 7, 11, 13, 17, 19]
+```
+
 These examples are all taken from the [unit tests](macropy/macros2/javascript_test.py).
 
 Like [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), JS Snippets demonstrates the feasibility, the convenience of being able to mark out sections of code using macros, to be cross-compiled into another language and run remotely. Unlike PINQ, which is built on top of the stable, battle-tested and widely used [SQLAlchemy](http://www.sqlalchemy.org/) library, JS Snippets is built on top of an buggy, unknown and untested Python to Javascript cross-compiler, making it far from production ready.
