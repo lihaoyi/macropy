@@ -1887,7 +1887,7 @@ Line 2311! In a 7 line file! This may improve in the future, but that's the curr
 
 Lessons
 =======
-Writing macros is not easy, to say the least. Thus, although you could theoretically "do whatever the hell you want" when writing macros, you probably don't want to. Instead, you should [minimize what the macros do](#minimize-macro-magic), [avoid them entirely when not necessary](#no-macros-necessary), be concious of [the amount of "magic" you introduce](#levels-of-magic) and [why, exactly, you want to use macros](#whither-macropy).
+Writing macros is not easy, to say the least. Thus, although you could theoretically "do whatever the hell you want" when writing macros, you probably don't want to. Instead, you should [minimize](#minimize-macro-magic) what the macros do, [avoid them](#no-macros-necessary) entirely when not necessary, be concious of the amount of [magic](#levels-of-magic) you introduce and think hard about [what, exactly](#whither-macropy) you want to do with them.
 
 Minimize Macro Magic
 --------------------
