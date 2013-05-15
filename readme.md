@@ -1163,9 +1163,9 @@ Nonetheless, as the above example demonstrates, the translation is entirely acce
 - `js%`, if you only want to translate the enclosed python expression into Javascript
 - `pyjs%`, if you want both the original expression as well as the translated Javascript (as in the example above). This is given to you as a tuple.
 
-`pyjs%` is particularly interesting, because it brings us closer to the holy grail of HTML form validation: having validation run on both client and server, but still only be expressed once in the code base. with `pyjs%`, it is trivial to fork an expression (such as the conditional function shown above) into both Python and Javascript representations. Rather than using a [menagerie](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Forms/Data_form_validation?redirectlocale=en-US&redirectslug=HTML%2FForms%2FData_form_validation) of [ad-hoc](http://docs.jquery.com/Plugins/validation) [mini-DSLs](https://code.google.com/p/validation-js/wiki/MainDocumentation), this lets you write your validation logic in plain Python.
+`pyjs%` is particularly interesting, because it brings us closer to the holy grail of HTML form validation: having validation run on both client and server, but still only be expressed once in the code base. With `pyjs%`, it is trivial to fork an expression (such as the conditional function shown above) into both Python and Javascript representations. Rather than using a [menagerie](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Forms/Data_form_validation?redirectlocale=en-US&redirectslug=HTML%2FForms%2FData_form_validation) of [ad-hoc](http://docs.jquery.com/Plugins/validation) [mini-DSLs](https://code.google.com/p/validation-js/wiki/MainDocumentation), this lets you write your validation logic in plain Python.
 
-As mentioned earlier, JS Snippets isn't very robust, and is full of bugs:
+As mentioned earlier, JS Snippets isn't very robust, and the translation is full of bugs:
 
 ```python
 # these work
