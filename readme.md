@@ -2022,7 +2022,11 @@ The last category that macros fall into are those such as [Case Classes](#case-c
 
 Of all the macros shown, these are probably the most risky. In the [mobile code](#mobile-code) macros, the code being transformed is usually clearly delimited and separate from the rest of the program. In the [boilerplate shaving](#boilerplate-shaving) macros, the transformation is simple to the point of being superficial. In these AST Manipulation macros, not only is the transformation being performed extremely complex, it also affects a large section of your program and is interleaved with lots of "untransformed" Python code.
 
-For example, with [Case Classes](#case-classes), the case class definition may contain method definitions, which you would hope can continue to function perfectly and not get messed up by the case class transform.
+For example, with [Case Classes](#case-classes), the case class definition may contain method definitions, which you would hope can continue to function perfectly and not get messed up by the case class transform. Nonetheless, the benefits of these transforms are also deep and far reaching, and the trade of may well be worth the macro complexity.
+
+------------------------------
+
+Note how none of these macros are simple things like do-while loops or alternate syntaxes for if-else statements; these categories of macros perform useful functions, often completely impossible without macros, and have to be carefully crafted so as to minimize the confusion caused by the macro transformation.
 
 MacroPy: The Last Refuge of the Competent
 =========================================
