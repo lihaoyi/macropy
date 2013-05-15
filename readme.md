@@ -1330,7 +1330,7 @@ This will replace the expression `(1 + 2)` with `((1 + 2) * (1 + 2))`; you can s
 
 Using Quasiquotes
 -----------------
-Building up the new tree manually, as shown above, works reasonably well. However, it can quickly get unwieldy, particularly for more complex expressions. For example, let's say we wanted to make `expand` wrap the expression `(1 + 1)` in a lambda, like `lambda x: x * (1 + 2) + 10`. Ignore, for the moment, that this transform is not very useful. Doing so manually is quite a pain:
+Building up the new tree manually, as shown above, works reasonably well. However, it can quickly get unwieldy, particularly for more complex expressions. For example, let's say we wanted to make `expand` wrap the expression `(1 + 2)` in a lambda, like `lambda x: x * (1 + 2) + 10`. Ignore, for the moment, that this transform is not very useful. Doing so manually is quite a pain:
 
 ```python
 # macro_module.py
