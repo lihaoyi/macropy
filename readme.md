@@ -1298,7 +1298,7 @@ BinOp(Num(1), Add(), Num(2))
 3
 ```
 
-As you can see, the AST objects don't have a nice `__repr__`, but if you use the MacroPy function `real_repr`, you can see that it's made up of the  `BinOp` `Add`, which adds the two numbers `Num(1)` and `Num(1)`. Unparsing it into source code via `unparse()` gives you `(1 + 1)`, which is what you would expect. In general, unparsing may not give you exactly the source of the original file (it may have more or fewer parentheses or have the indentation changed) but it should be semantically equivalent when executed.
+As you can see, the AST objects don't have a nice `__repr__`, but if you use the MacroPy function `real_repr`, you can see that it's made up of the  `BinOp` `Add`, which adds the two numbers `Num(1)` and `Num(2)`. Unparsing it into source code via `unparse()` gives you `(1 + 2)`, which is what you would expect. In general, unparsing may not give you exactly the source of the original file (it may have more or fewer parentheses or have the indentation changed) but it should be semantically equivalent when executed.
 
 One (trivial) example of modifying the tree is to simply replace it with a new tree, for example:
 
@@ -1312,7 +1312,7 @@ macros = Macros()
 def expand(tree):
     return Num(100)
 ```
-When you run `run.py`, this will print out `100`, as the original expression `(1 + 1)` has now been replaced by the literal `100`. Another possible operation would be to replace the expression with the square of itself:
+When you run `run.py`, this will print out `100`, as the original expression `(1 + 2)` has now been replaced by the literal `100`. Another possible operation would be to replace the expression with the square of itself:
 
 ```python
 # macro_module.py
@@ -1330,7 +1330,7 @@ This will replace the expression `(1 + 2)` with `((1 + 2) * (1 + 2))`; you can s
 
 Using Quasiquotes
 -----------------
-Building up the new tree manually, as shown above, works reasonably well. However, it can quickly get unwieldy, particularly for more complex expressions. For example, let's say we wanted to make `expand` wrap the expression `(1 + 1)` in a lambda, like `lambda x: x * (1 + 2) + 10`. Ignore, for the moment, that this transform is not very useful. Doing so manually is quite a pain:
+Building up the new tree manually, as shown above, works reasonably well. However, it can quickly get unwieldy, particularly for more complex expressions. For example, let's say we wanted to make `expand` wrap the expression `(1 + 2)` in a lambda, like `lambda x: x * (1 + 2) + 10`. Ignore, for the moment, that this transform is not very useful. Doing so manually is quite a pain:
 
 ```python
 # macro_module.py
@@ -1904,12 +1904,12 @@ expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
 And think this may be an ideal situation to go all-out, just handle the whole thing using AST transforms and do some code-generation to create a working parser! It turns out, the `peg` module does none of this. It has about 30 lines of code which does a very shallow transform from the above code into:
 
 ```python
-value = Raw('[0-9]+').r // int | (Raw('('), expr, Raw(')')) // (f%_[1])
-op = Raw('+') | Raw('-') | Raw('*') | Raw('/')
-expr = (value.bind_to("first"), (op, value).rep.bind_to("rest")) >> reduce_chain([first] + rest)
+value = Lazy(lambda: Raw('[0-9]+').r // int | Seq(Raw('('), expr, Raw(')')) // (lambda x: x[1]))
+op = Lazy(lambda: Raw('+') | Raw('-') | Raw('*') | Raw('/'))
+expr = Lazy(lambda: Seq(value.bind_to("first"), Seq(op, value).rep.bind_to("rest")) >> (lambda first, rest: reduce_chain([first] + rest)))
 ```
 
-That's the extent of the macro! It just wraps the raw strings in `Raw`s, and converts the `a is b` syntax into `a.bind_to("b")`. The rest, all the operators `|` `//` `>>`, the `.r` syntax for regexes and `.rep` syntax for repetitions, that's all just implemented on the `Raw` objects using plain-old operator overloading and properties.
+That's the extent of the macro! It just wraps the raw strings in `Raw`s, tuples in `Seq`s, converts the `a is b` syntax into `a.bind_to("b")` and wraps everything in a lazy memoizing thunk to allow circular references between them. The rest, all the operators `|` `//` `>>`, the `.r` syntax for regexes and `.rep` syntax for repetitions, that's all just implemented on the `Raw` objects using plain-old operator overloading and properties.
 
 Why do this, instead of simply implementing the behavior of `|` `//` and friends as macros? There are a few reasons
 
