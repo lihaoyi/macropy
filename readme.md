@@ -19,7 +19,7 @@ MacroPy has been used to implement features such as:
 - [String Interpolation](#string-interpolation), a common feature, and [Pyxl](#pyxl-integration), which is basically XML interpolation.
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts), from every programmer's wildest dreams.
 - [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), a clone of LINQ to SQL from C#
-- [PJs Integration](#pjs-integration), cross compiling snippets of Python into equivalent Javascript
+- [JS Snippets](#js-snippets), cross compiling snippets of Python into equivalent Javascript
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy
 - [Parser Combinators](#parser-combinators), inspired by Scala's
 
@@ -1127,7 +1127,7 @@ pp.pprint(parser.parse_all(string)[0])
 
 As you can see, the full parser parses that non-trivial blob of JSON into an identical structure as the in-built `json` package. In addition, the source of the parser looks almost identical to the PEG grammar it is parsing, shown above. Pretty neat!
 
-PJs Snippets
+JS Snippets
 ------------
 
 ```python
@@ -1154,7 +1154,7 @@ for i in range(10):
 # 9 False False
 ```
 
-[PJs](https://github.com/jabapyth/PJs) is a library designed to cross compile Python files into equivalent Javascript files. The generated Javascript is incredibly ugly, thanks in part to the fact that in order to preserve semantics in the presence of features that Python has but JS lacks (such as [operator overloading](http://en.wikipedia.org/wiki/Operator_overloading)), basically every operation in the Javascript program has to be virtualized into a method call. Furthermore, the translation is not very good, and breaks down around the fringes of the Python language.
+JS Snippets is a macro that allows you to mark out sections of code that will be cross-compiled into Javascript at module-import time. This cross-compilation is done using [PJs](https://github.com/jabapyth/PJs). The generated Javascript is incredibly ugly, thanks in part to the fact that in order to preserve semantics in the presence of features that Python has but JS lacks (such as [operator overloading](http://en.wikipedia.org/wiki/Operator_overloading)), basically every operation in the Javascript program has to be virtualized into a method call. Furthermore, the translation is not very good, and breaks down around the fringes of the Python language.
 
 Nonetheless, as the above example demonstrates, the translation is entirely acceptable for simple logic. Furthermore, with macros, marking out snippets of Python code to be translated is as simple as prepending either:
 
@@ -1163,7 +1163,7 @@ Nonetheless, as the above example demonstrates, the translation is entirely acce
 
 `pyjs%` is particularly interesting, because it brings us closer to the holy grail of HTML form validation: having validation run on both client and server, but still only be expressed once in the code base. with `pyjs%`, it is trivial to fork an expression (such as the conditional function shown above) into both Python and Javascript representations. Rather than using a [menagerie](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Forms/Data_form_validation?redirectlocale=en-US&redirectslug=HTML%2FForms%2FData_form_validation) of [ad-hoc](http://docs.jquery.com/Plugins/validation) [mini-DSLs](https://code.google.com/p/validation-js/wiki/MainDocumentation), this lets you write your validation logic in plain Python.
 
-As mentioned earlier, the PJs translator isn't very robust, and is full of bugs:
+As mentioned earlier, JS Snippets isn't very robust, and is full of bugs:
 
 ```python
 # these work
@@ -1176,7 +1176,7 @@ assert self.exec_js(js%3.14) == 3.14 # Fails
 assert self.exec_js(js%[1, 2, 'lol']) == [1, 2, 'lol'] # Fails
 assert self.exec_js(js%{"moo": 2, "cow": 1}) == {"moo": 2, "cow": 1} # Fails
 
-# set literals don't work so this throws an exception at macro-expansion time
+# set literals aren't supported so this throws an exception at macro-expansion time
 # self.exec_js(js%{1, 2, 'lol'})
 ```
 
@@ -1191,9 +1191,9 @@ print self.exec_js(script)
 ```
 These examples are all taken from the [unit tests](macropy/macros2/javascript_test.py).
 
-Like [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), PJs Snippets demonstrates the feasibility, the convenience of being able to mark out sections of code using macros, to be cross-compiled into another language and run remotely. Unlike PINQ, which is built on top of the stable, battle-tested and widely used [SQLAlchemy](http://www.sqlalchemy.org/) library, PJs snippets is built on top of an buggy, unknown and untested Python to Javascript cross-compiler, making it far from production ready.
+Like [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), JS Snippets demonstrates the feasibility, the convenience of being able to mark out sections of code using macros, to be cross-compiled into another language and run remotely. Unlike PINQ, which is built on top of the stable, battle-tested and widely used [SQLAlchemy](http://www.sqlalchemy.org/) library, JS Snippets is built on top of an buggy, unknown and untested Python to Javascript cross-compiler, making it far from production ready.
 
-Nonetheless, PJs Snippets demonstrate the promise of being able to cross-compile bits of your program and being able to run parts of it remotely. The code which performs the integration of PJs and MacroPy is a scant [25 lines long](macropy/macros2/javascript). If a better, more robust Python to Javascript cross-compiler appears some day, we could easily make use of it to provide a stable, seamless developer experience of sharing code between (web) client and server.
+Nonetheless, JS Snippets demonstrate the promise of being able to cross-compile bits of your program and being able to run parts of it remotely. The code which performs the integration of PJs and MacroPy is a scant [25 lines long](macropy/macros2/javascript). If a better, more robust Python to Javascript cross-compiler appears some day, we could easily make use of it to provide a stable, seamless developer experience of sharing code between (web) client and server.
 
 Detailed Guide
 ==============
