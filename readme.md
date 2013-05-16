@@ -1776,8 +1776,7 @@ Macros are expanded in an outside-in order, with macros higher up in the AST bei
 ```python
 >>> from macropy.macros.quicklambda import macros, f
 >>> from macropy.macros2.tracing import macros, trace
->>> trace%(map(f%(_ + 1), [1, 2, 3])
-... )
+>>> trace%(map(f%(_ + 1), [1, 2, 3]))
 (f % (_ + 1)) -> <function <lambda> at 0x00000000021F9128>
 (_ + 1) -> 2
 (_ + 1) -> 3
