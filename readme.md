@@ -1,6 +1,6 @@
 MacroPy
 =======
-**MacroPy** is an implementation of [Syntactic Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (macros) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree) (AST) of Python code at _module import time_. This is an easy way to enhance the semantics of a python program in ways which are otherwise impossible, for example providing an extremely concise way of declaring classes:
+**MacroPy** is an implementation of [Syntactic Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (macros) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree) (AST) of a Python program at _import time_. This is an easy way to enhance the semantics of a python program in ways which are otherwise impossible, for example providing an extremely concise way of declaring classes:
 
 ```python
 @case
@@ -30,7 +30,7 @@ The [Rough Overview](#rough-overview) will give a birds eye view of how it works
 
 Or just skip ahead to the [Subtleties](#macro-subtleties), [Lessons](#lessons), [Conclusion](#macropy-the-last-refuge-of-the-competent) and [Future Plans](#future). We're open to contributions, so send us your ideas/questions/issues/pull-requests and we'll do our best to accomodate you! If you need ideas on how to contribute, check out our [issues](issues) page.
 
-MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but does not yet work on [Jython](http://www.jython.org/) and does not work on older versions of PyPy. MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy). It uses `setup.py` to manage dependencies and other things, check out [this gist](https://gist.github.com/lihaoyi/5577609) for an example of setting it up on a clean system.
+MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy), using a standard [setup.py](setup.y) to manage dependencies, installation and other things. Check out [this gist](https://gist.github.com/lihaoyi/5577609) for an example of setting it up on a clean system.
 
 Rough Overview
 ==============
