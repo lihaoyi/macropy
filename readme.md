@@ -272,32 +272,34 @@ class Nil():
 class Cons(x, xs):
     pass
 
-def fold_left1(my_list, op):
+def reduce(op, my_list):
     with switch(my_list):
         if Cons(x, Nil()):
             return x
         elif Cons(x, xs):
-            return op(x, fold_left1(xs, op))
+            return op(x, fold_left1(op, xs))
 
-print fold_left1(Cons(1, Cons(2, Cons(4, Nil()))), lambda a, b: a + b)
+print reduce(lambda a, b: a + b, Cons(1, Cons(2, Cons(4, Nil()))))
 # 7
-print fold_left1(Cons(1, Cons(3, Cons(5, Nil()))), lambda a, b: a * b)
+print reduce(lambda a, b: a * b, Cons(1, Cons(3, Cons(5, Nil()))))
 # 15
-print fold_left1(Nil(), lambda a, b: a * b)
+print reduce(Nil(), lambda a, b: a * b)
 # None
 ```
 
-Pattern matching allows you to quickly check a variable against a series of possibilities, sort of like a [switch statement](http://en.wikipedia.org/wiki/Switch_statement) on steroids. The `fold_left1` function above (an implementation of a <a href="http://en.wikipedia.org/wiki/Fold_(higher-order_function)">left fold</a> from functional programming) takes a Cons list and quickly checks if it either a `Cons` with a `Nil` right hand side, or a `Cons` with something else. This is converted (roughly) into:
+Pattern matching allows you to quickly check a variable against a series of possibilities, sort of like a [switch statement](http://en.wikipedia.org/wiki/Switch_statement) on steroids. Unlike a switch statement, the `switch` macro allows you to match against the *inside* of a pattern: in this case, not just that `my_list` is a `Cons` object, but also that the `xs` member of `my_list` is a `Nil` object. This can be nested arbitrarily deep, and allows you to easily check if a data-structure has a particular "shape" that you are expecting. Out of convenience, the value of the leaf nodes in the pattern are bound to local variables, so you can immediately use `x` and `xs` inside the body of the if-statement without having to extract it (again) from `my_list`.
+
+The `reduce` function above (an simple, cons-list specific implementation of [reduce](http://docs.python.org/2/library/functions.html#reduce)) takes a Cons list (defined using [case classes](#case-classes)) and quickly checks if it either a `Cons` with a `Nil` right hand side, or a `Cons` with something else. This is converted (roughly) into:
 
 ```python
-def fold_left1(my_list, op):
+def reduce(my_list, op):
     if isinstance(my_list, Cons) and isinstance(my_list.xs, Nil):
         x = my_list.x
         return x
     elif isinstance(my_list, Cons):
         x = my_list.x
         xs = my_list.xs
-        return op(x, fold_left1(xs, op))
+        return op(x, reduce(xs, op))
 ```
 
 Which is significantly messier to write, with all the `isinstance` checks cluttering up the code and having to manually extract the values you need from `my_list` after the `isinstance` checks have passed.
@@ -322,30 +324,41 @@ def expand_macros(node):
             and node.context_expr.id in macros.block_registry:
         name = node.context_expr.id
 
-        return handle(name)
+            return handle(name)
     else:
         return node
 ```
 
 As you can see, matching against `With(Name(name))` is a quick and easy way of checking that the value in `node` matches a particular shape, and is much less cumbersome than a series of conditionals.
 
-It's also possible to do away with the if statements if you know what the structure 
-of your input will be.  This also has the benefits of throwing an exception if your 
-input doesn't match the expected form. 
+It is also possible to use pattern matching outside of a `switch`, by using the `patterns` macro. Within `patterns`, any left shift (`<<`) statement attempts to match the value on the right to the pattern on the left, allowing nested matches and binding variables as described earlier.
 
 ```python
-from macropy.macros.adt import macros, patterns
+from macropy.macros.pattern import macros, patterns
+from macropy.macros.adt import macros, case
+
+@case
+class Rect(p1, p2): pass
+
+@case
+class Line(p1, p2): pass
+
+@case
+class Point(x, y): pass
 
 def area(rect):
     with patterns:
         Rect(Point(x1, y1), Point(x2, y2)) << rect
         return (x2 - x1) * (y2 - y1)
+
+print area(Rect(Point(1, 1), Point(3, 3))) # 4
 ```
 
 If the match fails, a `PatternMatchException` will be thrown.
+
 ```python
-    # Throws a PatternMatchException
-    area(Line(Point(1, 2), Point(3, 4)))
+print area(Line(Point(1, 1), Point(3, 3)))
+# macropy.macros.pattern.PatternMatchException: Matchee should be of type <class 'scratch.Rect'>
 ```
 
 ###Class Matching Details
