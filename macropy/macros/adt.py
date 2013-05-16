@@ -4,8 +4,13 @@ from macropy.core.lift import macros, q, u
 macros = Macros()
 
 NO_ARG = object()
+def link_children(cls):
+    for child in cls.children:
+        new_child = type(child.__name__, (cls, object), child.__dict__)
+        setattr(cls, child.__name__, new_child)
+    return cls
 
-def _case_transform(tree, parents):
+def _case_transform(tree):
 
     def self_get(x):
         mini_tree = q%self.x
@@ -24,7 +29,7 @@ def _case_transform(tree, parents):
 
     with q as methods:
         def __init__(self):
-            super(name%tree.name, self).__init__()
+            pass
 
         def __str__(self):
             return u%tree.name + "(" + ", ".join(map(str, ast_list%map(self_get, var_names))) + ")"
@@ -42,8 +47,8 @@ def _case_transform(tree, parents):
             return not self.__eq__(other)
         def copy(self):
             return (name%tree.name)()
-
-    init_fun, str_fun, repr_fun, eq_fun, ne_fun, copy_fun = methods
+        children = []
+    init_fun, str_fun, repr_fun, eq_fun, ne_fun, copy_fun, set_children = methods
 
     copy_fun.args.args += [Name(id = n, ctx=Param()) for n in var_names]
     copy_fun.args.defaults = [q%NO_ARG for n in var_names]
@@ -63,24 +68,27 @@ def _case_transform(tree, parents):
     init_fun.body += [
         statement for statement in tree.body
         if type(statement) is not FunctionDef
+        if type(statement) is not ClassDef
     ]
 
     new_body = []
     new_classes = []
     for statement in tree.body:
         if type(statement) is ClassDef:
-            new_classes += [_case_transform(statement, [Name(id = tree.name)])]
+            new_body += [_case_transform(statement)]
+            new_classes += [Name(id = statement.name)]
         elif type(statement) is FunctionDef:
             new_body += [statement]
 
+    set_children.value.elts = new_classes
     tree.body = new_body
-    tree.bases = parents
+    tree.bases = []
 
     tree.body += methods
-    out = [tree] + new_classes
+    tree.decorator_list.append(Name(id="link_children"))
 
-    return out
+    return tree
 
 @macros.decorator()
 def case(tree):
-    return _case_transform(tree, [q%object])
+    return _case_transform(tree)

@@ -63,11 +63,11 @@ class Tests(unittest.TestCase):
                         yield current.head
                         current = current.tail
 
-        assert isinstance(Cons(None, None), List)
-        assert isinstance(Nil(), List)
+        assert isinstance(List.Cons(None, None), List)
+        assert isinstance(List.Nil(), List)
 
-        my_list = Cons(1, Cons(2, Cons(3, Nil())))
-        empty_list = Nil()
+        my_list = List.Cons(1, List.Cons(2, List.Cons(3, List.Nil())))
+        empty_list = List.Nil()
 
         assert len(my_list) == 3
         assert sum(iter(my_list)) == 6

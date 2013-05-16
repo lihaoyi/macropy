@@ -1,6 +1,6 @@
 MacroPy
 =======
-**MacroPy** is an implementation of [Syntactic Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (macros) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree) (AST) of Python code at _module import time_. This is an easy way to modify the semantics of a python program in ways which are otherwise impossible, for example providing an extremely concise way of declaring classes:
+**MacroPy** is an implementation of [Syntactic Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (macros) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree) (AST) of Python code at _module import time_. This is an easy way to enhance the semantics of a python program in ways which are otherwise impossible, for example providing an extremely concise way of declaring classes:
 
 ```python
 @case
@@ -26,9 +26,9 @@ MacroPy has been used to implement features such as:
 The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through creating a simple macro ([Quick Lambdas](#quick-lambdas)) as well as containing documentation for [Tools](#tools) such as
 
 - [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
-- The [Walker](#walker), a flexible tool to traverse and transform ASTs
+- The [Walker](#walkers), a flexible tool to traverse and transform ASTs
 
-Or just skip ahead to the [Subtleties](#macro-subtleties), [Lessons](#lessons) and [Conclusion](#macropy-the-last-refuge-of-the-competent).
+Or just skip ahead to the [Subtleties](#macro-subtleties), [Lessons](#lessons), [Conclusion](#macropy-the-last-refuge-of-the-competent) and [Future Plans](#future).
 
 MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but does not yet work on [Jython](http://www.jython.org/) and does not work on older versions of PyPy. MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy). It uses `setup.py` to manage dependencies and other things, check out [this gist](https://gist.github.com/lihaoyi/5577609) for an example of setting it up on a clean system.
 
@@ -214,7 +214,23 @@ class Point(x, y):
 print Point(3, 4).length() #5
 ```
 
-or class variables. The only restrictions are that only the `__init__`, `__repr__`, `___str__`, `__eq__` methods will be set for you, and it may not manually inherit from anything. Instead of manual inheritence, inheritence for case classes is defined by _nesting_, as shown below:
+or class variables. The only restrictions are that only the `__init__`, `__repr__`, `___str__`, `__eq__` methods will be set for you, and the initializer/class body and inheritence are treated specially.
+
+###Body Initializer
+```python
+@case
+class Point(x, y):
+    self.length = (self.x**2 + self.y**2) ** 0.5
+
+assert Point(3, 4).length == 5
+```
+
+Case classes allow you to add initialization logic by simply placing the initialization statements in the class body: any statements within the class body which are not class or function definitions are taken to be part of the initializer, and so you can use e.g. the `self` variable to set instance members just like in a normal `__init__` method.
+
+This also means that you cannot set *class* members on a case class. This should be an acceptable restriction, since most of the time you don't use those anyway, and the times you desperately need them, you can always just use a normal (non-case) class.
+
+###Inheritence
+Instead of manual inheritence, inheritence for case classes is defined by _nesting_, as shown below:
 
 ```python
 @case
@@ -239,14 +255,14 @@ class List():
                 yield current.head
                 current = current.tail
 
-print isinstance(Cons(None, None), List)    # True
-print isinstance(Nil(), List)               # True
+print isinstance(List.Cons(None, None), List)    # True
+print isinstance(List.Nil(), List)               # True
 
-my_list = Cons(1, Cons(2, Cons(3, Nil())))
-empty_list = Nil()
+my_list = List.Cons(1, List.Cons(2, List.Cons(3, List.Nil())))
+empty_list = List.Nil()
 
 print my_list.head              # 1
-print my_list.tail              # Cons(2, Cons(3, Nil()))
+print my_list.tail              # List.Cons(2, List.Cons(3, List.Nil()))
 print len(my_list)              # 5
 print sum(iter(my_list))        # 6
 print sum(iter(empty_list))     # 0
@@ -254,9 +270,9 @@ print sum(iter(empty_list))     # 0
 
 This is an implementation of a singly linked [cons list](http://en.wikipedia.org/wiki/Cons), providing both `head` and `tail` ([LISP](https://en.wikipedia.org/wiki/LISP)'s `car` and `cdr`) as well as the ability to get the `len` or `iter` for the list.
 
-As the classes `Nil` are `Cons` are nested within `List`, both of them get transformed into top-level classes which inherit from it. This nesting can go arbitrarily deep.
+As the classes `Nil` are `Cons` are nested within `List`, both of them get transformed into case  classes which inherit from it. This nesting can go arbitrarily deep.
 
-Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.org/2/library/collections.html#collections.namedtuple), but on steroids (methods, inheritence, etc.), and provides the programmer with a much better experience.
+Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.org/2/library/collections.html#collections.namedtuple), but far more flexible (methods, inheritence, etc.), and provides the programmer with a much better experience.
 
 Pattern Matching
 ----------------
@@ -2044,10 +2060,17 @@ We have a few major takeaways:
 
 Macros may be difficult to write, difficult to compose, difficult to reason about, especially compared to "plain old" Python code. But macros are not meant to replace "plain old" Python! They're aimed at replacing piles of manual duplication or swaths of textual code-generation. Compared to the difficulty of writing, composing and reasoning about the alternatives, MacroPy may well be the lesser evil.
 
+Future
+------
+MacroPy is essentially complete in its current state as a proof concept. The next steps, to turn it into a production-ready package, will involve:
+
+- Separating out the various implementations of macros into separate projects, leaving only the core macro infrastructure in the macropy repository. This will allow people to better use them independently (e.g. you won't need to pull in [Pyxl](#pyxl-integration) in order to use [Case Classes](#case-classes)), as well as to allow them to develop independently.
+- Solidify the core macropy infrastructure. This means properly specifying it and [writing tests](issues/29), so we do not need to rely on the various macros themselves to act as unit tests when things change.
+
 Credits
 =======
 
-*MacroPy is very much a work in progress, for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/). Although it is constantly in flux, all of the examples with source code represent already-working functionality. The rest will be filled in over the coming weeks.*
+*MacroPy is very much a work in progress, for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/), taught by [Jerry Sussman](http://groups.csail.mit.edu/mac/users/gjs/) and [Pavel Panchekha](http://pavpanchekha.com/). Inspiration was taken from project such as [Scala Macros](http://scalamacros.org/), [Karnickel](https://pypi.python.org/pypi/karnickel) and [Pyxl](https://github.com/dropbox/pyxl).
 
 The MIT License (MIT)
 
