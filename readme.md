@@ -295,7 +295,7 @@ def reduce(op, my_list):
         if Cons(x, Nil()):
             return x
         elif Cons(x, xs):
-            return op(x, fold_left1(op, xs))
+            return op(x, reduce(op, xs))
 
 print reduce(lambda a, b: a + b, Cons(1, Cons(2, Cons(4, Nil()))))
 # 7
