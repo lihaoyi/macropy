@@ -28,7 +28,7 @@ The [Rough Overview](#rough-overview) will give a birds eye view of how it works
 - [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
 - The [Walker](#walkers), a flexible tool to traverse and transform ASTs
 
-Or just skip ahead to the [Subtleties](#macro-subtleties), [Lessons](#lessons), [Conclusion](#macropy-the-last-refuge-of-the-competent) and [Future Plans](#future).
+Or just skip ahead to the [Subtleties](#macro-subtleties), [Lessons](#lessons), [Conclusion](#macropy-the-last-refuge-of-the-competent) and [Future Plans](#future). We're open to contributions, so send us your ideas/questions/issues/pull-requests and we'll do our best to accomodate you! If you need ideas on how to contribute, check out our [issues](issues) page.
 
 MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but does not yet work on [Jython](http://www.jython.org/) and does not work on older versions of PyPy. MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy). It uses `setup.py` to manage dependencies and other things, check out [this gist](https://gist.github.com/lihaoyi/5577609) for an example of setting it up on a clean system.
 
@@ -2082,15 +2082,17 @@ Macros may be difficult to write, difficult to compose, difficult to reason abou
 
 Future
 ------
-MacroPy is essentially complete in its current state as a proof concept. The next steps, to turn it into a production-ready package, will involve:
+MacroPy is essentially complete in its current state as a proof concept. The next steps, to turn it from a flashy demo into a production-ready package, will involve:
 
 - Separating out the various implementations of macros into separate projects, leaving only the core macro infrastructure in the macropy repository. This will allow people to better use them independently (e.g. you won't need to pull in [Pyxl](#pyxl-integration) in order to use [Case Classes](#case-classes)), as well as to allow them to develop independently.
 - Solidify the core macropy infrastructure. This means properly specifying it and [writing tests](issues/29), so we do not need to rely on the various macros themselves to act as unit tests when things change.
 
+As mentioned, MacroPy as a proof of concept is done. We have demonstrated beyond doubt that syntactic macros in Python are an novel concept that enables a [range of compelling use cases](#macropy). Now the work will shift towards refactoring, documenting, testing and generally turning MacroPy into a solid foundation for others to build on top of.
+
 Credits
 =======
 
-*MacroPy is very much a work in progress, for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/), taught by [Jerry Sussman](http://groups.csail.mit.edu/mac/users/gjs/) and [Pavel Panchekha](http://pavpanchekha.com/). Inspiration was taken from project such as [Scala Macros](http://scalamacros.org/), [Karnickel](https://pypi.python.org/pypi/karnickel) and [Pyxl](https://github.com/dropbox/pyxl).
+*MacroPy, in its initial state, is basically done, as a final project for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/), taught by [Jerry Sussman](http://groups.csail.mit.edu/mac/users/gjs/) and [Pavel Panchekha](http://pavpanchekha.com/). Inspiration was taken from project such as [Scala Macros](http://scalamacros.org/), [Karnickel](https://pypi.python.org/pypi/karnickel) and [Pyxl](https://github.com/dropbox/pyxl). See out [future plans](#future) to see where we're going!
 
 The MIT License (MIT)
 
