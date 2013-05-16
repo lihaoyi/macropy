@@ -260,76 +260,74 @@ Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.
 
 Pattern Matching
 ----------------
-One important thing you might want to do with case classes is match them against some patterns.
-For example, suppose that you are writing a function to transform an AST.  You want to try to macro-expand
-with-blocks which represent macro invocation, but not affect anything else.
-
-The code for this without pattern matching might look something like:
 ```python
-def expand_macros(node):
-    if (isinstance(node, With) and isinstance(node.context_expr, Name)
-        and node.context_expr.id in macros.block_registry:
-        return macros.block_registry[node.context_expr.id](node)
-    else:
-        return node
-```
+from macropy.macros.adt import macros, case
+from macropy.macros.pattern import macros, switch
 
-With pattern matching (specifically, using the switch macro), we could instead write:
-
-```python
-def expand_macros(node):
-    with switch(node):
-        if With(Name(macro_name)):
-            return macros.block_registry[macro_name](node)
-        else:
-            return node
-```
-
-Once you're used to this, it is much simpler both to read and to write,
-and the benefits of pattern matching only grow as the matched data structures get more complex.
-
-Here is another, more self-contained example of an implementation of a <a href="http://en.wikipedia.org/wiki/Fold_(higher-order_function)">
-left fold</a> from functional programming:
-
-```python
 @case
-class List:
-    class Nil():
-        pass
+class Nil():
+    pass
 
-    class Cons(x, xs):
-        pass
+@case
+class Cons(x, xs):
+    pass
 
-def foldl1(my_list, op):
+def fold_left1(my_list, op):
     with switch(my_list):
         if Cons(x, Nil()):
             return x
         elif Cons(x, xs):
-            return op(x, foldl1(xs, op))
+            return op(x, fold_left1(xs, op))
+
+print fold_left1(Cons(1, Cons(2, Cons(4, Nil()))), lambda a, b: a + b)
+# 7
+print fold_left1(Cons(1, Cons(3, Cons(5, Nil()))), lambda a, b: a * b)
+# 15
+print fold_left1(Nil(), lambda a, b: a * b)
+# None
 ```
 
-The switch macro is actually just syntactic sugar for using the more general patterns macro.
-`foldl1` is approximately desugared into the following, with one important
-caveat: the bodies of the if statements are not subject to pattern matching,
-in case you actually want to use bitshifts in your code.
+Pattern matching allows you to quickly check a variable against a series of possibilities, sort of like a [switch statement](http://en.wikipedia.org/wiki/Switch_statement) on steroids. The `fold_left1` function above (an implementation of a <a href="http://en.wikipedia.org/wiki/Fold_(higher-order_function)">left fold</a> from functional programming) takes a Cons list and quickly checks if it either a `Cons` with a `Nil` right hand side, or a `Cons` with something else. This is converted (roughly) into:
 
 ```python
-def foldl1(my_list, op):
-    with patterns:
-        tmp = my_list
-        try:
-            Cons(x, Nil()) << tmp
-            return x
-        except PatternMatchException:
-            try:
-                Cons(x, xs) << tmp
-                return op(x, foldl1(xs, op))
-            except PatternMatchException:
-                pass
+def fold_left1(my_list, op):
+    if isinstance(my_list, Cons) and isinstance(my_list.xs, Nil):
+        x = my_list.x
+        return x
+    elif isinstance(my_list, Cons):
+        x = my_list.x
+        xs = my_list.xs
+        return op(x, fold_left1(xs, op))
 ```
 
-I think you can agree that the first version is much easier to read, and the
-second version hasn't even been fully expanded yet!
+Which is significantly messier to write, with all the `isinstance` checks cluttering up the code and having to manually extract the values you need from `my_list` after the `isinstance` checks have passed.
+
+Another common use case for pattern matching is working with tree structures, like ASTs. This macro is a stylized version of the MacroPy code to identify `with ...:` macros:
+
+```python
+def expand_macros(node):
+    with switch(node):
+        if With(Name(name)):
+            return handle(name)
+        else:
+            return node
+```
+
+Compare it to the same code written manually using if-elses:
+
+```python
+def expand_macros(node):
+    if isinstance(node, With) \
+            and isinstance(node.context_expr, Name) \
+            and node.context_expr.id in macros.block_registry:
+        name = node.context_expr.id
+
+        return handle(name)
+    else:
+        return node
+```
+
+As you can see, matching against `With(Name(name))` is a quick and easy way of checking that the value in `node` matches a particular shape, and is much less cumbersome than a series of conditionals.
 
 It's also possible to do away with the if statements if you know what the structure 
 of your input will be.  This also has the benefits of throwing an exception if your 
@@ -404,25 +402,24 @@ with patterns:
 ```
 
 Tail-call Optimization
------------
-We have also implemented a macro which will optimize away the stack usage of
-functions which are actually implemented in a tail-recursive fashion.  This even
-works for mutually recursive functions by using trampolining.
-
-The 'hello world' of tail-recursive functions is a factorial function, so I'll
-show that first.
+----------------------
 ```python
+from macropy.macros.tco import macros, tco
 @tco
-def fact(n, acc):
+def fact(n, acc=0):
     if n == 0:
         return acc
     else:
         return fact(n-1, n * acc)
 
 print fact(10000)  # doesn't stack overflow
+# 28462596809170545189064132121198688901...
 ```
 
-More complicated mutually recursive examples also work too.
+[Tail-call Optimization](http://en.wikipedia.org/wiki/Tail_call) is a technique which will optimize away the stack usage of functions calls which are in a tail position. Intuitively, if a function **A** calls another function **B**, but does not do any computation after **B** returns (i.e. **A** returns immediately when **B** returns), we don't need to keep around the [stack frame](http://en.wikipedia.org/wiki/Call_stack) for **A**, which is normally used to store where to resume the computation after **B** returns. By optimizing this, we can prevent really deep tail-recursive functions (like the factorial example above) from [overflowing the stack](http://en.wikipedia.org/wiki/Stack_overflow).
+
+The `@tco` decorator macro doesn't just work with tail-recursive functions, but also with any generic tail-calls via [trampolining](#trampolining), such this mutually recursive example:
+
 ```python
 from macropy.macros.tco import macros, tco
 
@@ -458,6 +455,7 @@ call returns an actual value.
 
 A transformed (and simplified) version of the tail-call optimized factorial
 would look like this
+
 ```python
 def trampoline_decorator(func):
     def trampolined(*args):
@@ -1956,6 +1954,8 @@ Similar things could be done for the other use cases mentioned. This is not a co
 
 ###Auto-Forking
 Another suggestion was to make a decorator macro that ships the code within the function into a separate process to execute. While this sounds pretty extreme, it really is not that difficult, for in Python you can easily introspect a function object and retrieve it's `code` attribute. This can pretty easily [be pickled and sent to a child process](http://stackoverflow.com/questions/1253528/is-there-an-easy-way-to-pickle-a-python-function-or-otherwise-serialize-its-cod) to be executed there. Perhaps you may want some sort of Future container to hold the result, or some nice helpers for fork-join style code, but these are all just normal python functions: no macros necessary!
+
+--------------------------------------
 
 Thus, you can accomplish a lot of things in Python without using macros. If you need to pass functions around, you can do so without macros. Similarly, if you want to introspect a function and see how many arguments it takes, you can go ahead using `inspect`. `getattr`, `hasattr` and friends are sufficient for all sorts of reflective metaprogramming, dynamically setting and getting attributes. Beyond that, you have the abilities to access the `locals` an `globals` dictionaries, reflecting on the call stack via `inspect.stack()` and `eval` or `exec`ing source code. Whether this is a good idea is another question.
 
