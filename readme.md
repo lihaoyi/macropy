@@ -449,28 +449,32 @@ print fact(10000)  # doesn't stack overflow
 
 [Tail-call Optimization](http://en.wikipedia.org/wiki/Tail_call) is a technique which will optimize away the stack usage of functions calls which are in a tail position. Intuitively, if a function **A** calls another function **B**, but does not do any computation after **B** returns (i.e. **A** returns immediately when **B** returns), we don't need to keep around the [stack frame](http://en.wikipedia.org/wiki/Call_stack) for **A**, which is normally used to store where to resume the computation after **B** returns. By optimizing this, we can prevent really deep tail-recursive functions (like the factorial example above) from [overflowing the stack](http://en.wikipedia.org/wiki/Stack_overflow).
 
-The `@tco` decorator macro doesn't just work with tail-recursive functions, but also with any generic tail-calls via [trampolining](#trampolining), such this mutually recursive example:
+The `@tco` decorator macro doesn't just work with tail-recursive functions, but
+also with any generic tail-calls (of either a function or a method) via [trampolining](#trampolining), such this mutually recursive example:
 
 ```python
 from macropy.macros.tco import macros, tco
 
-@tco
-def odd(n):
-if n < 0:
-    return odd(-n)
-elif n == 0:
-    return False
-else:
-    return even(n - 1)
+class Example(object):
 
-@tco
-def even(n):
-    if n == 0:
-        return True
+    @tco
+    def odd(n):
+    if n < 0:
+        return odd(-n)
+    elif n == 0:
+        return False
     else:
-        return odd(n-1)
+        return even(n - 1)
 
-assert(even(100000))  # No stack overflow
+    @tco
+    def even(n):
+        if n == 0:
+            return True
+        else:
+            return odd(n-1)
+
+print Example().even(100000)  # No stack overflow
+# True
 ```
 
 Note that both `odd` and `even` were both decorated with `@tco`.  All functions
