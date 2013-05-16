@@ -40,17 +40,17 @@ Macro functions are defined in three ways:
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def my_expr_macro(tree):
     ...
     return new_tree
 
-@macros.block
+@macros.block()
 def my_block_macro(tree):
     ...
     return new_tree
 
-@macros.decorator
+@macros.decorator()
 def my_decorator_macro(tree):
     ...
     return new_tree
@@ -1315,12 +1315,12 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def expand(tree):
     return tree
 ```
 
-Running this via `python run.py` will print out `3`; so far `expand` is a simple no-op macro which does not do anything to the tree it is passed. At this point, you can print out the tree you are receiving in various forms just to see what you're getting:
+Running this via `python run.py` will print out `3`; so far `expand` is a simple no-op macro which does not do anything to the tree it is passed. This macro is provided in [examples/nop](examples/nop) if you want to try it out yourself; you can run it from the project root via `python examples/nop/run.py`. At this point, you can print out the tree you are receiving in various forms just to see what you're getting:
 
 ```python
 # macro_module.py
@@ -1328,7 +1328,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def expand(tree):
     print tree
     print real_repr(tree)
@@ -1355,7 +1355,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def expand(tree):
     return Num(100)
 ```
@@ -1367,7 +1367,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def expand(tree):
     newtree = BinOp(tree, Mult(), tree)
     return newtree
@@ -1385,7 +1385,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def expand(tree):
     return Lambda(arguments([Name("x", Param())], None, None, []), BinOp(BinOp(Name('x', Load()), Mult(), tree), Add(), Num(10)))
 ```
@@ -1416,12 +1416,12 @@ from macropy.core.lift import macros, q, ast
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def expand(tree):
     return q%(lambda x: x * (ast%tree) + 10)
 ```
 
-the `q%(..)` syntax means that the section following it is quoted as an AST, while the unquote `ast%` syntax means to place the *value* of `tree` into that part of the quoted AST, rather than simply the node `Name("tree")`. Running `run.py`, this also prints `25`. 
+the `q%(..)` syntax means that the section following it is quoted as an AST, while the unquote `ast%` syntax means to place the *value* of `tree` into that part of the quoted AST, rather than simply the node `Name("tree")`. Running `run.py`, this also prints `25`. See [examples/quasiquote](examples/quasiquote) for the self-contained code for this example.
 
 Another unquote `u%` allow us to dynamically include the value `10` in the AST at run time:
 
@@ -1432,7 +1432,7 @@ from macropy.core.lift import macros, q, ast, u
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def expand(tree):
     addition = 10
     return q%(lambda x: x * (ast%tree) + u%addition)
@@ -1449,7 +1449,7 @@ from macropy.core.lift import macros, q
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def expand(tree):
     newtree = q%(lambda x: x * None + 10)
     newtree.body.left.right = tree          # replace the None in the AST with the given tree
@@ -1491,7 +1491,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def f(tree):
     names = ('arg' + str(i) for i in xrange(100))
 
@@ -1521,7 +1521,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def f(tree):
     names = ('arg' + str(i) for i in xrange(100))
 
@@ -1555,7 +1555,7 @@ from macropy.core.lift import macros, q, u
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def f(tree):
     names = ('arg' + str(i) for i in xrange(100))
 
@@ -1583,7 +1583,7 @@ _ = None  # makes IDE happy
 
 macros = Macros()
 
-@macros.expr
+@macros.expr()
 def f(tree):
     names = ('arg' + str(i) for i in xrange(100))
 
@@ -1636,7 +1636,7 @@ print filter(f%(_ % 2 != 0), [1, 2, 3])  # [1, 3]
 print map(f%(_  * 10), [1, 2, 3])  # [10, 20, 30]
 ```
 
-Mission Accomplished! You can see the completed macro defined in [macropy/macros/quicklambda.py](macropy/macros/quicklambda.py), along with a suite of [unit tests](macropy/macros/quicklambda_test.py). It is also used throughout the implementation of the other macros.
+Mission Accomplished! You can see the completed self-contained example in [examples/full](examples/full). This macro is also defined in our library in [macropy/macros/quicklambda.py](macropy/macros/quicklambda.py), along with a suite of [unit tests](macropy/macros/quicklambda_test.py). It is also used throughout the implementation of the other macros.
 
 Tools
 =====

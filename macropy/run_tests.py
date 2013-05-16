@@ -1,12 +1,10 @@
 import unittest
+#import scratch
 import macropy.core.macros
-import scratch
-
 runner = unittest.TextTestRunner()
-
 def run(x):
     runner.run(unittest.TestLoader().loadTestsFromTestCase(x))
-"""
+
 from macropy import core_tests
 run(core_tests.Tests)
 
@@ -37,9 +35,10 @@ run(pyxl_strings_test.Tests)
 from macropy.macros import tco_test
 run(tco_test.Tests)
 
-from macropy.macros2 import linq_test
-run(linq_test.Tests)
+# this one creates a sqlite database to run, so may take a while
+# from macropy.macros2 import linq_test
+# run(linq_test.Tests)
 
-from macropy.macros2 import javascript_test
-run(javascript_test.Tests)
-"""
+# this one needs chromedriver in order to run the javascript using Selenium
+# from macropy.macros2 import javascript_test
+# run(javascript_test.Tests)
