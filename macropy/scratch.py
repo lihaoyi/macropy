@@ -1,11 +1,4 @@
-class List:
-    def __init__(self):
-        print "list init"
-    class Cons:
-        def __init__(self, x, xs):
-            self.x = x
-            self.xs = xs
+from macropy.macros2.tracing import macros ,require
 
-
-List.Cons = type("Cons", (object, List), List.Cons.__dict__)
-List.Cons(1, 0)
+require%(1 + 2 == 3)
+print "DONE"

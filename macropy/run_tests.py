@@ -1,10 +1,12 @@
 import unittest
-#import scratch
 import macropy.core.macros
+import scratch
+
 runner = unittest.TextTestRunner()
+
 def run(x):
     runner.run(unittest.TestLoader().loadTestsFromTestCase(x))
-
+"""
 from macropy import core_tests
 run(core_tests.Tests)
 
@@ -40,3 +42,4 @@ run(linq_test.Tests)
 
 from macropy.macros2 import javascript_test
 run(javascript_test.Tests)
+"""

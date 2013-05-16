@@ -55,8 +55,9 @@ def trace(tree):
 
 
 def _require_transform(tree):
+
     ret = trace_walk.recurse(copy.deepcopy(tree), None)
-    trace_walk.recurse(tree, None)
+    trace_walk.recurse(copy.deepcopy(tree), None)
     new = q%(ast%tree or handle(lambda log: ast%ret))
     return new
 

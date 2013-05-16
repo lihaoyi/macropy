@@ -140,21 +140,23 @@ Note that all of these examples are **macros**; that is, they hold no special pl
 
 All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 100 lines of code.
 
+I will be using a mix of REPL sessions (for short examples) and snippets from `.py` files (for longer examples) depending on which is more suitable.
+
 Case Classes
 ------------
 ```python
-from macropy.macros.adt import macros, case
-
-@case
-class Point(x, y): pass
-
-p = Point(1, 2)
-
-print str(p)    #Point(1, 2)
-print p.x       #1
-print p.y       #2
-print Point(1, 2) == Point(1, 2)
-#True
+>>> from macropy.macros.adt import macros, case
+>>> @case
+... class Point(x, y): pass
+>>> p = Point(1, 2)
+>>> str(p)
+'Point(1, 2)'
+>>> p.x
+1
+>>> p.y
+2
+>>> Point(1, 2) == Point(1, 2)
+True
 ```
 
 [Case classes](http://www.codecommit.com/blog/scala/case-classes-are-cool) are classes with extra goodies:
@@ -272,7 +274,7 @@ This is an implementation of a singly linked [cons list](http://en.wikipedia.org
 
 As the classes `Nil` are `Cons` are nested within `List`, both of them get transformed into case  classes which inherit from it. This nesting can go arbitrarily deep.
 
-Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.org/2/library/collections.html#collections.namedtuple), but far more flexible (methods, inheritence, etc.), and provides the programmer with a much better experience.
+Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.org/2/library/collections.html#collections.namedtuple), but far more flexible (methods, inheritence, etc.), and provides the programmer with a much better experience (e.g. no arguments-as-space-separated-string definition).
 
 Pattern Matching
 ----------------
@@ -303,7 +305,7 @@ print reduce(Nil(), lambda a, b: a * b)
 # None
 ```
 
-Pattern matching allows you to quickly check a variable against a series of possibilities, sort of like a [switch statement](http://en.wikipedia.org/wiki/Switch_statement) on steroids. Unlike a switch statement, the `switch` macro allows you to match against the *inside* of a pattern: in this case, not just that `my_list` is a `Cons` object, but also that the `xs` member of `my_list` is a `Nil` object. This can be nested arbitrarily deep, and allows you to easily check if a data-structure has a particular "shape" that you are expecting. Out of convenience, the value of the leaf nodes in the pattern are bound to local variables, so you can immediately use `x` and `xs` inside the body of the if-statement without having to extract it (again) from `my_list`.
+Pattern matching allows you to quickly check a variable against a series of possibilities, sort of like a [switch statement](http://en.wikipedia.org/wiki/Switch_statement) on steroids. Unlike a switch statement in other languages (Java, C++), the `switch` macro allows you to match against the *inside* of a pattern: in this case, not just that `my_list` is a `Cons` object, but also that the `xs` member of `my_list` is a `Nil` object. This can be nested arbitrarily deep, and allows you to easily check if a data-structure has a particular "shape" that you are expecting. Out of convenience, the value of the leaf nodes in the pattern are bound to local variables, so you can immediately use `x` and `xs` inside the body of the if-statement without having to extract it (again) from `my_list`.
 
 The `reduce` function above (an simple, cons-list specific implementation of [reduce](http://docs.python.org/2/library/functions.html#reduce)) takes a Cons list (defined using [case classes](#case-classes)) and quickly checks if it either a `Cons` with a `Nil` right hand side, or a `Cons` with something else. This is converted (roughly) into:
 
@@ -387,7 +389,7 @@ like:
 self.a = a
 self.b = b
 ```
-(We don't have access to the source of Foo, so this is the best we can do).
+We don't have access to the source of Foo, so this is the best we can do.
 Then `Foo(x, y) << Foo(3, 4)` is transformed roughly into
 
 ```python
@@ -523,10 +525,9 @@ String Interpolation
 ```python
 from macropy.macros.string_interp import macros, s
 
-a, b = 1, 2
-c = s%"%{a} apple and %{b} bananas"
-print c
-#1 apple and 2 bananas
+>>> a, b = 1, 2
+>>> s%"%{a} apple and %{b} bananas"
+'1 apple and 2 bananas'
 ```
 
 Unlike the normal string interpolation in Python, MacroPy's string interpolation allows the programmer to specify the variables to be interpolated _inline_ inside the string. The macro `s%` then takes the string literal
@@ -541,7 +542,15 @@ and expands it into the expression
 "%s apple and %s bananas" % (a, b)
 ```
 
-Which is evaluated at run-time in the local scope, using whatever the values `a` and `b` happen to hold at the time. The contents of the `%{...}` can be any arbitrary python expression, and is not limited to variable names.
+Which is evaluated at run-time in the local scope, using whatever the values `a` and `b` happen to hold at the time. The contents of the `%{...}` can be any arbitrary python expression, and is not limited to variable names:
+
+```python
+>>> from macropy.macros.string_interp import macros, s
+>>> A = 10
+>>> B = 5
+>>> s%"%{A} + %{B} = %{A + B}"
+'10 + 5 = 15'
+```
 
 ###Pyxl Integration
 
@@ -581,13 +590,14 @@ Tracing
 -------
 
 ```python
-from macropy.macros2.tracing import macros, trace, log, require
+>>> from macropy.macros2.tracing import macros, trace, log, require
+>>> log%(1 + 2)
+(1 + 2) -> 3
+3
 
-log%(1 + 2)
-#(1 + 2) -> 3
-
-log%("omg" * 3)
-#('omg' * 3) -> 'omgomgomg'
+>>> log%("omg" * 3)
+('omg' * 3) -> 'omgomgomg'
+'omgomgomg'
 ```
 
 Tracing allows you to easily see what is happening inside your code. Many a time programmers have written code like
@@ -602,21 +612,22 @@ and the `log%` macro (shown above) helps remove this duplication by automaticall
 In addition to simple logging, MacroPy provides the `trace%` macro. This macro not only logs the source and result of the given expression, but also the source and result of all sub-expressions nested within it:
 
 ```python
-trace%[len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]]
-#('b' * 2) -> 'bb'
-#(('b' * 2) + 'q') -> 'bbq'
-#('lo' * 3) -> 'lololo'
-#(('lo' * 3) + 'l') -> 'lololol'
-#['omg', 'wtf', (('b' * 2) + 'q'), (('lo' * 3) + 'l')] -> ['omg', 'wtf', 'bbq', 'lololol']
-#len(x) -> 3
-#(len(x) * 3) -> 9
-#len(x) -> 3
-#(len(x) * 3) -> 9
-#len(x) -> 3
-#(len(x) * 3) -> 9
-#len(x) -> 7
-#(len(x) * 3) -> 21
-#[(len(x) * 3) for x in ['omg', 'wtf', (('b' * 2) + 'q'), (('lo' * 3) + 'l')]] -> [9, 9, 9, 21]
+>>> trace%[len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]]
+('b' * 2) -> 'bb'
+(('b' * 2) + 'q') -> 'bbq'
+('lo' * 3) -> 'lololo'
+(('lo' * 3) + 'l') -> 'lololol'
+['omg', 'wtf', (('b' * 2) + 'q'), (('lo' * 3) + 'l')] -> ['omg', 'wtf', 'bbq', 'lololol']
+len(x) -> 3
+(len(x) * 3) -> 9
+len(x) -> 3
+(len(x) * 3) -> 9
+len(x) -> 3
+(len(x) * 3) -> 9
+len(x) -> 7
+(len(x) * 3) -> 21
+[(len(x) * 3) for x in ['omg', 'wtf', (('b' * 2) + 'q'), (('lo' * 3) + 'l')]] -> [9, 9, 9, 21]
+[9, 9, 9, 21]
 ```
 
 As you can see, `trace%` logs the source and value of all sub-expressions that get evaluated in the course of evaluating the list comprehension.
@@ -662,15 +673,21 @@ def log(x):
 
 The tracer uses whatever `log()` function it finds, falling back on printing only if none exists. Instead of printing, this `log()` function appends the traces to a list, and is used in our unit tests.
 
+We think that tracing is an extremely useful macro. For debugging what is happening, for teaching newbies how evaluation of expressions works, or for a myriad of other purposes, it is a powerful tool. The fact that it can be written as a [<100 line macro](macropy/macros2/tracing.py) is a bonus.
+
 ###Smart Asserts
 ```python
-require%(3**2 + 4**2 != 5**2)
-#AssertionError: Require Failed
-#(3 ** 2) -> 9
-#(4 ** 2) -> 16
-#((3 ** 2) + (4 ** 2)) -> 25
-#(5 ** 2) -> 25
-#(((3 ** 2) + (4 ** 2)) != (5 ** 2)) -> False
+>>> require%(3**2 + 4**2 != 5**2)
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "macropy\macros2\tracing.py", line 67, in handle
+    raise AssertionError("Require Failed\n" + "\n".join(out))
+AssertionError: Require Failed
+(3 ** 2) -> 9
+(4 ** 2) -> 16
+((3 ** 2) + (4 ** 2)) -> 25
+(5 ** 2) -> 25
+(((3 ** 2) + (4 ** 2)) != (5 ** 2)) -> False
 ```
 
 MacroPy provides a variant on the `assert` keyword called `require%`. Like `assert`, `require%` throws an `AssertionError` if the condition is false.
@@ -875,13 +892,11 @@ PINQ demonstrates how easy it is to use macros to lift python snippets into an A
 Quick Lambdas
 -------------
 ```python
-from macropy.macros.quicklambda import macros, f, _
-
-map(f%(_ + 1), [1, 2, 3])
-#[2, 3, 4]
-
-reduce(f%(_ + _), [1, 2, 3])
-#6
+>>> from macropy.macros.quicklambda import macros, f, _
+>>> map(f%(_ + 1), [1, 2, 3])
+[2, 3, 4]
+>>> reduce(f%(_ + _), [1, 2, 3])
+6
 ```
 
 Macropy provides a syntax for lambda expressions similar to Scala's [anonymous functions](http://www.codecommit.com/blog/scala/quick-explanation-of-scalas-syntax). Essentially, the transformation is:
@@ -893,36 +908,37 @@ f%(_ + _) -> lambda a, b: a + b
 where the underscores get replaced by identifiers, which are then set to be the parameters of the enclosing `lambda`. This works too:
 
 ```python
-map(f%_.split(' ')[0], ["i am cow", "hear me moo"])
-#["i", "hear"]
+>>> map(f%_.split(' ')[0], ["i am cow", "hear me moo"])
+['i', 'hear']
 ```
 
 Quick Lambdas can be also used as a concise, lightweight, more-readable substitute for `functools.partial`
 
 ```python
-import functools
-basetwo = functools.partial(int, base=2)
-basetwo('10010')
-#18
+>>> import functools
+>>> basetwo = functools.partial(int, base=2)
+>>> basetwo('10010')
+18
 ```
 
 is equivalent to
 
 ```python
-basetwo = f%int(_, base=2)
-basetwo('10010')
-#18
+>>> import functools
+>>> basetwo = functools.partial(int, base=2)
+>>> basetwo('10010')
+18
 ```
 
 Quick Lambdas can also be used entirely without the `_` placeholders, in which case they wrap the target in a no argument `lambda: ...` thunk:
 
 ```python
-from random import random
-thunk = f%random()
-print thunk()
-#0.5497242707566372
-print thunk()
-#0.3068253802774531
+>>> from random import random
+>>> thunk = f%random()
+>>> print thunk()
+0.347790429588
+>>> print thunk()
+0.817928092273
 ```
 
 This cuts out reduces the number of characters needed to make a thunk from 7 to 2, making it much easier to use thunks to do things like emulating [by name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html). The implementation of quicklambda is about [30 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/macros/quicklambda.py), and is worth a look if you want to see how a simple (but extremely useful!) macro can be written.
@@ -993,19 +1009,23 @@ Parsers are generally built up from a few common building blocks:
 So far, these building blocks all return the raw parse tree: all the things like whitespace, curly-braces, etc. will still be there. Often, you want to take a parser e.g.
 
 ```python
-with peg:
-    num = '[0-9]+'.r
-
-print num.parse_all("123") # ["123"]
+>>> from macropy.macros2.peg import macros, peg
+>>> with peg:
+...     num = '[0-9]+'.r
+>>> num.parse_all("123")
+['123']
+>>> num.parse_all("1 23")
+None
 ```
 
 which returns a string of digits, and convert it into a parser which returns an `int` with the value of that string. This can be done with the `//` operator:
 
 ```python
-with peg:
-    num = '[0-9]+'.r // int
-
-print num.parse_all("123") # [123]
+>>> with peg:
+...     num = '[0-9]+'.r // int
+>>>
+>>> num.parse_all("123")
+[123]
 ```
 
 The `//` operator takes a function which will be used to transform the result of the parser: in this case, it is the function `int`, which transforms the returned string into an integer. Another example is:
