@@ -1,6 +1,6 @@
 MacroPy
 =======
-**MacroPy** is an implementation of [Syntactic Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (macros) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree) (AST) of a Python program at _import time_. This is an easy way to enhance the semantics of a python program in ways which are otherwise impossible, for example providing an extremely concise way of declaring classes:
+**MacroPy** is an implementation of [Syntactic Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (macros) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree) (AST) of a Python program at _import time_. This is an easy way to enhance the semantics of a Python program in ways which are otherwise impossible, for example providing an extremely concise way of declaring classes:
 
 ```python
 @case
@@ -2084,15 +2084,15 @@ Future
 ------
 MacroPy is essentially complete in its current state as a proof concept. The next steps, to turn it from a flashy demo into a production-ready package, will involve:
 
-- Separating out the various implementations of macros into separate projects, leaving only the core macro infrastructure in the macropy repository. This will allow people to better use them independently (e.g. you won't need to pull in [Pyxl](#pyxl-integration) in order to use [Case Classes](#case-classes)), as well as to allow them to develop independently.
-- Solidify the core macropy infrastructure. This means properly specifying it and [writing tests](issues/29), so we do not need to rely on the various macros themselves to act as unit tests when things change.
+- Separating out the various implementations of macros into separate projects, leaving only the core macro infrastructure in the macropy repository. This will allow people to better use them independently (e.g. you won't need to pull in [Pyxl](#pyxl-integration) in order to use [Case Classes](#case-classes)), as well as to allow them to be developed independently.
+- Solidify the core macropy infrastructure. This means properly specifying it and [writing tests](issues/29), so we do not need to rely on the various macros themselves to act as unit tests when things change. This will also provide other developers with a stable interface to build on top of.
 
 As mentioned, MacroPy as a proof of concept is done. We have demonstrated beyond doubt that syntactic macros in Python are an novel concept that enables a [range of compelling use cases](#macropy). Now the work will shift towards refactoring, documenting, testing and generally turning MacroPy into a solid foundation for others to build on top of.
 
 Credits
 =======
 
-*MacroPy, in its initial state, is basically done, as a final project for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/), taught by [Jerry Sussman](http://groups.csail.mit.edu/mac/users/gjs/) and [Pavel Panchekha](http://pavpanchekha.com/). Inspiration was taken from project such as [Scala Macros](http://scalamacros.org/), [Karnickel](https://pypi.python.org/pypi/karnickel) and [Pyxl](https://github.com/dropbox/pyxl). See out [future plans](#future) to see where we're going!
+*MacroPy, in its initial state, is basically complete, as a final project for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/), taught by [Jerry Sussman](http://groups.csail.mit.edu/mac/users/gjs/) and [Pavel Panchekha](http://pavpanchekha.com/). Inspiration was taken from project such as [Scala Macros](http://scalamacros.org/), [Karnickel](https://pypi.python.org/pypi/karnickel) and [Pyxl](https://github.com/dropbox/pyxl).
 
 The MIT License (MIT)
 
