@@ -23,7 +23,7 @@ MacroPy has been used to implement features such as:
 - [Parser Combinators](#parser-combinators), inspired by Scala's
 - [JS Snippets](#js-snippets), cross compiling snippets of Python into equivalent Javascript
 
-The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through creating a simple macro ([Quick Lambdas](#quick-lambdas)) as well as containing documentation for [Tools](#tools) such as
+The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through creating a simple macro ([Quick Lambdas](#quick-lambdas)), with [self-contained examples](examples) and documentation for [Tools](#tools) such as
 
 - [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
 - The [Walker](#walkers), a flexible tool to traverse and transform ASTs
@@ -1279,7 +1279,7 @@ Except for `eval`, these are all functions defined in the [macropy/core/__init__
 
 Writing Your First Macro
 ------------------------
-Now, we will go through what it takes to write a simple macro. To begin, we need three files
+Now, we will go through what it takes to write a simple macro, with some [self-contained examples](examples). To begin, we need three files
 
 ```python
 # run.py
