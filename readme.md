@@ -3,13 +3,20 @@ MacroPy
 **MacroPy** is an implementation of [Syntactic Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (macros) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree) (AST) of a Python program at _import time_. This is an easy way to enhance the semantics of a Python program in ways which are otherwise impossible, for example providing an extremely concise way of declaring classes:
 
 ```python
-@case
-class Point(x, y)
-
-p = Point(1, 2)
-print p.x   # 1
-print p     # Point(1, 2)
+>>> import macropy.core.macros
+0=[]=====> MacroPy Enabled <=====[]=0
+>>> from macropy.macros.adt import macros, case
+>>> @case
+... class Point(x, y): pass
+>>> p = Point(1, 2)
+>>> print p.x
+1
+>>> print p
+Point(1, 2)
+>>>
 ```
+
+Try it out in the REPL, it should just work! You could also try out the [Tracing](#tracing) or [Quick Lambda](#quick-lambdas) examples to get a feel for what Macros can do for you.
 
 MacroPy has been used to implement features such as:
 

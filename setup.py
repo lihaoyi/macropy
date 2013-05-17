@@ -58,7 +58,7 @@ from distutils.core import setup
 import setuptools
 
 setup(name='MacroPy',
-      version='0.1.6',
+      version='0.1.7',
       description='Macros for Python: Quasiquotes, Case Classes, LINQ and more!',
       long_description=__doc__,
       license='BSD',
@@ -66,6 +66,6 @@ setup(name='MacroPy',
       author_email='haoyi.sg@gmail.com, justin.holmgren@gmail.com',
       url='https://github.com/lihaoyi/macropy',
       packages=['macropy', 'macropy.core', 'macropy.macros', 'macropy.macros2', 'macropy.core_tests'],
-      install_requires=['pyxl', 'SQLAlchemy', 'pyjaco', 'selenium'],
+      install_requires=['pyxl', 'SQLAlchemy', 'selenium'],
       classifiers=['Programming Language :: Python :: 2.7']
      )
