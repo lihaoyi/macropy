@@ -130,7 +130,7 @@ range(3) -> [0, 1, 2]
 [0, 2, 4]
 ```
 
-Although support for the REPL is still experimental, most of the examples on this page will work when copied and pasted into the REPL verbatim, except those with blank lines in class and function definitions (those seem to confuse it).
+This eample demonstrates the usage of the [Tracing](#tracing) macro, which helps trace the evaluation of a Python expression. Although support for the REPL is still experimental, many examples on this page will work when copied and pasted into the REPL verbatim, except those with blank lines in class and function definitions (those seem to confuse it).
 
 Examples
 ========
