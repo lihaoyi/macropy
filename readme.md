@@ -31,7 +31,7 @@ MacroPy has been used to implement features such as:
 - [Parser Combinators](#parser-combinators), inspired by Scala's
 - [JS Snippets](#js-snippets), cross compiling snippets of Python into equivalent Javascript
 
-The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through creating a simple macro ([Quick Lambdas](#quick-lambdas)), with [self-contained examples](examples) and documentation for [Tools](#tools) such as
+The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and [walk you through creating a simple macro](#writing-your-first-macro), with [self-contained examples](examples) and documentation for [Tools](#tools) such as
 
 - [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
 - The [Walker](#walkers), a flexible tool to traverse and transform ASTs
@@ -2104,7 +2104,7 @@ As mentioned, MacroPy as a proof of concept is done. We have demonstrated beyond
 Credits
 =======
 
-MacroPy, in its initial state, is basically complete, as a final project for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/), taught by [Jerry Sussman](http://groups.csail.mit.edu/mac/users/gjs/) and [Pavel Panchekha](http://pavpanchekha.com/). Inspiration was taken from project such as [Scala Macros](http://scalamacros.org/), [Karnickel](https://pypi.python.org/pypi/karnickel) and [Pyxl](https://github.com/dropbox/pyxl).
+MacroPy, in its initial state, is basically complete, as a final project for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/), taught by [Gerald Jay Sussman](http://groups.csail.mit.edu/mac/users/gjs/) and [Pavel Panchekha](http://pavpanchekha.com/). Inspiration was taken from project such as [Scala Macros](http://scalamacros.org/), [Karnickel](https://pypi.python.org/pypi/karnickel) and [Pyxl](https://github.com/dropbox/pyxl).
 
 The MIT License (MIT)
 
