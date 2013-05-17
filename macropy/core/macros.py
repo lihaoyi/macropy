@@ -149,77 +149,52 @@ def _detect_macros(tree):
 def _expand_ast(tree, modules):
     """Go through an AST, hunting for macro invocations and expanding any that
     are found"""
+    block_registry = dict((k,v) for d in modules for (k,v) in d.macros.block_registry.items())
+    expr_registry = dict((k,v) for d in modules for (k,v) in d.macros.expr_registry.items())
+    decorator_registry = dict((k,v) for d in modules for (k,v) in d.macros.decorator_registry.items())
+
+    def check_macro(tree, args, registry):
+        if isinstance(tree, Name) and tree.id in registry:
+            the_macro, inside_out = registry[tree.id]
+            new_tree = the_macro(*args)
+            return new_tree
+        elif isinstance(tree, Call):
+            args.extend(tree.args)
+            res = check_macro(tree.func, args, registry)
+            return res
 
     def macro_expand(tree):
-
-        for module in [m.macros for m in modules]:
-
-            if (isinstance(tree, With)):
-                if (isinstance(tree.context_expr, Name)
-                        and tree.context_expr.id in module.block_registry):
-                    pos = (tree.lineno, tree.col_offset) if hasattr(tree, "lineno") and hasattr(tree, "col_offset") else None
-                    the_macro, inside_out = module.block_registry[
-                            tree.context_expr.id]
-                    if inside_out:
-                        tree.body = macro_expand(tree.body)
-                    new_tree = the_macro(tree)
-                    if pos:
-                        if type(new_tree) is list:
-                            (new_tree[0].lineno, new_tree[0].col_offset) = pos
-                        else:
-                            (new_tree.lineno, new_tree.col_offset) = pos
-                    return new_tree, True
-
-                if (isinstance(tree.context_expr, Call)
-                        and isinstance(tree.context_expr.func, Name)
-                        and tree.context_expr.func.id in module.block_registry):
-                    the_macro, inside_out = module.block_registry[
-                            tree.context_expr.func.id]
-                    if inside_out:
-                        tree.body = macro_expand(tree.body)
-                    return the_macro(tree, *(tree.context_expr.args)), True
-
-            if  (isinstance(tree, BinOp)
-                    and type(tree.left) is Name
-                    and type(tree.op) is Mod
-                    and tree.left.id in module.expr_registry):
-                pos = (tree.lineno, tree.col_offset)
-                the_macro, inside_out = module.expr_registry[tree.left.id]
-                if inside_out:
-                    tree.right = macro_expand(tree.right)
-                new_tree = the_macro(tree.right)
-                (new_tree.lineno, new_tree.col_offset) = pos
+        if isinstance(tree, With):
+            pos = (tree.lineno, tree.col_offset) if hasattr(tree, "lineno") and hasattr(tree, "col_offset") else None
+            new_tree = check_macro(tree.context_expr, [tree], block_registry)
+            if new_tree:
+                if pos:
+                    if type(new_tree) is list:
+                        (new_tree[0].lineno, new_tree[0].col_offset) = pos
+                    else:
+                        (new_tree.lineno, new_tree.col_offset) = pos
                 return new_tree, True
 
-            if  (isinstance(tree, ClassDef) or isinstance(tree, FunctionDef)):
-                decorators = tree.decorator_list
-                for i in xrange(len(decorators)):
-# The usual macro expansion order is first decorator is expanded first, and then
-# the rest of the decorators.  However, if the macro says it wants to be
-# expanded inside-out, then 
-                    if (isinstance(decorators[i], Name) and decorators[i].id in
-                        module.decorator_registry):
-                        the_macro, inside_out = module.decorator_registry[
-                                decorators[i].id]
-                        decorator_prefix = decorators[:i]
-                        tree.decorator_list = decorators[i+1:]
-                        if inside_out:
-                            tree, modified  = macro_expand(tree)
-                            if modified:
-                                # This means there are sub-macros, so we can't
-                                # apply the macro yet.
-                                tree.decorator_list = (decorator_prefix +
-                                        [decorators[i]] + tree.decorator_list)
-                                return tree, True
+        if isinstance(tree, BinOp) and type(tree.op) is Mod:
+            new_tree = check_macro(tree.left, [tree.right], expr_registry)
+            if new_tree:
+                return new_tree, True
 
-                        tree = the_macro(tree)
-                        if decorator_prefix:
-# TODO maybe handle the case when a the macro returns a list of statements.
-                            # Like if you want to decorate every class that is
-                            # generated by a case class declaration.
-                            tree.decorator_list = (decorator_prefix +
-                                    tree.decorator_list)
-                        return tree, True
+        if isinstance(tree, ClassDef) or isinstance(tree, FunctionDef):
+            decorators = tree.decorator_list
+            for i in xrange(len(decorators)):
+                if isinstance(decorators[i], Name) and decorators[i].id in decorator_registry:
+                    the_macro, inside_out = decorator_registry[decorators[i].id]
+                    decorator_prefix = decorators[:i]
+                    tree.decorator_list = decorators[i+1:]
+
+                    tree = the_macro(tree)
+                    if decorator_prefix:
+
+                        # Like if you want to decorate every class that is
+                        # generated by a case class declaration.
+                        tree.decorator_list = (decorator_prefix + tree.decorator_list)
+                    return tree, True
 
         return tree, False
 
