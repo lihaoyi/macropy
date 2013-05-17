@@ -115,12 +115,7 @@ class _MacroLoader(object):
 
         modules = [sys.modules[p] for p in self.required_pkgs]
 
-        tree = _expand_ast(self.tree, modules)
-
-        tree = _ast_ctx_fixer.recurse(tree, Load())
-
-        fill_line_numbers(tree, 0, 0)
-
+        tree = process_ast(self.tree, modules)
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
         mod.__loader__ = self
@@ -132,8 +127,17 @@ class _MacroLoader(object):
         exec compile(tree, self.file_name, "exec") in mod.__dict__
         return mod
 
+def process_ast(tree, modules):
+    """Takes an AST and spits out an AST, doing macro expansion in additon to
+    some post-processing"""
+    tree = _expand_ast(tree, modules)
 
-def _detect_macros(tree):
+    tree = _ast_ctx_fixer.recurse(tree, Load())
+
+    fill_line_numbers(tree, 0, 0)
+    return tree
+
+def detect_macros(tree):
     """Look for macros imports within an AST, transforming them and extracting
     the list of macro modules."""
     required_pkgs = []
@@ -165,7 +169,10 @@ def _expand_ast(tree, modules):
             args.extend(tree.args)
             res = expand_if_in_registry(tree.func, args, registry)
             return res
+
     def preserve_line_numbers(func):
+        """Decorates a tree-transformer function to stick the original line
+        numbers onto the transformed tree"""
         def run(tree):
             pos = (tree.lineno, tree.col_offset) if hasattr(tree, "lineno") and hasattr(tree, "col_offset") else None
             new_tree = func(tree)
@@ -221,7 +228,7 @@ class _MacroFinder(object):
                     module_name.split('.')[-1], package_path)
             txt = file.read()
             tree = ast.parse(txt)
-            required_pkgs = _detect_macros(tree)
+            required_pkgs = detect_macros(tree)
             if required_pkgs == []: return
             else: return _MacroLoader(module_name, tree, file.name, required_pkgs)
         except Exception, e:

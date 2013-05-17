@@ -1,6 +1,6 @@
 import unittest
-#import scratch
 import macropy.core.macros
+
 runner = unittest.TextTestRunner()
 def run(x):
     runner.run(unittest.TestLoader().loadTestsFromTestCase(x))
