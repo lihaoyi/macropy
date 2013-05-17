@@ -6,14 +6,15 @@ MacroPy
 >>> import macropy.core.macros
 0=[]=====> MacroPy Enabled <=====[]=0
 >>> from macropy.macros.adt import macros, case
+
 >>> @case
 ... class Point(x, y): pass
+
 >>> p = Point(1, 2)
 >>> print p.x
 1
 >>> print p
 Point(1, 2)
->>>
 ```
 
 Try it out in the REPL, it should just work! You could also try out the [Tracing](#tracing) or [Quick Lambda](#quick-lambdas) examples to get a feel for what Macros can do for you.
