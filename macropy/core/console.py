@@ -3,7 +3,7 @@ import code
 import ast
 from codeop import CommandCompiler, Compile, _features
 import sys
-
+import inspect
 from macropy.core.macros import Load, fill_line_numbers, _ast_ctx_fixer, _expand_ast, _detect_macros
 
 
@@ -44,3 +44,7 @@ class MacroCompile(Compile):
                 self.flags |= feature.compiler_flag
         return codeob
 
+
+
+
+MacroConsole().interact("0=[]=====> MacroPy Enabled <=====[]=0")

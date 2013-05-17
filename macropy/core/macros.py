@@ -149,9 +149,11 @@ def _detect_macros(tree):
 def _expand_ast(tree, modules):
     """Go through an AST, hunting for macro invocations and expanding any that
     are found"""
-    block_registry = dict((k,v) for d in modules for (k,v) in d.macros.block_registry.items())
-    expr_registry = dict((k,v) for d in modules for (k,v) in d.macros.expr_registry.items())
-    decorator_registry = dict((k,v) for d in modules for (k,v) in d.macros.decorator_registry.items())
+    def merge_dicts(my_dict):
+        return dict((k,v) for d in my_dict for (k,v) in d.items())
+    block_registry     = merge_dicts(m.macros.block_registry for m in modules)
+    expr_registry      = merge_dicts(m.macros.expr_registry for m in modules)
+    decorator_registry = merge_dicts(m.macros.decorator_registry for m in modules)
 
     def expand_if_in_registry(tree, args, registry):
         """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
@@ -225,7 +227,3 @@ class _MacroFinder(object):
         except Exception, e:
             pass
 
-from macropy.core import console
-
-if inspect.stack()[-1][1] == '<stdin>':
-    console.MacroConsole().interact("0=[]=====> MacroPy Enabled <=====[]=0")

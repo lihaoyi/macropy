@@ -126,7 +126,7 @@ MacroPy also works in the REPL:
 PS C:\Dropbox\Workspace\6.945\Project> python
 Python 2.7 (r27:82525, Jul  4 2010, 07:43:08) [MSC v.1500 64 bit (AMD64)] on win32
 Type "help", "copyright", "credits" or "license" for more information.
->>> import macropy.core.macros
+>>> import macropy.core.console
 0=[]=====> MacroPy Enabled <=====[]=0
 >>> from macropy.macros2.tracing import macros, trace
 >>> trace%[x*2 for x in range(3)]
