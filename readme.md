@@ -31,7 +31,7 @@ MacroPy has been used to implement features such as:
 - [Parser Combinators](#parser-combinators), inspired by Scala's
 - [JS Snippets](#js-snippets), cross compiling snippets of Python into equivalent Javascript
 
-The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and [walk you through creating a simple macro](#writing-your-first-macro), with [self-contained examples](examples) and documentation for [Tools](#tools) such as
+The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through [creating a simple macro](#writing-your-first-macro), with [self-contained examples](examples) and documentation for [Tools](#tools) such as
 
 - [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
 - The [Walker](#walkers), a flexible tool to traverse and transform ASTs
@@ -927,8 +927,8 @@ where the underscores get replaced by identifiers, which are then set to be the 
 Quick Lambdas can be also used as a concise, lightweight, more-readable substitute for `functools.partial`
 
 ```python
->>> import functools
->>> basetwo = functools.partial(int, base=2)
+>>> from macropy.macros.quicklambda import macros, f
+>>> basetwo = f%int(_, base=2)
 >>> basetwo('10010')
 18
 ```
