@@ -334,7 +334,7 @@ def switch(tree, arg):
     """
     import string
     import random
-    new_id = util.gen_sym()
+    new_id = gen_syms(tree).next()
     for i in xrange(len(tree.body)):
         tree.body[i] = _maybe_rewrite_if(tree.body[i], new_id)
     tree.body = [Assign([Name(new_id, Store())], arg)] + tree.body

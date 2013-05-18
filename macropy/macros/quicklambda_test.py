@@ -18,3 +18,11 @@ class Tests(unittest.TestCase):
         from random import random
         thunk = f%random()
         assert thunk() != thunk()
+
+    def test_name_collision(self):
+        sym0 = 1
+        sym1 = 2
+        func1 = f%(_ + sym0)
+        assert func1(10) == 11
+        func2 = f%(_ + sym0 + _ + sym1)
+        assert func2(10, 10) == 23

@@ -7,7 +7,7 @@ macros = Macros()
 
 @macros.expr()
 def f(tree):
-    names = ('arg' + str(i) for i in xrange(100))
+    names = gen_syms(tree)
 
     @Walker
     def underscore_search(tree):

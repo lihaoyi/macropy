@@ -18,8 +18,3 @@ def singleton(cls):
     """Decorates a class to turn it into a singleton."""
     return cls()
 
-def gen_sym():
-    """Make random symbol which hopefully won't collide with an existing one."""
-    import random
-    import string
-    return ''.join([random.choice(string.letters) for _ in range(15)])

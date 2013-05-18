@@ -1,7 +1,7 @@
 import sys
 import imp
 import ast
-import inspect
+import itertools
 from ast import *
 from util import *
 from walkers import *
@@ -233,4 +233,18 @@ class _MacroFinder(object):
             else: return _MacroLoader(module_name, tree, file.name, required_pkgs)
         except Exception, e:
             pass
+
+def gen_syms(tree):
+    """Create a generator that creates symbols which are not used in the given
+    `tree`. This means they will be hygienic, i.e. it guarantees that they will
+    not cause accidental shadowing, as long as the scope of the new symbol is
+    limited to `tree` e.g. by a lambda expression or a function body"""
+    @Walker
+    def name_finder(tree):
+        if type(tree) is Name:
+            return collect(tree.id)
+
+    tree, found_names = name_finder.recurse_real(tree)
+    names = ("sym" + str(i) for i in itertools.count())
+    return itertools.ifilter(lambda x: x not in found_names, names)
 
