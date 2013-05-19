@@ -73,34 +73,34 @@ class Tests(unittest.TestCase):
                     else:
                         odds += [n]
 
-            assert(result[-16:] == [
-                "evens = []",
-                "odds = []",
-                """for n in range(0, 2):
+            assert("\n".join(result[-16:]).strip() == """
+evens = []
+odds = []
+for n in range(0, 2):
     if ((n / 2) == (n // 2)):
         evens += [n]
     else:
-        odds += [n]""",
-                "range(0, 2) -> [0, 1]",
-                """if ((n / 2) == (n // 2)):
+        odds += [n]
+range(0, 2) -> [0, 1]
+if ((n / 2) == (n // 2)):
     evens += [n]
 else:
-    odds += [n]""",
-                "(n / 2) -> 0",
-                "(n // 2) -> 0",
-                "((n / 2) == (n // 2)) -> True",
-                "evens += [n]",
-                 "[n] -> [0]",
-                """if ((n / 2) == (n // 2)):
+    odds += [n]
+(n / 2) -> 0
+(n // 2) -> 0
+((n / 2) == (n // 2)) -> True
+evens += [n]
+[n] -> [0]
+if ((n / 2) == (n // 2)):
     evens += [n]
 else:
-    odds += [n]""",
-                "(n / 2) -> 0",
-                "(n // 2) -> 0",
-                "((n / 2) == (n // 2)) -> True",
-                "evens += [n]",
-                 "[n] -> [1]",
-            ])
+    odds += [n]
+(n / 2) -> 0
+(n // 2) -> 0
+((n / 2) == (n // 2)) -> True
+evens += [n]
+[n] -> [1]
+            """.strip())
 
         def test_require(self):
             with self.assertRaises(AssertionError) as cm:
