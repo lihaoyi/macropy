@@ -191,9 +191,11 @@ class ClassMatcher(Matcher):
         pos_values = []
         kw_dict = {}
         arg_spec = inspect.getargspec(self.clazz.__init__)
-        for arg in arg_spec.args:
-            if arg != 'self':
-                pos_values.append(getattr(matchee, arg, None))
+        def genPosValues():
+            for arg in arg_spec.args:
+                if arg != 'self':
+                    yield(getattr(matchee, arg, None))
+        pos_values = genPosValues()
         # if arg_spec.varargs:
         #     pos_values.extend(getattr(matchee, varargs, []))
         for kw_key in kw_keys:

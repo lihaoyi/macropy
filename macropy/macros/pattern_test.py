@@ -19,7 +19,14 @@ class Baz(object):
         self.b = b
 
 
+class Screwy(object):
+    def __init__(self, a, b):
+        self.x = a
+        self.y = b
+
+
 class Tests(unittest.TestCase):
+
     def test_literal_matcher(self):
         matcher = LiteralMatcher(5)
         self.assertEquals([], matcher.match(5))
@@ -175,6 +182,12 @@ class Tests(unittest.TestCase):
         with _matching:
             (_, _,  x) << (3, 4, 5)
             self.assertEquals(5, x)
+
+    def keyword_only_matching(self):
+        with _matching:
+            Screwy(x=x, y=y) << Screwy(4, 5)
+            self.assertEquals(4, x)
+            self.assertEquals(5, y)
 
 
 if __name__ == '__main__':
