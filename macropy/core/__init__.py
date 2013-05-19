@@ -51,7 +51,7 @@ def ast_repr(x):
             starargs = None,
             kwargs = None
         )
-    raise Exception("LOL", x)
+    raise Exception("Don't know how to ast_repr this: ", x)
 
 def parse_expr(x):
     """Parses a string into an `expr` AST"""

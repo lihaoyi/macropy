@@ -142,9 +142,9 @@ def detect_macros(tree):
     the list of macro modules."""
     required_pkgs = []
     for stmt in tree.body:
-        if  (isinstance(stmt, ImportFrom)
-                and stmt.names[0].name == 'macros'
-                and stmt.names[0].asname is  None):
+        if isinstance(stmt, ImportFrom) \
+                and stmt.names[0].name == 'macros' \
+                and stmt.names[0].asname is  None:
             required_pkgs.append(stmt.module)
             stmt.names = [alias(name='*', asname=None)]
     return required_pkgs
@@ -158,7 +158,6 @@ def _expand_ast(tree, modules):
     block_registry     = merge_dicts(m.macros.block_registry for m in modules)
     expr_registry      = merge_dicts(m.macros.expr_registry for m in modules)
     decorator_registry = merge_dicts(m.macros.decorator_registry for m in modules)
-
 
     symbols = gen_syms(tree)
 
@@ -229,12 +228,16 @@ class _MacroFinder(object):
     def find_module(self, module_name, package_path):
         try:
             (file, pathname, description) = imp.find_module(
-                    module_name.split('.')[-1], package_path)
+                module_name.split('.')[-1],
+                package_path
+            )
             txt = file.read()
             tree = ast.parse(txt)
             required_pkgs = detect_macros(tree)
-            if required_pkgs == []: return
-            else: return _MacroLoader(module_name, tree, file.name, required_pkgs)
+            if required_pkgs == []:
+                return # no macros found, carry on
+            else:
+                return _MacroLoader(module_name, tree, file.name, required_pkgs)
         except Exception, e:
             pass
 
