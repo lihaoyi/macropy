@@ -9,8 +9,9 @@ std_lib = [
     'classes.js',
     '__builtin__.js',
 ]
-
-std_lib_script = "\n".join(open("pjs/jslib/" + f).read() for f in std_lib)
+import os
+path = os.path.dirname(pjs.__file__) + "/data/pjslib.js"
+std_lib_script = open(path).read()
 
 macros = Macros()
 
