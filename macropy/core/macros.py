@@ -159,11 +159,14 @@ def _expand_ast(tree, modules):
     expr_registry      = merge_dicts(m.macros.expr_registry for m in modules)
     decorator_registry = merge_dicts(m.macros.decorator_registry for m in modules)
 
+
+    symbols = gen_syms(tree)
+
     def expand_if_in_registry(tree, args, registry):
         """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
         if isinstance(tree, Name) and tree.id in registry:
             the_macro, inside_out = registry[tree.id]
-            new_tree = the_macro(*args)
+            new_tree = safe_splat(the_macro, *args, gen_sym = lambda: symbols.next())
             return new_tree
         elif isinstance(tree, Call):
             args.extend(tree.args)
@@ -207,6 +210,7 @@ def _expand_ast(tree, modules):
                     return macro_expand(tree)
 
         return tree
+
 
     @Walker
     def macro_searcher(tree):

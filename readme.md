@@ -1850,7 +1850,7 @@ into
 
 Hygiene
 -------
-[Hygienic](http://en.wikipedia.org/wiki/Hygienic_macro) macros are macros which will not accidentally shadow an identifier, or have the identifiers they introduce shadowed by user code. For example, the [quicklambda](#quick-lambdas) macro takes this:
+[Hygienic](http://en.wikipedia.org/wiki/Hygienic_macro) macros are macros which will not accidentally [shadow](http://en.wikipedia.org/wiki/Variable_shadowing) an identifier, or have the identifiers they introduce shadowed by user code. For example, the [quicklambda](#quick-lambdas) macro takes this:
 
 ```python
 >>> func = f%(_ + 1)
@@ -1858,7 +1858,7 @@ Hygiene
 2
 ```
 
-and expands it into this:
+And turns it into a lambda expression. If we did it naively, like we did in the [walkthrough](#detailed-guide), we may expand it into this:
 
 ```python
 >>> func = lambda arg0: arg0 + 1
@@ -1875,17 +1875,32 @@ However, if we introduce a variable called `arg0` in the enclosing scope:
 2
 ```
 
-It does not behave as we may expect; we probably want it to produce `11`. this is because the `arg0` identifier introduced by the `f%` macro shadows the `arg0` in our enclosing scope. This could cause weird bugs, for
+It does not behave as we may expect; we probably want it to produce `11`. this is because the `arg0` identifier introduced by the `f%` macro shadows the `arg0` in our enclosing scope. These bugs could be hard to find, since renaming variables could make them appear or disappear.
+
+###gen_sym
+
+There is a way out of this: if you create a new variable, but use an identifier that has not been used before, you don't stand the risk of accidentally shadowing something you didn't intend to. To help with this, MacroPy provides the `gen_sym` function, which you can acquire by adding an extra parameter named `gen_sym` to your macro definition:
 
 ```python
->>> arg1 = 10
->>> func = f%(_ + arg1)
->>> func(1)
-11
+@macros.expr()
+def f(tree, gen_sym):
+    ...
+    new_name = gen_sym()
+    ... use new_name ...
 ```
 
-prints `11` as you expect! Hygienic macros would avoid this by choosing a different name if the one desired is already used, but `MacroPy` does not (as of yet) provide any support in making your macros hygienic.
+`gen_sym` is a function which produce a new identifier (as a string) every time it is called. This is guaranteed to produce a identifier that does not appear anywhere in the origial source code, or have been produced by an earlier call to `gen_sym`. You can thus use these identifiers without worrying about shadowing an identifier someone was using; see the source for the [quicklambda](blob/master/macropy/macros/quicklambda.py) macro to see it in action.
 
+###Caveats
+
+This system is not perfect. Although it prevents you from using any identifier that is present in the source, or which you have generated earlier, there are still ways you could get into trouble:
+
+- Some other package is using an identifier in the current package, without the current package's knowledge. For example, a `package_b` may be storing a variable called `sym0` in `package_a`'s package namespace and retrieving it later. If you use macros in `package_a`, `gen_sym` has no way of knowing what `package_a` is doing and may still give you the identifier `sym0`, clobbering `package_b`'s value
+- You could have manually inserted a brand new identifier into the AST without consulting `gen_sym`. For example, if I forcefully place a variable called `sym0` into the AST, it could end up shadowing an already existing `sym0`, and it may end up being shadowed by `gen_sym` when it itself generates a name `sym0`, since `gen_sym` has no way of knowing you put it there.
+
+We think these are acceptable restrictions. The first can be solved via *don't do that*, and the second can be solved by ensuring you only create new identifiers via `gen_sym`. That is, when you create a identifier in the AST, make sure you either use `gen_sym` (if you don't want it to be accessible from using code) or make use of a name already present in the AST (if you want it to be accessible from user code) and be conscious of the scoping and shadowing consequences.
+
+MacroPy doesn't guarantee hygiene like some other macro systems do, as it provides low level, direct access to the AST. Nonetheless, `gen_sym` should be sufficient to give yourself hygiene if you really want it, and avoid any unexpected identifier collisions between user-written and macro-generated code.
 
 Line Numbers
 ------------

@@ -18,3 +18,15 @@ def singleton(cls):
     """Decorates a class to turn it into a singleton."""
     return cls()
 
+
+def safe_splat(func, *args, **kwargs):
+    """Applies the function to the given args and kwargs, while taking special
+    care not to give it too many arguments to cause TypeErrors. Extra arguments
+    just get ignored."""
+    import inspect
+    fargs, fvarargs, fkwargs, fdefault = inspect.getargspec(func)
+    cutargs, leftover = fargs[:len(args)], fargs[len(args):]
+
+    cutkwargs = {k: w for k, w in kwargs.items() if k in leftover}
+
+    return func(*args[:len(cutargs)], **cutkwargs)

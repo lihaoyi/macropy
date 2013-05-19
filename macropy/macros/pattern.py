@@ -326,7 +326,7 @@ def _maybe_rewrite_if(stmt, var_name=None):
 
 
 @macros.block()
-def switch(tree, arg):
+def switch(tree, arg, gen_sym):
     """
     This only enables (refutable) pattern matching in top-level if statements.
     The advantage of this is the limited reach ensures less interference with
@@ -334,7 +334,7 @@ def switch(tree, arg):
     """
     import string
     import random
-    new_id = gen_syms(tree).next()
+    new_id = gen_sym()
     for i in xrange(len(tree.body)):
         tree.body[i] = _maybe_rewrite_if(tree.body[i], new_id)
     tree.body = [Assign([Name(new_id, Store())], arg)] + tree.body
