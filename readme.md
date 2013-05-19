@@ -1214,7 +1214,7 @@ for i in range(10):
 # 9 False False
 ```
 
-JS Snippets is a macro that allows you to mark out sections of code that will be cross-compiled into Javascript at module-import time. This cross-compilation is done using [PJs](https://github.com/jabapyth/PJs). The generated Javascript is incredibly ugly, thanks in part to the fact that in order to preserve semantics in the presence of features that Python has but JS lacks (such as [operator overloading](http://en.wikipedia.org/wiki/Operator_overloading)), basically every operation in the Javascript program has to be virtualized into a method call. Furthermore, the translation is not very good, and breaks down around the fringes of the Python language.
+JS Snippets is a macro that allows you to mark out sections of code that will be cross-compiled into Javascript at module-import time. This cross-compilation is done using [PJs](https://github.com/jabapyth/PJs). The generated Javascript is incredibly ugly, thanks in part to the fact that in order to preserve semantics in the presence of features that Python has but JS lacks (such as [operator overloading](http://en.wikipedia.org/wiki/Operator_overloading)), basically every operation in the Javascript program has to be virtualized into a method call. The translation also breaks down around the fringes of the Python language.
 
 Nonetheless, as the above example demonstrates, the translation is entirely acceptable for simple logic. Furthermore, with macros, marking out snippets of Python code to be translated is as simple as prepending either:
 
