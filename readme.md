@@ -38,7 +38,7 @@ The [Rough Overview](#rough-overview) will give a birds eye view of how it works
 
 Or just skip ahead to the [Subtleties](#macro-subtleties), [Lessons](#lessons), [Conclusion](#macropy-the-last-refuge-of-the-competent) and [Future Plans](#future). We're open to contributions, so send us your ideas/questions/issues/pull-requests and we'll do our best to accomodate you! If you need ideas on how to contribute, check out our [issues](issues) page.
 
-MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy), using a standard [setup.py](setup.y) to manage dependencies, installation and other things. Check out [this gist](https://gist.github.com/lihaoyi/5577609) for an example of setting it up on a clean system.
+MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy), using a standard [setup.py](setup.py) to manage dependencies, installation and other things. Check out [this gist](https://gist.github.com/lihaoyi/5577609) for an example of setting it up on a clean system.
 
 Rough Overview
 ==============
@@ -2123,7 +2123,7 @@ MacroPy, in its initial state, is basically complete, as a final project for the
 
 The MIT License (MIT)
 
-Copyright (c) 2013, Li Haoyi, Justin Holmgren
+Copyright (c) 2013, [Li Haoyi](https://github.com/lihaoyi), [Justin Holmgren](https://github.com/jnhnum1)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
