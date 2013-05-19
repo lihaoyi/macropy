@@ -32,6 +32,7 @@ class Tests(unittest.TestCase):
 
         a = Point(1, 2)
         b = a.copy(x = 3)
+
         assert(a == Point(1, 2))
         assert(b == Point(3, 2))
         c = b.copy(y = 4)
