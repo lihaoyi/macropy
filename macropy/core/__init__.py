@@ -24,11 +24,35 @@ from unparser import Unparser
 
 import StringIO
 
+class Literal(object):
+    """Used to wrap sections of an AST which must remain intact when
+    `ast_repr`ed or `real_repr`ed."""
+    def __init__(self, body):
+        self.body = body
+
+    def __repr__(self):
+        return unparse_ast(self.body)
+
 def ast_repr(x):
     """Similar to repr(), but returns an AST instead of a String, which when
     evaluated will return the given value."""
-    return parse_expr(repr(x))
-
+    if type(x) in (int, float): return ast.Num(n=x)
+    elif type(x) is str:        return ast.Str(s=x)
+    elif type(x) is list:       return ast.List(elts=map(ast_repr, x))
+    elif type(x) is dict:       return ast.Dict(keys=map(ast_repr, x.keys()), values=map(ast_repr, x.values()))
+    elif type(x) is set:        return ast.Set(elts=map(ast_repr, x))
+    elif type(x) is Literal:    return x.body
+    elif x is None:             return ast.Name(id="None")
+    elif isinstance(x, ast.AST):
+        fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
+        return ast.Call(
+            func = ast.Name(id=x.__class__.__name__),
+            args = [],
+            keywords = fields,
+            starargs = None,
+            kwargs = None
+        )
+    raise Exception("LOL", x)
 
 def parse_expr(x):
     """Parses a string into an `expr` AST"""

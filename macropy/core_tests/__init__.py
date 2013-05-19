@@ -39,7 +39,7 @@ class Tests(unittest.TestCase):
             quote_source.run(4)
         except:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            assert exc_traceback.tb_next.tb_lineno == 6
+            assert exc_traceback.tb_next.tb_lineno == 6, exc_traceback.tb_next.tb_lineno
 
         try:
             quote_source.run(2)

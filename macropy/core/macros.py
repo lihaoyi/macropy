@@ -1,7 +1,7 @@
 import sys
 import imp
 import ast
-import inspect
+import itertools
 from ast import *
 from util import *
 from walkers import *
@@ -115,12 +115,7 @@ class _MacroLoader(object):
 
         modules = [sys.modules[p] for p in self.required_pkgs]
 
-        tree = _expand_ast(self.tree, modules)
-
-        tree = _ast_ctx_fixer.recurse(tree, Load())
-
-        fill_line_numbers(tree, 0, 0)
-
+        tree = process_ast(self.tree, modules)
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
         mod.__loader__ = self
@@ -132,8 +127,17 @@ class _MacroLoader(object):
         exec compile(tree, self.file_name, "exec") in mod.__dict__
         return mod
 
+def process_ast(tree, modules):
+    """Takes an AST and spits out an AST, doing macro expansion in additon to
+    some post-processing"""
+    tree = _expand_ast(tree, modules)
 
-def _detect_macros(tree):
+    tree = _ast_ctx_fixer.recurse(tree, Load())
+
+    fill_line_numbers(tree, 0, 0)
+    return tree
+
+def detect_macros(tree):
     """Look for macros imports within an AST, transforming them and extracting
     the list of macro modules."""
     required_pkgs = []
@@ -149,86 +153,68 @@ def _detect_macros(tree):
 def _expand_ast(tree, modules):
     """Go through an AST, hunting for macro invocations and expanding any that
     are found"""
+    def merge_dicts(my_dict):
+        return dict((k,v) for d in my_dict for (k,v) in d.items())
+    block_registry     = merge_dicts(m.macros.block_registry for m in modules)
+    expr_registry      = merge_dicts(m.macros.expr_registry for m in modules)
+    decorator_registry = merge_dicts(m.macros.decorator_registry for m in modules)
 
+
+    symbols = gen_syms(tree)
+
+    def expand_if_in_registry(tree, args, registry):
+        """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
+        if isinstance(tree, Name) and tree.id in registry:
+            the_macro, inside_out = registry[tree.id]
+            new_tree = safe_splat(the_macro, *args, gen_sym = lambda: symbols.next())
+            return new_tree
+        elif isinstance(tree, Call):
+            args.extend(tree.args)
+            res = expand_if_in_registry(tree.func, args, registry)
+            return res
+
+    def preserve_line_numbers(func):
+        """Decorates a tree-transformer function to stick the original line
+        numbers onto the transformed tree"""
+        def run(tree):
+            pos = (tree.lineno, tree.col_offset) if hasattr(tree, "lineno") and hasattr(tree, "col_offset") else None
+            new_tree = func(tree)
+            if pos:
+                if type(new_tree) is list:
+                    (new_tree[0].lineno, new_tree[0].col_offset) = pos
+                else:
+                    (new_tree.lineno, new_tree.col_offset) = pos
+            return new_tree
+        return run
+
+    @preserve_line_numbers
     def macro_expand(tree):
+        """Tail Recursively expands all macros in a single AST node"""
+        if isinstance(tree, With):
+            new_tree = expand_if_in_registry(tree.context_expr, [tree], block_registry)
+            if new_tree:
+                return macro_expand(new_tree)
 
-        for module in [m.macros for m in modules]:
+        if isinstance(tree, BinOp) and type(tree.op) is Mod:
+            new_tree = expand_if_in_registry(tree.left, [tree.right], expr_registry)
+            if new_tree:
+                return macro_expand(new_tree)
 
-            if (isinstance(tree, With)):
-                if (isinstance(tree.context_expr, Name)
-                        and tree.context_expr.id in module.block_registry):
-                    pos = (tree.lineno, tree.col_offset) if hasattr(tree, "lineno") and hasattr(tree, "col_offset") else None
-                    the_macro, inside_out = module.block_registry[
-                            tree.context_expr.id]
-                    if inside_out:
-                        tree.body = macro_expand(tree.body)
-                    new_tree = the_macro(tree)
-                    if pos:
-                        if type(new_tree) is list:
-                            (new_tree[0].lineno, new_tree[0].col_offset) = pos
-                        else:
-                            (new_tree.lineno, new_tree.col_offset) = pos
-                    return new_tree, True
+        if isinstance(tree, ClassDef) or isinstance(tree, FunctionDef):
+            decorators = tree.decorator_list
+            for dec in decorators:
+                new_tree = expand_if_in_registry(dec, [tree], decorator_registry)
+                if new_tree is not None:
+                    tree = new_tree
+                    new_tree.decorator_list.remove(dec)
+                    return macro_expand(tree)
 
-                if (isinstance(tree.context_expr, Call)
-                        and isinstance(tree.context_expr.func, Name)
-                        and tree.context_expr.func.id in module.block_registry):
-                    the_macro, inside_out = module.block_registry[
-                            tree.context_expr.func.id]
-                    if inside_out:
-                        tree.body = macro_expand(tree.body)
-                    return the_macro(tree, *(tree.context_expr.args)), True
+        return tree
 
-            if  (isinstance(tree, BinOp)
-                    and type(tree.left) is Name
-                    and type(tree.op) is Mod
-                    and tree.left.id in module.expr_registry):
-                pos = (tree.lineno, tree.col_offset)
-                the_macro, inside_out = module.expr_registry[tree.left.id]
-                if inside_out:
-                    tree.right = macro_expand(tree.right)
-                new_tree = the_macro(tree.right)
-                (new_tree.lineno, new_tree.col_offset) = pos
-                return new_tree, True
-
-            if  (isinstance(tree, ClassDef) or isinstance(tree, FunctionDef)):
-                decorators = tree.decorator_list
-                for i in xrange(len(decorators)):
-# The usual macro expansion order is first decorator is expanded first, and then
-# the rest of the decorators.  However, if the macro says it wants to be
-# expanded inside-out, then 
-                    if (isinstance(decorators[i], Name) and decorators[i].id in
-                        module.decorator_registry):
-                        the_macro, inside_out = module.decorator_registry[
-                                decorators[i].id]
-                        decorator_prefix = decorators[:i]
-                        tree.decorator_list = decorators[i+1:]
-                        if inside_out:
-                            tree, modified  = macro_expand(tree)
-                            if modified:
-                                # This means there are sub-macros, so we can't
-                                # apply the macro yet.
-                                tree.decorator_list = (decorator_prefix +
-                                        [decorators[i]] + tree.decorator_list)
-                                return tree, True
-
-                        tree = the_macro(tree)
-                        if decorator_prefix:
-# TODO maybe handle the case when a the macro returns a list of statements.
-                            # Like if you want to decorate every class that is
-                            # generated by a case class declaration.
-                            tree.decorator_list = (decorator_prefix +
-                                    tree.decorator_list)
-                        return tree, True
-
-        return tree, False
 
     @Walker
     def macro_searcher(tree):
-        modified = True
-        while modified:
-            tree, modified = macro_expand(tree)
-        return tree
+        return macro_expand(tree)
 
     tree = macro_searcher.recurse(tree)
 
@@ -246,13 +232,23 @@ class _MacroFinder(object):
                     module_name.split('.')[-1], package_path)
             txt = file.read()
             tree = ast.parse(txt)
-            required_pkgs = _detect_macros(tree)
+            required_pkgs = detect_macros(tree)
             if required_pkgs == []: return
             else: return _MacroLoader(module_name, tree, file.name, required_pkgs)
         except Exception, e:
             pass
 
-from macropy.core import console
+def gen_syms(tree):
+    """Create a generator that creates symbols which are not used in the given
+    `tree`. This means they will be hygienic, i.e. it guarantees that they will
+    not cause accidental shadowing, as long as the scope of the new symbol is
+    limited to `tree` e.g. by a lambda expression or a function body"""
+    @Walker
+    def name_finder(tree):
+        if type(tree) is Name:
+            return collect(tree.id)
 
-if inspect.stack()[-1][1] == '<stdin>':
-    console.MacroConsole().interact("0=[]=====> MacroPy Enabled <=====[]=0")
+    tree, found_names = name_finder.recurse_real(tree)
+    names = ("sym" + str(i) for i in itertools.count())
+    return itertools.ifilter(lambda x: x not in found_names, names)
+
