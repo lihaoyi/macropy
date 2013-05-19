@@ -10,38 +10,40 @@ from macropy.core.macros import process_ast, detect_macros
 class MacroConsole(code.InteractiveConsole):
     def __init__(self, locals=None, filename="<console>"):
         code.InteractiveConsole.__init__(self, locals, filename)
-        self.compile = MacroCommandCompiler()
-
-
-class MacroCommandCompiler(CommandCompiler):
-    def __init__(self,):
-        CommandCompiler.__init__(self)
-        self.compiler = MacroCompile()
-
-
-class MacroCompile(Compile):
-    def __init__(self):
-        Compile.__init__(self)
         self.modules = set()
-    def __call__(self, source, filename, symbol):
-        tree = ast.parse(source)
 
-        required_pkgs = detect_macros(tree)
-        for p in required_pkgs:
-            __import__(p)
+    def runsource(self, source, filename="<input>", symbol="single"):
+        try:
+            code = self.compile(source, filename, symbol)
+        except (OverflowError, SyntaxError, ValueError):
+            code = ""
+            pass
 
-        self.modules.update(sys.modules[p] for p in required_pkgs)
+        if code is None:
+            # This means it's incomplete
+            return True
 
-        tree = process_ast(tree, self.modules)
+        try:
+            tree = ast.parse(source)
+            required_pkgs = detect_macros(tree)
+            for p in required_pkgs:
+                __import__(p)
 
-        tree = ast.Interactive(tree.body)
-        codeob = compile(tree, filename, symbol, self.flags, 1)
-        for feature in _features:
-            if codeob.co_flags & feature.compiler_flag:
-                self.flags |= feature.compiler_flag
-        return codeob
+            self.modules.update(sys.modules[p] for p in required_pkgs)
+            tree = process_ast(tree, self.modules)
+
+            tree = ast.Interactive(tree.body)
+            code = compile(tree, filename, symbol, self.compile.compiler.flags, 1)
+        except (OverflowError, SyntaxError, ValueError):
+            # Case 1
+            self.showsyntaxerror(filename)
+            # This means there's a syntax error
+            return False
 
 
-
+        self.runcode(code)
+        # This means it was successfully compiled; `runcode` takes care of
+        # any runtime failures
+        return False
 
 MacroConsole().interact("0=[]=====> MacroPy Enabled <=====[]=0")

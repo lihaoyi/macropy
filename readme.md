@@ -144,11 +144,9 @@ Examples
 ========
 Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for some small (<30 lines), self contained examples. Their [unit](macropy/macros/string_interp_test.py) [tests](macropy/macros/quicklambda_test.py) demonstrate how these macros are used.
 
-Note that all of these examples are **macros**; that is, they hold no special place in MacroPy. They are placed in [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2), separate from the Macropy core in [macropy/core](macropy/core). Thus they are on even footing with any macro you may want to write yourself.
+Note that all of these examples are **macros**; that is, they hold no special place in MacroPy. They are placed in [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2), separate from the Macropy core in [macropy/core](macropy/core). All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 100 lines of code.
 
-All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 100 lines of code.
-
-I will be using a mix of REPL sessions (for short examples) and snippets from `.py` files (for longer examples) depending on which is more suitable.
+Feel free to open up a REPL and try out the examples in the console; simply `import macropy.core.console`, and most of the examples should work right off the bat when pasted in!
 
 Case Classes
 ------------
@@ -535,7 +533,7 @@ String Interpolation
 --------------------
 
 ```python
-from macropy.macros.string_interp import macros, s
+>>> from macropy.macros.string_interp import macros, s
 
 >>> a, b = 1, 2
 >>> s%"%{a} apple and %{b} bananas"
@@ -959,6 +957,7 @@ Parser Combinators
 ------------------
 ```python
 from macropy.macros2.peg import macros, peg
+from macropy.macros.quicklambda import macros, f
 
 def reduce_chain(chain):
     chain = list(reversed(chain))
