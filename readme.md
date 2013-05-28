@@ -1713,7 +1713,7 @@ class Cls():
 
 ###`args`
 
-Macros can take arguments, for example a macro can be invoked as follows:
+Macros can take addition arguments when invoked, apart from the primary tree that it receives. For example a macro can be invoked as follows:
 
 ```python
 my_macro(a)%(...)
@@ -1726,7 +1726,7 @@ def func():
     ...
 ```
 
-In these cases, `args` contains a list of additional arguments, a length-1 list containing the AST for `a`. This is used in (pattern matching)[#pattern-matching]'s switch macro.
+In these cases, `args` contains a list of additional arguments, a length-1 list containing the AST for `a`. Multiple arguments works as you would expect, although named arguments, `*args* and `**kwargs` are not supported. This is used in [pattern matching](#pattern-matching)'s switch macro to indicate what value to switch on.
 
 ###`gen_sym`
 
