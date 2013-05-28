@@ -206,18 +206,20 @@ def _expand_ast(tree, modules):
 
         if isinstance(tree, ClassDef) or isinstance(tree, FunctionDef):
             all_decs = tree.decorator_list[:]
-            for i, dec in enumerate(all_decs):
-                first = tree.decorator_list[:i]
-                rest = tree.decorator_list[i+1:]
-                tree.decorator_list = rest
+            seen_decs = []
+            while tree.decorator_list != []:
+                dec = tree.decorator_list[0]
+                tree.decorator_list = tree.decorator_list[1:]
+
                 new_tree = expand_if_in_registry(dec, tree, [], decorator_registry)
                 if new_tree is None:
 
-                    tree.decorator_list = first + [dec] + rest
+                    seen_decs.append(dec)
                 else:
                     tree = new_tree
                     tree = macro_expand(tree)
-                    tree.decorator_list = first + tree.decorator_list
+
+            tree.decorator_list = seen_decs
             return tree
 
         return tree
