@@ -1327,11 +1327,15 @@ from macropy.core.macros import *
 macros = Macros()
 
 @macros.expr()
-def expand(tree):
+def expand(tree, **kw):
     return tree
 ```
 
-Running this via `python run.py` will print out `3`; so far `expand` is a simple no-op macro which does not do anything to the tree it is passed. This macro is provided in [examples/nop](examples/nop) if you want to try it out yourself; you can run it from the project root via `python examples/nop/run.py`. At this point, you can print out the tree you are receiving in various forms just to see what you're getting:
+Running this via `python run.py` will print out `3`; so far `expand` is a simple no-op macro which does not do anything to the tree it is passed. This macro is provided in [examples/nop](examples/nop) if you want to try it out yourself; you can run it from the project root via `python examples/nop/run.py`.
+
+The `**kw` serves to absorb all the arguments that you did not declare. The macro can take additional arguments (not shown here) which are documented here. Alternately, you can just take a look at what the `**kw` dictionary contains.
+
+At this point, you can print out the tree you are receiving in various forms just to see what you're getting:
 
 ```python
 # macro_module.py
@@ -1340,7 +1344,7 @@ from macropy.core.macros import *
 macros = Macros()
 
 @macros.expr()
-def expand(tree):
+def expand(tree, **kw):
     print tree
     print real_repr(tree)
     print unparse_ast(tree)
@@ -1367,7 +1371,7 @@ from macropy.core.macros import *
 macros = Macros()
 
 @macros.expr()
-def expand(tree):
+def expand(tree, **kw):
     return Num(100)
 ```
 When you run `run.py`, this will print out `100`, as the original expression `(1 + 2)` has now been replaced by the literal `100`. Another possible operation would be to replace the expression with the square of itself:
@@ -1379,7 +1383,7 @@ from macropy.core.macros import *
 macros = Macros()
 
 @macros.expr()
-def expand(tree):
+def expand(tree, **kw):
     newtree = BinOp(tree, Mult(), tree)
     return newtree
 ```
@@ -1397,7 +1401,7 @@ from macropy.core.macros import *
 macros = Macros()
 
 @macros.expr()
-def expand(tree):
+def expand(tree, **kw):
     return Lambda(arguments([Name("x", Param())], None, None, []), BinOp(BinOp(Name('x', Load()), Mult(), tree), Add(), Num(10)))
 ```
 
@@ -1428,7 +1432,7 @@ from macropy.core.lift import macros, q, ast
 macros = Macros()
 
 @macros.expr()
-def expand(tree):
+def expand(tree, **kw):
     return q%(lambda x: x * (ast%tree) + 10)
 ```
 
@@ -1444,7 +1448,7 @@ from macropy.core.lift import macros, q, ast, u
 macros = Macros()
 
 @macros.expr()
-def expand(tree):
+def expand(tree, **kw):
     addition = 10
     return q%(lambda x: x * (ast%tree) + u%addition)
 ```
@@ -1461,7 +1465,7 @@ from macropy.core.lift import macros, q
 macros = Macros()
 
 @macros.expr()
-def expand(tree):
+def expand(tree, **kw):
     newtree = q%(lambda x: x * None + 10)
     newtree.body.left.right = tree          # replace the None in the AST with the given tree
     return newtree
@@ -1503,7 +1507,7 @@ from macropy.core.macros import *
 macros = Macros()
 
 @macros.expr()
-def f(tree):
+def f(tree, **kw):
     names = ('arg' + str(i) for i in xrange(100))
 
     def rec(tree):
@@ -1533,11 +1537,11 @@ from macropy.core.macros import *
 macros = Macros()
 
 @macros.expr()
-def f(tree):
+def f(tree, **kw):
     names = ('arg' + str(i) for i in xrange(100))
 
     @Walker
-    def underscore_search(tree):
+    def underscore_search(tree, **kw):
         if type(tree) is Name and tree.id == '_':
             tree.id = names.next()
 
@@ -1567,11 +1571,11 @@ from macropy.core.lift import macros, q, u
 macros = Macros()
 
 @macros.expr()
-def f(tree):
+def f(tree, **kw):
     names = ('arg' + str(i) for i in xrange(100))
 
     @Walker
-    def underscore_search(tree):
+    def underscore_search(tree, **kw):
         if isinstance(tree, Name) and tree.id == "_":
             name = names.next()
             tree.id = name
@@ -1595,11 +1599,11 @@ _ = None  # makes IDE happy
 macros = Macros()
 
 @macros.expr()
-def f(tree):
+def f(tree, **kw):
     names = ('arg' + str(i) for i in xrange(100))
 
     @Walker
-    def underscore_search(tree):
+    def underscore_search(tree, **kw):
         if isinstance(tree, Name) and tree.id == "_":
             name = names.next()
             tree.id = name
@@ -1649,9 +1653,83 @@ print map(f%(_  * 10), [1, 2, 3])  # [10, 20, 30]
 
 Mission Accomplished! You can see the completed self-contained example in [examples/full](examples/full). This macro is also defined in our library in [macropy/macros/quicklambda.py](macropy/macros/quicklambda.py), along with a suite of [unit tests](macropy/macros/quicklambda_test.py). It is also used throughout the implementation of the other macros.
 
-Tools
-=====
-This section describes tools ([Quasiquotes](#quasiquotes), [Walkers](#walkers)) that can be used to help you define your macros and their transformations. Although it is perfectly possible to write macros which only use conditionals and for-loops, life gets so much easier using these abstractions that I would consider them a "must have".
+Reference
+=========
+
+
+Arguments
+---------
+Any macro which is called receives a number of things from MacroPy in order to perform its duties (the syntax transformation). These are given to the macro as keyword arguments; the macro can declare the arguments as part of its parameter list in order to use it directly, otherwise it gets chucked into the `**kw` dict at the end of the macro's parameter list.
+
+###`tree`
+This is, the AST provided to the macro, which it can transform/replace. It contains the code captured by the macro, which varies depending on the macro used:
+
+- The right hand side of an **expression macro**: `my_macro%(A + B)` captures the tree for `(A + B)`.
+- The body of a **block macro**:
+
+```python
+with my_macro:
+    do_stuff()
+    return blah
+```
+
+will capture the statements in the body of the `with`: in this case a list containing the AST for `do_stuff()` and `return blah`.
+
+- The entire class or function definition for a **decorator macro*, including *any decorators below the macro itself*:
+
+```python
+@dec
+@my_macro
+@inner_dec
+class Cls():
+    blah
+```
+
+Captures the AST for:
+
+```python
+@inner_dec
+class Cls():
+    blah
+```
+
+###`args`
+
+Macros can take arguments, for example a macro can be invoked as follows:
+
+```python
+my_macro(a)%(...)
+
+with my_macro(a):
+    ...
+
+@my_macro(a)
+def func():
+    ...
+```
+
+In these cases, `args` contains a list of additional arguments, a length-1 list containing the AST for `a`. This is used in (pattern matching)[#pattern-matching]'s switch macro.
+
+###`gen_sym`
+
+As [described below](#hygiene), `gen_sym` provides a mechanism for creating identifiers that are guaranteed not to clash with any other identifier in the same source file. `gen_sym` is a 0-argument function, which when called via:
+
+```python
+gen_sym()
+```
+
+Will produce a new identifier (as a string) which does not exist in the source code, and has not been provided before. This is used in the (quick lambda macro)[#quick-lambda) to ensure that the new arguments do not collide.
+
+###`target`
+
+This argument is only provided for **block macros**. It provides a way to capture the bound name in the `with` statement:
+
+```python
+with my_macro as blah:
+    ...
+```
+
+`target will contain the AST for `blah`. This is used in the [quasiquotes](#quasiquotes) macro.
 
 Quasiquotes
 -----------
@@ -1728,7 +1806,7 @@ The Walker is a uniform abstraction to use for recursively traversing a Python A
 In its most basic form, a Walker is used as follows:
 ```python
 @Walker
-def transform(tree):
+def transform(tree, **kw):
     ...
     return new_tree
 ```
@@ -1747,7 +1825,7 @@ The Walker allows the programmer to provide a *context*:
 
 ```python
 @Walker
-def transform(tree, ctx):
+def transform(tree, ctx, **kw):
     ...
     return new_tree
     or
@@ -1765,7 +1843,7 @@ The Walker provides an easy way for  the programmer to aggregate data as it recu
 
 ```python
 @Walker
-def transform(tree, ctx):
+def transform(tree, ctx, **kw):
     ...
     return new_tree, collect(value)
 new_tree, collected = transform.recurse_real(old_tree)
@@ -1779,7 +1857,7 @@ Lastly, the Walker provides a way to end the recursion, via the `stop` value:
 
 ```python
 @Walker
-def transform(tree, ctx):
+def transform(tree, ctx, **kw):
     ...
     if ...:
         return new_tree
@@ -1794,7 +1872,7 @@ As shown in some of the examples, the `transform` function given to a Walker can
 
 ```python
 @Walker
-def transform(tree, ctx):
+def transform(tree, ctx, **kw):
     ...
     return new_tree, set_ctx(new_ctx), collect(value), stop
 
