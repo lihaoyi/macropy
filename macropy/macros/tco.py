@@ -60,22 +60,22 @@ def trampoline_decorator(func):
 
 
 @macros.decorator(inside_out=True)
-def tco(node):
+def tco(tree, **kw):
     @Walker
     # Replace returns of calls - TODO use pattern matching here
-    def return_replacer(node):
-        if isinstance(node, Return): 
-            if isinstance(node.value, Call):
+    def return_replacer(tree, **kw):
+        if isinstance(tree, Return):
+            if isinstance(tree.value, Call):
                 with q as code:
                     return ('macropy-tco-call',
-                            ast%(node.value.func),
-                            ast%(List(node.value.args, Load())),
-                            ast%(node.value.starargs or List([], Load())),
-                            ast%(node.value.kwargs or Dict([],[])))
+                            ast%(tree.value.func),
+                            ast%(List(tree.value.args, Load())),
+                            ast%(tree.value.starargs or List([], Load())),
+                            ast%(tree.value.kwargs or Dict([],[])))
                 return code
             else:
-                return node
-        return node
+                return tree
+        return tree
 
     # Replace calls (that aren't returned) which happen to be in a tail-call
     # position
@@ -97,16 +97,16 @@ def tco(node):
     # We need to remove ourselves from the decorator list so we don't have
     # infinite expansion
 
-    arg_list_node = List(node.args.args, Load())
+    arg_list_node = List(tree.args.args, Load())
     for x in arg_list_node.elts:
         assert isinstance(x, Name)
         x.ctx = Load()
 
-    node = return_replacer.recurse(node)
-    node.decorator_list = ([q%tco.trampoline_decorator] +
-            node.decorator_list)
-    node.body[-1] = replace_tc_pos(node.body[-1])
-    return node
+    tree = return_replacer.recurse(tree)
+    tree.decorator_list = ([q%tco.trampoline_decorator] +
+            tree.decorator_list)
+    tree.body[-1] = replace_tc_pos(tree.body[-1])
+    return tree
 
 
 # ok, so now you will only need to import tco...

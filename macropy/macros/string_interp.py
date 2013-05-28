@@ -6,7 +6,7 @@ from macropy.core.lift import macros, q, u
 macros = Macros()
 
 @macros.expr()
-def s(tree):
+def s(tree, **kw):
     captured = []
     new_string = ""
     chunks = re.split("%{(.*?)}", tree.s)

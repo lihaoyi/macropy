@@ -3,6 +3,6 @@ from macropy.core.macros import *
 macros = Macros()
 
 @macros.block()
-def expand(tree):
+def expand(tree, **kw):
     import copy
-    return tree.body * 10
+    return tree * 10

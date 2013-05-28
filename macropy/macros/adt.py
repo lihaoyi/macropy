@@ -69,5 +69,5 @@ def _case_transform(tree):
     return tree
 
 @macros.decorator()
-def case(tree):
+def case(tree, **kw):
     return _case_transform(tree)

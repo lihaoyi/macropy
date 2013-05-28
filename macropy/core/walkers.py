@@ -91,7 +91,7 @@ class Walker(object):
             # Be loose enough to work whether the function takes 1 or 2 args,
             # and whether it returns a tuple or a single tree. The types should
             # still be sound, since the various possibilities are all disjoint.
-            gen = safe_splat(self.func, tree, ctx)
+            gen = self.func(tree=tree, ctx=ctx)
 
             if gen is None:
                 gen = ()

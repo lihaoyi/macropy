@@ -3,5 +3,5 @@ from macropy.core.macros import *
 macros = Macros()
 
 @macros.expr()
-def g(tree):
+def g(tree, **kw):
     return Num(n = 20)

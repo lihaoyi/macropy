@@ -11,7 +11,7 @@ from pyxl.html import *
 macros = Macros()
 
 @macros.expr()
-def p(tree):
+def p(tree, **kw):
     import StringIO
     new_string = tokenize.untokenize(pyxl_tokenize(StringIO.StringIO('(' + tree.s + ')').readline)).rstrip()
     new_tree = ast.parse("from __future__ import unicode_literals;" + new_string)

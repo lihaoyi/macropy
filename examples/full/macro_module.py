@@ -6,11 +6,11 @@ _ = None  # makes IDE happy
 macros = Macros()
 
 @macros.expr()
-def f(tree):
+def f(tree, **kw):
     names = ('arg' + str(i) for i in xrange(100))
 
     @Walker
-    def underscore_search(tree):
+    def underscore_search(tree, **kw):
         if isinstance(tree, Name) and tree.id == "_":
             name = names.next()
             tree.id = name

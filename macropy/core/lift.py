@@ -10,7 +10,7 @@ def name(tree):
 
 
 @Walker
-def _unquote_search(tree):
+def _unquote_search(tree, **kw):
     if isinstance(tree, BinOp) and type(tree.left) is Name and type(tree.op) is Mod:
         if 'u' == tree.left.id:
             return Literal(Call(Name(id="ast_repr"), [tree.right], [], None, None))
@@ -23,12 +23,12 @@ def _unquote_search(tree):
 
 
 @macros.expr()
-def q(tree):
+def q(tree, **kw):
     tree = _unquote_search.recurse(tree)
     return ast_repr(tree)
 
 
 @macros.block()
-def q(tree):
-    body = _unquote_search.recurse(tree.body)
-    return Assign([Name(id=tree.optional_vars.id)], ast_repr(body))
+def q(tree, target, **kw):
+    body = _unquote_search.recurse(tree)
+    return [Assign([Name(id=target.id)], ast_repr(body))]

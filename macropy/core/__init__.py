@@ -177,7 +177,7 @@ def unparse_ast(tree):
             While:      lambda: tabs + "while " + rec(tree.test) + ":" + irec(tree.body) +
                                 mix(tabs, "else:", irec(tree.orelse)),
             With:       lambda: tabs + "with " + rec(tree.context_expr) +
-                                mix(" as ", tree.optional_vars) +
+                                mix(" as ", tree.optional_vars) + ":" +
                                 irec(tree.body),
             #Expressions
             #Str doesn't properly handle from __future__ import unicode_literals

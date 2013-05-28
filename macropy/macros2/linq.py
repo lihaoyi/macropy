@@ -9,20 +9,20 @@ import sqlalchemy
 macros = Macros()
 
 @macros.expr()
-def sql(tree):
+def sql(tree, **kw):
     x = _recurse.recurse(tree)
     x = expand_let_bindings.recurse(x)
     return x
 
 @macros.expr()
-def query(tree):
+def query(tree, **kw):
     x = _recurse.recurse(tree)
     x = expand_let_bindings.recurse(x)
     return q%(lambda query: query.bind.execute(query).fetchall())(ast%x)
 
 
 @Walker
-def _recurse(tree):
+def _recurse(tree, **kw):
     if type(tree) is Compare and type(tree.ops[0]) is In:
         return q%(ast%tree.left).in_(ast%tree.comparators[0])
 
@@ -63,7 +63,7 @@ def generate_schema(engine):
 
 
 @Walker
-def _find_let_bindings(tree, ctx):
+def _find_let_bindings(tree, ctx, **kw):
     if type(tree) is Call and type(tree.func) is Lambda:
         return tree.func.body, stop, collect(tree)
 
@@ -71,7 +71,7 @@ def _find_let_bindings(tree, ctx):
         return tree, stop
 
 @Walker
-def expand_let_bindings(tree):
+def expand_let_bindings(tree, **kw):
     tree, chunks = _find_let_bindings.recurse_real(tree)
     for v in chunks:
         let_tree = v

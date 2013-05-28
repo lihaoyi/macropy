@@ -273,29 +273,32 @@ def _is_pattern_match_expr(tree):
 
 
 @macros.block()
-def _matching(tree):
+def _matching(tree, **kw):
     """
     This macro will enable non-refutable pattern matching.  If a pattern match
     fails, an exception will be thrown.
     """
     @Walker
-    def func(tree):
+    def func(tree, **kw):
         if _is_pattern_match_stmt(tree):
             modified = set()
             matcher = build_matcher(tree.value.left, modified)
             # lol random names for hax
             with q as assignment:
                 xsfvdy = ast%(matcher)
-            statements = [assignment,
-                          Expr(q%(xsfvdy.match_value(ast%(tree.value.right))))]
+
+            statements = [assignment, Expr(q%(xsfvdy.match_value(ast%(tree.value.right))))]
+
             for var_name in modified:
                 statements.append(Assign([Name(var_name, Store())],
                     q%(xsfvdy.get_var(u%var_name))))
+
             return statements
         else:
             return tree
+
     func.recurse(tree)
-    return tree.body
+    return [tree]
 
 
 def _rewrite_if(tree, var_name=None):
@@ -307,17 +310,20 @@ def _rewrite_if(tree, var_name=None):
     #     except PatternMatchException:
     #         u%(_maybe_rewrite_if(failBody))
     # return rewritten
-    handler = ExceptHandler(Name('PatternMatchException',
-        Load()), None, tree.orelse)
+    handler = ExceptHandler(Name('PatternMatchException', Load()), None, tree.orelse)
     try_stmt = TryExcept(tree.body, [handler], [])
+
     if var_name:
         tree.test = BinOp(tree.test, LShift(), Name(var_name, Load()))
-    macroed_match = With(Name('_matching', Load()), None, Expr(tree.test))
+
+    macroed_match = With(Name('_matching', Load()), None, [Expr(tree.test)])
     try_stmt.body = [macroed_match] + try_stmt.body
+
     if len(handler.body) == 1:
         handler.body = [_maybe_rewrite_if(handler.body[0], var_name)]
     elif not handler.body:
         handler.body = [Pass()]
+
     return try_stmt
 
 
@@ -328,32 +334,31 @@ def _maybe_rewrite_if(stmt, var_name=None):
 
 
 @macros.block()
-def switch(tree, arg, gen_sym):
+def switch(tree, args, gen_sym, **kw):
     """
     This only enables (refutable) pattern matching in top-level if statements.
     The advantage of this is the limited reach ensures less interference with
     existing code.
     """
-    import string
-    import random
     new_id = gen_sym()
-    for i in xrange(len(tree.body)):
-        tree.body[i] = _maybe_rewrite_if(tree.body[i], new_id)
-    tree.body = [Assign([Name(new_id, Store())], arg)] + tree.body
-    return tree.body
+    for i in xrange(len(tree)):
+        tree[i] = _maybe_rewrite_if(tree[i], new_id)
+    tree = [Assign([Name(new_id, Store())], args[0])] + tree
+    return tree
 
 
 @macros.block()
-def patterns(tree):
+def patterns(tree, **kw):
     """
     This enables patterns everywhere!  NB if you use this macro, you will not be
     able to use real left shifts anywhere.
     """
-    # First transform all if-matches, then wrap the whole thing in a "with
-    # _matching" block
     @Walker
-    def if_rewriter(tree):
-        return  _maybe_rewrite_if(tree)
-    if_rewriter.recurse(tree)
-    tree.context_expr = Name('_matching', Load())
-    return tree
+    def if_rewriter(tree, **kw):
+        return _maybe_rewrite_if(tree)
+
+    with q as new:
+        with _matching:
+            None
+    if_rewriter.recurse(new)
+    return new

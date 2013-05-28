@@ -6,11 +6,11 @@ _ = None  # makes IDE happy
 macros = Macros()
 
 @macros.expr()
-def f(tree, gen_sym):
+def f(tree, gen_sym, **kw):
 
 
     @Walker
-    def underscore_search(tree):
+    def underscore_search(tree, **kw):
         if isinstance(tree, Name) and tree.id == "_":
             name = gen_sym()
             tree.id = name

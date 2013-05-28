@@ -144,8 +144,8 @@ class Tests(unittest.TestCase):
             try:
                 assert parser.parse_all(string)[0] == json.loads(string)
             except Exception, e:
-                print parser.parse_all(string)
-                print json.loads(string)
+                print(parser.parse_all(string))
+                print(json.loads(string))
                 raise e
         """
         JSON <- S? ( Object / Array / String / True / False / Null / Number ) S?

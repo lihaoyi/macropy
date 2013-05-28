@@ -13,12 +13,12 @@ def wrap(printer, txt, x):
 
 
 @macros.expr()
-def log(tree):
+def log(tree, **kw):
     new_tree = q%(wrap(log, u%unparse_ast(tree), ast%tree))
     return new_tree
 
 @Walker
-def trace_walk(tree, ctx):
+def trace_walk(tree, ctx, **kw):
     if isinstance(tree, expr) and \
             tree._fields != () and \
             type(tree) is not Num and \
@@ -44,13 +44,13 @@ def trace_walk(tree, ctx):
         return [code, tree], stop
 
 @macros.expr()
-def trace(tree):
+def trace(tree, **kw):
     ret = trace_walk.recurse(tree, None)
     return ret
 
 @macros.block()
-def trace(tree):
-    ret = trace_walk.recurse(tree.body, None)
+def trace(tree, **kw):
+    ret = trace_walk.recurse(tree, None)
     return ret
 
 
@@ -67,14 +67,15 @@ def handle(thunk):
     raise AssertionError("Require Failed\n" + "\n".join(out))
 
 @macros.expr()
-def require(tree):
+def require(tree, **kw):
     return _require_transform(tree)
 
 @macros.block()
-def require(tree):
-    for expr in tree.body:
+def require(tree, **kw):
+    for expr in tree:
         expr.value = _require_transform(expr.value)
 
-    return tree.body
+    return tree
 
-def log(x): print x
+def log(x):
+    print(x)

@@ -3,7 +3,7 @@ from macropy.core.lift import macros, q
 macros = Macros()
 
 @macros.block()
-def my_macro(tree):
+def my_macro(tree, **kw):
     with q as code:
         x = x / 2
         y = 1 / x

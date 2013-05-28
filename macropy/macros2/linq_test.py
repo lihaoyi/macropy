@@ -19,13 +19,13 @@ def compare_queries(query1, query2, post_process=lambda x: x):
     try:
         assert post_process(res1) == post_process(res2)
     except Exception, e:
-        print "FAILURE"
-        print e
-        print query1
-        print "\n".join(map(str, post_process(res1)))
-        print query2
-        print "\n".join(map(str, post_process(res2)))
-        raise e
+        print ("FAILURE")
+        print (e)
+        print (query1)
+        print ("\n".join(map(str, post_process(res1))))
+        print (query2)
+        print ("\n".join(map(str, post_process(res2))))
+        raise (e)
 
 class Tests(unittest.TestCase):
 

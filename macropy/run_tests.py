@@ -38,7 +38,7 @@ run(tco_test.Tests)
 # this one creates a sqlite database to run, so may take a while
 from macropy.macros2 import linq_test
 run(linq_test.Tests)
-
-# this one needs chromedriver in order to run the javascript using Selenium
+#
+# # this one needs chromedriver in order to run the javascript using Selenium
 from macropy.macros2 import javascript_test
 run(javascript_test.Tests)

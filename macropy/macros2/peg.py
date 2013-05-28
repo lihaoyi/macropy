@@ -9,23 +9,23 @@ from collections import defaultdict
 macros = Macros()
 
 @macros.block()
-def peg(tree):
-    for statement in tree.body:
+def peg(tree, **kw):
+    for statement in tree:
         if type(statement) is Assign:
             new_tree, bindings = _PegWalker.recurse_real(statement.value)
             statement.value = q%(Parser.Lazy(lambda: ast%new_tree))
 
-    return tree.body
+    return tree
 
 
 @macros.expr()
-def peg(tree):
+def peg(tree, **kw):
     new_tree, bindings = _PegWalker.recurse_real(tree)
     return new_tree
 
 
 @Walker
-def _PegWalker(tree, ctx):
+def _PegWalker(tree, ctx, **kw):
     if type(tree) is Str:
         return q%Parser.Raw(ast%tree), stop
 
