@@ -5,8 +5,22 @@ import macropy.core.macros
 
 class Tests(unittest.TestCase):
     def test_basic_identification_and_expansion(self):
-        import basic_expansion
-        assert basic_expansion.run() == 10
+        import basic_expr
+        assert basic_expr.run() == 10
+
+        import basic_block
+        assert basic_block.run() == 13
+
+        import basic_decorator
+        assert basic_decorator.run() == 14
+
+    def test_arguments(self):
+        import argument
+        argument.run() == 31
+
+    def test_gen_sym(self):
+        import gen_sym
+        gen_sym.run() == 10
 
     def test_ignore_macros_not_explicitly_imported(self):
         import not_imported

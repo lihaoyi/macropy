@@ -134,7 +134,7 @@ def unparse_ast(tree):
                                 " import " + jmap(", ", rec, tree.names),
             Assign:     lambda: tabs + "".join(rec(t) + " = " for t in tree.targets) + rec(tree.value),
             AugAssign:  lambda: tabs + rec(tree.target) + " " + binop[tree.op.__class__] + "= " + rec(tree.value),
-            Return:     lambda: tabs + "return " + mix(tree.value),
+            Return:     lambda: tabs + "return " + rec(tree.value),
             Pass:       lambda: tabs + "pass",
             Break:      lambda: tabs + "break",
             Continue:   lambda: tabs + "continue",
@@ -221,7 +221,7 @@ def unparse_ast(tree):
             ExtSlice:   lambda: jmap(", ", rec, tree.dims),
             arguments:  lambda: ", ".join(
                             map(lambda a, d: rec(a) + mix("=", rec(d)),
-                                tree.arguments,
+                                tree.args,
                                 [None] * (len(tree.args) - len(tree.defaults)) + tree.defaults
                             ) +
                             box(mix("*", tree.vararg)) +

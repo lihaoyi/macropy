@@ -165,13 +165,10 @@ def _expand_ast(tree, modules):
         """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
         if isinstance(tree, Name) and tree.id in registry:
             the_macro, inside_out = registry[tree.id]
-
-            new_tree = the_macro(tree=body, args=args, gen_sym = lambda: symbols.next(), **kwargs)
-            return new_tree
+            return the_macro(tree=body, args=args, gen_sym = lambda: symbols.next(), **kwargs)
         elif isinstance(tree, Call):
             args.extend(tree.args)
-            res = expand_if_in_registry(tree.func, body, args, registry)
-            return res
+            return expand_if_in_registry(tree.func, body, args, registry)
 
     def preserve_line_numbers(func):
         """Decorates a tree-transformer function to stick the original line
@@ -188,7 +185,7 @@ def _expand_ast(tree, modules):
                     (new_tree.lineno, new_tree.col_offset) = pos
             return new_tree
         return run
-    outer = tree
+
     @preserve_line_numbers
     def macro_expand(tree):
         """Tail Recursively expands all macros in a single AST node"""
@@ -208,13 +205,20 @@ def _expand_ast(tree, modules):
                 return macro_expand(new_tree)
 
         if isinstance(tree, ClassDef) or isinstance(tree, FunctionDef):
-            decorators = tree.decorator_list
-            for dec in decorators:
+            all_decs = tree.decorator_list[:]
+            for i, dec in enumerate(all_decs):
+                first = tree.decorator_list[:i]
+                rest = tree.decorator_list[i+1:]
+                tree.decorator_list = rest
                 new_tree = expand_if_in_registry(dec, tree, [], decorator_registry)
-                if new_tree is not None:
+                if new_tree is None:
+
+                    tree.decorator_list = first + [dec] + rest
+                else:
                     tree = new_tree
-                    new_tree.decorator_list.remove(dec)
-                    return macro_expand(tree)
+                    tree = macro_expand(tree)
+                    tree.decorator_list = first + tree.decorator_list
+            return tree
 
         return tree
 
