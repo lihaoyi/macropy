@@ -1334,7 +1334,8 @@ def expand(tree, **kw):
 
 Running this via `python run.py` will print out `3`; so far `expand` is a simple no-op macro which does not do anything to the tree it is passed. This macro is provided in [examples/nop](examples/nop) if you want to try it out yourself; you can run it from the project root via `python examples/nop/run.py`.
 
-The `**kw` serves to absorb all the arguments that you did not declare. The macro can take additional arguments (not shown here) which are documented [below](#arguments). Alternately, you can just take a look at what the `**kw` dictionary contains.
+The `**kw` serves to absorb all the arguments that you did not declare. The macro can take additional arguments (not shown here) which are documented [below](#arguments)
+. Alternately, you can just take a look at what the `**kw` dictionary contains.
 
 At this point, you can print out the tree you are receiving in various forms just to see what you're getting:
 
@@ -1660,7 +1661,23 @@ Reference
 
 Arguments
 ---------
-Any macro which is called receives a number of things from MacroPy in order to perform its duties (the syntax transformation). These are given to the macro as keyword arguments; the macro can declare the arguments as part of its parameter list in order to use it directly, otherwise it gets chucked into the `**kw` dict at the end of the macro's parameter list.
+Any macro which is called receives a number of things from MacroPy in order to perform its duties (the syntax transformation). A simple macro may just require
+
+```python
+@macros.expr()
+def my_simple_macro(tree, **kw):
+    ...
+```
+
+While a more complex macro may require more of the functionality provided by MacroPy:
+
+```python
+@macros.expr()
+def my_complex_macro(tree, args, gen_sym, target, **kw):
+    ...
+```
+
+These additional arguments given to the macro as keyword arguments. The macro can declare the arguments as part of its parameter list in order to use it directly, otherwise it gets chucked into the `**kw` dict at the end of the macro's parameter list. This section details what each argument means and why it is useful.
 
 ###`tree`
 This is, the AST provided to the macro, which it can transform/replace. It contains the code captured by the macro, which varies depending on the macro used:
