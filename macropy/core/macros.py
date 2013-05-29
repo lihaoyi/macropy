@@ -151,51 +151,41 @@ def detect_macros(tree):
     return required_pkgs
 
 
-def linear_index(string, lineno, col_offset):
-    prev_lines = "\n".join(string.split("\n")[:lineno-1])
-
-    prev_length = len(prev_lines)
+def linear_index(line_lengths, lineno, col_offset):
+    prev_length = sum(line_lengths[:lineno-1]) + lineno-2
     out = prev_length + col_offset + 1
     return out
 
 @Walker
 def indexer(tree, **kw):
     try:
-        return collect((tree.lineno, tree.col_offset, unparse_ast(tree)))
-    except:
+
+        unparse_ast(tree)
+
+        return collect((tree.lineno, tree.col_offset))
+    except Exception, e:
         pass
 
-def _expand_ast(tree, src, modules):
-    """Go through an AST, hunting for macro invocations and expanding any that
-    are found"""
-    def merge_dicts(my_dict):
-        return dict((k,v) for d in my_dict for (k,v) in d.items())
-
-    positions = indexer.recurse_real(tree)[1]
-
-    indexes = [linear_index(src, l, c) for (l, c, t) in positions] + [len(src)]
-
-    def src_for(tree):
+def _src_for(tree, src, indexes, line_lengths):
 
         all_child_pos = sorted(indexer.recurse_real(tree)[1])
-        start_index = linear_index(src, *all_child_pos[0][:-1])
+        start_index = linear_index(line_lengths, *all_child_pos[0])
 
-        last_child_index = linear_index(src, *all_child_pos[-1][:-1])
+        last_child_index = linear_index(line_lengths, *all_child_pos[-1])
 
         first_successor_index = indexes[min(indexes.index(last_child_index)+1, len(indexes)-1)]
 
 
         for end_index in range(last_child_index, first_successor_index):
+            transforms = {
+                GeneratorExp: "(%s)",
+                ListComp: "[%s]",
+                SetComp: "{%s}",
+                DictComp: "{%s}"
+            }
 
             prelim = src[start_index:end_index]
-            if isinstance(tree, GeneratorExp):
-                prelim = "(" + prelim + ")"
-            if isinstance(tree, ListComp):
-                prelim = "[" + prelim + "]"
-            if isinstance(tree, SetComp):
-                prelim = "{" + prelim + "}"
-            if isinstance(tree, DictComp):
-                prelim = "{" + prelim + "}"
+            prelim = transforms.get(type(tree), "%s") % prelim
             if isinstance(tree, stmt):
                 prelim = prelim.replace("\n" + " " * tree.col_offset, "\n")
 
@@ -204,11 +194,20 @@ def _expand_ast(tree, src, modules):
                 if unparse_ast(parsed).strip() == unparse_ast(tree).strip():
                     return src[start_index:end_index].replace("\n" + " " * tree.col_offset, "\n")
 
-
             except SyntaxError as e:
                 pass
         raise Exception("Can't find working source")
 
+
+def _expand_ast(tree, src, modules):
+    """Go through an AST, hunting for macro invocations and expanding any that
+    are found"""
+    def merge_dicts(my_dict):
+        return dict((k,v) for d in my_dict for (k,v) in d.items())
+
+    positions = indexer.recurse_real(tree)[1]
+    line_lengths = map(len, src.split("\n"))
+    indexes = [linear_index(line_lengths, l, c) for (l, c) in positions] + [len(src)]
 
     block_registry     = merge_dicts(m.macros.block_registry for m in modules)
     expr_registry      = merge_dicts(m.macros.expr_registry for m in modules)
@@ -220,7 +219,13 @@ def _expand_ast(tree, src, modules):
         """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
         if isinstance(tree, Name) and tree.id in registry:
             the_macro, inside_out = registry[tree.id]
-            return the_macro(tree=body, args=args, gen_sym=lambda: symbols.next(), src_for=src_for, **kwargs)
+            return the_macro(
+                tree=body,
+                args=args,
+                gen_sym=lambda: symbols.next(),
+                src_for=lambda t: _src_for(t, src, indexes, line_lengths),
+                **kwargs
+            )
         elif isinstance(tree, Call):
             args.extend(tree.args)
             return expand_if_in_registry(tree.func, body, args, registry)
