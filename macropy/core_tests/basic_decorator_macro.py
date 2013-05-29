@@ -18,7 +18,7 @@ def my_macro(tree, **kw):
 @macros.decorator()
 def my_macro2(tree, **kw):
     assert unparse_ast(tree).strip() == "\n".join([
-    "@outer",
+    "@middle",
     "@my_macro",
     "@inner",
     "def run():",
