@@ -56,9 +56,10 @@ And more! All this runs perfectly on vanilla Python 2.7 or PyPy 2.0. For more de
 """
 from distutils.core import setup
 import setuptools
+from macropy import __version__
 
 setup(name='MacroPy',
-      version='0.1.7',
+      version=__version__,
       description='Macros for Python: Quasiquotes, Case Classes, LINQ and more!',
       long_description=__doc__,
       license='BSD',
