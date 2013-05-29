@@ -35,13 +35,13 @@ class Literal(object):
 def ast_repr(x):
     """Similar to repr(), but returns an AST instead of a String, which when
     evaluated will return the given value."""
-    if type(x) in (int, float): return ast.Num(n=x)
-    elif type(x) is str:        return ast.Str(s=x)
-    elif type(x) is list:       return ast.List(elts=map(ast_repr, x))
-    elif type(x) is dict:       return ast.Dict(keys=map(ast_repr, x.keys()), values=map(ast_repr, x.values()))
-    elif type(x) is set:        return ast.Set(elts=map(ast_repr, x))
-    elif type(x) is Literal:    return x.body
-    elif x is None:             return ast.Name(id="None")
+    if type(x) in (int, float):     return ast.Num(n=x)
+    elif type(x) in (str, unicode): return ast.Str(s=x)
+    elif type(x) is list:           return ast.List(elts=map(ast_repr, x))
+    elif type(x) is dict:           return ast.Dict(keys=map(ast_repr, x.keys()), values=map(ast_repr, x.values()))
+    elif type(x) is set:            return ast.Set(elts=map(ast_repr, x))
+    elif type(x) is Literal:        return x.body
+    elif x is None:                 return ast.Name(id="None")
     elif isinstance(x, ast.AST):
         fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
         return ast.Call(

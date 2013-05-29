@@ -124,7 +124,7 @@ Where you run `run.py` instead of `other.py`. For the same reason, you cannot di
 MacroPy also works in the REPL:
 
 ```python
-PS C:\Dropbox\Workspace\6.945\Project> python
+PS C:\Dropbox\Workspace\macropy> python
 Python 2.7 (r27:82525, Jul  4 2010, 07:43:08) [MSC v.1500 64 bit (AMD64)] on win32
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import macropy.core.console
@@ -132,11 +132,12 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> from macropy.macros2.tracing import macros, trace
 >>> trace%[x*2 for x in range(3)]
 range(3) -> [0, 1, 2]
-(x * 2) -> 0
-(x * 2) -> 2
-(x * 2) -> 4
-[(x * 2) for x in range(3)] -> [0, 2, 4]
+x*2 -> 0
+x*2 -> 2
+x*2 -> 4
+x*2 for x in range(3) -> [0, 2, 4]
 [0, 2, 4]
+>>>
 ```
 
 This eample demonstrates the usage of the [Tracing](#tracing) macro, which helps trace the evaluation of a Python expression. Although support for the REPL is still experimental, many examples on this page will work when copied and pasted into the REPL verbatim, except those with multi-line class and function definitions (those seem to confuse it). MacroPy also works in the PyPy and [IPython](http://ipython.org/) REPLs.
@@ -603,7 +604,7 @@ Tracing
 ```python
 >>> from macropy.macros2.tracing import macros, trace, log, require
 >>> log%(1 + 2)
-(1 + 2) -> 3
+1 + 2 -> 3
 3
 
 >>> log%("omg" * 3)
@@ -624,20 +625,20 @@ In addition to simple logging, MacroPy provides the `trace%` macro. This macro n
 
 ```python
 >>> trace%[len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]]
-('b' * 2) -> 'bb'
-(('b' * 2) + 'q') -> 'bbq'
-('lo' * 3) -> 'lololo'
-(('lo' * 3) + 'l') -> 'lololol'
-['omg', 'wtf', (('b' * 2) + 'q'), (('lo' * 3) + 'l')] -> ['omg', 'wtf', 'bbq', 'lololol']
+"b" * 2 -> 'bb'
+"b" * 2 + "q" -> 'bbq'
+"lo" * 3 -> 'lololo'
+"lo" * 3 + "l" -> 'lololol'
+["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"] -> ['omg', 'wtf', 'bbq', 'lololol']
 len(x) -> 3
-(len(x) * 3) -> 9
+len(x)*3 -> 9
 len(x) -> 3
-(len(x) * 3) -> 9
+len(x)*3 -> 9
 len(x) -> 3
-(len(x) * 3) -> 9
+len(x)*3 -> 9
 len(x) -> 7
-(len(x) * 3) -> 21
-[(len(x) * 3) for x in ['omg', 'wtf', (('b' * 2) + 'q'), (('lo' * 3) + 'l')]] -> [9, 9, 9, 21]
+len(x)*3 -> 21
+len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"] -> [9, 9, 9, 21]
 [9, 9, 9, 21]
 ```
 
@@ -647,28 +648,25 @@ Lastly, `trace` can be used as a block macro:
 
 
 ```python
-with trace:
-    sum = 0
-    for i in range(0, 5):
-        sum = sum + 5
-
-    square = sum * sum
-#sum = 0
-#for i in range(0, 5):
-#   sum = (sum + 5)
-#range(0, 5) -> [0, 1, 2, 3, 4]
-#sum = (sum + 5)
-#(sum + 5) -> 5
-#sum = (sum + 5)
-#(sum + 5) -> 10
-#sum = (sum + 5)
-#(sum + 5) -> 15
-#sum = (sum + 5)
-#(sum + 5) -> 20
-#sum = (sum + 5)
-#(sum + 5) -> 25
-#square = (sum * sum)
-#(sum * sum) -> 625
+>>> with trace:
+...     sum = 0
+...     for i in range(0, 5):
+...         sum = sum + 5
+...
+sum = 0
+for i in range(0, 5):
+    sum = sum + 5
+range(0, 5) -> [0, 1, 2, 3, 4]
+sum = sum + 5
+sum + 5 -> 5
+sum = sum + 5
+sum + 5 -> 10
+sum = sum + 5
+sum + 5 -> 15
+sum = sum + 5
+sum + 5 -> 20
+sum = sum + 5
+sum + 5 -> 25
 ```
 
 Used this way, `trace` will print out the source code of every _statement_ that gets executed, in addition to tracing the evaluation of any expressions within those statements.
@@ -694,11 +692,11 @@ Traceback (most recent call last):
   File "macropy\macros2\tracing.py", line 67, in handle
     raise AssertionError("Require Failed\n" + "\n".join(out))
 AssertionError: Require Failed
-(3 ** 2) -> 9
-(4 ** 2) -> 16
-((3 ** 2) + (4 ** 2)) -> 25
-(5 ** 2) -> 25
-(((3 ** 2) + (4 ** 2)) != (5 ** 2)) -> False
+3**2 -> 9
+4**2 -> 16
+3**2 + 4**2 -> 25
+5**2 -> 25
+3**2 + 4**2 != 5**2 -> False
 ```
 
 MacroPy provides a variant on the `assert` keyword called `require%`. Like `assert`, `require%` throws an `AssertionError` if the condition is false.
@@ -708,14 +706,17 @@ Unlike `assert`, `require%` automatically tells you what code failed the conditi
 `require% can also be used in block form:
 
 ```python
-a = 10
-b = 2
-with require:
-    a > 5
-    a * b == 20
-    a < 2
-#AssertionError: Require Failed
-#(a < 2) -> False
+>>> with require:
+...     a > 5
+...     a * b == 20
+...     a < 2
+...
+Traceback (most recent call last):
+  File "<console>", line 4, in <module>
+  File "macropy\macros2\tracing.py", line 67, in handle
+    raise AssertionError("Require Failed\n" + "\n".join(out))
+AssertionError: Require Failed
+a < 2 -> False
 ```
 
 This requires every statement in the block to be a boolean expression. Each expression will then be wrapped in a `require%`, throwing an `AssertionError` with a nice trace when a condition fails.
