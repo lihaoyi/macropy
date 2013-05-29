@@ -1,3 +1,3 @@
 from macropy.macros2.tracing import macros, trace
 
-print (log%[1 + 2 + 3]);
+print (log%[1 + 2 + 3])

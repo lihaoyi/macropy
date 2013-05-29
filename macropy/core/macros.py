@@ -171,37 +171,25 @@ def _expand_ast(tree, src, modules):
     def merge_dicts(my_dict):
         return dict((k,v) for d in my_dict for (k,v) in d.items())
 
-
-    print "EXPANDING"
     positions = indexer.recurse_real(tree)[1]
-    print "POSITIONS"
-    for l in positions:
-        print l
-    print [linear_index(src, l, c) for (l, c, tree) in positions]
-    # print "INDEXES", indexes
 
+    indexes = [linear_index(src, l, c) for (l, c, t) in positions] + [len(src)]
 
     def src_for(tree):
 
         start_index = linear_index(src, tree.lineno, tree.col_offset)
-        print "start_index", start_index
         last_child_pos = sorted(indexer.recurse_real(tree)[1])[-1]
         last_child_index = linear_index(src, *last_child_pos[:-1])
+
         end_index = indexes[min(last_child_index+1, len(indexes)-1)]
 
-        print "end_index", end_index
         prelim = src[start_index:end_index]
-        print "prelim", prelim
         try:
             ast.parse(prelim)
         except SyntaxError as e:
-            print "ERROR"
-            new_end_index = linear_index(prelim, e.lineno, e.offset) + start_index - 1
-            print "new_end_index", new_end_index
-            end_index = min(end_index, new_end_index)
+            end_index = linear_index(prelim, e.lineno, e.offset) + start_index - 2
 
-
-        print "OMG", src[start_index:end_index]
+        return src[start_index:end_index]
 
     block_registry     = merge_dicts(m.macros.block_registry for m in modules)
     expr_registry      = merge_dicts(m.macros.expr_registry for m in modules)
