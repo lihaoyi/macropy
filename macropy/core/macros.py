@@ -102,9 +102,10 @@ def _ast_ctx_fixer(tree, ctx, **kw):
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
-    def __init__(self, module_name, tree, file_name, required_pkgs):
+    def __init__(self, module_name, tree, source, file_name, required_pkgs):
         self.module_name = module_name
         self.tree = tree
+        self.source = source
         self.file_name = file_name
         self.required_pkgs = required_pkgs
 
@@ -115,7 +116,7 @@ class _MacroLoader(object):
 
         modules = [sys.modules[p] for p in self.required_pkgs]
 
-        tree = process_ast(self.tree, modules)
+        tree = process_ast(self.tree, self.source, modules)
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
         mod.__loader__ = self
@@ -127,10 +128,10 @@ class _MacroLoader(object):
         exec compile(tree, self.file_name, "exec") in mod.__dict__
         return mod
 
-def process_ast(tree, modules):
+def process_ast(tree, src, modules):
     """Takes an AST and spits out an AST, doing macro expansion in additon to
     some post-processing"""
-    tree = _expand_ast(tree, modules)
+    tree = _expand_ast(tree, src, modules)
 
     tree = _ast_ctx_fixer.recurse(tree, Load())
 
@@ -150,11 +151,58 @@ def detect_macros(tree):
     return required_pkgs
 
 
-def _expand_ast(tree, modules):
+def linear_index(string, lineno, col_offset):
+    prev_lines = "\n".join(string.split("\n")[:lineno-1])
+
+    prev_length = len(prev_lines)
+    out = prev_length + col_offset + 1
+    return out
+
+@Walker
+def indexer(tree, **kw):
+    try:
+        return collect((tree.lineno, tree.col_offset, unparse_ast(tree)))
+    except:
+        pass
+
+def _expand_ast(tree, src, modules):
     """Go through an AST, hunting for macro invocations and expanding any that
     are found"""
     def merge_dicts(my_dict):
         return dict((k,v) for d in my_dict for (k,v) in d.items())
+
+
+    print "EXPANDING"
+    positions = indexer.recurse_real(tree)[1]
+    print "POSITIONS"
+    for l in positions:
+        print l
+    print [linear_index(src, l, c) for (l, c, tree) in positions]
+    # print "INDEXES", indexes
+
+
+    def src_for(tree):
+
+        start_index = linear_index(src, tree.lineno, tree.col_offset)
+        print "start_index", start_index
+        last_child_pos = sorted(indexer.recurse_real(tree)[1])[-1]
+        last_child_index = linear_index(src, *last_child_pos[:-1])
+        end_index = indexes[min(last_child_index+1, len(indexes)-1)]
+
+        print "end_index", end_index
+        prelim = src[start_index:end_index]
+        print "prelim", prelim
+        try:
+            ast.parse(prelim)
+        except SyntaxError as e:
+            print "ERROR"
+            new_end_index = linear_index(prelim, e.lineno, e.offset) + start_index - 1
+            print "new_end_index", new_end_index
+            end_index = min(end_index, new_end_index)
+
+
+        print "OMG", src[start_index:end_index]
+
     block_registry     = merge_dicts(m.macros.block_registry for m in modules)
     expr_registry      = merge_dicts(m.macros.expr_registry for m in modules)
     decorator_registry = merge_dicts(m.macros.decorator_registry for m in modules)
@@ -165,7 +213,7 @@ def _expand_ast(tree, modules):
         """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
         if isinstance(tree, Name) and tree.id in registry:
             the_macro, inside_out = registry[tree.id]
-            return the_macro(tree=body, args=args, gen_sym = lambda: symbols.next(), **kwargs)
+            return the_macro(tree=body, args=args, gen_sym=lambda: symbols.next(), src_for=src_for, **kwargs)
         elif isinstance(tree, Call):
             args.extend(tree.args)
             return expand_if_in_registry(tree.func, body, args, registry)
@@ -251,7 +299,7 @@ class _MacroFinder(object):
             if required_pkgs == []:
                 return # no macros found, carry on
             else:
-                return _MacroLoader(module_name, tree, file.name, required_pkgs)
+                return _MacroLoader(module_name, tree, txt, file.name, required_pkgs)
         except Exception, e:
             pass
 

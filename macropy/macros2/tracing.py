@@ -13,7 +13,8 @@ def wrap(printer, txt, x):
 
 
 @macros.expr()
-def log(tree, **kw):
+def log(tree, src_for, **kw):
+    src_for(tree)
     new_tree = q%(wrap(log, u%unparse_ast(tree), ast%tree))
     return new_tree
 
@@ -55,7 +56,6 @@ def trace(tree, **kw):
 
 
 def _require_transform(tree):
-
     ret = trace_walk.recurse(copy.deepcopy(tree), None)
     trace_walk.recurse(copy.deepcopy(tree), None)
     new = q%(ast%tree or handle(lambda log: ast%ret))

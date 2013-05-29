@@ -30,7 +30,7 @@ class MacroConsole(code.InteractiveConsole):
                 __import__(p)
 
             self.modules.update(sys.modules[p] for p in required_pkgs)
-            tree = process_ast(tree, self.modules)
+            tree = process_ast(tree, source, self.modules)
 
             tree = ast.Interactive(tree.body)
             code = compile(tree, filename, symbol, self.compile.compiler.flags, 1)
