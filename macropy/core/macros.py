@@ -177,19 +177,38 @@ def _expand_ast(tree, src, modules):
 
     def src_for(tree):
 
-        start_index = linear_index(src, tree.lineno, tree.col_offset)
-        last_child_pos = sorted(indexer.recurse_real(tree)[1])[-1]
-        last_child_index = linear_index(src, *last_child_pos[:-1])
+        all_child_pos = sorted(indexer.recurse_real(tree)[1])
+        start_index = linear_index(src, *all_child_pos[0][:-1])
 
-        end_index = indexes[min(last_child_index+1, len(indexes)-1)]
+        last_child_index = linear_index(src, *all_child_pos[-1][:-1])
 
-        prelim = src[start_index:end_index]
-        try:
-            ast.parse(prelim)
-        except SyntaxError as e:
-            end_index = linear_index(prelim, e.lineno, e.offset) + start_index - 2
+        first_successor_index = indexes[min(indexes.index(last_child_index)+1, len(indexes)-1)]
 
-        return src[start_index:end_index]
+
+        for end_index in range(last_child_index, first_successor_index):
+
+            prelim = src[start_index:end_index]
+            if isinstance(tree, GeneratorExp):
+                prelim = "(" + prelim + ")"
+            if isinstance(tree, ListComp):
+                prelim = "[" + prelim + "]"
+            if isinstance(tree, SetComp):
+                prelim = "{" + prelim + "}"
+            if isinstance(tree, DictComp):
+                prelim = "{" + prelim + "}"
+            if isinstance(tree, stmt):
+                prelim = prelim.replace("\n" + " " * tree.col_offset, "\n")
+
+            try:
+                parsed = ast.parse(prelim)
+                if unparse_ast(parsed).strip() == unparse_ast(tree).strip():
+                    return src[start_index:end_index].replace("\n" + " " * tree.col_offset, "\n")
+
+
+            except SyntaxError as e:
+                pass
+        raise Exception("Can't find working source")
+
 
     block_registry     = merge_dicts(m.macros.block_registry for m in modules)
     expr_registry      = merge_dicts(m.macros.expr_registry for m in modules)

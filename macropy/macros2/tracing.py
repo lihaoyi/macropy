@@ -37,7 +37,7 @@ def trace_walk(tree, ctx, **kw):
             return wrapped, stop
 
     elif isinstance(tree, stmt):
-        txt = unparse_ast(tree).strip()
+        txt = ctx(tree)
         trace_walk.walk_children(tree , ctx)
         with q as code:
             log(u%txt)
