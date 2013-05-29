@@ -50,24 +50,24 @@ Macro functions are defined in three ways:
 macros = Macros()
 
 @macros.expr()
-def my_expr_macro(tree):
+def my_expr_macro(tree, **kw):
     ...
     return new_tree
 
 @macros.block()
-def my_block_macro(tree):
+def my_block_macro(tree, **kw):
     ...
     return new_tree
 
 @macros.decorator()
-def my_decorator_macro(tree):
+def my_decorator_macro(tree, **kw):
     ...
     return new_tree
 ```
 
 The line `macros = Macros()` is required to mark the file as providing macros, and the `macros` object then provides the methods `expr`, `block` and `decorator` which can be used to decorate functions to mark them out as the three different kinds of macros.
 
-Each macro function is passed a `tree`. The `tree` is an `AST` object, the sort provided by Python's [ast module](http://docs.python.org/2/library/ast.html). The macro is able to do whatever transformations it wants, and it returns a modified (or even an entirely new) `AST` object which MacroPy will use to replace the original macro invocation.
+Each macro function is passed a `tree`. The `tree` is an `AST` object, the sort provided by Python's [ast module](http://docs.python.org/2/library/ast.html). The macro is able to do whatever transformations it wants, and it returns a modified (or even an entirely new) `AST` object which MacroPy will use to replace the original macro invocation. The macro also takes `**kw`, which contains [other useful things](#arguments) which you may need.
 
 These three types of macros are called via:
 
@@ -2017,7 +2017,7 @@ from macropy.core.macros import *
 macros = Macros()
 
 @macros.block()
-def expand(tree):
+def expand(tree, **kw):
     import copy
     return tree.body * 10
 ```
