@@ -261,7 +261,7 @@ class PointKwargs(x, y, {rest}):
 assert PointKwargs(1, 2, a=1, b=2).rest == {"a": 1, "b": 2}
 ```
 
-Both kwargs and *args can be used together. The strange syntax (rather than the normal `*args` or `**kwargs`) is due to limitations in the Python 2.7 grammar, which are removed in Python 3.3.
+Both *args and **kwargs can be used together, as you would expect. The strange syntax (rather than the normal `*args` or `**kwargs`) is due to limitations in the Python 2.7 grammar, which are removed in Python 3.3.
 
 ###Inheritence
 Instead of manual inheritence, inheritence for case classes is defined by _nesting_, as shown below:
