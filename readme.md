@@ -1747,7 +1747,24 @@ with my_macro as blah:
     ...
 ```
 
-`target will contain the AST for `blah`. This is used in the [quasiquotes](#quasiquotes) macro.
+`target` will contain the AST for `blah`. This is used in the [quasiquotes](#quasiquotes) macro.
+
+###exact_src
+
+This is a function that attempts to retrieve the source code of the target AST, exactly as written in the source code. This is in contrast to `unparse_ast`, which produces semantically correct code that may differ in syntax from what was originally parsed, for example it may have extra parentheses, be missing comments, and have the whitespace and layout modified, and a variety of other syntactic changes:
+
+```python
+(1 + 2 + 3 + 4) -> (((1 + 2) + 3) + 4)
+"lol", 'rofl' -> ('lol', 'rofl')
+```
+
+In contrast `exact_src` promises that you get exactly what you put in, down to the choice of single quotes vs double quotes:
+
+```python
+"lol", 'rofl' -> "lol", 'rofl'
+```
+
+It does this by analyzing the `lineno` and `col_offset` values on the AST it is passed, comparing those against the known values within the source file the AST originates from and making a best-effort attempt to extract the corresponding snippet of code. This obviously only really works on ASTs that originated directly from the source code, and will fail on ASTs you synthesized manually.
 
 Quasiquotes
 -----------

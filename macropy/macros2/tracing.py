@@ -13,9 +13,9 @@ def wrap(printer, txt, x):
 
 
 @macros.expr()
-def log(tree, src_for, **kw):
+def log(tree, exact_src, **kw):
 
-    new_tree = q%(wrap(log, u%src_for(tree), ast%tree))
+    new_tree = q%(wrap(log, u%exact_src(tree), ast%tree))
     return new_tree
 
 @Walker
@@ -45,19 +45,19 @@ def trace_walk(tree, ctx, **kw):
         return [code, tree], stop
 
 @macros.expr()
-def trace(tree, src_for, **kw):
-    ret = trace_walk.recurse(tree, src_for)
+def trace(tree, exact_src, **kw):
+    ret = trace_walk.recurse(tree, exact_src)
     return ret
 
 @macros.block()
-def trace(tree, src_for, **kw):
-    ret = trace_walk.recurse(tree, src_for)
+def trace(tree, exact_src, **kw):
+    ret = trace_walk.recurse(tree, exact_src)
     return ret
 
 
-def _require_transform(tree, src_for):
-    ret = trace_walk.recurse(copy.deepcopy(tree), src_for)
-    trace_walk.recurse(copy.deepcopy(tree), src_for)
+def _require_transform(tree, exact_src):
+    ret = trace_walk.recurse(copy.deepcopy(tree), exact_src)
+    trace_walk.recurse(copy.deepcopy(tree), exact_src)
     new = q%(ast%tree or handle(lambda log: ast%ret))
     return new
 
@@ -67,13 +67,13 @@ def handle(thunk):
     raise AssertionError("Require Failed\n" + "\n".join(out))
 
 @macros.expr()
-def require(tree, src_for, **kw):
-    return _require_transform(tree, src_for)
+def require(tree, exact_src, **kw):
+    return _require_transform(tree, exact_src)
 
 @macros.block()
-def require(tree, src_for, **kw):
+def require(tree, exact_src, **kw):
     for expr in tree:
-        expr.value = _require_transform(expr.value, src_for)
+        expr.value = _require_transform(expr.value, exact_src)
 
     return tree
 

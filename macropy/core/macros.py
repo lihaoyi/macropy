@@ -217,7 +217,7 @@ def _expand_ast(tree, src, modules):
                 tree=body,
                 args=args,
                 gen_sym=lambda: symbols().next(),
-                src_for=lambda t: _src_for(t, src, indexes, line_lengths),
+                exact_src=lambda t: _src_for(t, src, indexes, line_lengths),
                 **kwargs
             )
         elif isinstance(tree, Call):
