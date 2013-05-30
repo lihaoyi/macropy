@@ -240,7 +240,7 @@ Case classes allow you to add initialization logic by simply placing the initial
 
 This also means that you cannot set *class* members on a case class. This should be an acceptable restriction, since most of the time you don't use those anyway, and the times you desperately need them, you can always just use a normal (non-case) class.
 
-`*args and **kwargs`
+###`*args and **kwargs`
 
 Case classes also provide a syntax for declaration of `*args`:
 
