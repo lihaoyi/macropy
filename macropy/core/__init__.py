@@ -75,29 +75,30 @@ def real_repr(thing):
     return repr(thing)
 
 from ast import *
+INFSTR = "1e" + repr(sys.float_info.max_10_exp + 1)
+
+
+binop = {
+    Add: "+",        Sub: "-",        Mult: "*",
+    Div: "/",        Mod: "%",        LShift: "<<",
+    RShift: ">>",    BitOr: "|",      BitXor: "^",
+    BitAnd: "&",     FloorDiv: "//",  Pow: "**"
+}
+unop = {
+    Invert: "~",     Not: "not",     UAdd: "+",   USub: "-"
+}
+cmpops = {
+    Eq: "==",        NotEq: "!=",     Lt: "<",
+    LtE: "<=",       Gt: ">",         GtE: ">=",
+    Is: "is",        IsNot: "is not", In: "in",
+    NotIn: "not in"
+}
+boolops = {
+    And: 'and',     Or: 'or'
+}
 def unparse_ast(tree):
     """Converts an AST back into the source code from whence it came!"""
-    INFSTR = "1e" + repr(sys.float_info.max_10_exp + 1)
 
-
-    binop = {
-        Add: "+",        Sub: "-",        Mult: "*",
-        Div: "/",        Mod: "%",        LShift: "<<",
-        RShift: ">>",    BitOr: "|",      BitXor: "^",
-        BitAnd: "&",     FloorDiv: "//",  Pow: "**"
-    }
-    unop = {
-        Invert: "~",     Not: "not",     UAdd: "+",   USub: "-"
-    }
-    cmpops = {
-        Eq: "==",        NotEq: "!=",     Lt: "<",
-        LtE: "<=",       Gt: ">",         GtE: ">=",
-        Is: "is",        IsNot: "is not", In: "in",
-        NotIn: "not in"
-    }
-    boolops = {
-        And: 'and',     Or: 'or'
-    }
 
     def trec(tree, indent):
         def box(x):

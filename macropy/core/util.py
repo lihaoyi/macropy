@@ -30,3 +30,17 @@ def safe_splat(func, **kwargs):
     cutkwargs = {k: w for k, w in kwargs.items() if k in fargs}
 
     return func(**cutkwargs)
+
+def merge_dicts(my_dicts):
+    """Combines a bunch of dictionaries together, later dictionaries taking
+    precedence if there is a key conflict"""
+    return dict((k,v) for d in my_dicts for (k,v) in d.items())
+
+class Lazy:
+    def __init__(self, thunk):
+        self.thunk = thunk
+        self.val = None
+    def __call__(self):
+        if self.val is None:
+            self.val = [self.thunk()]
+        return self.val[0]

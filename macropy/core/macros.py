@@ -159,61 +159,55 @@ def linear_index(line_lengths, lineno, col_offset):
 @Walker
 def indexer(tree, **kw):
     try:
-
         unparse_ast(tree)
-
         return collect((tree.lineno, tree.col_offset))
     except Exception, e:
         pass
 
+_transforms = {
+    GeneratorExp: "(%s)",
+    ListComp: "[%s]",
+    SetComp: "{%s}",
+    DictComp: "{%s}"
+}
+
 def _src_for(tree, src, indexes, line_lengths):
 
-        all_child_pos = sorted(indexer.recurse_real(tree)[1])
-        start_index = linear_index(line_lengths, *all_child_pos[0])
+    all_child_pos = sorted(indexer.recurse_real(tree)[1])
+    start_index = linear_index(line_lengths(), *all_child_pos[0])
 
-        last_child_index = linear_index(line_lengths, *all_child_pos[-1])
+    last_child_index = linear_index(line_lengths(), *all_child_pos[-1])
 
-        first_successor_index = indexes[min(indexes.index(last_child_index)+1, len(indexes)-1)]
+    first_successor_index = indexes()[min(indexes().index(last_child_index)+1, len(indexes())-1)]
 
+    for end_index in range(last_child_index, first_successor_index):
+        prelim = src[start_index:end_index]
+        prelim = _transforms.get(type(tree), "%s") % prelim
+        if isinstance(tree, stmt):
+            prelim = prelim.replace("\n" + " " * tree.col_offset, "\n")
+        try:
+            parsed = ast.parse(prelim)
+            if unparse_ast(parsed).strip() == unparse_ast(tree).strip():
+                return src[start_index:end_index].replace("\n" + " " * tree.col_offset, "\n")
 
-        for end_index in range(last_child_index, first_successor_index):
-            transforms = {
-                GeneratorExp: "(%s)",
-                ListComp: "[%s]",
-                SetComp: "{%s}",
-                DictComp: "{%s}"
-            }
-
-            prelim = src[start_index:end_index]
-            prelim = transforms.get(type(tree), "%s") % prelim
-            if isinstance(tree, stmt):
-                prelim = prelim.replace("\n" + " " * tree.col_offset, "\n")
-
-            try:
-                parsed = ast.parse(prelim)
-                if unparse_ast(parsed).strip() == unparse_ast(tree).strip():
-                    return src[start_index:end_index].replace("\n" + " " * tree.col_offset, "\n")
-
-            except SyntaxError as e:
-                pass
-        raise Exception("Can't find working source")
+        except SyntaxError as e:
+            pass
+    raise Exception("Can't find working source")
 
 
 def _expand_ast(tree, src, modules):
     """Go through an AST, hunting for macro invocations and expanding any that
     are found"""
-    def merge_dicts(my_dict):
-        return dict((k,v) for d in my_dict for (k,v) in d.items())
 
-    positions = indexer.recurse_real(tree)[1]
-    line_lengths = map(len, src.split("\n"))
-    indexes = [linear_index(line_lengths, l, c) for (l, c) in positions] + [len(src)]
+    # you don't pay for what you don't used
+    positions = Lazy(lambda: indexer.recurse_real(tree)[1])
+    line_lengths = Lazy(lambda: map(len, src.split("\n")))
+    indexes = Lazy(lambda: [linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)])
+    symbols = Lazy(lambda: gen_syms(tree))
 
     block_registry     = merge_dicts(m.macros.block_registry for m in modules)
     expr_registry      = merge_dicts(m.macros.expr_registry for m in modules)
     decorator_registry = merge_dicts(m.macros.decorator_registry for m in modules)
-
-    symbols = gen_syms(tree)
 
     def expand_if_in_registry(tree, body, args, registry, **kwargs):
         """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
@@ -222,7 +216,7 @@ def _expand_ast(tree, src, modules):
             return the_macro(
                 tree=body,
                 args=args,
-                gen_sym=lambda: symbols.next(),
+                gen_sym=lambda: symbols().next(),
                 src_for=lambda t: _src_for(t, src, indexes, line_lengths),
                 **kwargs
             )
@@ -238,11 +232,12 @@ def _expand_ast(tree, src, modules):
             new_tree = func(tree)
 
             if pos:
-                if type(new_tree) is list:
-                    new_tree = flatten(new_tree)
-                    (new_tree[0].lineno, new_tree[0].col_offset) = pos
-                else:
-                    (new_tree.lineno, new_tree.col_offset) = pos
+                t = new_tree
+                while type(t) is list:
+                    t = t[0]
+
+
+                (t.lineno, t.col_offset) = pos
             return new_tree
         return run
 
@@ -265,15 +260,14 @@ def _expand_ast(tree, src, modules):
                 return macro_expand(new_tree)
 
         if isinstance(tree, ClassDef) or isinstance(tree, FunctionDef):
-            all_decs = tree.decorator_list[:]
             seen_decs = []
             while tree.decorator_list != []:
                 dec = tree.decorator_list[0]
                 tree.decorator_list = tree.decorator_list[1:]
 
                 new_tree = expand_if_in_registry(dec, tree, [], decorator_registry)
-                if new_tree is None:
 
+                if new_tree is None:
                     seen_decs.append(dec)
                 else:
                     tree = new_tree

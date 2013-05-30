@@ -69,10 +69,19 @@ class Walker(object):
             return aggregates
 
         elif isinstance(tree, list) and len(tree) > 0:
-            x = zip(*map(lambda x: self.recurse_real(x, ctx), tree))
-            [trees, aggregates] = x
-            tree[:] = flatten(trees)
-            return [x for y in aggregates for x in y]
+
+            aggregates = []
+            new_tree = []
+            for t in tree:
+                new_t, new_a = self.recurse_real(t, ctx)
+                if type(new_t) is list:
+                    new_tree.extend(new_t)
+                else:
+                    new_tree.append(new_t)
+                aggregates.extend(new_a)
+
+            tree[:] = new_tree
+            return aggregates
 
         else:
             return []
