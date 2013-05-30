@@ -86,15 +86,11 @@ class Tests(unittest.TestCase):
         class PointArgs(x, y, [rest]):
             def extra_count(self):
                 return len(self.rest)
-            def extra_sum(self):
-                return sum(self.rest)
 
         assert PointArgs(3, 4).extra_count() == 0
         assert PointArgs(3, 4, 5).extra_count() == 1
-        assert PointArgs(3, 4, 5).extra_sum() == 5
         assert PointArgs(3, 4, 5, 6).extra_count() == 2
-        assert PointArgs(3, 4, 5, 6).extra_sum() == 11
-        assert PointArgs(3, 4, 5, 6, 7).extra_sum() == 18
+        assert PointArgs(3, 4, 5, 6, 7).rest == (5, 6, 7)
 
         with self.assertRaises(TypeError):
             PointArgs(3, 4, p = 0)
