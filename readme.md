@@ -1749,7 +1749,7 @@ with my_macro as blah:
 
 `target` will contain the AST for `blah`. This is used in the [quasiquotes](#quasiquotes) macro.
 
-###exact_src
+###`exact_src`
 
 This is a function that attempts to retrieve the source code of the target AST, exactly as written in the source code. This is in contrast to `unparse_ast`, which produces semantically correct code that may differ in syntax from what was originally parsed, for example it may have extra parentheses, be missing comments, and have the whitespace and layout modified, and a variety of other syntactic changes:
 
