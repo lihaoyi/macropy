@@ -565,7 +565,7 @@ Which is evaluated at run-time in the local scope, using whatever the values `a`
 
 ###Pyxl Integration
 
-```p    ython
+```python
 from macropy.macros2.pyxl_strings import macros, p
 
 image_name = "bolton.png"
