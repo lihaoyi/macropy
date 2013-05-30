@@ -225,7 +225,7 @@ class Point(x, y):
 print Point(3, 4).length() #5
 ```
 
-or class variables. The only restrictions are that only the `__init__`, `__repr__`, `___str__`, `__eq__` methods will be set for you, and the initializer/class body and inheritence are treated specially.
+or class variables. The only restrictions are that only the `__init__`, `__repr__`, `___str__`, `__eq__` methods will be set for you, and the initializer/class body and inheritance are treated specially.
 
 ###Body Initializer
 ```python
@@ -238,7 +238,9 @@ assert Point(3, 4).length == 5
 
 Case classes allow you to add initialization logic by simply placing the initialization statements in the class body: any statements within the class body which are not class or function definitions are taken to be part of the initializer, and so you can use e.g. the `self` variable to set instance members just like in a normal `__init__` method.
 
-This also means that you cannot set *class* members on a case class. This should be an acceptable restriction, since most of the time you don't use those anyway, and the times you desperately need them, you can always just use a normal (non-case) class.
+Any additional assignments to `self.XXX` in the body of the class scope are detected and the `XXX` added to the class' `__slots__` declaration, meaning you generally don't need to worry about `__slots__` limiting what you can do with the class. As long as there is an assignment to the member somewhere in the class' body, it will be added to slots. This means if you try to set a member of an instance via `my_thing.XXX = ...` somewhere else, but aren't setting it anywhere in the class' body, it will fail with an AttributeError. The solution to this is to simply add a `self.XXX = None` in the class body, which will get picked up and added to its `__slots__`.
+
+The body initializer also means you cannot set *class* members on a case class, as it any bare assignments `XXX = ...` will get treated as a local variable assignment in the scope of the class' `__init__` method. This is one of [several limitations](#limitations).
 
 ###`*args` and `**kwargs`
 
@@ -263,8 +265,8 @@ assert PointKwargs(1, 2, a=1, b=2).rest == {"a": 1, "b": 2}
 
 Both *args and **kwargs can be used together, as you would expect. The strange syntax (rather than the normal `*args` or `**kwargs`) is due to limitations in the Python 2.7 grammar, which are removed in Python 3.3.
 
-###Inheritence
-Instead of manual inheritence, inheritence for case classes is defined by _nesting_, as shown below:
+###Inheritance
+Instead of manual inheritance, inheritance for case classes is defined by _nesting_, as shown below:
 
 ```python
 @case
@@ -340,12 +342,12 @@ You cannot access the replaced `__init__` method, due to fact that it's generate
 Case classes provide a lot of functionality to the user, but come with their own set of limitations:
 
 - **No class members**: a consequence of the [body initializer](#body-initializer), you cannot assign class variables in the body of a class via the `foo = ...` syntax. However, `@static` and `@class` methods work fine
-- **Restricted inheritence**: A case class only inherits from `macropy.macros.adt.CaseClass`, as well as any case classes it is lexically scoped within. There is no way to express any other form of inheritence
-- **__slots__**: case classes get `__slots__` declarations by default. Thus you cannot assign ad-hoc menbers which are not defined in the class signature (the `class Point(x, y)` line).
+- **Restricted inheritance**: A case class only inherits from `macropy.macros.adt.CaseClass`, as well as any case classes it is lexically scoped within. There is no way to express any other form of inheritance
+- **__slots__**: case classes get `__slots__` declarations by default. Thus you cannot assign ad-hoc members which are not defined in the class signature (the `class Point(x, y)` line).
 
 -------------------------------------------------------------------------------
 
-Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.org/2/library/collections.html#collections.namedtuple), but far more flexible (methods, inheritence, etc.), and provides the programmer with a much better experience (e.g. no arguments-as-space-separated-string definition). Unlike `namedtuple`s, they are flexible enough that they can be used to replace a large fraction of user defined classes, rather than being relegated to niche uses.
+Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.org/2/library/collections.html#collections.namedtuple), but far more flexible (methods, inheritance, etc.), and provides the programmer with a much better experience (e.g. no arguments-as-space-separated-string definition). Unlike `namedtuple`s, they are flexible enough that they can be used to replace a large fraction of user defined classes, rather than being relegated to niche uses.
 
 In the cases where you desperately need additional flexibility [not afforded](#limitations) by case classes, you can always fall back on normal Python classes and do without the case class functionality.
 

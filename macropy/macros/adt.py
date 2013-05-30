@@ -49,6 +49,18 @@ def extract_args(init_fun, bases):
         all_args.append(kwarg)
     return args, vararg, kwarg, all_args
 
+@Walker
+def find_member_assignments(tree, **kw):
+    if type(tree) in [GeneratorExp, Lambda, ListComp, DictComp, SetComp, FunctionDef, ClassDef]:
+        return stop
+    if type(tree) is Assign:
+        self_assigns = [
+            t.attr for t in tree.targets
+            if type(t) is Attribute
+            and type(t.value) is Name
+            and t.value.id == "self"
+        ]
+        return tuple(map(collect, self_assigns))
 
 @macros.decorator()
 def case(tree, gen_sym, **kw):
@@ -108,9 +120,11 @@ def case(tree, gen_sym, **kw):
         if kwarg:
             set_kwargs = Str(kwarg)
 
+        additional_members = find_member_assignments.recurse_real(tree.body)[1]
+        print additional_members
         prep_initialization(init_fun, args, vararg, kwarg, all_args)
         set_fields.value.elts = map(Str, args)
-        set_slots.value.elts = map(Str, all_args)
+        set_slots.value.elts = map(Str, all_args + additional_members)
 
 
         new_body, outer, init_body = split_body(tree)

@@ -76,7 +76,7 @@ class Tests(unittest.TestCase):
 
     def test_body_init(self):
         @case
-        class Point(x, y, [length]):
+        class Point(x, y):
             self.length = (self.x**2 + self.y**2) ** 0.5
 
         assert Point(3, 4).length == 5
