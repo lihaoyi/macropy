@@ -1,10 +1,9 @@
 # import pattern matching
 # import quoting / unquoting
-from macropy.macros.pattern import macros
-from macropy.macros.pattern import *
-from macropy.core.lift import macros
-from macropy.core.lift import *
-from ast import *
+from macropy.core.macros import *
+from macropy.macros.pattern import macros, switch, _matching
+
+from macropy.core.lift import macros, q
 
 macros = Macros()
 

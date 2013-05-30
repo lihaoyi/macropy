@@ -1,6 +1,7 @@
 
+from macropy.macros.adt import macros, case
 from macropy.macros2.pyxl_strings import macros, p
-from macropy.macros.adt import macros, case, NO_ARG
+
 from pyxl import html
 from pyxl.html import rawhtml
 import re

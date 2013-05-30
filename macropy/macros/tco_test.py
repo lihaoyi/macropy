@@ -1,10 +1,10 @@
 import unittest
-from macropy.macros.tco import macros
-from macropy.macros.tco import tco
-from macropy.macros.adt import macros
-from macropy.macros.adt import *
-from macropy.macros.pattern import macros
-from macropy.macros.pattern import *
+from macropy.macros.tco import macros, tco
+
+from macropy.macros.adt import macros, case
+
+from macropy.macros.pattern import macros, switch, _matching
+
 
 
 class Tests(unittest.TestCase):

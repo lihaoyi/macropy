@@ -60,3 +60,24 @@ class Tests(unittest.TestCase):
         except:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             assert exc_traceback.tb_next.tb_lineno == 6
+
+    def test_exact_src(self):
+        import exact_src
+        assert exact_src.run0() == "1 * max(1, 2, 3)"
+        assert exact_src.run1() == """1 * max((1,'2',"3"))"""
+        assert exact_src.run_block() == """
+print "omg"
+print "wtf"
+if 1:
+    print 'omg'
+else:
+    import math
+    math.acos(0.123)
+        """.strip()
+
+    def test_alises(self):
+        import aliases
+        assert aliases.run_normal() == "omg"
+        assert aliases.run_aliased() == "wtf"
+        with self.assertRaises(TypeError):
+            aliases.run_ignored()

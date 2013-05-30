@@ -3,7 +3,7 @@ import inspect
 from ast import *
 from macropy.core import util
 from macropy.core.macros import *
-from macropy.core.lift import macros
+from macropy.core.lift import macros, q
 from macropy.core.lift import *
 
 macros = Macros()

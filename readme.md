@@ -1412,8 +1412,23 @@ def expand(tree, **kw):
 
 Running this via `python run.py` will print out `3`; so far `expand` is a simple no-op macro which does not do anything to the tree it is passed. This macro is provided in [examples/nop](examples/nop) if you want to try it out yourself; you can run it from the project root via `python examples/nop/run.py`.
 
-The `**kw` serves to absorb all the arguments that you did not declare. The macro can take additional arguments (not shown here) which are documented [below](#arguments)
-. Alternately, you can just take a look at what the `**kw` dictionary contains.
+The `**kw` serves to absorb all the arguments that you did not declare. The macro can take additional arguments (not shown here) which are documented [below](#arguments). Alternately, you can just take a look at what the `**kw` dictionary contains.
+
+The line
+
+```python
+from macro_module import macros, expand
+```
+
+is necessary to declare what macros you want to use (`expand`), and which module you want to load them from `macro_module`. Aliases also work:
+
+```python
+from macro_module import macros, expand as my_alias
+
+print my_alias%(1 + 2)
+```
+
+As you would expect. Import-alls like `from macro_module import *` do **not** work.
 
 At this point, you can print out the tree you are receiving in various forms just to see what you're getting:
 

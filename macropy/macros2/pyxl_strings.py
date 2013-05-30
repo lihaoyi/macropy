@@ -7,8 +7,8 @@ from pyxl.codec.tokenizer import pyxl_tokenize
 from pyxl.html import *
 
 
-
 macros = Macros()
+
 
 @macros.expr()
 def p(tree, **kw):

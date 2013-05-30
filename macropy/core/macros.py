@@ -138,7 +138,10 @@ def detect_macros(tree):
         if isinstance(stmt, ImportFrom) \
                 and stmt.names[0].name == 'macros' \
                 and stmt.names[0].asname is None:
-            found_macros.append((stmt.module, [(t.name, t.asname or t.name) for t in stmt.names]))
+            found_macros.append((
+                stmt.module,
+                [(t.name, t.asname or t.name) for t in stmt.names[1:]]
+            ))
             stmt.names = [alias(name='*', asname=None)]
     return found_macros
 
@@ -175,9 +178,14 @@ def _src_for(tree, src, indexes, line_lengths):
     for end_index in range(last_child_index, first_successor_index):
         prelim = src[start_index:end_index]
         prelim = _transforms.get(type(tree), "%s") % prelim
+
+
         if isinstance(tree, stmt):
             prelim = prelim.replace("\n" + " " * tree.col_offset, "\n")
+        if isinstance(tree, list):
+            prelim = prelim.replace("\n" + " " * tree[0].col_offset, "\n")
         try:
+
             parsed = ast.parse(prelim)
             if unparse_ast(parsed).strip() == unparse_ast(tree).strip():
                 return prelim
@@ -197,9 +205,19 @@ def _expand_ast(tree, src, modules):
     indexes = Lazy(lambda: [linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)])
     symbols = Lazy(lambda: _gen_syms(tree))
 
-    block_registry     = merge_dicts(m.macros.block.registry for m, names in modules)
-    expr_registry      = merge_dicts(m.macros.expr.registry for m, names in modules)
-    decorator_registry = merge_dicts(m.macros.decorator.registry for m, names in modules)
+    allnames = [(m, name, asname) for m, names in modules for name, asname in names]
+
+    def extract_macros(pick_registry):
+        return {
+            asname: registry[name]
+            for ma, name, asname in allnames
+            for registry in [pick_registry(ma.macros).registry]
+            if name in registry.keys()
+        }
+    block_registry = extract_macros(lambda x: x.block)
+    expr_registry = extract_macros(lambda x: x.expr)
+    decorator_registry = extract_macros(lambda x: x.decorator)
+
 
     def expand_if_in_registry(tree, body, args, registry, **kwargs):
         """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
