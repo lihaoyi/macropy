@@ -1836,7 +1836,7 @@ This is a function that attempts to retrieve the source code of the target AST, 
 "lol", 'rofl' -> ('lol', 'rofl')
 ```
 
-In contrast `exact_src` promises that you get exactly what you put in, down to the choice of single quotes vs double quotes:
+In contrast `exact_src(tree)` promises that you get exactly what was written in the source code, down to the choice of single quotes vs double quotes:
 
 ```python
 "lol", 'rofl' -> "lol", 'rofl'

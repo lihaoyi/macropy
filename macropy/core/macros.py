@@ -24,9 +24,9 @@ class Macros(object):
     class Registry(object):
         def __init__(self):
             self.registry = {}
-        def __call__(self, inside_out=False):
+        def __call__(self):
             def register(f):
-                self.registry[f.func_name] = (f, inside_out)
+                self.registry[f.func_name] = f
                 return f
             return register
 
@@ -204,7 +204,7 @@ def _expand_ast(tree, src, modules):
     def expand_if_in_registry(tree, body, args, registry, **kwargs):
         """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
         if isinstance(tree, Name) and tree.id in registry:
-            the_macro, inside_out = registry[tree.id]
+            the_macro = registry[tree.id]
             return the_macro(
                 tree=body,
                 args=args,

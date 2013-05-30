@@ -3,9 +3,6 @@ from macropy.core.lift import macros, q, u
 
 macros = Macros()
 
-NO_ARG = object()
-
-
 class CaseClass(object):
     __slots__ = []
 
@@ -127,7 +124,6 @@ def case(tree, gen_sym, **kw):
         prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args)
         set_fields.value.elts = map(Str, args)
         set_slots.value.elts = map(Str, all_args + additional_members)
-
 
         new_body, outer, init_body = split_body(tree)
         init_fun.body.extend(init_body)
