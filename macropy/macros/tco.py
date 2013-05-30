@@ -59,7 +59,7 @@ def trampoline_decorator(func):
     return trampolined
 
 
-@macros.decorator(inside_out=True)
+@macros.decorator()
 def tco(tree, **kw):
     @Walker
     # Replace returns of calls - TODO use pattern matching here

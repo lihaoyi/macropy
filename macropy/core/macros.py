@@ -101,10 +101,10 @@ class _MacroLoader(object):
 
     def load_module(self, fullname):
 
-        for p in self.required_pkgs:
+        for (p, _) in self.required_pkgs:
             __import__(p)
 
-        modules = [sys.modules[p] for p in self.required_pkgs]
+        modules = [(sys.modules[p], bindings) for (p, bindings) in self.required_pkgs]
 
         tree = process_ast(self.tree, self.source, modules)
 
@@ -133,14 +133,14 @@ def process_ast(tree, src, modules):
 def detect_macros(tree):
     """Look for macros imports within an AST, transforming them and extracting
     the list of macro modules."""
-    required_pkgs = []
+    found_macros = []
     for stmt in tree.body:
         if isinstance(stmt, ImportFrom) \
                 and stmt.names[0].name == 'macros' \
-                and stmt.names[0].asname is  None:
-            required_pkgs.append(stmt.module)
+                and stmt.names[0].asname is None:
+            found_macros.append((stmt.module, [(t.name, t.asname or t.name) for t in stmt.names]))
             stmt.names = [alias(name='*', asname=None)]
-    return required_pkgs
+    return found_macros
 
 
 def linear_index(line_lengths, lineno, col_offset):
@@ -197,9 +197,9 @@ def _expand_ast(tree, src, modules):
     indexes = Lazy(lambda: [linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)])
     symbols = Lazy(lambda: _gen_syms(tree))
 
-    block_registry     = merge_dicts(m.macros.block.registry for m in modules)
-    expr_registry      = merge_dicts(m.macros.expr.registry for m in modules)
-    decorator_registry = merge_dicts(m.macros.decorator.registry for m in modules)
+    block_registry     = merge_dicts(m.macros.block.registry for m, names in modules)
+    expr_registry      = merge_dicts(m.macros.expr.registry for m, names in modules)
+    decorator_registry = merge_dicts(m.macros.decorator.registry for m, names in modules)
 
     def expand_if_in_registry(tree, body, args, registry, **kwargs):
         """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
@@ -300,11 +300,11 @@ class _MacroFinder(object):
             )
             txt = file.read()
             tree = ast.parse(txt)
-            required_pkgs = detect_macros(tree)
-            if required_pkgs == []:
+            found_macros = detect_macros(tree)
+            if found_macros == []:
                 return # no macros found, carry on
             else:
-                return _MacroLoader(module_name, tree, txt, file.name, required_pkgs)
+                return _MacroLoader(module_name, tree, txt, file.name, found_macros)
         except Exception, e:
             pass
 
