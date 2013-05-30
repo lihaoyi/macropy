@@ -31,6 +31,7 @@ def extract_args(init_fun, bases):
     args = []
     vararg = None
     kwarg = None
+    defaults = []
     for base in bases:
         if type(base) is Name:
             args.append(base.id)
@@ -39,7 +40,9 @@ def extract_args(init_fun, bases):
 
         if type(base) is Set:
             kwarg = base.elts[0].id
-
+        if type(base) is BinOp and type(base.op) is BitOr:
+            args.append(base.left.id)
+            defaults.append(base.right)
 
     all_args = args[:]
     if vararg:
@@ -47,7 +50,7 @@ def extract_args(init_fun, bases):
     if kwarg:
 
         all_args.append(kwarg)
-    return args, vararg, kwarg, all_args
+    return args, vararg, kwarg, defaults, all_args
 
 @Walker
 def find_member_assignments(tree, **kw):
@@ -85,12 +88,12 @@ def case(tree, gen_sym, **kw):
                 init_body.append(statement)
         return new_body, outer, init_body
 
-    def prep_initialization(init_fun, args, vararg, kwarg, all_args):
+    def prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args):
         init_fun.args = arguments(
             args = [Name(id="self")] + [Name(id = id) for id in args],
             vararg = vararg,
             kwarg = kwarg,
-            defaults =[]
+            defaults = defaults
         )
         for x in all_args:
             with q as a:
@@ -112,8 +115,7 @@ def case(tree, gen_sym, **kw):
 
         init_fun, set_fields, set_varargs, set_kwargs, set_slots, = methods
 
-
-        args, vararg, kwarg, all_args = extract_args(init_fun, tree.bases)
+        args, vararg, kwarg, defaults, all_args = extract_args(init_fun, tree.bases)
 
         if vararg:
             set_varargs.value = Str(vararg)
@@ -121,8 +123,8 @@ def case(tree, gen_sym, **kw):
             set_kwargs = Str(kwarg)
 
         additional_members = find_member_assignments.recurse_real(tree.body)[1]
-        print additional_members
-        prep_initialization(init_fun, args, vararg, kwarg, all_args)
+
+        prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args)
         set_fields.value.elts = map(Str, args)
         set_slots.value.elts = map(Str, all_args + additional_members)
 
@@ -143,7 +145,9 @@ def case(tree, gen_sym, **kw):
         tree.body = methods + tree.body
 
         return [tree] + (assign if len(outer) > 0 else [])
-    return _case_transform(tree, ["CaseClass"])
+    x = _case_transform(tree, ["CaseClass"])
+
+    return x
 
 
 

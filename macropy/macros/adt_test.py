@@ -77,7 +77,8 @@ class Tests(unittest.TestCase):
     def test_body_init(self):
         @case
         class Point(x, y):
-            self.length = (self.x**2 + self.y**2) ** 0.5
+            if True:
+                self.length = (self.x**2 + self.y**2) ** 0.5
 
         assert Point(3, 4).length == 5
 
@@ -111,7 +112,15 @@ class Tests(unittest.TestCase):
             pass
         assert PointAll(1, 2, 3, a=1, b=2, c=3).args == (1, 2, 3)
         assert PointAll(1, 2, 3, a=1, b=2, c=3).kwargs == {"a": 1, "b": 2, "c": 3}
-
+    def test_default_values(self):
+        @case
+        class Point(x | 0, y | 0):
+            pass
+        assert str(Point()) == "Point(0, 0)"
+        assert str(Point(1)) == "Point(1, 0)"
+        assert str(Point(1, 2)) == "Point(1, 2)"
+        assert str(Point(y = 5)) == "Point(0, 5)"
+        assert str(Point(y = 5, x = 7)) == "Point(7, 5)"
     def test_overriding_methods(self):
         @case
         class Point(x, y):

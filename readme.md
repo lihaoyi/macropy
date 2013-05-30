@@ -242,9 +242,19 @@ Any additional assignments to `self.XXX` in the body of the class scope are dete
 
 The body initializer also means you cannot set *class* members on a case class, as it any bare assignments `XXX = ...` will get treated as a local variable assignment in the scope of the class' `__init__` method. This is one of [several limitations](#limitations).
 
-###`*args` and `**kwargs`
+###Defaults, `*args` and `**kwargs`
 
-Case classes also provide a syntax for declaration of `*args`:
+Case classes also provide a syntax for default values:
+
+```python
+@case
+class Point(x | 0, y | 0):
+    pass
+
+assert str(Point(y = 5)) == "Point(0, 5)"
+```
+
+For `*args`:
 
 ```python
 @case
@@ -263,7 +273,7 @@ class PointKwargs(x, y, {rest}):
 assert PointKwargs(1, 2, a=1, b=2).rest == {"a": 1, "b": 2}
 ```
 
-Both *args and **kwargs can be used together, as you would expect. The strange syntax (rather than the normal `*args` or `**kwargs`) is due to limitations in the Python 2.7 grammar, which are removed in Python 3.3.
+All these behave as you would expect, and can be combined in all the normal ways. The strange syntax (rather than the normal `x=0`, `*args` or `**kwargs`) is due to limitations in the Python 2.7 grammar, which are removed in Python 3.3.
 
 ###Inheritance
 Instead of manual inheritance, inheritance for case classes is defined by _nesting_, as shown below:
