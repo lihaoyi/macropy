@@ -2039,19 +2039,7 @@ map((f % (_ + 1)), [1, 2, 3]) -> [2, 3, 4]
 >>>
 ```
 
-As you can see, the `trace` macro is expanded first, and hence the when it prints out the expressions being executed, we see the un-expanded `(f%(_ + 1))` rather than the expanded `(lammbda arg0: arg0 + 1)`. After the tracing is inserted, the `f%` is finally expanded into a `lambda` and the final output of this expression is `[2, 3, 4]`.
-
-This decision is arbitrary; in the case of [tracing](#tracing), having it outside-in makes things easier, for we generally desire to see the original code being traced, rather than the macro-expanded code. However, there are cases (such as the [tail-call macro](#tail-call-optimization)) where you want the order to be reversed: you want the children of an expression to be macro-expanded first before the macro itself. In this case, you can add an `inside_out` flag to the macro decorator, turning this:
-
-```python
-@macros.expr()
-```
-
-into
-
-```python
-@macros.expr(inside_out=True)
-```
+As you can see, the `trace` macro is expanded first, and hence the when it prints out the expressions being executed, we see the un-expanded `(f%(_ + 1))` rather than the expanded `(lammbda arg0: arg0 + 1)`. After the tracing is inserted, the `f%` is finally expanded into a `lambda` and the final output of this expression is `[2, 3, 4]`. This decision is arbitrary.
 
 Hygiene
 -------
