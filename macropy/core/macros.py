@@ -5,7 +5,7 @@ import itertools
 from ast import *
 from util import *
 from walkers import *
-
+import parser
 
 class Macros(object):
     """A registry of macros belonging to a module; used via
@@ -21,29 +21,19 @@ class Macros(object):
     Where the decorators are used to register functions as macros belonging
     to that module.
     """
+    class Registry(object):
+        def __init__(self):
+            self.registry = {}
+        def __call__(self, inside_out=False):
+            def register(f):
+                self.registry[f.func_name] = (f, inside_out)
+                return f
+            return register
+
     def __init__(self):
-        self.expr_registry = {}
-        self.decorator_registry = {}
-        self.block_registry = {}
-
-    def expr(self, inside_out=False):
-        def register(f):
-            self.expr_registry[f.func_name] = (f, inside_out)
-            return f
-        return register
-
-    def decorator(self, inside_out=False):
-        def register(f):
-            self.decorator_registry[f.func_name] = (f, inside_out)
-            return f
-        return register
-
-    def block(self, inside_out=False):
-        def register(f):
-            self.block_registry[f.func_name] = (f, inside_out)
-            return f
-        return register
-
+        self.expr = Macros.Registry()
+        self.block = Macros.Registry()
+        self.decorator = Macros.Registry()
 
 def fill_line_numbers(tree, lineno, col_offset):
     """Fill in line numbers somewhat more cleverly than the
@@ -117,6 +107,7 @@ class _MacroLoader(object):
         modules = [sys.modules[p] for p in self.required_pkgs]
 
         tree = process_ast(self.tree, self.source, modules)
+
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
         mod.__loader__ = self
@@ -188,7 +179,7 @@ def _src_for(tree, src, indexes, line_lengths):
         try:
             parsed = ast.parse(prelim)
             if unparse_ast(parsed).strip() == unparse_ast(tree).strip():
-                return src[start_index:end_index].replace("\n" + " " * tree.col_offset, "\n")
+                return prelim
 
         except SyntaxError as e:
             pass
@@ -199,15 +190,15 @@ def _expand_ast(tree, src, modules):
     """Go through an AST, hunting for macro invocations and expanding any that
     are found"""
 
-    # you don't pay for what you don't used
+    # you don't pay for what you don't use
     positions = Lazy(lambda: indexer.recurse_real(tree)[1])
     line_lengths = Lazy(lambda: map(len, src.split("\n")))
     indexes = Lazy(lambda: [linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)])
-    symbols = Lazy(lambda: gen_syms(tree))
+    symbols = Lazy(lambda: _gen_syms(tree))
 
-    block_registry     = merge_dicts(m.macros.block_registry for m in modules)
-    expr_registry      = merge_dicts(m.macros.expr_registry for m in modules)
-    decorator_registry = merge_dicts(m.macros.decorator_registry for m in modules)
+    block_registry     = merge_dicts(m.macros.block.registry for m in modules)
+    expr_registry      = merge_dicts(m.macros.expr.registry for m in modules)
+    decorator_registry = merge_dicts(m.macros.decorator.registry for m in modules)
 
     def expand_if_in_registry(tree, body, args, registry, **kwargs):
         """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
@@ -261,6 +252,7 @@ def _expand_ast(tree, src, modules):
 
         if isinstance(tree, ClassDef) or isinstance(tree, FunctionDef):
             seen_decs = []
+            additions = []
             while tree.decorator_list != []:
                 dec = tree.decorator_list[0]
                 tree.decorator_list = tree.decorator_list[1:]
@@ -272,9 +264,15 @@ def _expand_ast(tree, src, modules):
                 else:
                     tree = new_tree
                     tree = macro_expand(tree)
+                    if type(tree) is list:
+                        additions = tree[1:]
+                        tree = tree[0]
 
             tree.decorator_list = seen_decs
-            return tree
+            if len(additions) == 0:
+                return tree
+            else:
+                return [tree] + additions
 
         return tree
 
@@ -309,7 +307,7 @@ class _MacroFinder(object):
         except Exception, e:
             pass
 
-def gen_syms(tree):
+def _gen_syms(tree):
     """Create a generator that creates symbols which are not used in the given
     `tree`. This means they will be hygienic, i.e. it guarantees that they will
     not cause accidental shadowing, as long as the scope of the new symbol is

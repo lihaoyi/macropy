@@ -76,7 +76,42 @@ class Tests(unittest.TestCase):
 
     def test_body_init(self):
         @case
-        class Point(x, y):
+        class Point(x, y, [length]):
             self.length = (self.x**2 + self.y**2) ** 0.5
 
         assert Point(3, 4).length == 5
+
+    def test_varargs_kwargs(self):
+        @case
+        class PointArgs(x, y, [rest]):
+            def extra_count(self):
+                return len(self.rest)
+            def extra_sum(self):
+                return sum(self.rest)
+
+        assert PointArgs(3, 4).extra_count() == 0
+        assert PointArgs(3, 4, 5).extra_count() == 1
+        assert PointArgs(3, 4, 5).extra_sum() == 5
+        assert PointArgs(3, 4, 5, 6).extra_count() == 2
+        assert PointArgs(3, 4, 5, 6).extra_sum() == 11
+        assert PointArgs(3, 4, 5, 6, 7).extra_sum() == 18
+
+        with self.assertRaises(TypeError):
+            PointArgs(3, 4, p = 0)
+
+
+        @case
+        class PointKwargs(x, y, {rest}):
+            pass
+        assert PointKwargs(1, 2).rest == {}
+        assert PointKwargs(1, 2, k = 10).rest == {"k": 10}
+        assert PointKwargs(1, 2, a=1, b=2).rest == {"a": 1, "b": 2}
+
+        with self.assertRaises(TypeError):
+            PointKwargs(3, 4, 4)
+
+        @case
+        class PointAll([args], {kwargs}):
+            pass
+        assert PointAll(1, 2, 3, a=1, b=2, c=3).args == (1, 2, 3)
+        assert PointAll(1, 2, 3, a=1, b=2, c=3).kwargs == {"a": 1, "b": 2, "c": 3}

@@ -6,6 +6,7 @@ runner = unittest.TextTestRunner()
 def run(x):
     runner.run(unittest.TestLoader().loadTestsFromTestCase(x))
 
+
 from macropy import core_tests
 run(core_tests.Tests)
 from macropy.core import walkers_test

@@ -48,7 +48,7 @@ class Tests(unittest.TestCase):
                 "len(x)*3 -> 9",
                 "len(x) -> 7",
                 "len(x)*3 -> 21",
-                "len(x)*3 for x in ['omg', 'wtf', 'b' * 2 + 'q', 'lo' * 3 + 'l'] -> [9, 9, 9, 21]"
+                "[len(x)*3 for x in ['omg', 'wtf', 'b' * 2 + 'q', 'lo' * 3 + 'l']] -> [9, 9, 9, 21]"
             ])
 
         def test_function_call(self):

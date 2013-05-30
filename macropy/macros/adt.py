@@ -5,69 +5,132 @@ macros = Macros()
 
 NO_ARG = object()
 
-def link_children(cls):
-    for child in cls._children:
-        new_child = type(child.__name__, (cls, CaseClass), dict(**child.__dict__))
-        setattr(cls, child.__name__, new_child)
-    return cls
 
 class CaseClass(object):
-    def __init__(self, *args, **kwargs):
-        for k, v in zip(self.__class__._fields, args) + kwargs.items():
-            setattr(self, k, v)
+    __slots__ = []
 
     def copy(self, **kwargs):
-        return self.__class__(**dict(self.__dict__.items() + kwargs.items()))
-
+        old = map(lambda a: (a, getattr(self, a)), self._fields)
+        new = kwargs.items()
+        return self.__class__(**dict(old + new))
     def __str__(self):
         return self.__class__.__name__ + "(" + ", ".join(str(getattr(self, x)) for x in self.__class__._fields) + ")"
-
     def __repr__(self):
         return self.__str__()
-
     def __eq__(self, other):
         try:
             return self.__class__ == other.__class__ \
                 and all(getattr(self, x) == getattr(other, x) for x in self.__class__._fields)
         except:
             return False
-
     def __ne__(self, other):
         return not self.__eq__(other)
 
-def _case_transform(tree):
 
-    with q as methods:
-        def __init__(self, *args, **kwargs):
-            CaseClass.__init__(self, *args, **kwargs)
+def extract_args(init_fun, bases):
+    args = []
+    vararg = None
+    kwarg = None
+    for base in bases:
+        if type(base) is Name:
+            args.append(base.id)
+        if type(base) is List:
+            vararg = base.elts[0].id
 
-        _children = []
-        _fields = []
+        if type(base) is Set:
+            kwarg = base.elts[0].id
 
-    init_fun, set_children, set_fields = methods
 
-    new_body = []
-    new_classes = []
+    all_args = args[:]
+    if vararg:
+        all_args.append(vararg)
+    if kwarg:
 
-    for statement in tree.body:
-        if type(statement) is ClassDef:
-            new_body.append(_case_transform(statement))
-            new_classes.append(Name(id = statement.name))
-        elif type(statement) is FunctionDef:
-            new_body.append(statement)
-        else:
-            init_fun.body.append(statement)
+        all_args.append(kwarg)
+    return args, vararg, kwarg, all_args
 
-    set_children.value.elts = new_classes
-    set_fields.value.elts = [Str(name.id) for name in tree.bases]
-    tree.body = new_body
-    tree.bases = [Name(id="CaseClass")]
-
-    tree.body += methods
-    tree.decorator_list.append(Name(id="link_children"))
-
-    return tree
 
 @macros.decorator()
-def case(tree, **kw):
-    return _case_transform(tree)
+def case(tree, gen_sym, **kw):
+    def split_body(tree):
+        new_body = []
+        outer = []
+        init_body = []
+        for statement in tree.body:
+            if type(statement) is ClassDef:
+                outer.append(_case_transform(statement, [tree.name]))
+                with q as a:
+                    (name%tree.name).b = name%statement.name
+                a_old = a[0]
+                a_old.targets[0].attr = statement.name
+
+
+                a_new = parse_stmt(unparse_ast(a[0]))[0]
+                outer.append(a_new)
+            elif type(statement) is FunctionDef:
+                new_body.append(statement)
+            else:
+                init_body.append(statement)
+        return new_body, outer, init_body
+
+    def prep_initialization(init_fun, args, vararg, kwarg, all_args):
+        init_fun.args = arguments(
+            args = [Name(id="self")] + [Name(id = id) for id in args],
+            vararg = vararg,
+            kwarg = kwarg,
+            defaults =[]
+        )
+        for x in all_args:
+            with q as a:
+                self.x = x
+            a[0].targets[0].attr = x
+            a[0].value = Name(id=x)
+            init_fun.body.append(a[0])
+
+    def _case_transform(tree, parents):
+
+        with q as methods:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            _fields = []
+            _varargs = None
+            _kwargs = None
+            __slots__ = []
+
+        init_fun, set_fields, set_varargs, set_kwargs, set_slots, = methods
+
+
+        args, vararg, kwarg, all_args = extract_args(init_fun, tree.bases)
+
+        if vararg:
+            set_varargs.value = Str(vararg)
+        if kwarg:
+            set_kwargs = Str(kwarg)
+
+        prep_initialization(init_fun, args, vararg, kwarg, all_args)
+        set_fields.value.elts = map(Str, args)
+        set_slots.value.elts = map(Str, all_args)
+
+
+        new_body, outer, init_body = split_body(tree)
+        init_fun.body.extend(init_body)
+        with q as assign:
+            @singleton
+            def x():
+                pass
+
+        assign[0].name = gen_sym()
+        assign[0].body += outer
+
+        tree.body = new_body
+        tree.bases = [Name(id=x, ctx=Load()) for x in parents]
+
+        tree.body += methods
+
+        return [tree] + (assign if len(outer) > 0 else [])
+    return _case_transform(tree, ["CaseClass"])
+
+
+
+
