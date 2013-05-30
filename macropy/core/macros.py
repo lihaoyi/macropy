@@ -92,19 +92,19 @@ def _ast_ctx_fixer(tree, ctx, **kw):
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
-    def __init__(self, module_name, tree, source, file_name, required_pkgs):
+    def __init__(self, module_name, tree, source, file_name, bindings):
         self.module_name = module_name
         self.tree = tree
         self.source = source
         self.file_name = file_name
-        self.required_pkgs = required_pkgs
+        self.bindings = bindings
 
     def load_module(self, fullname):
 
-        for (p, _) in self.required_pkgs:
+        for (p, _) in self.bindings:
             __import__(p)
 
-        modules = [(sys.modules[p], bindings) for (p, bindings) in self.required_pkgs]
+        modules = [(sys.modules[p], bindings) for (p, bindings) in self.bindings]
 
         tree = process_ast(self.tree, self.source, modules)
 
@@ -120,10 +120,10 @@ class _MacroLoader(object):
         exec compile(tree, self.file_name, "exec") in mod.__dict__
         return mod
 
-def process_ast(tree, src, modules):
+def process_ast(tree, src, bindings):
     """Takes an AST and spits out an AST, doing macro expansion in additon to
     some post-processing"""
-    tree = _expand_ast(tree, src, modules)
+    tree = _expand_ast(tree, src, bindings)
 
     tree = _ast_ctx_fixer.recurse(tree, Load())
 
@@ -133,17 +133,17 @@ def process_ast(tree, src, modules):
 def detect_macros(tree):
     """Look for macros imports within an AST, transforming them and extracting
     the list of macro modules."""
-    found_macros = []
+    bindings = []
     for stmt in tree.body:
         if isinstance(stmt, ImportFrom) \
                 and stmt.names[0].name == 'macros' \
                 and stmt.names[0].asname is None:
-            found_macros.append((
+            bindings.append((
                 stmt.module,
                 [(t.name, t.asname or t.name) for t in stmt.names[1:]]
             ))
             stmt.names = [alias(name='*', asname=None)]
-    return found_macros
+    return bindings
 
 
 def linear_index(line_lengths, lineno, col_offset):
@@ -195,17 +195,17 @@ def _src_for(tree, src, indexes, line_lengths):
     raise Exception("Can't find working source")
 
 
-def _expand_ast(tree, src, modules):
+def _expand_ast(tree, src, bindings):
     """Go through an AST, hunting for macro invocations and expanding any that
     are found"""
-
+    print "bindings", bindings
     # you don't pay for what you don't use
     positions = Lazy(lambda: indexer.recurse_real(tree)[1])
     line_lengths = Lazy(lambda: map(len, src.split("\n")))
     indexes = Lazy(lambda: [linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)])
     symbols = Lazy(lambda: _gen_syms(tree))
 
-    allnames = [(m, name, asname) for m, names in modules for name, asname in names]
+    allnames = [(m, name, asname) for m, names in bindings for name, asname in names]
 
     def extract_macros(pick_registry):
         return {
@@ -318,11 +318,11 @@ class _MacroFinder(object):
             )
             txt = file.read()
             tree = ast.parse(txt)
-            found_macros = detect_macros(tree)
-            if found_macros == []:
+            bindings = detect_macros(tree)
+            if bindings == []:
                 return # no macros found, carry on
             else:
-                return _MacroLoader(module_name, tree, txt, file.name, found_macros)
+                return _MacroLoader(module_name, tree, txt, file.name, bindings)
         except Exception, e:
             pass
 

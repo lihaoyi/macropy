@@ -10,7 +10,7 @@ from macropy.core.macros import process_ast, detect_macros
 class MacroConsole(code.InteractiveConsole):
     def __init__(self, locals=None, filename="<console>"):
         code.InteractiveConsole.__init__(self, locals, filename)
-        self.modules = set()
+        self.bindings = []
 
     def runsource(self, source, filename="<input>", symbol="single"):
         try:
@@ -25,12 +25,13 @@ class MacroConsole(code.InteractiveConsole):
 
         try:
             tree = ast.parse(source)
-            required_pkgs = detect_macros(tree)
-            for p in required_pkgs:
+            bindings = detect_macros(tree)
+            for p, names in bindings:
                 __import__(p)
 
-            self.modules.update(sys.modules[p] for p in required_pkgs)
-            tree = process_ast(tree, source, self.modules)
+            self.bindings.extend([(sys.modules[p], bindings) for (p, bindings) in bindings])
+
+            tree = process_ast(tree, source, self.bindings)
 
             tree = ast.Interactive(tree.body)
             code = compile(tree, filename, symbol, self.compile.compiler.flags, 1)
