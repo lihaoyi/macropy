@@ -1,4 +1,4 @@
-from macropy.macros.adt import macros, case
+from macropy.macros.adt import macros, case, CaseClass
 
 import unittest
 
@@ -111,3 +111,15 @@ class Tests(unittest.TestCase):
             pass
         assert PointAll(1, 2, 3, a=1, b=2, c=3).args == (1, 2, 3)
         assert PointAll(1, 2, 3, a=1, b=2, c=3).kwargs == {"a": 1, "b": 2, "c": 3}
+
+    def test_overriding_methods(self):
+        @case
+        class Point(x, y):
+            def __str__(self):
+                return "mooo " + CaseClass.__str__(self)
+
+            def __init__(self):
+                self.x = 10
+                self.y = 10
+
+        assert str(Point()) == "mooo Point(10, 10)"

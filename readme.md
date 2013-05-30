@@ -306,7 +306,48 @@ This is an implementation of a singly linked [cons list](http://en.wikipedia.org
 
 As the classes `Nil` are `Cons` are nested within `List`, both of them get transformed into case  classes which inherit from it. This nesting can go arbitrarily deep.
 
-Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.org/2/library/collections.html#collections.namedtuple), but far more flexible (methods, inheritence, etc.), and provides the programmer with a much better experience (e.g. no arguments-as-space-separated-string definition).
+###Overriding
+
+Except for the `__init__` method, all the methods provided by case classes are inherited from `macropy.macros.adt.CaseClass`, and can thus be overriden, with the overriden method still accessible via the normal mechanisms:
+
+```python
+@case
+class Point(x, y):
+    def __str__(self):
+        return "mooo " + CaseClass.__str__(self)
+
+print Point(1, 2)
+# mooo Point(1, 2)
+```
+
+The `__init__` method is generated, not inherited. For the common case of adding additional initialization steps after the assignment of arguments to members, you can use the [body initializer](#body-initializer) described above. However, if you want a different modification (e.g. changing the number of arguments) you can achieve this by manually defining your own `__init__` method:
+
+```python
+@case
+class Point(x, y):
+    def __init__(self, value):
+        self.x = value
+        self.y = value
+
+
+print Point(1)
+# mooo Point(1, 1)
+```
+
+You cannot access the replaced `__init__` method, due to fact that it's generated, not inherited. Nevertheless, this provides additional flexibility in the case where you really need it.
+
+###Limitations
+Case classes provide a lot of functionality to the user, but come with their own set of limitations:
+
+- **No class members**: a consequence of the [body initializer](#body-initializer), you cannot assign class variables in the body of a class via the `foo = ...` syntax. However, `@static` and `@class` methods work fine
+- **Restricted inheritence**: A case class only inherits from `macropy.macros.adt.CaseClass`, as well as any case classes it is lexically scoped within. There is no way to express any other form of inheritence
+- **__slots__**: case classes get `__slots__` declarations by default. Thus you cannot assign ad-hoc menbers which are not defined in the class signature (the `class Point(x, y)` line).
+
+-------------------------------------------------------------------------------
+
+Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.org/2/library/collections.html#collections.namedtuple), but far more flexible (methods, inheritence, etc.), and provides the programmer with a much better experience (e.g. no arguments-as-space-separated-string definition). Unlike `namedtuple`s, they are flexible enough that they can be used to replace a large fraction of user defined classes, rather than being relegated to niche uses.
+
+In the cases where you desperately need additional flexibility [not afforded](#limitations) by case classes, you can always fall back on normal Python classes and do without the case class functionality.
 
 Pattern Matching
 ----------------

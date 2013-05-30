@@ -126,7 +126,7 @@ def case(tree, gen_sym, **kw):
         tree.body = new_body
         tree.bases = [Name(id=x, ctx=Load()) for x in parents]
 
-        tree.body += methods
+        tree.body = methods + tree.body
 
         return [tree] + (assign if len(outer) > 0 else [])
     return _case_transform(tree, ["CaseClass"])
