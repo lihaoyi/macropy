@@ -1,6 +1,6 @@
 import unittest
 import ast
-from macropy.macros2.javascript import macros, js, std_lib_script
+from macropy.macros2.javascript import macros, pyjs, js, std_lib_script
 import pjs
 
 from selenium import webdriver

@@ -2,7 +2,7 @@ import unittest
 import ast
 
 from sqlalchemy import *
-from macropy.macros2.linq import macros, sql, generate_schema
+from macropy.macros2.linq import macros, sql, query, generate_schema
 from macropy.core.lift import macros, q
 from macropy.core import unparse_ast
 
