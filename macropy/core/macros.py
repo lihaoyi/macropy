@@ -177,11 +177,15 @@ def _src_for(tree, src, indexes, line_lengths):
 
         if isinstance(tree, stmt):
             prelim = prelim.replace("\n" + " " * tree.col_offset, "\n")
+
         if isinstance(tree, list):
             prelim = prelim.replace("\n" + " " * tree[0].col_offset, "\n")
         try:
-
-            parsed = ast.parse(prelim)
+            if isinstance(tree, expr):
+                x = "(" + prelim + ")"
+            else:
+                x = prelim
+            parsed = ast.parse(x)
             if unparse_ast(parsed).strip() == unparse_ast(tree).strip():
                 return prelim
 
@@ -197,7 +201,7 @@ def _expand_ast(tree, src, bindings):
     # you don't pay for what you don't use
     positions = Lazy(lambda: indexer.recurse_real(tree)[1])
     line_lengths = Lazy(lambda: map(len, src.split("\n")))
-    indexes = Lazy(lambda: [linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)])
+    indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)]))
     symbols = Lazy(lambda: _gen_syms(tree))
 
     allnames = [(m, name, asname) for m, names in bindings for name, asname in names]

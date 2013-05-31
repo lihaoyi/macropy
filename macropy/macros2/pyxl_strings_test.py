@@ -1,7 +1,7 @@
 
 from macropy.macros.adt import macros, case
 from macropy.macros2.pyxl_strings import macros, p
-
+from macropy.macros.tracing import macros, require
 from pyxl import html
 from pyxl.html import rawhtml
 import re
@@ -27,7 +27,8 @@ class Tests(unittest.TestCase):
         element_list = [image, text]
         block2 = p%'<div>{element_list}</div>'
 
-        assert block2.to_string() == '<div><img src="/static/images/bolton.png" />Michael Bolton</div>'
+        with require:
+            block2.to_string() == '<div><img src="/static/images/bolton.png" />Michael Bolton</div>'
 
 
     def test_dynamic(self):
@@ -36,13 +37,16 @@ class Tests(unittest.TestCase):
         for text in items:
             nav.append(p%'<li>{text}</li>')
 
-        assert str(nav) == "<ul><li>Puppies</li><li>Dragons</li></ul>"
+        with require:
+            str(nav) == "<ul><li>Puppies</li><li>Dragons</li></ul>"
 
     def test_attributes(self):
         fruit = p%'<div data-text="tangerine" />'
-        assert fruit.data_text == "tangerine"
+        with require:
+            fruit.data_text == "tangerine"
         fruit.set_attr('data-text', 'clementine')
-        assert fruit.attr('data-text') == "clementine"
+        with require:
+            fruit.attr('data-text') == "clementine"
 
 
     def test_interpreter(self):
@@ -54,7 +58,8 @@ class Tests(unittest.TestCase):
                    {rawhtml(safe_value)}
                </div>"""
         target_blob = '<div class="&quot;&gt;">&lt;script&gt;bad();&lt;/script&gt;<b>Puppies!</b></div>'
-        assert normalize(pyxl_blob.to_string()) == normalize(target_blob)
+        with require:
+            normalize(pyxl_blob.to_string()) == normalize(target_blob)
 
     def test_modules(self):
         from pyxl.element import x_element
@@ -86,7 +91,8 @@ class Tests(unittest.TestCase):
             <div>Any arbitrary content...</div></div>
         </div>"""
 
-        assert normalize(pyxl_blob.to_string()) == normalize(target_blob)
+        with require:
+            normalize(pyxl_blob.to_string()) == normalize(target_blob)
 
 
 

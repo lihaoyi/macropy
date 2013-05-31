@@ -1,6 +1,6 @@
 import unittest
 
-from macropy.macros2.tracing import macros, trace, log, require
+from macropy.macros.tracing import macros, trace, log, require
 
 result = []
 

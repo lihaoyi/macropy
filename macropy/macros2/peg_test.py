@@ -1,58 +1,71 @@
 import unittest
 from macropy.macros2.peg import macros, peg
-
+from macropy.macros.tracing import macros, require
 from macropy.macros.quicklambda import macros, f, _
 class Tests(unittest.TestCase):
     def test_basic(self):
         parse1 = peg%"Hello World"
-
-        assert parse1.parse_all("Hello World")[0] == 'Hello World'
-        assert parse1.parse_all("Hello, World") is None
-
+        with require:
+            parse1.parse_all("Hello World")[0] == 'Hello World'
+            parse1.parse_all("Hello, World") is None
+            
         parse2 = peg%("Hello World", (".").r)
-        assert parse2.parse_all("Hello World") is None
-        assert parse2.parse_all("Hello World1")[0] == ['Hello World', '1']
-        assert parse2.parse_all("Hello World ")[0] == ['Hello World', ' ']
+        with require:
+            parse2.parse_all("Hello World") is None
+            parse2.parse_all("Hello World1")[0] == ['Hello World', '1']
+            parse2.parse_all("Hello World ")[0] == ['Hello World', ' ']
 
     def test_operators(self):
         parse1 = peg%"Hello World"
 
         parse2 = peg%(parse1, "!".rep1)
-        assert parse2.parse_all("Hello World!!!")[0] == ['Hello World', ['!', '!', '!']]
-        assert parse2.parse_all("Hello World!")[0] == ['Hello World', ['!']]
-        assert parse2.parse_all("Hello World") is None
+        with require:
+            parse2.parse_all("Hello World!!!")[0] == ['Hello World', ['!', '!', '!']]
+            parse2.parse_all("Hello World!")[0] == ['Hello World', ['!']]
+            parse2.parse_all("Hello World") is None
 
         parse3 = peg%(parse1, ("!" | "?"))
-        assert parse3.parse_all("Hello World!")[0] == ['Hello World', '!']
-        assert parse3.parse_all("Hello World?")[0] == ['Hello World', '?']
-        assert parse3.parse_all("Hello World%") is None
+        
+        with require:
+            parse3.parse_all("Hello World!")[0] == ['Hello World', '!']
+            parse3.parse_all("Hello World?")[0] == ['Hello World', '?']
+            parse3.parse_all("Hello World%") is None
 
         parse4 = peg%(parse1, "!".rep & "!!!")
-        assert parse4.parse_all("Hello World!!!")[0] == ['Hello World', ['!', '!', '!']]
-        assert parse4.parse_all("Hello World!!") is None
+        
+        with require:
+            parse4.parse_all("Hello World!!!")[0] == ['Hello World', ['!', '!', '!']]
+            parse4.parse_all("Hello World!!") is None
 
         parse4 = peg%(parse1, "!".rep & "!!!")
-        assert parse4.parse_all("Hello World!!!")[0] == ["Hello World", ["!", "!", "!"]]
+        
+        with require:
+            parse4.parse_all("Hello World!!!")[0] == ["Hello World", ["!", "!", "!"]]
 
         parse5 = peg%(parse1, "!".rep & -"!!!")
-        assert parse5.parse_all("Hello World!!")[0] == ["Hello World", ['!', '!']]
-        assert parse5.parse_all("Hello World!!!") is None
+        with require:
+            parse5.parse_all("Hello World!!")[0] == ["Hello World", ['!', '!']]
+            parse5.parse_all("Hello World!!!") is None
 
         parse6 = peg%(parse1, "!" * 3)
-        assert parse6.parse_all("Hello World!") is None
-        assert parse6.parse_all("Hello World!!") is None
-        assert parse6.parse_all("Hello World!!!")[0] == ["Hello World", ['!', '!', '!']]
-        assert parse6.parse_all("Hello World!!!!") is None
+        with require:
+            parse6.parse_all("Hello World!") is None
+            parse6.parse_all("Hello World!!") is None
+            parse6.parse_all("Hello World!!!")[0] == ["Hello World", ['!', '!', '!']]
+            parse6.parse_all("Hello World!!!!") is None
 
 
     def test_conversion(self):
         parse1 = peg%(("Hello World", "!".rep1) // (f%_[1]))
-
-        assert parse1.parse("Hello World!!!")[0] == ['!', '!', '!']
-        assert parse1.parse("Hello World") is None
+        
+        with require:
+            parse1.parse("Hello World!!!")[0] == ['!', '!', '!']
+            parse1.parse("Hello World") is None
 
         parse2 = parse1 // len
-        assert parse2.parse("Hello World!!!")[0] == 3
+        
+        with require:
+            parse2.parse("Hello World!!!")[0] == 3
 
 
     def test_block(self):
@@ -60,24 +73,26 @@ class Tests(unittest.TestCase):
             parse1 = ("Hello World", "!".rep1) // (f%_[1])
             parse2 = parse1 // len
 
-        assert parse1.parse("Hello World!!!")[0] == ['!', '!', '!']
-        assert parse1.parse("Hello World") is None
-        assert parse2.parse("Hello World!!!")[0] == 3
+        with require:
+            parse1.parse("Hello World!!!")[0] == ['!', '!', '!']
+            parse1.parse("Hello World") is None
+            parse2.parse("Hello World!!!")[0] == 3
 
     def test_recursive(self):
         with peg:
             expr = ("(", expr, ")").rep | ""
 
-        assert expr.parse("()") is not None
-        assert expr.parse("(()())") is not None
-        assert expr.parse("(((()))))") is not None
+        with require:
+            expr.parse("()") is not None
+            expr.parse("(()())") is not None
+            expr.parse("(((()))))") is not None
 
-        assert expr.parse("((()))))") is not None
-        assert expr.parse_all("((()))))") is None
-        assert expr.parse(")((()()))(") is not None
-        assert expr.parse_all(")((()()))(") is None
-        assert expr.parse(")()") is not None
-        assert expr.parse_all(")()") is None
+            expr.parse("((()))))") is not None
+            expr.parse_all("((()))))") is None
+            expr.parse(")((()()))(") is not None
+            expr.parse_all(")((()()))(") is None
+            expr.parse(")()") is not None
+            expr.parse_all(")()") is None
 
     def test_bindings(self):
         with peg:
@@ -86,17 +101,20 @@ class Tests(unittest.TestCase):
             seq1 = ("l", ("ol".rep1) is xxx) >> xxx
             seq2 = ("l", ("ol" is xxx).rep1) >> xxx
             seq3 = ("l", ("ol" is xxx).rep1) >> sum(map(len, xxx))
+        with require:
+            short.parse_all('omg') == ['omgomg']
+            short.parse_all('omgg') is None
+            short.parse_all('cow') is None
+            medium.parse_all('omg wtf bbq') == ['omgwtfbbq']
+            medium.parse_all('omg wtf bbbbbq') == ['omgwtfbbbbbq']
+            medium.parse_all('omg wtf bbqq') is None
+            seq3.parse_all("lolololol") == [8]
 
-        assert short.parse_all('omg') == ['omgomg']
-        assert short.parse_all('omgg') is None
-        assert short.parse_all('cow') is None
-        assert medium.parse_all('omg wtf bbq') == ['omgwtfbbq']
-        assert medium.parse_all('omg wtf bbbbbq') == ['omgwtfbbbbbq']
-        assert medium.parse_all('omg wtf bbqq') is None
         for x in ["lol", "lolol", "ol", "'"]:
-            assert seq1.parse_all(x) == seq2.parse_all(x)
+            with require:
+                seq1.parse_all(x) == seq2.parse_all(x)
 
-        assert seq3.parse_all("lolololol") == [8]
+
 
     def test_arithmetic(self):
         """
@@ -127,13 +145,13 @@ class Tests(unittest.TestCase):
             op = '+' | '-' | '*' | '/'
             expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
 
-
-        assert expr.parse_all("123") == [123]
-        assert expr.parse_all("((123))") == [123]
-        assert expr.parse_all("(123+456+789)") == [1368]
-        assert expr.parse_all("(6/2)") == [3]
-        assert expr.parse_all("(1+2+3)+2") == [8]
-        assert expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)") == [1804]
+        with require:
+            expr.parse_all("123") == [123]
+            expr.parse_all("((123))") == [123]
+            expr.parse_all("(123+456+789)") == [1368]
+            expr.parse_all("(6/2)") == [3]
+            expr.parse_all("(1+2+3)+2") == [8]
+            expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)") == [1804]
 
 
 
@@ -142,7 +160,7 @@ class Tests(unittest.TestCase):
         def test(parser, string):
             import json
             try:
-                assert parser.parse_all(string)[0] == json.loads(string)
+                    parser.parse_all(string)[0] == json.loads(string)
             except Exception, e:
                 print(parser.parse_all(string))
                 print(json.loads(string))

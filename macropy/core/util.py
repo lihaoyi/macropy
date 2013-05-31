@@ -44,3 +44,10 @@ class Lazy:
         if self.val is None:
             self.val = [self.thunk()]
         return self.val[0]
+
+def distinct(l):
+    s = []
+    for i in l:
+       if i not in s:
+          s.append(i)
+    return s
