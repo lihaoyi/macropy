@@ -10,11 +10,12 @@ def f(tree, gen_sym, **kw):
 
 
     @Walker
-    def underscore_search(tree, **kw):
+    def underscore_search(tree, collect, **kw):
         if isinstance(tree, Name) and tree.id == "_":
             name = gen_sym()
             tree.id = name
-            return tree, collect(name)
+            collect(name)
+            return tree
 
     tree, used_names = underscore_search.recurse_real(tree)
 

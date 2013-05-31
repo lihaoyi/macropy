@@ -1657,7 +1657,7 @@ More Walking
 ------------
 The function being passed to the Walker can return a variety of things. In this case, let's say we want to collect the names we extracted from the `names` generator, so we can use them to populate the arguments of the `lambda`.
 
-The Walker function can return `collect(item)`, in addition to a `new_tree`. This will hand `item` over to the Walker, which will aggregate them all in one large list which you can extract by using `recurse_real` instead of `real`:
+The Walker function request the `collect` argument, and call `collect(item)` to have the `Walker` aggregate them all in one large list which you can extract by using `recurse_real` instead of `recurse`:
 
 ```python
 from macropy.core.macros import *
@@ -1670,18 +1670,19 @@ def f(tree, **kw):
     names = ('arg' + str(i) for i in xrange(100))
 
     @Walker
-    def underscore_search(tree, **kw):
+    def underscore_search(tree, collect, **kw):
         if isinstance(tree, Name) and tree.id == "_":
             name = names.next()
             tree.id = name
-            return tree, collect(name)
+            collect(name)
+            return tree
 
     new_tree, used_names = underscore_search.recurse_real(tree)
     print used_names # ['arg0', 'arg1']
     return new_tree
 ```
 
-Now we have available both the `new_tree` as well as a list of `used_names`. When we print out `used_names`, we see it is the names that got substituted in place of the underscores within the AST. If you're wondering about how the return values (tuple? AST? None?) of the `underscore_search` function are interpreted, check out the section on [Walkers](#walkers).
+Now we have available both the `new_tree` as well as a list of `used_names`. When we print out `used_names`, we see it is the names that got substituted in place of the underscores within the AST. If you're wondering what other useful things are hiding in the `**kw`, check out the section on [Walkers](#walkers).
 
 This still fails at runtime, but now all we need now is to wrap everything in a `lambda`, set the arguments properly:
 
@@ -1947,76 +1948,90 @@ new_tree = transform.recurse(old_tree)
 
 The `transform` function can either mutate the given `tree` (e.g. by changing its attributes, swapping out children, etc.) or replace it by returning a new one (like in the example above). Returning `None` leaves the tree as-is without replacing it (although it still could have been mutated).
 
-###Contexts
+Apart from receiving and returning a `tree`, the `transform` function can receive a range of other arguments. By default, these all go into the `**kw`, but can be explicitly declared for ease of use:
+
+```python
+@Walker
+def transform(tree, ctx, set_ctx, **kw):
+    ... do stuff with ctx ...
+    set_ctx(...)
+    return new_tree
+```
+
+This section documents what each one does.
+
+###`ctx`
 
 The Walker allows the programmer to provide a *context*:
 
 ```python
 @Walker
 def transform(tree, ctx, **kw):
-    ...
+    ... do stuff with ctx ...
     return new_tree
-    or
-    return new_tree, set_ctx(new_ctx)
 
 new_tree = transform.recurse(old_tree)
 new_tree = transform.recurse(old_tree, init_ctx)
 ```
 
-If the `transform` function takes an additional argument, it will be given the `init_ctx` that is passed in as the second argument to the `.recurse()` method. This defaults to `None` if no `init_ctx` is given. Furthermore, the `transform` function can return a tuple including a `set_ctx(new_ctx)` object, and the Walker will provide the `new_ctx` to all descendents (children, grandchildren, et.c) of the current AST node.
+If the `transform` function takes an additional argument, it will be given the `init_ctx` that is passed in as the second argument to the `.recurse()` method (default `None`).
 
-###Collections
-
-The Walker provides an easy way for  the programmer to aggregate data as it recurses over the AST. This is done by returning an *additional* value: a `collect(value)` object:
+###`set_ctx`
+Apart from using the `ctx` passed in to the `recurse` method, `transform` can request for the `set_ctx` function:
 
 ```python
 @Walker
-def transform(tree, ctx, **kw):
+def transform(tree, ctx, set_ctx, **kw):
+    ... do stuff with ctx ...
+    set_ctx(new_ctx)
+    return new_tree
+```
+This will cause all children of the current `tree` to receive `new_ctx` as their `ctx` argument.
+
+###`collect`
+
+The Walker provides an easy way for  the programmer to aggregate data as it recurses over the AST. This is done by requesting the `collect` argument:
+
+```python
+@Walker
+def transform(tree, collect, **kw):
     ...
-    return new_tree, collect(value)
+    collect(value)
+    return new_tree
 new_tree, collected = transform.recurse_real(old_tree)
 ```
 
 Using the `recurse_real` instead of the `recurse` method to return both the new `tree` as well as the collected data, as a list. This is a simple way of aggregating values as you traverse the AST.
 
-###Stop
+###`stop`
 
-Lastly, the Walker provides a way to end the recursion, via the `stop` value:
+Lastly, the Walker provides a way to end the recursion, via the `stop` functionm:
 
 ```python
 @Walker
-def transform(tree, ctx, **kw):
+def transform(tree, stop, **kw):
     ...
     if ...:
         return new_tree
     else:
-        return stop
+        stop()
 ```
 
-Returning `stop` prevents the `Walker` from recursing over the children of the current node. This is useful, for example, if you know that the current node's AST subtree does not contain anything of interest to you and wish to save some computation. Another use case would be if you wish to delimit your transformation: if you want any code within a certain construct to be passed over by `transform`, you can simply have `transform` return `stop` when it sees that construct.
+Calling `stop` prevents the `Walker` from recursing over the children of the current node. This is useful, for example, if you know that the current node's AST subtree does not contain anything of interest to you and wish to save some computation. Another use case would be if you wish to delimit your transformation: if you want any code within a certain construct to be passed over by `transform`, you can simply have `transform` return `stop` when it sees that construct.
 
 ###A Flexible Tool
-As shown in some of the examples, the `transform` function given to a Walker can return multiple of values together. For example, you could have a walker such as:
+The `transform` function can take any combination of the above arguments. For example, you could have a walker such as:
 
 ```python
 @Walker
-def transform(tree, ctx, **kw):
+def transform(tree, ctx, set_ctx, collect, stop, **kw):
     ...
-    return new_tree, set_ctx(new_ctx), collect(value), stop
+    return new_tree
 
 new_tree, collected = transform.recurse_real(old_tree, initial_ctx)
 ```
 
-Which will do all of:
-
-- Replacing the current AST node with new_tree
-- Setting the `ctx` that all its children will receive
-- Collecting some value that will get returned in `collected`
-- Preventing recursion on sub-trees
-
-It is a bit silly to have both the second and fourth items, since if it doesn't recurse on sub-trees then setting the new `ctx` is moot. Nonetheless, the point is that you can return any combination of these results from `transform`, and in any order, in order to gain some control about how the recursive traversal is performed.
-
-The Walker is an incredibly versatile tool, used to recursively traverse and transform Python ASTs. If you inspect the source code of the macros in the [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2) folders, you will see most of them make extensive use of Walkers in order to concisely perform their transformations. If you find yourself needing a recursive traversal, you should think hard about why you cannot use a Walker before writing the recursion yourself.
+This provides it a large amount of versatility, and lets you use the `Walker` to recursively traverse and transform Python ASTs in interesting ways. If you inspect the source code of the macros in the [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2) folders, you will see most of them make extensive use of `Walker`s in order to concisely perform their transformations. If you find yourself needing a recursive traversal, you should think hard about why you cannot use a Walker before writing the recursion yourself.
 
 Macro Subtleties
 ================

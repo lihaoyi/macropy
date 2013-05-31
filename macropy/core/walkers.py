@@ -3,31 +3,16 @@ from macropy.core.util import *
 from ast import *
 
 
-# stops the traversal
-stop = object()
-
-class set_ctx(object):
-    """Returned from the Walker function to set the `ctx` used when traversing
-    child nodes."""
-    def __init__(self, ctx):
-        self.ctx = ctx
-
-class collect(object):
-    """Returned from the Walker function to collect some value during the
-    traversal. A list of values collected is returned from the traveral
-    by the `recurse_real` method."""
-    def __init__(self, ctx):
-        self.ctx = ctx
 
 class Walker(object):
     """
     Decorates a function of the form:
 
     @Walker
-    def transform(tree, ctx):
+    def transform(tree, **kw):
         ...
         return new_tree
-        return new_tree, set_ctx(new_ctx), collect(value), stop
+
 
     Which is used via:
 
@@ -36,22 +21,28 @@ class Walker(object):
     new_tree, collected = transform.recurse_real(old_tree, initial_ctx)
     new_tree, collected = transform.recurse_real(old_tree)
 
-    The `transform` function takes either:
+    The `transform` function takes the tree to be transformed, in addition to
+    a set of `**kw` which provides additional functionality:
 
-    - the `tree` to be transformed, or
-    - the `tree` to be transformed and a `ctx` variable
+    - `ctx`: this is the value that is (optionally) passed in to the `recurse`
+      and `recurse_real` methods.
+    - `set_ctx`: this is a function, used via `set_ctx(new_ctx)` anywhere in
+      `transform`, which will cause any children of `tree` to receive `new_ctx`
+      as their `ctx` variable.
+    - `collect`: this is a function used via `collect(thing)`, which adds
+      `thing` to the `collected` list returned by `recurse_real`.
+    - `stop`: when called via `stop()`, this prevents recursion on children
+      of the current tree.
 
-    The `transform` function can return:
+    These additional arguments can be declared in the signature, e.g.:
 
-    - a single `new_tree`, which is the new AST to replace the original
-    - a tuple which contains:
-        - a `new_tree` AST, as above
-        - `set_ctx(new_ctx)`, which causes the recursion on all child nodes to receive
-          the new_ctx
-        - `collect(value)`, which adds `value` to the list of collected values
-          returned by `recurse_real`
-        - `stop`, which prevents recursion on the children of the current tree
+    @Walker
+    def transform(tree, ctx, set_ctx, **kw):
+        ... do stuff with ctx ...
+        set_ctx(...)
+        return new_tree
 
+    for ease of use.
     """
     def __init__(self, func):
         self.func = func
@@ -95,30 +86,31 @@ class Walker(object):
         with any values which were collected along with way."""
         if isinstance(tree, AST):
             aggregates = []
-            stop_now = False
+            stop_now = [False]
 
-            # Be loose enough to work whether the function takes 1 or 2 args,
-            # and whether it returns a tuple or a single tree. The types should
-            # still be sound, since the various possibilities are all disjoint.
-            gen = self.func(tree=tree, ctx=ctx)
+            def stop():
+                stop_now[0] = True
 
-            if gen is None:
-                gen = ()
-            if type(gen) is not tuple:
-                gen = (gen,)
+            new_ctx = [ctx]
 
-            for x in gen:
-                if x is stop:
-                    stop_now = True
-                elif isinstance(x, set_ctx):
-                    ctx = x.ctx
-                elif isinstance(x, collect):
-                    aggregates.append(x.ctx)
-                else:
-                    tree = x
+            def set_ctx(new):
+                new_ctx[0] = new
 
-            if not stop_now:
-                aggregates.extend(self.walk_children(tree, ctx))
+            # Provide the function with a bunch of controls, in addition to
+            # the tree itself.
+            new_tree = self.func(
+                tree=tree,
+                ctx=ctx,
+                collect=aggregates.append,
+                set_ctx=set_ctx,
+                stop=stop
+            )
+
+            if new_tree is not None:
+                tree = new_tree
+
+            if not stop_now[0]:
+                aggregates.extend(self.walk_children(tree, new_ctx[0]))
 
         else:
             aggregates = self.walk_children(tree, ctx)

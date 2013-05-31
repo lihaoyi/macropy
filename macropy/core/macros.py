@@ -59,7 +59,7 @@ def fill_line_numbers(tree, lineno, col_offset):
             fill_line_numbers(sub, tree.lineno, tree.col_offset)
 
 @Walker
-def _ast_ctx_fixer(tree, ctx, **kw):
+def _ast_ctx_fixer(tree, ctx, stop, **kw):
     """Fix any missing `ctx` attributes within an AST; allows you to build
     your ASTs without caring about that stuff and just filling it in later."""
     if "ctx" in type(tree)._fields and not hasattr(tree, "ctx"):
@@ -70,25 +70,28 @@ def _ast_ctx_fixer(tree, ctx, **kw):
             _ast_ctx_fixer.recurse(arg, Param())
         for default in tree.defaults:
             _ast_ctx_fixer.recurse(default, Load())
-
-        return tree, stop
+        stop()
+        return tree
 
     if type(tree) is AugAssign:
         _ast_ctx_fixer.recurse(tree.target, AugStore())
         _ast_ctx_fixer.recurse(tree.value, AugLoad())
-        return tree, stop
+        stop()
+        return tree
 
     if type(tree) is Assign:
         for target in tree.targets:
             _ast_ctx_fixer.recurse(target, Store())
 
         _ast_ctx_fixer.recurse(tree.value, Load())
-        return tree, stop
+        stop()
+        return tree
 
     if type(tree) is Delete:
         for target in tree.targets:
             _ast_ctx_fixer.recurse(target, Del())
-        return tree, stop
+        stop()
+        return tree
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
@@ -147,10 +150,10 @@ def linear_index(line_lengths, lineno, col_offset):
     return out
 
 @Walker
-def indexer(tree, **kw):
+def indexer(tree, collect, **kw):
     try:
         unparse_ast(tree)
-        return collect((tree.lineno, tree.col_offset))
+        collect((tree.lineno, tree.col_offset))
     except Exception, e:
         pass
 
@@ -341,9 +344,9 @@ def _gen_syms(tree):
     not cause accidental shadowing, as long as the scope of the new symbol is
     limited to `tree` e.g. by a lambda expression or a function body"""
     @Walker
-    def name_finder(tree, **kw):
+    def name_finder(tree, collect, **kw):
         if type(tree) is Name:
-            return collect(tree.id)
+            collect(tree.id)
 
     tree, found_names = name_finder.recurse_real(tree)
     names = ("sym" + str(i) for i in itertools.count())

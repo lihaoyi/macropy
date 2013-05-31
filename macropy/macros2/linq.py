@@ -63,12 +63,15 @@ def generate_schema(engine):
 
 
 @Walker
-def _find_let_bindings(tree, ctx, **kw):
+def _find_let_bindings(tree, ctx, stop, collect, **kw):
     if type(tree) is Call and type(tree.func) is Lambda:
-        return tree.func.body, stop, collect(tree)
+        stop()
+        collect(tree)
+        return tree.func.body
 
     elif type(tree) in [Lambda, GeneratorExp, ListComp, SetComp, DictComp]:
-        return tree, stop
+        stop()
+        return tree
 
 @Walker
 def expand_let_bindings(tree, **kw):

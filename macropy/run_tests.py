@@ -8,8 +8,9 @@ def run(x):
 
 import cProfile
 
-from macropy import core_tests
-run(core_tests.Tests)
+# from macropy import core_tests
+# run(core_tests.Tests)
+
 from macropy.core import walkers_test
 run(walkers_test.Tests)
 

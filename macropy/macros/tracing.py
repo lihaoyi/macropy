@@ -19,7 +19,7 @@ def log(tree, exact_src, **kw):
     return new_tree
 
 @Walker
-def trace_walk(tree, ctx, **kw):
+def trace_walk(tree, ctx, stop, **kw):
     if isinstance(tree, expr) and \
             tree._fields != () and \
             type(tree) is not Num and \
@@ -28,21 +28,23 @@ def trace_walk(tree, ctx, **kw):
 
         try:
             literal_eval(tree)
-            return tree, stop
+            stop()
+            return tree
         except ValueError:
             txt = ctx(tree)
             trace_walk.walk_children(tree, ctx)
 
             wrapped = q%(wrap(log, u%txt, ast%tree))
-            return wrapped, stop
+            stop()
+            return wrapped
 
     elif isinstance(tree, stmt):
         txt = ctx(tree)
         trace_walk.walk_children(tree , ctx)
         with q as code:
             log(u%txt)
-
-        return [code, tree], stop
+        stop()
+        return [code, tree]
 
 @macros.expr()
 def trace(tree, exact_src, **kw):

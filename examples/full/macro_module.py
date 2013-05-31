@@ -10,11 +10,12 @@ def f(tree, **kw):
     names = ('arg' + str(i) for i in xrange(100))
 
     @Walker
-    def underscore_search(tree, **kw):
+    def underscore_search(tree, collect, **kw):
         if isinstance(tree, Name) and tree.id == "_":
             name = names.next()
             tree.id = name
-            return tree, collect(name)
+            collect(name)
+            return tree
 
     tree, used_names = underscore_search.recurse_real(tree)
 

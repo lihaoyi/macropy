@@ -50,9 +50,9 @@ def extract_args(init_fun, bases):
     return args, vararg, kwarg, defaults, all_args
 
 @Walker
-def find_member_assignments(tree, **kw):
+def find_member_assignments(tree, collect, stop, **kw):
     if type(tree) in [GeneratorExp, Lambda, ListComp, DictComp, SetComp, FunctionDef, ClassDef]:
-        return stop
+        stop()
     if type(tree) is Assign:
         self_assigns = [
             t.attr for t in tree.targets
@@ -60,7 +60,7 @@ def find_member_assignments(tree, **kw):
             and type(t.value) is Name
             and t.value.id == "self"
         ]
-        return tuple(map(collect, self_assigns))
+        map(collect, self_assigns)
 
 @macros.decorator()
 def case(tree, gen_sym, **kw):
