@@ -123,12 +123,7 @@ class _MacroLoader(object):
 def process_ast(tree, src, bindings):
     """Takes an AST and spits out an AST, doing macro expansion in additon to
     some post-processing"""
-    tree = _expand_ast(tree, src, bindings)
-
-    tree = _ast_ctx_fixer.recurse(tree, Load())
-
-    fill_line_numbers(tree, 0, 0)
-    return tree
+    return _expand_ast(tree, src, bindings)
 
 def detect_macros(tree):
     """Look for macros imports within an AST, transforming them and extracting
@@ -223,13 +218,16 @@ def _expand_ast(tree, src, bindings):
         """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
         if isinstance(tree, Name) and tree.id in registry:
             the_macro = registry[tree.id]
-            return the_macro(
+            new_tree = the_macro(
                 tree=body,
                 args=args,
                 gen_sym=lambda: symbols().next(),
                 exact_src=lambda t: _src_for(t, src, indexes, line_lengths),
                 **kwargs
             )
+            new_tree = _ast_ctx_fixer.recurse(new_tree, Load())
+            fill_line_numbers(new_tree, tree.lineno, tree.col_offset)
+            return new_tree
         elif isinstance(tree, Call):
             args.extend(tree.args)
             return expand_if_in_registry(tree.func, body, args, registry)
@@ -317,6 +315,8 @@ class _MacroFinder(object):
                 package_path
             )
             txt = file.read()
+            if "macros" not in txt:
+                return
             tree = ast.parse(txt)
             bindings = detect_macros(tree)
             if bindings == []:
