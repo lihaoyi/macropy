@@ -6,6 +6,7 @@ runner = unittest.TextTestRunner()
 def run(x):
     runner.run(unittest.TestLoader().loadTestsFromTestCase(x))
 
+import cProfile
 
 from macropy import core_tests
 run(core_tests.Tests)

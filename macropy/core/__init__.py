@@ -96,143 +96,139 @@ cmpops = {
 boolops = {
     And: 'and',     Or: 'or'
 }
-def unparse_ast(tree):
-    """Converts an AST back into the source code from whence it came!"""
+trec = {
+    #Misc
+    type(None): lambda tree, i: "",
+    list:       lambda tree, i: jmap("", lambda t: rec(t, i), tree),
 
+    Module:     lambda tree, i: jmap("", lambda t: rec(t, i), tree.body),
 
-    def trec(tree, indent):
-        def box(x):
-            "None | T => [T]"
-            return [x] if x else []
-
-        def mix(*x):
-            """Join everything together if none of them are empty"""
-            return "".join(x) if all(x) else ""
-
-        def rec(tree):
-            """Recurse with same indentation"""
-            return trec(tree, indent)
-        def irec(tree):
-            """Recurse with additional indentation"""
-            return trec(tree, indent+1)
-
-        tabs = "\n" + "    "*indent
-        def jmap(s, f, *l):
-            """Shorthand for the join+map operation"""
-            return s.join(map(f, *l))
-
-        type_dict = {
-            #Misc
-            type(None): lambda: "",
-            list:       lambda: jmap("", rec, tree),
-
-            Module:     lambda: jmap("", rec, tree.body),
-
-            #Statements
-            Expr:       lambda: tabs + rec(tree.value),
-            Import:     lambda: tabs + "import " + jmap(", ", rec, tree.names),
-            ImportFrom: lambda: tabs + "from " + ("." * tree.level) + mix(tree.module) +
-                                " import " + jmap(", ", rec, tree.names),
-            Assign:     lambda: tabs + "".join(rec(t) + " = " for t in tree.targets) + rec(tree.value),
-            AugAssign:  lambda: tabs + rec(tree.target) + " " + binop[tree.op.__class__] + "= " + rec(tree.value),
-            Return:     lambda: tabs + "return" + mix(" ", rec(tree.value)),
-            Pass:       lambda: tabs + "pass",
-            Break:      lambda: tabs + "break",
-            Continue:   lambda: tabs + "continue",
-            Delete:     lambda: tabs + "del " + jmap(", ", rec, tree.targets),
-            Assert:     lambda: tabs + "assert " + rec(tree.test) + mix(", ", rec(tree.msg)),
-            Exec:       lambda: tabs + "exec " + rec(tree.body) +
-                                mix(" in ", rec(tree.globals)) +
-                                mix(", ", rec(tree.locals)),
-            Print:      lambda: tabs + "print " +
-                                ", ".join(box(mix(">>", rec(tree.dest))) + map(rec, tree.values)) +
+    #Statements
+    Expr:       lambda tree, i: tabs(i) + rec(tree.value, i),
+    Import:     lambda tree, i: tabs(i) + "import " + jmap(", ", lambda t: rec(t, i), tree.names),
+    ImportFrom: lambda tree, i: tabs(i) + "from " + ("." * tree.level) + mix(tree.module) +
+                                " import " + jmap(", ", lambda t: rec(t, i), tree.names),
+    Assign:     lambda tree, i: tabs(i) + "".join(rec(t, i) + " = " for t in tree.targets) + rec(tree.value, i),
+    AugAssign:  lambda tree, i: tabs(i) + rec(tree.target, i) + " " + binop[tree.op.__class__] + "= " + rec(tree.value, i),
+    Return:     lambda tree, i: tabs(i) + "return" + mix(" ", rec(tree.value, i)),
+    Pass:       lambda tree, i: tabs(i) + "pass",
+    Break:      lambda tree, i: tabs(i) + "break",
+    Continue:   lambda tree, i: tabs(i) + "continue",
+    Delete:     lambda tree, i: tabs(i) + "del " + jmap(", ", lambda t: rec(t, i), tree.targets),
+    Assert:     lambda tree, i: tabs(i) + "assert " + rec(tree.test) + mix(", ", rec(tree.msg, i)),
+    Exec:       lambda tree, i: tabs(i) + "exec " + rec(tree.body, i) +
+                                mix(" in ", rec(tree.globals, i)) +
+                                mix(", ", rec(tree.locals, i)),
+    Print:      lambda tree, i: tabs(i) + "print " +
+                                ", ".join(box(mix(">>", rec(tree.dest, i))) + map(lambda t: rec(t, i),tree.values)) +
                                 ("," if not tree.nl else ""),
-            Global:     lambda: tabs + "global " + jmap(", ", rec, tree.names),
-            Yield:      lambda: "(yield " + rec(tree.value) + ")",
-            Raise:      lambda: tabs + "raise " + rec(tree.type) +
-                                mix(", ", rec(tree.inst)) +
-                                mix(", ", rec(tree.tback)),
-            TryExcept:  lambda: tabs + "try:" + irec(tree.body) +
-                                jmap("", rec, tree.handlers) +
-                                mix(tabs, "else:", irec(tree.orelse)),
-            TryFinally: lambda: (rec(tree.body)
+    Global:     lambda tree, i: tabs(i) + "global " + jmap(", ", lambda t: rec(t, i), tree.names),
+    Yield:      lambda tree, i: "(yield " + rec(tree.value, i) + ")",
+    Raise:      lambda tree, i: tabs(i) + "raise " + rec(tree.type, i) +
+                                mix(", ", rec(tree.inst, i)) +
+                                mix(", ", rec(tree.tback, i)),
+    TryExcept:  lambda tree, i: tabs(i) + "try:" + rec(tree.body, i+1) +
+                                jmap("", lambda t: rec(t, i), tree.handlers) +
+                                mix(tabs(i), "else:", rec(tree.orelse, i+1)),
+    TryFinally: lambda tree, i: (rec(tree.body, i)
                                 if len(tree.body) == 1 and isinstance(tree.body[0], ast.TryExcept)
-                                else tabs + "try:" + irec(tree.body)) +
-                                tabs + "finally:" + irec(tree.finalbody),
-            ExceptHandler: lambda: tabs + "except" +
-                                mix(" ", rec(tree.type)) +
-                                mix(" as ", rec(tree.name)) + ":" +
-                                irec(tree.body),
-            ClassDef:   lambda: "\n" + "".join(tabs + "@" + rec(dec) for dec in tree.decorator_list) +
-                                tabs + "class " + tree.name +
-                                mix("(", jmap(", ", rec, tree.bases), ")") + ":" +
-                                irec(tree.body),
-            FunctionDef: lambda: "\n" + "".join(tabs + "@" + rec(dec) for dec in tree.decorator_list) +
-                                tabs + "def " + tree.name + "(" + rec(tree.args) + "):" + irec(tree.body),
-            For:        lambda: tabs + "for " + rec(tree.target) + " in " +
-                                rec(tree.iter) + ":" + irec(tree.body) +
-                                mix(tabs, "else: ", irec(tree.orelse)),
-            If:         lambda: tabs + "if " + rec(tree.test) + ":" + irec(tree.body) +
+                                else tabs(i) + "try:" + rec(tree.body, i+1)) +
+                                tabs(i) + "finally:" + rec(tree.finalbody, i+1),
+    ExceptHandler: lambda tree, i: tabs(i) + "except" +
+                                mix(" ", rec(tree.type, i)) +
+                                 mix(" as ", rec(tree.name, i)) + ":" +
+                                rec(tree.body, i+1),
+    ClassDef:   lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
+                                tabs(i) + "class " + tree.name +
+                                mix("(", jmap(", ", lambda t: rec(t, i), tree.bases), ")") + ":" +
+                                rec(tree.body, i+1),
+    FunctionDef: lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
+                                tabs(i) + "def " + tree.name + "(" + rec(tree.args, i) + "):" + rec(tree.body, i+1),
+    For:        lambda tree, i: tabs(i) + "for " + rec(tree.target, i) + " in " +
+                                rec(tree.iter, i) + ":" + rec(tree.body, i+1) +
+                                mix(tabs(i), "else: ", rec(tree.orelse, i+1)),
+    If:         lambda tree, i: tabs(i) + "if " + rec(tree.test, i) + ":" + rec(tree.body, i+1) +
                                 # this doesn't collapse nested ifs into elifs
-                                mix(tabs, "else:", irec(tree.orelse)),
-            While:      lambda: tabs + "while " + rec(tree.test) + ":" + irec(tree.body) +
-                                mix(tabs, "else:", irec(tree.orelse)),
-            With:       lambda: tabs + "with " + rec(tree.context_expr) +
-                                mix(" as ", rec(tree.optional_vars)) + ":" +
-                                irec(tree.body),
-            #Expressions
-            #Str doesn't properly handle from __future__ import unicode_literals
-            Str:        lambda: repr(tree.s),
-            Name:       lambda: tree.id,
-            Repr:       lambda: "`" + rec(tree.value) + "`",
-            Num:        lambda: (lambda repr_n:
+                                mix(tabs(i), "else:", rec(tree.orelse, i+1)),
+    While:      lambda tree, i: tabs(i) + "while " + rec(tree.test, i) + ":" + rec(tree.body, i+1) +
+                                mix(tabs(i), "else:", rec(tree.orelse, i+1)),
+    With:       lambda tree, i: tabs(i) + "with " + rec(tree.context_expr, i) +
+                                mix(" as ", rec(tree.optional_vars, i)) + ":" +
+                                rec(tree.body, i+1),
+                                #Expressions
+                                #Str doesn't properly handle from __future__ import unicode_literals
+    Str:        lambda tree, i: repr(tree.s),
+    Name:       lambda tree, i: tree.id,
+    Repr:       lambda tree, i: "`" + rec(tree.value) + "`",
+    Num:        lambda tree, i: (lambda repr_n:
                                     "(" + repr_n.replace("inf", INFSTR) + ")"
                                     if repr_n.startswith("-")
                                     else repr_n.replace("inf", INFSTR)
                                 )(repr(tree.n)),
-            List:       lambda: "[" + jmap(", ", rec, tree.elts) + "]",
-            ListComp:   lambda: "[" + rec(tree.elt) + jmap("", rec, tree.generators) + "]",
-            GeneratorExp: lambda: "(" + rec(tree.elt) + jmap("", rec, tree.generators) + ")",
-            SetComp:    lambda: "{" + rec(tree.elt) + jmap("", rec, tree.generators) + "}",
-            DictComp:   lambda: "{" + rec(tree.key) + ": " + rec(tree.value) + jmap("", rec, tree.generators) + "}",
-            comprehension:  lambda: " for " + rec(tree.target) + " in " + rec(tree.iter) + jmap("", lambda x: " if " + rec(x), tree.ifs),
-            IfExp:      lambda: "(" + rec(tree.body) + " if " + rec(tree.test) + " else " + rec(tree.orelse) + ")",
-            Set:        lambda: "{" + jmap(", ", rec, tree.elts) + "}",
-            Dict:       lambda: "{" + jmap(", ", lambda x, y: rec(x) + ":" + rec(y), tree.keys, tree.values) + "}",
-            Tuple:      lambda: "(" + jmap(", ", rec, tree.elts) + ("," if len(tree.elts) == 1 else "") + ")",
-            UnaryOp:    lambda: "(" + unop[tree.op.__class__] +
-                                ("(" + rec(tree.operand) + ")"
-                                 if type(tree.op) is USub and type(tree.operand) is Num
-                                 else " " + rec(tree.operand)) + ")",
-            BinOp:      lambda: "(" + rec(tree.left) + " " + binop[tree.op.__class__] + " " + rec(tree.right) + ")",
-            Compare:    lambda: "(" + rec(tree.left) + jmap("", lambda op, c: " " + cmpops[op.__class__] + " " + rec(c), tree.ops, tree.comparators) + ")",
-            BoolOp:     lambda: "(" + jmap(" " + boolops[tree.op.__class__] + " ", rec, tree.values) + ")",
-            Attribute:  lambda: rec(tree.value) + (" " if isinstance(tree.value, Num) and isinstance(tree.value.n, int) else "") + "." + tree.attr,
-            Call:       lambda: rec(tree.func) + "(" +
-                        ", ".join(
-                            map(rec, tree.args) +
-                            map(rec, tree.keywords) +
-                            box(mix("*", rec(tree.starargs))) +
-                            box(mix("**", rec(tree.kwargs)))
-                        ) + ")",
-            Subscript:  lambda: rec(tree.value) + "[" + rec(tree.slice) + "]",
-            Ellipsis:   lambda: "...",
-            Index:      lambda: rec(tree.value),
-            Slice:      lambda: rec(tree.lower) + ":" + rec(tree.upper) + mix(":", rec(tree.step)),
-            ExtSlice:   lambda: jmap(", ", rec, tree.dims),
-            arguments:  lambda: ", ".join(
-                            map(lambda a, d: rec(a) + mix("=", rec(d)),
-                                tree.args,
-                                [None] * (len(tree.args) - len(tree.defaults)) + tree.defaults
-                            ) +
-                            box(mix("*", tree.vararg)) +
-                            box(mix("**", tree.kwarg))
-                        ),
-            keyword:    lambda: tree.arg + "=" + rec(tree.value),
-            Lambda:     lambda: "(lambda " + rec(tree.args) + ": "+ rec(tree.body) + ")",
-            alias:      lambda: tree.name + mix(" as ", tree.asname)
-        }
+    List:       lambda tree, i: "[" + jmap(", ", lambda t: rec(t, i), tree.elts) + "]",
+    ListComp:   lambda tree, i: "[" + rec(tree.elt, i) + jmap("", lambda t: rec(t, i), tree.generators) + "]",
+    GeneratorExp: lambda tree, i: "(" + rec(tree.elt, i) + jmap("", lambda t: rec(t, i), tree.generators) + ")",
+    SetComp:    lambda tree, i: "{" + rec(tree.elt, i) + jmap("", lambda t: rec(t, i), tree.generators) + "}",
+    DictComp:   lambda tree, i: "{" + rec(tree.key, i) + ": " + rec(tree.value, i) + jmap("", lambda t: rec(t, i), tree.generators) + "}",
+    comprehension:  lambda tree, i: " for " + rec(tree.target, i) + " in " + rec(tree.iter, i) + jmap("", lambda x: " if " + rec(x, i), tree.ifs),
+    IfExp:      lambda tree, i: "(" + rec(tree.body, i) + " if " + rec(tree.test, i) + " else " + rec(tree.orelse, i) + ")",
+    Set:        lambda tree, i: "{" + jmap(", ", lambda t: rec(t, i), tree.elts) + "}",
+    Dict:       lambda tree, i: "{" + jmap(", ", lambda x, y: rec(x, i) + ":" + rec(y, i), tree.keys, tree.values) + "}",
+    Tuple:      lambda tree, i: "(" + jmap(", ", lambda t: rec(t, i), tree.elts) + ("," if len(tree.elts) == 1 else "") + ")",
+    UnaryOp:    lambda tree, i: "(" + unop[tree.op.__class__] +
+                                ("(" + rec(tree.operand, i) + ")"
+                                if type(tree.op) is USub and type(tree.operand) is Num
+                                else " " + rec(tree.operand, i)) + ")",
+    BinOp:      lambda tree, i: "(" + rec(tree.left, i) + " " + binop[tree.op.__class__] + " " + rec(tree.right, i) + ")",
+    Compare:    lambda tree, i: "(" + rec(tree.left, i) + jmap("", lambda op, c: " " + cmpops[op.__class__] + " " + rec(c, i), tree.ops, tree.comparators) + ")",
+    BoolOp:     lambda tree, i: "(" + jmap(" " + boolops[tree.op.__class__] + " ", lambda t: rec(t, i), tree.values) + ")",
+    Attribute:  lambda tree, i: rec(tree.value, i) + (" " if isinstance(tree.value, Num) and isinstance(tree.value.n, int) else "") + "." + tree.attr,
+    Call:       lambda tree, i: rec(tree.func, i) + "(" +
+                                ", ".join(
+                                    map(lambda t: rec(t, i),tree.args) +
+                                    map(lambda t: rec(t, i),tree.keywords) +
+                                    box(mix("*", rec(tree.starargs, i))) +
+                                    box(mix("**", rec(tree.kwargs, i)))
+                                ) + ")",
+    Subscript:  lambda tree, i: rec(tree.value, i) + "[" + rec(tree.slice, i) + "]",
+    Ellipsis:   lambda tree, i: "...",
+    Index:      lambda tree, i: rec(tree.value, i),
+    Slice:      lambda tree, i: rec(tree.lower, i) + ":" + rec(tree.upper, i) + mix(":", rec(tree.step, i)),
+    ExtSlice:   lambda tree, i: jmap(", ", lambda t: rec(t, i), tree.dims),
+    arguments:  lambda tree, i: ", ".join(
+                                    map(lambda a, d: rec(a, i) + mix("=", rec(d, i)),
+                                        tree.args,
+                                        [None] * (len(tree.args) - len(tree.defaults)) + tree.defaults
+                                    ) +
+                                    box(mix("*", tree.vararg)) +
+                                    box(mix("**", tree.kwarg))
+                                ),
+    keyword:    lambda tree, i: tree.arg + "=" + rec(tree.value, i),
+    Lambda:     lambda tree, i: "(lambda " + rec(tree.args, i) + ": "+ rec(tree.body, i) + ")",
+    alias:      lambda tree, i: tree.name + mix(" as ", tree.asname)
+}
+def box(x):
+    "None | T => [T]"
+    return [x] if x else []
 
-        return type_dict[tree.__class__]()
+def mix(*x):
+    """Join everything together if none of them are empty"""
+    return "".join(x) if all(x) else ""
 
-    return trec(tree, 0)
+def rec(tree, i):
+    """Recurse with same iation"""
+    return trec[tree.__class__](tree, i)
+
+def jmap(s, f, *l):
+    """Shorthand for the join+map operation"""
+    return s.join(map(f, *l))
+
+def tabs(i): 
+    return "\n" + "    "*i
+
+def unparse_ast(tree):
+    """Converts an AST back into the source code from whence it came!"""
+
+
+    return trec[tree.__class__](tree, 0)
+
