@@ -193,7 +193,7 @@ def _src_for(tree, src, indexes, line_lengths):
 def _expand_ast(tree, src, bindings):
     """Go through an AST, hunting for macro invocations and expanding any that
     are found"""
-    print "bindings", bindings
+
     # you don't pay for what you don't use
     positions = Lazy(lambda: indexer.recurse_real(tree)[1])
     line_lengths = Lazy(lambda: map(len, src.split("\n")))
@@ -315,8 +315,13 @@ class _MacroFinder(object):
                 package_path
             )
             txt = file.read()
-            if "macros" not in txt:
+
+            # short circuit heuristic to fail fast if the source code can't
+            # possible contain the macro import at all
+            if " import macros," not in txt:
                 return
+
+            # check properly the AST if the macro import really exists
             tree = ast.parse(txt)
             bindings = detect_macros(tree)
             if bindings == []:
