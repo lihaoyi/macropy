@@ -23,10 +23,10 @@ MacroPy has been used to implement features such as:
 
 - [Case Classes](#case-classes), easy Algebraic Data Types from Scala
 - [Pattern Matching](#pattern-matching) from the Functional Programming world
-- [Tail-call Optimization](#tail-call-optimization)
-- [String Interpolation](#string-interpolation), a common feature, and [Pyxl](#pyxl-integration), which is basically XML interpolation.
-- [Tracing](#tracing) and [Smart Asserts](#smart-asserts), from every programmer's wildest dreams.
-- [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), a clone of LINQ to SQL from C#
+- [Tail-call Optimization](#tail-call-optimization), preventing unnecessary stack overflows
+- [String Interpolation](#string-interpolation), a common feature, and [Pyxl](#pyxl-integration), which is basically XML interpolation
+- [Tracing](#tracing) and [Smart Asserts](#smart-asserts), and [show_expanded](#show_expanded), to help in the debugging effort
+- [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), a shameless clone of LINQ to SQL from C#
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy
 - [Parser Combinators](#parser-combinators), inspired by Scala's
 - [JS Snippets](#js-snippets), cross compiling snippets of Python into equivalent Javascript
@@ -46,6 +46,7 @@ Rough Overview
 Macro functions are defined in three ways:
 
 ```python
+from macropy.core.macros import *
 
 macros = Macros()
 
@@ -72,7 +73,7 @@ Each macro function is passed a `tree`. The `tree` is an `AST` object, the sort 
 These three types of macros are called via:
 
 ```python
-from my_macro_module import macros, ...
+from my_macro_module import macros, my_expr_macro, my_block_macro, my_decorator_macro
 
 val = my_expr_macro%(...)
 
@@ -84,7 +85,7 @@ class X():
     ...
 ```
 
-Where the line `from my_macro_module import macros, ...` is necessary to tell MacroPy which macros these module relies on. Multiple things can be imported from each module (the `...`) but `macros` must come first for macros from that module to be used.
+Where the line `from my_macro_module import macros, ...` is necessary to tell MacroPy which macros these module relies on. Multiple things can be imported from each module, but `macros` must come first for macros from that module to be used.
 
 Any time any of these syntactic forms is seen, if a matching macro exists in any of the packages from which `macros` has been imported from, the abstract syntax tree captured by these forms (the `...` in the code above) is given to the respective macro to handle. The tree (new, modified, or even unchanged) which the macro returns is substituted into the original code in-place.
 
@@ -210,8 +211,8 @@ Case classes also provide a convenient *copy-constructor*, which creates a shall
 ```python
 a = Point(1, 2)
 b = a.copy(x = 3)
-print a #Point(1, 2)
-print b #Point(3, 2)
+print a # Point(1, 2)
+print b # Point(3, 2)
 ```
 
 Like any other class, a case class may contain methods in its body:
@@ -679,7 +680,7 @@ Tracing
 -------
 
 ```python
->>> from macropy.macros2.tracing import macros, trace, log, require
+>>> from macropy.macros.tracing import macros, log
 >>> log%(1 + 2)
 1 + 2 -> 3
 3
@@ -701,6 +702,7 @@ and the `log%` macro (shown above) helps remove this duplication by automaticall
 In addition to simple logging, MacroPy provides the `trace%` macro. This macro not only logs the source and result of the given expression, but also the source and result of all sub-expressions nested within it:
 
 ```python
+>>> from macropy.macros.tracing import macros, trace
 >>> trace%[len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]]
 "b" * 2 -> 'bb'
 "b" * 2 + "q" -> 'bbq'
@@ -725,6 +727,7 @@ Lastly, `trace` can be used as a block macro:
 
 
 ```python
+>>> from macropy.macros.tracing import macros, trace
 >>> with trace:
 ...     sum = 0
 ...     for i in range(0, 5):
@@ -763,6 +766,7 @@ We think that tracing is an extremely useful macro. For debugging what is happen
 
 ###Smart Asserts
 ```python
+>>> from macropy.macros.tracing import macros, require
 >>> require%(3**2 + 4**2 != 5**2)
 Traceback (most recent call last):
   File "<console>", line 1, in <module>
@@ -783,6 +787,7 @@ Unlike `assert`, `require%` automatically tells you what code failed the conditi
 `require% can also be used in block form:
 
 ```python
+>>> from macropy.macros.tracing import macros, trace
 >>> with require:
 ...     a > 5
 ...     a * b == 20
@@ -801,6 +806,7 @@ This requires every statement in the block to be a boolean expression. Each expr
 ###`show_expanded`
 
 ```python
+from macropy.core.lift import macros, q
 from macropy.macros.tracing import macros, show_expanded
 
 show_expanded%(q%(1 + 2))
@@ -829,6 +835,9 @@ These examples show how the [quasiquote](#quasiquotes) macro works: it turns an 
 Here is a less trivial example: [case classes](#case-classes) are a pretty useful macro, which saves us the hassle of writing a pile of boilerplate ourselves. By using `show_expanded`, we can see what the case class definition expands into:
 
 ```python
+from macropy.macros.adt import macros, case
+from macropy.macros.tracing import macros, show_expanded
+
 with show_expanded:
     @case
     class Point(x, y):

@@ -328,7 +328,7 @@ class _MacroFinder(object):
 
             # short circuit heuristic to fail fast if the source code can't
             # possible contain the macro import at all
-            if " import macros," not in txt:
+            if " import macros" not in txt:
                 return
 
             # check properly the AST if the macro import really exists
