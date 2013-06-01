@@ -23,21 +23,21 @@ def log(tree, exact_src, **kw):
 
 @macros.expr()
 def show_expanded(tree, expand_macros, **kw):
-    import copy
-    expanded_tree = unparse_ast(expand_macros(copy.deepcopy(tree)))
-    new_tree = q(wrap_simple(log, u(expanded_tree), ast(tree)))
+    expanded_tree = expand_macros(tree)
+    new_tree = q(wrap_simple(log, u(unparse_ast(expanded_tree)), ast(expanded_tree)))
     return new_tree
 
 @macros.block()
 def show_expanded(tree, expand_macros, **kw):
-    import copy
+
     new_tree = []
     for stmt in tree:
-        txt = unparse_ast(expand_macros(copy.deepcopy(stmt)))
+        new_stmt = expand_macros(stmt)
+
         with q as code:
-            log(u(txt))
+            log(u(unparse_ast(new_stmt)))
         new_tree.append(code)
-        new_tree.append(stmt)
+        new_tree.append(new_stmt)
 
     return new_tree
 

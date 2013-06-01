@@ -68,11 +68,11 @@ setup(
     author='Li Haoyi, Justin Holmgren',
     author_email='haoyi.sg@gmail.com, justin.holmgren@gmail.com',
     url='https://github.com/lihaoyi/macropy',
-
+    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     extras_require = {
-    'pyxl':  ["pyxl"],
-    'pinq': ["SQLAlchemy"],
-    'js_snippets': ["selenium", "pjs"],
+        'pyxl':  ["pyxl"],
+        'pinq': ["SQLAlchemy"],
+        'js_snippets': ["selenium", "pjs"],
     },
     classifiers=['Programming Language :: Python :: 2.7']
 )

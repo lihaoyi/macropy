@@ -1943,6 +1943,20 @@ In contrast `exact_src(tree)` promises that you get exactly what was written in 
 
 It does this by analyzing the `lineno` and `col_offset` values on the AST it is passed, comparing those against the known values within the source file the AST originates from and making a best-effort attempt to extract the corresponding snippet of code. This obviously only really works on ASTs that originated directly from the source code, and will fail on ASTs you synthesized manually.
 
+###`expand_macros`
+
+`expand_macros` is a function that can be called by a macro to expand any macros in the target AST. For example, the `tracing` module's `show_expanded` macro uses it to print out what the captured AST looks like after expansion:
+
+```python
+@macros.expr()
+def show_expanded(tree, expand_macros, **kw):
+    expanded_tree = expand_macros(tree)
+    new_tree = q(wrap_simple(log, u(unparse_ast(expanded_tree)), ast(expanded_tree)))
+    return new_tree
+```
+
+Note that macro expansion *mutates the tree being expanded*. In the case of the `show_expanded` macro, it doesn't really macro (since the tree was going to get expanded anyway). However, if you want to preserve the original AST for any reason, you should [deepcopy](http://docs.python.org/2/library/copy.html#copy.deepcopy) the original AST and do your expansion on the copy.
+
 Quasiquotes
 -----------
 
