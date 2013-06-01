@@ -75,7 +75,9 @@ These three types of macros are called via:
 ```python
 from my_macro_module import macros, my_expr_macro, my_block_macro, my_decorator_macro
 
+val = my_expr_macro(...)
 val = my_expr_macro%(...)
+
 
 with my_block_macro:
     ...
@@ -85,7 +87,7 @@ class X():
     ...
 ```
 
-Where the line `from my_macro_module import macros, ...` is necessary to tell MacroPy which macros these module relies on. Multiple things can be imported from each module, but `macros` must come first for macros from that module to be used.
+Where the line `from my_macro_module import macros, ...` is necessary to tell MacroPy which macros these module relies on. Multiple things can be imported from each module, but `macros` must come first for macros from that module to be used. Note that expression macros can be invoked via two alternate syntaxes.
 
 Any time any of these syntactic forms is seen, if a matching macro exists in any of the packages from which `macros` has been imported from, the abstract syntax tree captured by these forms (the `...` in the code above) is given to the respective macro to handle. The tree (new, modified, or even unchanged) which the macro returns is substituted into the original code in-place.
 
@@ -131,7 +133,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> import macropy.core.console
 0=[]=====> MacroPy Enabled <=====[]=0
 >>> from macropy.macros2.tracing import macros, trace
->>> trace%[x*2 for x in range(3)]
+>>> trace([x*2 for x in range(3)])
 range(3) -> [0, 1, 2]
 x*2 -> 0
 x*2 -> 2
@@ -153,18 +155,19 @@ Feel free to open up a REPL and try out the examples in the console; simply `imp
 Case Classes
 ------------
 ```python
->>> from macropy.macros.adt import macros, case
->>> @case
-... class Point(x, y): pass
->>> p = Point(1, 2)
->>> str(p)
-'Point(1, 2)'
->>> p.x
-1
->>> p.y
-2
->>> Point(1, 2) == Point(1, 2)
-True
+@case
+class Point(x, y): pass
+
+p = Point(1, 2)
+
+print str(p)
+# Point(1, 2)
+print p.x
+# 1
+print p.y
+# 2
+print Point(1, 2) == Point(1, 2)
+# True
 ```
 
 [Case classes](http://www.codecommit.com/blog/scala/case-classes-are-cool) are classes with extra goodies:
@@ -681,11 +684,11 @@ Tracing
 
 ```python
 >>> from macropy.macros.tracing import macros, log
->>> log%(1 + 2)
+>>> log(1 + 2)
 1 + 2 -> 3
 3
 
->>> log%("omg" * 3)
+>>> log("omg" * 3)
 ('omg' * 3) -> 'omgomgomg'
 'omgomgomg'
 ```
@@ -697,13 +700,13 @@ print "value", value
 print "sqrt(x)", sqrt(x)
 ```
 
-and the `log%` macro (shown above) helps remove this duplication by automatically expanding `log%(1 + 2)` into `wrap("(1 + 2)", (1 + 2))`. `wrap` then evaluates the expression, printing out the source code and final value of the computation.
+and the `log()` macro (shown above) helps remove this duplication by automatically expanding `log(1 + 2)` into `wrap("(1 + 2)", (1 + 2))`. `wrap` then evaluates the expression, printing out the source code and final value of the computation.
 
-In addition to simple logging, MacroPy provides the `trace%` macro. This macro not only logs the source and result of the given expression, but also the source and result of all sub-expressions nested within it:
+In addition to simple logging, MacroPy provides the `trace()` macro. This macro not only logs the source and result of the given expression, but also the source and result of all sub-expressions nested within it:
 
 ```python
 >>> from macropy.macros.tracing import macros, trace
->>> trace%[len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]]
+>>> trace([len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]])
 "b" * 2 -> 'bb'
 "b" * 2 + "q" -> 'bbq'
 "lo" * 3 -> 'lololo'
@@ -767,7 +770,7 @@ We think that tracing is an extremely useful macro. For debugging what is happen
 ###Smart Asserts
 ```python
 >>> from macropy.macros.tracing import macros, require
->>> require%(3**2 + 4**2 != 5**2)
+>>> require(3**2 + 4**2 != 5**2)
 Traceback (most recent call last):
   File "<console>", line 1, in <module>
   File "macropy\macros2\tracing.py", line 67, in handle
@@ -780,11 +783,11 @@ AssertionError: Require Failed
 3**2 + 4**2 != 5**2 -> False
 ```
 
-MacroPy provides a variant on the `assert` keyword called `require%`. Like `assert`, `require%` throws an `AssertionError` if the condition is false.
+MacroPy provides a variant on the `assert` keyword called `require(`. Like `assert`, `require` throws an `AssertionError` if the condition is false.
 
-Unlike `assert`, `require%` automatically tells you what code failed the condition, and traces all the sub-expressions within the code so you can more easily see what went wrong. Pretty handy!
+Unlike `assert`, `require` automatically tells you what code failed the condition, and traces all the sub-expressions within the code so you can more easily see what went wrong. Pretty handy!
 
-`require% can also be used in block form:
+`require can also be used in block form:
 
 ```python
 >>> from macropy.macros.tracing import macros, trace
@@ -801,7 +804,7 @@ AssertionError: Require Failed
 a < 2 -> False
 ```
 
-This requires every statement in the block to be a boolean expression. Each expression will then be wrapped in a `require%`, throwing an `AssertionError` with a nice trace when a condition fails.
+This requires every statement in the block to be a boolean expression. Each expression will then be wrapped in a `require()`, throwing an `AssertionError` with a nice trace when a condition fails.
 
 ###`show_expanded`
 
@@ -809,7 +812,7 @@ This requires every statement in the block to be a boolean expression. Each expr
 from macropy.core.lift import macros, q
 from macropy.macros.tracing import macros, show_expanded
 
-show_expanded%(q%(1 + 2))
+show_expanded(q(1 + 2))
 # BinOp(left=Num(n=1), op=Add(), right=Num(n=2))
 ```
 
@@ -821,7 +824,7 @@ from macropy.macros.tracing import macros, show_expanded, trace
 
 with show_expanded:
     a = 1
-    b = q%(1 + 2)
+    b = q(1 + 2)
     with q as code:
         print a
 
@@ -870,7 +873,7 @@ from macropy.macros2.linq import macros, sql, query, generate_schema
 db = generate_schema(engine)
 
 # Countries in Europe with a GNP per Capita greater than the UK
-results = query%(
+results = query(
     x.name for x in db.country
     if x.gnp / x.population > (
         y.gnp / y.population for y in db.country
@@ -894,13 +897,13 @@ for line in results: print line
 # (u'Sweden',)
 ```
 
-PINQ (Python INtegrated Query) to SQLAlchemy is inspired by [C#'s LINQ to SQL](http://msdn.microsoft.com/en-us/library/bb386976.aspx). In short, code used to manipulate lists is lifted into an AST which is then cross-compiled into a snippet of [SQL](http://en.wikipedia.org/wiki/SQL). In this case, it is the `query%` macro which does this lifting and cross-compilation. Instead of performing the manipulation locally on some data structure, the compiled query is sent to a remote database to be performed there.
+PINQ (Python INtegrated Query) to SQLAlchemy is inspired by [C#'s LINQ to SQL](http://msdn.microsoft.com/en-us/library/bb386976.aspx). In short, code used to manipulate lists is lifted into an AST which is then cross-compiled into a snippet of [SQL](http://en.wikipedia.org/wiki/SQL). In this case, it is the `query` macro which does this lifting and cross-compilation. Instead of performing the manipulation locally on some data structure, the compiled query is sent to a remote database to be performed there.
 
 This allows you to write queries to a database in the same way you would write queries on in-memory lists, which is really very nice. The translation is a relatively thin layer of over the [SQLAlchemy Query Language](http://docs.sqlalchemy.org/ru/latest/core/tutorial.html), which does the heavy lifting of converting the query into a raw SQL string:. If we start with a simple query:
 
 ```python
 # Countries with a land area greater than 10 million square kilometers
-print query%((x.name, x.surface_area) for x in db.country if x.surface_area > 10000000)
+print query((x.name, x.surface_area) for x in db.country if x.surface_area > 10000000)
 # [(u'Antarctica', Decimal('13120000.0000000000')), (u'Russian Federation', Decimal('17075400.0000000000'))]
 ```
 
@@ -910,10 +913,10 @@ This is to the equivalent SQLAlchemy query:
 print engine.execute(select([country.c.name, country.c.surface_area]).where(country.c.surface_area > 10000000)).fetchall()
 ```
 
-To verify that PINQ is actually cross-compiling the python to SQL, and not simply requesting everything and performing the manipulation locally, we can use the `sql%` macro to perform the lifting of the query without executing it:
+To verify that PINQ is actually cross-compiling the python to SQL, and not simply requesting everything and performing the manipulation locally, we can use the `sql` macro to perform the lifting of the query without executing it:
 
 ```python
-query_string = sql%((x.name, x.surface_area) for x in db.country if x.surface_area > 10000000)
+query_string = sql((x.name, x.surface_area) for x in db.country if x.surface_area > 10000000)
 print type(query_string)
 # <class 'sqlalchemy.sql.expression.Select'>
 print query_string
@@ -945,7 +948,7 @@ Already we are bumping into edge cases: the `db.country` in the nested query is 
 In the equivalent PINQ code, the scoping of which `db.country` you are referring to is much more explicit, and in general the semantics are identical to a typical python comprehension:
 
 ```python
-query = sql%(
+query = sql(
     x.name for x in db.country
     if x.gnp / x.population > (
         y.gnp / y.population for y in db.country
@@ -989,7 +992,7 @@ Although PINQ does not support the vast capabilities of the SQL language, it sup
 
 ```python
 # The number of cities in all of Asia
-query = sql%(
+query = sql(
     func.count(t.name)
     for c in db.country
     for t in db.city
@@ -1011,7 +1014,7 @@ As well as `ORDER BY`, with `LIMIT` and `OFFSET`s:
 
 ```python
 # The top 10 largest countries in the world by population
-query = sql%(
+query = sql(
     c.name for c in db.country
 ).order_by(c.population.desc()).limit(10)
 
@@ -1044,22 +1047,22 @@ Quick Lambdas
 -------------
 ```python
 >>> from macropy.macros.quicklambda import macros, f, _
->>> map(f%(_ + 1), [1, 2, 3])
+>>> map(f(_ + 1), [1, 2, 3])
 [2, 3, 4]
->>> reduce(f%(_ + _), [1, 2, 3])
+>>> reduce(f(_ + _), [1, 2, 3])
 6
 ```
 
 Macropy provides a syntax for lambda expressions similar to Scala's [anonymous functions](http://www.codecommit.com/blog/scala/quick-explanation-of-scalas-syntax). Essentially, the transformation is:
 
 ```python
-f%(_ + _) -> lambda a, b: a + b
+f(_ + _) -> lambda a, b: a + b
 ```
 
 where the underscores get replaced by identifiers, which are then set to be the parameters of the enclosing `lambda`. This works too:
 
 ```python
->>> map(f%_.split(' ')[0], ["i am cow", "hear me moo"])
+>>> map(f(_.split(' ')[0]), ["i am cow", "hear me moo"])
 ['i', 'hear']
 ```
 
@@ -1067,7 +1070,7 @@ Quick Lambdas can be also used as a concise, lightweight, more-readable substitu
 
 ```python
 >>> from macropy.macros.quicklambda import macros, f
->>> basetwo = f%int(_, base=2)
+>>> basetwo = f(int(_, base=2))
 >>> basetwo('10010')
 18
 ```
@@ -1085,7 +1088,7 @@ Quick Lambdas can also be used entirely without the `_` placeholders, in which c
 
 ```python
 >>> from random import random
->>> thunk = f%random()
+>>> thunk = f(random())
 >>> print thunk()
 0.347790429588
 >>> print thunk()
@@ -1103,10 +1106,10 @@ from macropy.macros.quicklambda import macros, f
 def reduce_chain(chain):
     chain = list(reversed(chain))
     o_dict = {
-        "+": f%(_+_),
-        "-": f%(_-_),
-        "*": f%(_*_),
-        "/": f%(_/_),
+        "+": f(_+_),
+        "-": f(_-_),
+        "*": f(_*_),
+        "/": f(_/_),
     }
     while len(chain) > 1:
         a, [o, b] = chain.pop(), chain.pop()
@@ -1120,7 +1123,7 @@ Op      <- "+" / "-" / "*" / "/"
 Expr <- Value (Op Value)*
 """
 with peg:
-    value = '[0-9]+'.r // int | ('(', expr, ')') // (f%_[1])
+    value = '[0-9]+'.r // int | ('(', expr, ')') // f(_[1])
     op = '+' | '-' | '*' | '/'
     expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
 
@@ -1274,7 +1277,7 @@ with peg:
     false = 'false' >> False
     null = 'null' >> None
 
-    number = (minus.opt, integral, fractional.opt, exponent.opt) // (f%float("".join(_)))
+    number = (minus.opt, integral, fractional.opt, exponent.opt) // f(float("".join(_)))
     minus = '-'
     integral = '0' | '[1-9][0-9]*'.r
     fractional = ('.', '[0-9]+'.r) // "".join
@@ -1331,7 +1334,7 @@ JS Snippets
 ```python
 from macropy.macros2.javascript import macros, pyjs
 
-code, javascript = pyjs%(lambda x: x > 5 and x % 2 == 0)
+code, javascript = pyjs(lambda x: x > 5 and x % 2 == 0)
 
 print code
 # <function <lambda> at 0x0000000003515C18>
@@ -1358,32 +1361,32 @@ JS Snippets is a macro that allows you to mark out sections of code that will be
 
 Nonetheless, as the above example demonstrates, the translation is entirely acceptable for simple logic. Furthermore, with macros, marking out snippets of Python code to be translated is as simple as prepending either:
 
-- `js%`, if you only want to translate the enclosed python expression into Javascript
-- `pyjs%`, if you want both the original expression as well as the translated Javascript (as in the example above). This is given to you as a tuple.
+- `js`, if you only want to translate the enclosed python expression into Javascript
+- `pyjs`, if you want both the original expression as well as the translated Javascript (as in the example above). This is given to you as a tuple.
 
-`pyjs%` is particularly interesting, because it brings us closer to the holy grail of HTML form validation: having validation run on both client and server, but still only be expressed once in the code base. With `pyjs%`, it is trivial to fork an expression (such as the conditional function shown above) into both Python and Javascript representations. Rather than using a [menagerie](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Forms/Data_form_validation?redirectlocale=en-US&redirectslug=HTML%2FForms%2FData_form_validation) of [ad-hoc](http://docs.jquery.com/Plugins/validation) [mini-DSLs](https://code.google.com/p/validation-js/wiki/MainDocumentation), this lets you write your validation logic in plain Python.
+`pyjs` is particularly interesting, because it brings us closer to the holy grail of HTML form validation: having validation run on both client and server, but still only be expressed once in the code base. With `pyjs`, it is trivial to fork an expression (such as the conditional function shown above) into both Python and Javascript representations. Rather than using a [menagerie](https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Forms/Data_form_validation?redirectlocale=en-US&redirectslug=HTML%2FForms%2FData_form_validation) of [ad-hoc](http://docs.jquery.com/Plugins/validation) [mini-DSLs](https://code.google.com/p/validation-js/wiki/MainDocumentation), this lets you write your validation logic in plain Python.
 
 As mentioned earlier, JS Snippets isn't very robust, and the translation is full of bugs:
 
 ```python
 # these work
-assert self.exec_js(js%10) == 10
-assert self.exec_js(js%"i am a cow") == "i am a cow"
+assert self.exec_js(js(10)) == 10
+assert self.exec_js(js("i am a cow")) == "i am a cow"
 
 # these literals are buggy, and it seems to be PJs' fault
 # ??? all the results seem to turn into strings ???
-assert self.exec_js(js%3.14) == 3.14 # Fails
-assert self.exec_js(js%[1, 2, 'lol']) == [1, 2, 'lol'] # Fails
-assert self.exec_js(js%{"moo": 2, "cow": 1}) == {"moo": 2, "cow": 1} # Fails
+assert self.exec_js(js(3.14)) == 3.14 # Fails
+assert self.exec_js(js([1, 2, 'lol'])) == [1, 2, 'lol'] # Fails
+assert self.exec_js(js({"moo": 2, "cow": 1})) == {"moo": 2, "cow": 1} # Fails
 
 # set literals aren't supported so this throws an exception at macro-expansion time
-# self.exec_js(js%{1, 2, 'lol'})
+# self.exec_js(js({1, 2, 'lol'}))
 ```
 
 Even as such basic things fail, other, more complex operations work flawlessly:
 
 ```python
-script = js%sum([x for x in range(10) if x > 5])
+script = js(sum([x for x in range(10) if x > 5]))
 print script
 # "$b.sum($b.listcomp([$b.range(10)], function (x) {return x;}, [function (x) { return $b.do_ops(x, '>', 5); }]))"
 print self.exec_js(script)
@@ -1393,7 +1396,7 @@ print self.exec_js(script)
 Here's another, less trivial use case: cross compiling a function that searchs for the [prime numbers](http://en.wikipedia.org/wiki/Prime_number):
 
 ```python
-code, javascript = pyjs%(lambda n: [
+code, javascript = pyjs(lambda n: [
     x for x in range(n)
     if 0 == len([
         y for y in range(2, x-2)
@@ -1415,7 +1418,7 @@ Nonetheless, JS Snippets demonstrate the promise of being able to cross-compile 
 Detailed Guide
 ==============
 
-As mentioned earlier, MacroPy uses PEP 302 for much of its functionality. It looks out in particular for the syntactic forms (`import macros, ...`, `my_macro%...`, `with my_macro:`, `@my_macro`) to decide which parts of the AST need to be expanded by which macros. MacroPy uses the inbuilt Python infrastructure for [parsing the source](http://docs.python.org/2/library/ast.html#ast.parse) and [representing it as an AST](http://docs.python.org/2/library/ast.html#abstract-grammar). You should familiarize yourself with the classes which make up the Python AST, since you will be interacting with them a great deal while writing macros.
+As mentioned earlier, MacroPy uses PEP 302 for much of its functionality. It looks out in particular for the syntactic forms (`import macros, ...`, `my_macro(...)`, `my_macro%...`, `with my_macro:`, `@my_macro`) to decide which parts of the AST need to be expanded by which macros. MacroPy uses the inbuilt Python infrastructure for [parsing the source](http://docs.python.org/2/library/ast.html#ast.parse) and [representing it as an AST](http://docs.python.org/2/library/ast.html#abstract-grammar). You should familiarize yourself with the classes which make up the Python AST, since you will be interacting with them a great deal while writing macros.
 
 Once you have an AST, there are a few possible forms that code can take:
 
@@ -1460,7 +1463,7 @@ import target
 # target.py
 from macro_module import macros, expand
 
-print expand%(1 + 2)
+print expand(1 + 2)
 
 # macro_module.py
 from macropy.core.macros import *
@@ -1487,7 +1490,7 @@ is necessary to declare what macros you want to use (`expand`), and which module
 ```python
 from macro_module import macros, expand as my_alias
 
-print my_alias%(1 + 2)
+print my_alias(1 + 2)
 ```
 
 As you would expect. Import-alls like `from macro_module import *` do **not** work.
@@ -1574,7 +1577,8 @@ Because now `target.py` is printing out a lambda function. If we modify `target.
 # target.py
 from macro_module import macros, expand
 
-print (expand%(1 + 2))(5)
+func = expand(1 + 2)
+print func(5)
 ```
 
 It prints `25`, as you would expect.
@@ -1590,12 +1594,12 @@ macros = Macros()
 
 @macros.expr()
 def expand(tree, **kw):
-    return q%(lambda x: x * (ast%tree) + 10)
+    return q(lambda x: x * ast(tree) + 10)
 ```
 
-the `q%(..)` syntax means that the section following it is quoted as an AST, while the unquote `ast%` syntax means to place the *value* of `tree` into that part of the quoted AST, rather than simply the node `Name("tree")`. Running `run.py`, this also prints `25`. See [examples/quasiquote](examples/quasiquote) for the self-contained code for this example.
+the `q(..)` syntax means that the section following it is quoted as an AST, while the unquote `ast()` syntax means to place the *value* of `tree` into that part of the quoted AST, rather than simply the node `Name("tree")`. Running `run.py`, this also prints `25`. See [examples/quasiquote](examples/quasiquote) for the self-contained code for this example.
 
-Another unquote `u%` allow us to dynamically include the value `10` in the AST at run time:
+Another unquote `u` allow us to dynamically include the value `10` in the AST at run time:
 
 ```python
 # macro_module.py
@@ -1607,12 +1611,12 @@ macros = Macros()
 @macros.expr()
 def expand(tree, **kw):
     addition = 10
-    return q%(lambda x: x * (ast%tree) + u%addition)
+    return q(lambda x: x * ast(tree) + u(addition))
 ```
 
-This will insert the a literal representing the value of `addition` into the position of the `u%addition`, in this case `10`. This *also* prints 25. For a more detailed description of how quoting and unquoting works, and what more you can do with it, check out the documentation for [Quaasiquotes](#quasiquotes).
+This will insert the a literal representing the value of `addition` into the position of the `u(addition)`, in this case `10`. This *also* prints 25. For a more detailed description of how quoting and unquoting works, and what more you can do with it, check out the documentation for [Quaasiquotes](#quasiquotes).
 
-Apart from using the `%u` and `%ast` unquotes to put things into the AST, good old fashioned assignment works too:
+Apart from using the `u` and `ast` unquotes to put things into the AST, good old fashioned assignment works too:
 
 ```python
 # macro_module.py
@@ -1623,7 +1627,7 @@ macros = Macros()
 
 @macros.expr()
 def expand(tree, **kw):
-    newtree = q%(lambda x: x * None + 10)
+    newtree = q(lambda x: x * None + 10)
     newtree.body.left.right = tree          # replace the None in the AST with the given tree
     return newtree
 ```
@@ -1639,7 +1643,7 @@ Now that you know how to make basic macros, I will walk you through the implemen
 If we look at what [quicklambda](#quick-lambdas) does, we see want to take code which looks like this:
 
 ```python
-f%(_ + (1 * _))
+f(_ + (1 * _))
 ```
 
 and turn it into:
@@ -1715,7 +1719,7 @@ from macro_module import macros, f
 from macropy.macros.tracing import macros, show_expanded
 
 with show_expanded:
-    my_func = f%(_ + (1 * _))
+    my_func = f(_ + (1 * _))
 # my_func = (arg0 + (1 * arg1))
 ```
 
@@ -1783,7 +1787,7 @@ def f(tree, **kw):
 
     tree, used_names = underscore_search.recurse_real(tree)
 
-    new_tree = q%(lambda: ast%tree)
+    new_tree = q(lambda: ast(tree))
     new_tree.args.args = [Name(id = x) for x in used_names]
     print unparse_ast(new_tree) # (lambda arg0, arg1: (arg0 + (1 * arg1)))
     return new_tree
@@ -1795,7 +1799,7 @@ And we're done! The printed `new_tree` looks exactly like what we want. The orig
 # target.py
 from macro_module import macros, f
 
-print f%(_ + (1 * _))
+print f(_ + (1 * _))
 ```
 
 spits out 
@@ -1810,7 +1814,7 @@ Showing we have successfully replaced all the underscores with variables and wra
 # target.py
 from macro_module import macros, f
 
-my_func = f%(_ + (1 * _))
+my_func = f(_ + (1 * _))
 print my_func(10, 20) # 30
 ```
 
@@ -1818,9 +1822,9 @@ It works! We can also use it in some less trivial cases, just to verify that it 
 
 ```python
 # target.py
-print reduce(f%(_ + _), [1, 2, 3])  # 6
-print filter(f%(_ % 2 != 0), [1, 2, 3])  # [1, 3]
-print map(f%(_  * 10), [1, 2, 3])  # [10, 20, 30]
+print reduce(f(_ + _), [1, 2, 3])  # 6
+print filter(f(_ % 2 != 0), [1, 2, 3])  # [1, 3]
+print map(f(_  * 10), [1, 2, 3])  # [10, 20, 30]
 ```
 
 Mission Accomplished! You can see the completed self-contained example in [examples/full](examples/full). This macro is also defined in our library in [macropy/macros/quicklambda.py](macropy/macros/quicklambda.py), along with a suite of [unit tests](macropy/macros/quicklambda_test.py). It is also used throughout the implementation of the other macros.
@@ -1852,7 +1856,7 @@ These additional arguments given to the macro as keyword arguments. The macro ca
 ###`tree`
 This is, the AST provided to the macro, which it can transform/replace. It contains the code captured by the macro, which varies depending on the macro used:
 
-- The right hand side of an **expression macro**: `my_macro%(A + B)` captures the tree for `(A + B)`.
+- The right hand side of an **expression macro**: `my_macro(A + B)` captures the tree for `(A + B)`.
 - The body of a **block macro**:
 
 ```python
@@ -1886,7 +1890,7 @@ class Cls():
 Macros can take addition arguments when invoked, apart from the primary tree that it receives. For example a macro can be invoked as follows:
 
 ```python
-my_macro(a)%(...)
+my_macro(a)(...)
 
 with my_macro(a):
     ...
@@ -1944,7 +1948,7 @@ from macropy.core.lift import macros, q, name, ast
 
 a = 10
 b = 2
-tree = q%(1 + u%(a + b))
+tree = q(1 + u(a + b))
 print ast.dump(tree)
 #BinOp(Num(1), Add(), Num(12))
 ```
@@ -1961,16 +1965,16 @@ Without quasiquotes, you would have to build it up by hand:
 tree = BinOp(Num(1), Add(), Num(2))
 ```
 
-But with quasiquotes, you can simply write the code `(1 + 2)`, quoting it with `q%` to lift it from an expression (to be evaluated) to a tree (to be returned):
+But with quasiquotes, you can simply write the code `(1 + 2)`, quoting it with `q` to lift it from an expression (to be evaluated) to a tree (to be returned):
 
 ```python
-tree = q%(1 + 2)
+tree = q(1 + 2)
 ```
 
-Furthermore, quasiquotes allow you to _unquote_ things: if you wish to insert the **value** of an expression into the tree, rather than the **tree** making up the expression, you unquote it using `u%`. In the example above:
+Furthermore, quasiquotes allow you to _unquote_ things: if you wish to insert the **value** of an expression into the tree, rather than the **tree** making up the expression, you unquote it using `u`. In the example above:
 
 ```python
-tree = q%(1 + u%(a + b))
+tree = q(1 + u(a + b))
 print ast.dump(tree)
 #BinOp(Num(1), Add(), Num(12))
 ```
@@ -1982,24 +1986,24 @@ Apart from interpolating values in the AST, you can also interpolate:
 ###Other ASTs
 
 ```python
-a = q%(1 + 2)
-b = q%(ast%a + 3)
+a = q(1 + 2)
+b = q(ast(a) + 3)
 print ast.dump(b)
 #BinOp(BinOp(Num(1), Add(), Num(2)), Add(), Num(3))
 ```
 
-This is necessary to join together ASTs directly, without converting the interpolated AST into its `repr`. If we had used the `u%` interpolator, it fails with an error
+This is necessary to join together ASTs directly, without converting the interpolated AST into its `repr`. If we had used the `u` interpolator, it fails with an error
 
 ###Names
 ```python
 n = "x"
 x = 1
-y = q%(name%n + name%n)
+y = q(name(n) + name(n))
 print ast.dump(y)
 #BinOp(Name('x'), Add(), Name('x'))
 ```
 
-This is convenient in order to interpolate a string variable as an identifier, rather than interpolating it as a string literal. In this case, I want the syntax tree for the expression `x + x`, and not `'x' + 'x'`, so I use the `name%` macro to unquote it.
+This is convenient in order to interpolate a string variable as an identifier, rather than interpolating it as a string literal. In this case, I want the syntax tree for the expression `x + x`, and not `'x' + 'x'`, so I use the `name` macro to unquote it.
 
 Overall, quasiquotes are an incredibly useful tool for assembling or manipulating the ASTs, and are used in the implementation in all of the following examples. See the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for short, practical examples of their usage.
 
@@ -2120,24 +2124,24 @@ Macros are expanded in an outside-in order, with macros higher up in the AST bei
 ```python
 >>> from macropy.macros.quicklambda import macros, f
 >>> from macropy.macros2.tracing import macros, trace
->>> trace%(map(f%(_ + 1), [1, 2, 3]))
-(f % (_ + 1)) -> <function <lambda> at 0x00000000021F9128>
+>>> trace(map(f(_ + 1), [1, 2, 3]))
+(f(_ + 1)) -> <function <lambda> at 0x00000000021F9128>
 (_ + 1) -> 2
 (_ + 1) -> 3
 (_ + 1) -> 4
-map((f % (_ + 1)), [1, 2, 3]) -> [2, 3, 4]
+map((f(_ + 1)), [1, 2, 3]) -> [2, 3, 4]
 [2, 3, 4]
 >>>
 ```
 
-As you can see, the `trace` macro is expanded first, and hence the when it prints out the expressions being executed, we see the un-expanded `(f%(_ + 1))` rather than the expanded `(lammbda arg0: arg0 + 1)`. After the tracing is inserted, the `f%` is finally expanded into a `lambda` and the final output of this expression is `[2, 3, 4]`. This decision is arbitrary.
+As you can see, the `trace` macro is expanded first, and hence the when it prints out the expressions being executed, we see the un-expanded `(f(_ + 1))` rather than the expanded `(lammbda arg0: arg0 + 1)`. After the tracing is inserted, the `f` is finally expanded into a `lambda` and the final output of this expression is `[2, 3, 4]`. This decision is arbitrary.
 
 Hygiene
 -------
 [Hygienic](http://en.wikipedia.org/wiki/Hygienic_macro) macros are macros which will not accidentally [shadow](http://en.wikipedia.org/wiki/Variable_shadowing) an identifier, or have the identifiers they introduce shadowed by user code. For example, the [quicklambda](#quick-lambdas) macro takes this:
 
 ```python
->>> func = f%(_ + 1)
+>>> func = f(_ + 1)
 >>> func(1)
 2
 ```
@@ -2154,12 +2158,12 @@ However, if we introduce a variable called `arg0` in the enclosing scope:
 
 ```python
 >>> arg0 = 10
->>> func = f%(_ + arg0)
+>>> func = f(_ + arg0)
 >>> func(1)
 2
 ```
 
-It does not behave as we may expect; we probably want it to produce `11`. this is because the `arg0` identifier introduced by the `f%` macro shadows the `arg0` in our enclosing scope. These bugs could be hard to find, since renaming variables could make them appear or disappear.
+It does not behave as we may expect; we probably want it to produce `11`. this is because the `arg0` identifier introduced by the `f` macro shadows the `arg0` in our enclosing scope. These bugs could be hard to find, since renaming variables could make them appear or disappear.
 
 ###gen_sym
 
@@ -2253,7 +2257,7 @@ This may seem counter-intuitive, but just because you have the ability to do AST
 For example, let us look at the [Parser Combinator](#parser-combinators) macro, shown in the examples above. You may look at the syntax:
 
 ```python
-value = '[0-9]+'.r // int | ('(', expr, ')') // (f%_[1])
+value = '[0-9]+'.r // int | ('(', expr, ')') // f(_[1])
 op = '+' | '-' | '*' | '/'
 expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
 ```
