@@ -31,7 +31,7 @@ MacroPy has been used to implement features such as:
 - [Parser Combinators](#parser-combinators), inspired by Scala's
 - [JS Snippets](#js-snippets), cross compiling snippets of Python into equivalent Javascript
 
-The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through [creating a simple macro](#writing-your-first-macro), with [self-contained examples](examples) and [reference documentation](#reference) for
+The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through [creating a simple macro](#writing-your-first-macro), with [self-contained examples](docs/examples) and [reference documentation](#reference) for
 
 - [Arguments](#arguments), what a macro is given to do its work
 - [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
@@ -146,9 +146,9 @@ This eample demonstrates the usage of the [Tracing](#tracing) macro, which helps
 
 Examples
 ========
-Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) and [macropy/experimental](macropy/experimental) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quick_lambda.py) macros for some small (<30 lines), self contained examples. Their [unit](macropy/macros/string_interp_test.py) [tests](macropy/macros/quick_lambda_test.py) demonstrate how these macros are used.
+Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy](macropy) and [macropy/experimental](macropy/experimental) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/string_interp.py) or [Quick Lambda](macropy/quick_lambda.py) macros for some small (<30 lines), self contained examples. Their [unit](macropy/test/string_interp.py) [tests](macropy/test/quick_lambda.py) demonstrate how these macros are used.
 
-Note that all of these examples are **macros**; that is, they hold no special place in MacroPy. They are placed in [macropy/macros](macropy/macros) and [macropy/experimental](macropy/experimental), separate from the Macropy core in [macropy/core](macropy/core). All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 100 lines of code.
+Note that all of these examples are **macros**; that is, they hold no special place in MacroPy. They are placed in [macropy](macropy) and [macropy/experimental](macropy/experimental), separate from the Macropy core in [macropy/core](macropy/core). All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 100 lines of code.
 
 Feel free to open up a REPL and try out the examples in the console; simply `import macropy.core.console`, and most of the examples should work right off the bat when pasted in!
 
@@ -768,7 +768,7 @@ def log(x):
 
 The tracer uses whatever `log()` function it finds, falling back on printing only if none exists. Instead of printing, this `log()` function appends the traces to a list, and is used in our unit tests.
 
-We think that tracing is an extremely useful macro. For debugging what is happening, for teaching newbies how evaluation of expressions works, or for a myriad of other purposes, it is a powerful tool. The fact that it can be written as a [<100 line macro](macropy.tracing.py) is a bonus.
+We think that tracing is an extremely useful macro. For debugging what is happening, for teaching newbies how evaluation of expressions works, or for a myriad of other purposes, it is a powerful tool. The fact that it can be written as a [<100 line macro](macropy/tracing.py) is a bonus.
 
 ###Smart Asserts
 ```python
@@ -923,8 +923,8 @@ query_string = sql((x.name, x.surface_area) for x in db.country if x.surface_are
 print type(query_string)
 # <class 'sqlalchemy.sql.expression.Select'>
 print query_string
-# SELECT country_1.name, country_1.surface_area 
-# FROM country AS country_1 
+# SELECT country_1.name, country_1.surface_area
+# FROM country AS country_1
 # WHERE country_1.surface_area > ?
 ```
 
@@ -1042,7 +1042,7 @@ for line in res:
 # (u'Nigeria',)
 ```
 
-In general, apart from the translation of generator expressions (and their guards) into `SELECT` an `WHERE` clauses, the rest of the functionality of SQL (like the `.order_by()`, `.limit()`, etc. functions shown above) is accessed as in the [SQLAlchemy Expression Language](http://docs.sqlalchemy.org/ru/latest/core/tutorial.html#ordering-grouping-limiting-offset-ing). See the [unit tests](https://github.com/lihaoyi/macropy/blob/master/macropy/experimental/linq_test.py) for a fuller set of examples of what PINQ can do, or browse the SQLAlchemy docs mentioned earlier.
+In general, apart from the translation of generator expressions (and their guards) into `SELECT` an `WHERE` clauses, the rest of the functionality of SQL (like the `.order_by()`, `.limit()`, etc. functions shown above) is accessed as in the [SQLAlchemy Expression Language](http://docs.sqlalchemy.org/ru/latest/core/tutorial.html#ordering-grouping-limiting-offset-ing). See the [unit tests](https://github.com/lihaoyi/macropy/blob/master/macropy/experimental/test/linq.py) for a fuller set of examples of what PINQ can do, or browse the SQLAlchemy docs mentioned earlier.
 
 PINQ demonstrates how easy it is to use macros to lift python snippets into an AST and cross-compile it into another language, and how nice the syntax and semantics can be for these embedded DSLs. PINQ's entire implementation comprises about [100 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/experimental/linq.py), which really isn't much considering how much it does for you!
 
@@ -1098,7 +1098,7 @@ Quick Lambdas can also be used entirely without the `_` placeholders, in which c
 0.817928092273
 ```
 
-This cuts out reduces the number of characters needed to make a thunk from 7 to 2, making it much easier to use thunks to do things like emulating [by name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html). The implementation of quicklambda is about [30 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/macros/quick_lambda.py), and is worth a look if you want to see how a simple (but extremely useful!) macro can be written.
+This cuts out reduces the number of characters needed to make a thunk from 7 to 2, making it much easier to use thunks to do things like emulating [by name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html). The implementation of quicklambda is about [30 lines of code](macropy/quick_lambda.py), and is worth a look if you want to see how a simple (but extremely useful!) macro can be written.
 
 Parser Combinators
 ------------------
@@ -1412,7 +1412,7 @@ print self.exec_js_func(javascript, 20)
 # [0, 1, 2, 3, 4, 5, 7, 11, 13, 17, 19]
 ```
 
-These examples are all taken from the [unit tests](macropy/experimental/javascript_test.py).
+These examples are all taken from the [unit tests](macropy/experimental/test/javascript.py).
 
 Like [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), JS Snippets demonstrates the feasibility, the convenience of being able to mark out sections of code using macros, to be cross-compiled into another language and run remotely. Unlike PINQ, which is built on top of the stable, battle-tested and widely used [SQLAlchemy](http://www.sqlalchemy.org/) library, JS Snippets is built on top of an relatively unknown and untested Python to Javascript cross-compiler, making it far from production ready.
 
@@ -1437,7 +1437,7 @@ Except for `eval`, these are all functions defined in the [macropy/core/__init__
 
 Writing Your First Macro
 ------------------------
-Now, we will go through what it takes to write a simple macro, with some [self-contained examples](examples). To begin, we need three files
+Now, we will go through what it takes to write a simple macro, with some [self-contained examples](docs/examples). To begin, we need three files
 
 ```python
 # run.py
@@ -1805,7 +1805,7 @@ from macro_module import macros, f
 print f(_ + (1 * _))
 ```
 
-spits out 
+spits out
 
 ```
 <function <lambda> at 0x000000000203D198>
@@ -1830,7 +1830,7 @@ print filter(f(_ % 2 != 0), [1, 2, 3])  # [1, 3]
 print map(f(_  * 10), [1, 2, 3])  # [10, 20, 30]
 ```
 
-Mission Accomplished! You can see the completed self-contained example in [docs/examples/full](docs/examples/full). This macro is also defined in our library in [macropy/macros/quick_lambda.py](macropy/macros/quick_lambda.py), along with a suite of [unit tests](macropy/macros/quick_lambda_test.py). It is also used throughout the implementation of the other macros.
+Mission Accomplished! You can see the completed self-contained example in [docs/examples/full](docs/examples/full). This macro is also defined in our library in [macropy/quick_lambda.py](macropy/quick_lambda.py), along with a suite of [unit tests](macropy/test/quick_lambda.py). It is also used throughout the implementation of the other macros.
 
 Reference
 =========
@@ -1970,7 +1970,7 @@ print ast.dump(tree)
 #BinOp(Num(1), Add(), Num(12))
 ```
 
-Quasiquotes are the foundation for many macro systems, such as that found in [LISP](http://en.wikipedia.org/wiki/LISP). Quasiquotes save you from having to manually construct code trees from the nodes they are made of. For example, if you want the code tree for 
+Quasiquotes are the foundation for many macro systems, such as that found in [LISP](http://en.wikipedia.org/wiki/LISP). Quasiquotes save you from having to manually construct code trees from the nodes they are made of. For example, if you want the code tree for
 
 ```python
 (1 + 2)
@@ -2022,7 +2022,7 @@ print ast.dump(y)
 
 This is convenient in order to interpolate a string variable as an identifier, rather than interpolating it as a string literal. In this case, I want the syntax tree for the expression `x + x`, and not `'x' + 'x'`, so I use the `name` macro to unquote it.
 
-Overall, quasiquotes are an incredibly useful tool for assembling or manipulating the ASTs, and are used in the implementation in all of the following examples. See the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quick_lambda.py) macros for short, practical examples of their usage.
+Overall, quasiquotes are an incredibly useful tool for assembling or manipulating the ASTs, and are used in the implementation in all of the following examples. See the [String Interpolation](macropy/string_interp.py) or [Quick Lambda](macropy/quick_lambda.py) macros for short, practical examples of their usage.
 
 Walkers
 -------
@@ -2128,7 +2128,7 @@ def transform(tree, ctx, set_ctx, collect, stop, **kw):
 new_tree, collected = transform.recurse_real(old_tree, initial_ctx)
 ```
 
-This provides it a large amount of versatility, and lets you use the `Walker` to recursively traverse and transform Python ASTs in interesting ways. If you inspect the source code of the macros in the [macropy/macros](macropy/macros) and [macropy/experimental](macropy/experimental) folders, you will see most of them make extensive use of `Walker`s in order to concisely perform their transformations. If you find yourself needing a recursive traversal, you should think hard about why you cannot use a Walker before writing the recursion yourself.
+This provides it a large amount of versatility, and lets you use the `Walker` to recursively traverse and transform Python ASTs in interesting ways. If you inspect the source code of the macros in the [macropy](macropy) and [macropy/experimental](macropy/experimental) folders, you will see most of them make extensive use of `Walker`s in order to concisely perform their transformations. If you find yourself needing a recursive traversal, you should think hard about why you cannot use a Walker before writing the recursion yourself.
 
 Macro Subtleties
 ================
@@ -2194,7 +2194,7 @@ def f(tree, gen_sym):
     ... use new_name ...
 ```
 
-`gen_sym` is a function which produce a new identifier (as a string) every time it is called. This is guaranteed to produce a identifier that does not appear anywhere in the origial source code, or have been produced by an earlier call to `gen_sym`. You can thus use these identifiers without worrying about shadowing an identifier someone was using; see the source for the [quicklambda](blob/master/macropy/macros/quick_lambda.py) macro to see it in action.
+`gen_sym` is a function which produce a new identifier (as a string) every time it is called. This is guaranteed to produce a identifier that does not appear anywhere in the origial source code, or have been produced by an earlier call to `gen_sym`. You can thus use these identifiers without worrying about shadowing an identifier someone was using; see the source for the [quicklambda](macropy/quick_lambda.py) macro to see it in action.
 
 ###Caveats
 
