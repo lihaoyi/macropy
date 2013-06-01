@@ -864,7 +864,7 @@ Pretty neat!
 
 ---------------------------------
 
-If you want to write your own custom logging, tracing or debugging macros, take a look at the [100 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy.tracing.py) that implements all the functionality shown above.
+If you want to write your own custom logging, tracing or debugging macros, take a look at the [100 lines of code](macropy/tracing.py) that implements all the functionality shown above.
 
 
 
