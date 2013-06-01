@@ -9,17 +9,27 @@ def name(tree):
     """Stub to make the IDE happy"""
 
 
+def extract(tree):
+    if isinstance(tree, BinOp) and type(tree.left) is Name and type(tree.op) is Mod:
+        return tree.left.id, tree.right
+    if isinstance(tree, Call) and type(tree.func) is Name and len(tree.args) == 1:
+        return tree.func.id, tree.args[0]
 @Walker
 def _unquote_search(tree, **kw):
-    if isinstance(tree, BinOp) and type(tree.left) is Name and type(tree.op) is Mod:
-        if 'u' == tree.left.id:
-            return Literal(Call(Name(id="ast_repr"), [tree.right], [], None, None))
-        elif 'name' == tree.left.id:
-            return Literal(Call(Name(id="Name"), [], [keyword("id", tree.right)], None, None))
-        elif 'ast' == tree.left.id:
-            return Literal(tree.right)
-        elif 'ast_list' == tree.left.id:
-            return Literal(Call(Name(id="List"), [], [keyword("elts", tree.right)], None, None))
+
+    e = extract(tree)
+
+    if e:
+        func, right = e
+
+        if 'u' == func:
+            return Literal(Call(Name(id="ast_repr"), [right], [], None, None))
+        elif 'name' == func:
+            return Literal(Call(Name(id="Name"), [], [keyword("id", right)], None, None))
+        elif 'ast' == func:
+            return Literal(right)
+        elif 'ast_list' == func:
+            return Literal(Call(Name(id="List"), [], [keyword("elts", right)], None, None))
 
 
 @macros.expr()

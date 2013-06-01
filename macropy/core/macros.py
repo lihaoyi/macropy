@@ -165,7 +165,6 @@ _transforms = {
 }
 
 def _src_for(tree, src, indexes, line_lengths):
-
     all_child_pos = sorted(indexer.recurse_real(tree)[1])
     start_index = linear_index(line_lengths(), *all_child_pos[0])
 
@@ -184,6 +183,7 @@ def _src_for(tree, src, indexes, line_lengths):
 
         if isinstance(tree, list):
             prelim = prelim.replace("\n" + " " * tree[0].col_offset, "\n")
+
         try:
             if isinstance(tree, expr):
                 x = "(" + prelim + ")"
@@ -268,6 +268,13 @@ def _expand_ast(tree, src, bindings):
 
             if new_tree:
                 assert isinstance(new_tree, list), type(new_tree)
+                return macro_expand(new_tree)
+
+        if isinstance(tree, Call) and len(tree.args) == 1:
+            new_tree = expand_if_in_registry(tree.func, tree.args[0], [], expr_registry)
+
+            if new_tree:
+                assert isinstance(new_tree, expr), type(new_tree)
                 return macro_expand(new_tree)
 
         if isinstance(tree, BinOp) and type(tree.op) is Mod:

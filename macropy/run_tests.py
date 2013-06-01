@@ -10,17 +10,14 @@ def run(x):
 from macropy import core_tests
 run(core_tests.Tests)
 
-from macropy.core import walkers_test
-run(walkers_test.Tests)
-
 from macropy.core import lift_test
 run(lift_test.Tests)
 
+from macropy.core import walkers_test
+run(walkers_test.Tests)
+
 from macropy.macros import string_interp_test
 run(string_interp_test.Tests)
-
-from macropy.macros import tracing_test
-run(tracing_test.Tests)
 
 from macropy.macros import quicklambda_test
 run(quicklambda_test.Tests)

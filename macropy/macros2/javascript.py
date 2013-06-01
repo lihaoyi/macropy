@@ -23,4 +23,4 @@ def js(tree, **kw):
 @macros.expr()
 def pyjs(tree, **kw):
     javascript = pjs.converter.Converter("").convert_node(tree, Scope())
-    return q%(ast%tree, u%javascript)
+    return q((ast(tree), u(javascript)))

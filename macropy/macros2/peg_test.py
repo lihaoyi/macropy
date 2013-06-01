@@ -4,50 +4,50 @@ from macropy.macros.tracing import macros, require
 from macropy.macros.quicklambda import macros, f, _
 class Tests(unittest.TestCase):
     def test_basic(self):
-        parse1 = peg%"Hello World"
+        parse1 = peg("Hello World")
         with require:
             parse1.parse_all("Hello World")[0] == 'Hello World'
             parse1.parse_all("Hello, World") is None
             
-        parse2 = peg%("Hello World", (".").r)
+        parse2 = peg(("Hello World", (".").r))
         with require:
             parse2.parse_all("Hello World") is None
             parse2.parse_all("Hello World1")[0] == ['Hello World', '1']
             parse2.parse_all("Hello World ")[0] == ['Hello World', ' ']
 
     def test_operators(self):
-        parse1 = peg%"Hello World"
+        parse1 = peg("Hello World")
 
-        parse2 = peg%(parse1, "!".rep1)
+        parse2 = peg((parse1, "!".rep1))
         with require:
             parse2.parse_all("Hello World!!!")[0] == ['Hello World', ['!', '!', '!']]
             parse2.parse_all("Hello World!")[0] == ['Hello World', ['!']]
             parse2.parse_all("Hello World") is None
 
-        parse3 = peg%(parse1, ("!" | "?"))
+        parse3 = peg((parse1, ("!" | "?")))
         
         with require:
             parse3.parse_all("Hello World!")[0] == ['Hello World', '!']
             parse3.parse_all("Hello World?")[0] == ['Hello World', '?']
             parse3.parse_all("Hello World%") is None
 
-        parse4 = peg%(parse1, "!".rep & "!!!")
+        parse4 = peg((parse1, "!".rep & "!!!"))
         
         with require:
             parse4.parse_all("Hello World!!!")[0] == ['Hello World', ['!', '!', '!']]
             parse4.parse_all("Hello World!!") is None
 
-        parse4 = peg%(parse1, "!".rep & "!!!")
+        parse4 = peg((parse1, "!".rep & "!!!"))
         
         with require:
             parse4.parse_all("Hello World!!!")[0] == ["Hello World", ["!", "!", "!"]]
 
-        parse5 = peg%(parse1, "!".rep & -"!!!")
+        parse5 = peg((parse1, "!".rep & -"!!!"))
         with require:
             parse5.parse_all("Hello World!!")[0] == ["Hello World", ['!', '!']]
             parse5.parse_all("Hello World!!!") is None
 
-        parse6 = peg%(parse1, "!" * 3)
+        parse6 = peg((parse1, "!" * 3))
         with require:
             parse6.parse_all("Hello World!") is None
             parse6.parse_all("Hello World!!") is None
@@ -56,7 +56,7 @@ class Tests(unittest.TestCase):
 
 
     def test_conversion(self):
-        parse1 = peg%(("Hello World", "!".rep1) // (f%_[1]))
+        parse1 = peg((("Hello World", "!".rep1) // f(_[1])))
         
         with require:
             parse1.parse("Hello World!!!")[0] == ['!', '!', '!']
@@ -70,7 +70,7 @@ class Tests(unittest.TestCase):
 
     def test_block(self):
         with peg:
-            parse1 = ("Hello World", "!".rep1) // (f%_[1])
+            parse1 = ("Hello World", "!".rep1) // f(_[1])
             parse2 = parse1 // len
 
         with require:
@@ -130,10 +130,10 @@ class Tests(unittest.TestCase):
         def reduce_chain(chain):
             chain = list(reversed(chain))
             o_dict = {
-                "+": f%(_+_),
-                "-": f%(_-_),
-                "*": f%(_*_),
-                "/": f%(_/_),
+                "+": f(_+_),
+                "-": f(_-_),
+                "*": f(_*_),
+                "/": f(_/_),
             }
             while len(chain) > 1:
                 a, [o, b] = chain.pop(), chain.pop()
@@ -141,7 +141,7 @@ class Tests(unittest.TestCase):
             return chain[0]
 
         with peg:
-            value = '[0-9]+'.r // int | ('(', expr, ')') // (f%_[1])
+            value = '[0-9]+'.r // int | ('(', expr, ')') // (f(_[1]))
             op = '+' | '-' | '*' | '/'
             expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
 
@@ -212,7 +212,7 @@ class Tests(unittest.TestCase):
             false = 'false' >> False
             null = 'null' >> None
 
-            number = (minus.opt, integral, fractional.opt, exponent.opt) // (f%float("".join(_)))
+            number = (minus.opt, integral, fractional.opt, exponent.opt) // f(float("".join(_)))
             minus = '-'
             integral = '0' | '[1-9][0-9]*'.r
             fractional = ('.', '[0-9]+'.r) // "".join

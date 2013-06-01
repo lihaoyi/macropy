@@ -224,14 +224,14 @@ class ClassMatcher(Matcher):
 
 def build_matcher(tree, modified):
     if isinstance(tree, Num):
-        return q%(LiteralMatcher(u%(tree.n)))
+        return q(LiteralMatcher(u(tree.n)))
     if isinstance(tree, Str):
-        return q%(LiteralMatcher(u%(tree.s)))
+        return q(LiteralMatcher(u(tree.s)))
     if isinstance(tree, Name):
         if tree.id in ['True', 'False', 'None']:
-            return q%(LiteralMatcher(ast%(tree)))
+            return q(LiteralMatcher(ast(tree)))
         modified.add(tree.id)
-        return q%(NameMatcher(u%(tree.id)))
+        return q(NameMatcher(u(tree.id)))
     if isinstance(tree, List):
         sub_matchers = []
         for child in tree.elts:
@@ -285,13 +285,13 @@ def _matching(tree, **kw):
             matcher = build_matcher(tree.value.left, modified)
             # lol random names for hax
             with q as assignment:
-                xsfvdy = ast%(matcher)
+                xsfvdy = ast(matcher)
 
-            statements = [assignment, Expr(q%(xsfvdy.match_value(ast%(tree.value.right))))]
+            statements = [assignment, Expr(q(xsfvdy.match_value(ast(tree.value.right))))]
 
             for var_name in modified:
                 statements.append(Assign([Name(var_name, Store())],
-                    q%(xsfvdy.get_var(u%var_name))))
+                    q(xsfvdy.get_var(u(var_name)))))
 
             return statements
         else:

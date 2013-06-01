@@ -9,8 +9,8 @@ class Tests(unittest.TestCase):
 
         a = 10
         b = 2
-        data1 = q%(1 + u%(a + b))
-        data2 = q%(1 + (a + b))
+        data1 = q(1 + u(a + b))
+        data2 = q(1 + (a + b))
 
         assert eval(unparse_ast(data1)) == 13
         assert eval(unparse_ast(data2)) == 13
@@ -23,7 +23,7 @@ class Tests(unittest.TestCase):
 
         a = [1, 2, "omg"]
         b = ["wtf", "bbq"]
-        data1 = q%([x for x in u%(a + b)])
+        data1 = q([x for x in u(a + b)])
 
         assert(eval(unparse_ast(data1)) == [1, 2, "omg", "wtf", "bbq"])
         b = []
@@ -34,7 +34,7 @@ class Tests(unittest.TestCase):
 
         x = 1
         y = 2
-        a = q%(u%(x + y))
+        a = q(u(x + y))
         assert(eval(unparse_ast(a)) == 3)
         x = 0
         y = 0
@@ -44,14 +44,14 @@ class Tests(unittest.TestCase):
     def test_unquote_name(self):
         n = "x"
         x = 1
-        y = q%(name%n + name%n)
+        y = q(name(n) + name(n))
 
         assert(eval(unparse_ast(y)) == 2)
 
     def test_quote_unquote_ast(self):
 
-        a = q%(x + y)
-        b = q%(ast%a + z)
+        a = q(x + y)
+        b = q(ast(a) + z)
 
         x, y, z = 1, 2, 3
         assert(eval(unparse_ast(b)) == 6)
@@ -66,8 +66,8 @@ class Tests(unittest.TestCase):
         c = []
         with q as code:
             c.append(a)
-            c.append(u%a)
-            c.extend(u%b)
+            c.append(u(a))
+            c.extend(u(b))
 
         exec(unparse_ast(code))
         assert(c == [10, 10, 'a', 'b', 'c'])

@@ -67,10 +67,10 @@ def tco(tree, **kw):
             if isinstance(tree.value, Call):
                 with q as code:
                     return ('macropy-tco-call',
-                            ast%(tree.value.func),
-                            ast%(List(tree.value.args, Load())),
-                            ast%(tree.value.starargs or List([], Load())),
-                            ast%(tree.value.kwargs or Dict([],[])))
+                            ast(tree.value.func),
+                            ast(List(tree.value.args, Load())),
+                            ast(tree.value.starargs or List([], Load())),
+                            ast(tree.value.kwargs or Dict([],[])))
                 return code
             else:
                 return tree
@@ -81,10 +81,11 @@ def tco(tree, **kw):
     def replace_tc_pos(node):
         if isinstance(node, Expr) and isinstance(node.value, Call):
             with q as code:
-                return ('macropy-tco-ignore', ast%(node.value.func), 
-                        ast%(List(node.value.args, Load())),
-                        ast%(node.value.starargs or List([], Load())),
-                        ast%(node.value.kwargs or Dict([], [])))
+                return ('macropy-tco-ignore',
+                        ast(node.value.func),
+                        ast(List(node.value.args, Load())),
+                        ast(node.value.starargs or List([], Load())),
+                        ast(node.value.kwargs or Dict([], [])))
             return code
         elif isinstance(node, If):
             node.body[-1] = replace_tc_pos(node.body[-1])
@@ -102,7 +103,7 @@ def tco(tree, **kw):
         x.ctx = Load()
 
     tree = return_replacer.recurse(tree)
-    tree.decorator_list = ([q%tco.trampoline_decorator] +
+    tree.decorator_list = ([q(tco.trampoline_decorator)] +
             tree.decorator_list)
     tree.body[-1] = replace_tc_pos(tree.body[-1])
     return tree

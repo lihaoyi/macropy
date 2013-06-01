@@ -72,7 +72,7 @@ def case(tree, gen_sym, **kw):
             if type(statement) is ClassDef:
                 outer.append(_case_transform(statement, [tree.name]))
                 with q as a:
-                    (name%tree.name).b = name%statement.name
+                    name(tree.name).b = name(statement.name)
                 a_old = a[0]
                 a_old.targets[0].attr = statement.name
 

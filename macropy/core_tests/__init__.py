@@ -24,7 +24,7 @@ class Tests(unittest.TestCase):
 
     def test_ignore_macros_not_explicitly_imported(self):
         import not_imported
-        assert not_imported.run() == 10
+        assert not_imported.run() == 21
 
     def test_line_numbers_should_match_source(self):
         import line_number_source
@@ -75,7 +75,7 @@ else:
     math.acos(0.123)
         """.strip()
 
-    def test_alises(self):
+    def test_aliases(self):
         import aliases
         assert aliases.run_normal() == "omg"
         assert aliases.run_aliased() == "wtf"

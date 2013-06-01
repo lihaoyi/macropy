@@ -18,14 +18,14 @@ def wrap_simple(printer, txt, x):
 
 @macros.expr()
 def log(tree, exact_src, **kw):
-    new_tree = q%(wrap(log, u%exact_src(tree), ast%tree))
+    new_tree = q(wrap(log, u(exact_src(tree)), ast(tree)))
     return new_tree
 
 @macros.expr()
 def show_expanded(tree, expand_macros, **kw):
     import copy
     expanded_tree = unparse_ast(expand_macros(copy.deepcopy(tree)))
-    new_tree = q%(wrap_simple(log, u%expanded_tree, ast%tree))
+    new_tree = q(wrap_simple(log, u(expanded_tree), ast(tree)))
     return new_tree
 
 @macros.block()
@@ -35,7 +35,7 @@ def show_expanded(tree, expand_macros, **kw):
     for stmt in tree:
         txt = unparse_ast(expand_macros(copy.deepcopy(stmt)))
         with q as code:
-            log(u%txt)
+            log(u(txt))
         new_tree.append(code)
         new_tree.append(stmt)
 
@@ -43,6 +43,7 @@ def show_expanded(tree, expand_macros, **kw):
 
 @Walker
 def trace_walk(tree, ctx, stop, **kw):
+
     if isinstance(tree, expr) and \
             tree._fields != () and \
             type(tree) is not Num and \
@@ -57,7 +58,7 @@ def trace_walk(tree, ctx, stop, **kw):
             txt = ctx(tree)
             trace_walk.walk_children(tree, ctx)
 
-            wrapped = q%(wrap(log, u%txt, ast%tree))
+            wrapped = q(wrap(log, u(txt), ast%tree))
             stop()
             return wrapped
 
@@ -65,7 +66,7 @@ def trace_walk(tree, ctx, stop, **kw):
         txt = ctx(tree)
         trace_walk.walk_children(tree , ctx)
         with q as code:
-            log(u%txt)
+            log(u(txt))
         stop()
         return [code, tree]
 
@@ -83,7 +84,7 @@ def trace(tree, exact_src, **kw):
 def _require_transform(tree, exact_src):
     ret = trace_walk.recurse(copy.deepcopy(tree), exact_src)
     trace_walk.recurse(copy.deepcopy(tree), exact_src)
-    new = q%(ast%tree or handle(lambda log: ast%ret))
+    new = q(ast(tree) or handle(lambda log: ast(ret)))
     return new
 
 def handle(thunk):

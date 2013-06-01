@@ -84,6 +84,7 @@ class Walker(object):
     def recurse_real(self, tree, ctx=None):
         """Traverse the given AST and return the transformed tree together
         with any values which were collected along with way."""
+
         if isinstance(tree, AST):
             aggregates = []
             stop_now = [False]

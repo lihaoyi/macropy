@@ -13,7 +13,7 @@ def peg(tree, **kw):
     for statement in tree:
         if type(statement) is Assign:
             new_tree, bindings = _PegWalker.recurse_real(statement.value)
-            statement.value = q%(Parser.Lazy(lambda: ast%new_tree))
+            statement.value = q(Parser.Lazy(lambda: ast(new_tree)))
 
     return tree
 
@@ -28,12 +28,12 @@ def peg(tree, **kw):
 def _PegWalker(tree, ctx, stop, collect, **kw):
     if type(tree) is Str:
         stop()
-        return q%Parser.Raw(ast%tree)
+        return q(Parser.Raw(ast(tree)))
 
     if type(tree) is BinOp and type(tree.op) is RShift:
         tree.left, b_left = _PegWalker.recurse_real(tree.left)
-        tree.right = q%(lambda bindings: ast%tree.right)
-        tree.right.args.args = map(f%Name(id = _), flatten(b_left))
+        tree.right = q(lambda bindings: ast(tree.right))
+        tree.right.args.args = map(f(Name(id = _)), flatten(b_left))
         stop()
         return tree
 
@@ -44,7 +44,7 @@ def _PegWalker(tree, ctx, stop, collect, **kw):
         return tree
 
     if type(tree) is Tuple:
-        result = q%Parser.Seq([])
+        result = q(Parser.Seq([]))
 
         result.args[0].elts = tree.elts
         all_bindings = []
@@ -57,7 +57,7 @@ def _PegWalker(tree, ctx, stop, collect, **kw):
 
     if type(tree) is Compare and type(tree.ops[0]) is Is:
         left_tree, bindings = _PegWalker.recurse_real(tree.left)
-        new_tree = q%(ast%left_tree).bind_to(u%tree.comparators[0].id)
+        new_tree = q(ast(left_tree).bind_to(u(tree.comparators[0].id)))
         stop()
         collect(bindings + [tree.comparators[0].id])
         return new_tree

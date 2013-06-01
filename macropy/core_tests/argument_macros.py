@@ -4,6 +4,7 @@ macros = Macros()
 
 @macros.expr()
 def expr_macro(tree, args, **kw):
+
     assert map(unparse_ast, args) == ["(1 + math.sqrt(5))"], unparse_ast(args)
     return tree
 

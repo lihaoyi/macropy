@@ -35,20 +35,20 @@ class Tests(unittest.TestCase):
         comprehension variable available *outside* of the comprehension
         when used in PINQ
         """
-        tree = q%(lambda x: x + (lambda y: y + 1)(3))(5)
-        goal = q%(lambda x: (lambda y: (x + (y + 1)))(3))(5)
+        tree = q(lambda x: x + (lambda y: y + 1)(3))(5)
+        goal = q(lambda x: (lambda y: (x + (y + 1)))(3))(5)
 
         new_tree = expand_let_bindings.recurse(tree)
         assert ast.dump(new_tree) == ast.dump(goal)
 
-        tree = q%(lambda x: x + (lambda y: y + 1)(3) + (lambda z: z + 2)(4))(5)
-        goal = q%(lambda x: (lambda z: (lambda y: ((x + (y + 1)) + (z + 2)))(3))(4))(5)
+        tree = q(lambda x: x + (lambda y: y + 1)(3) + (lambda z: z + 2)(4))(5)
+        goal = q(lambda x: (lambda z: (lambda y: ((x + (y + 1)) + (z + 2)))(3))(4))(5)
 
         new_tree = expand_let_bindings.recurse(tree)
         assert ast.dump(new_tree) == ast.dump(goal)
 
-        tree = q%(lambda x: (x, lambda w: (lambda y: y + 1)(3) + (lambda z: z + 2)(4)))(5)
-        goal = q%(lambda x: (x, (lambda w: (lambda z: (lambda y: ((y + 1) + (z + 2)))(3))(4))))(5)
+        tree = q(lambda x: (x, lambda w: (lambda y: y + 1)(3) + (lambda z: z + 2)(4)))(5)
+        goal = q(lambda x: (x, (lambda w: (lambda z: (lambda y: ((y + 1) + (z + 2)))(3))(4))))(5)
 
         new_tree = expand_let_bindings.recurse(tree)
         assert ast.dump(new_tree) == ast.dump(goal)
@@ -60,12 +60,12 @@ class Tests(unittest.TestCase):
         # all countries in europe
         compare_queries(
             "SELECT name FROM country WHERE continent = 'Europe'",
-            sql%(x.name for x in db.country if x.continent == 'Europe')
+            sql(x.name for x in db.country if x.continent == 'Europe')
         )
         # countries whose area is bigger than 10000000
         compare_queries(
             "SELECT name, surface_area FROM country WHERE surface_area > 10000000",
-            sql%((x.name, x.surface_area) for x in db.country if x.surface_area > 10000000)
+            sql((x.name, x.surface_area) for x in db.country if x.surface_area > 10000000)
         )
 
     def test_nested(self):
@@ -79,7 +79,7 @@ class Tests(unittest.TestCase):
                 WHERE name IN ('India', 'Iran')
             )
             """,
-            sql%(
+            sql(
                 (x.name, x.continent) for x in db.country
                 if x.continent in (
                     y.continent for y in db.country
@@ -99,7 +99,7 @@ class Tests(unittest.TestCase):
                 WHERE z.name = 'Belize' OR z.name = 'Belgium'
             )
             """,
-            sql%(
+            sql(
                 (c.name, c.continent) for c in db.country
                 if c.continent in (
                     x.continent for x in db.country
@@ -119,7 +119,7 @@ class Tests(unittest.TestCase):
             )
             AND continent = 'Europe'
             """,
-            sql%(
+            sql(
                 x.name for x in db.country
                 if x.gnp / x.population > (
                     y.gnp / y.population for y in db.country
@@ -133,12 +133,12 @@ class Tests(unittest.TestCase):
         # the population of the world
         compare_queries(
             "SELECT SUM(population) FROM country",
-            sql%(func.sum(x.population) for x in db.country)
+            sql(func.sum(x.population) for x in db.country)
         )
         # number of countries whose area is at least 1000000
         compare_queries(
             "select count(*) from country where surface_area >= 1000000",
-            sql%(func.count(x.name) for x in db.country if x.surface_area >= 1000000)
+            sql(func.count(x.name) for x in db.country if x.surface_area >= 1000000)
         )
 
     def test_aliased(self):
@@ -154,7 +154,7 @@ class Tests(unittest.TestCase):
                 WHERE w.continent = x.continent
             )
             """,
-            sql%(
+            sql(
                 func.distinct(x.continent) for x in db.country
                 if (
                     func.sum(w.population) for w in db.country
@@ -164,7 +164,7 @@ class Tests(unittest.TestCase):
         )
 
     def test_query_macro(self):
-        query = sql%(
+        query = sql(
             func.distinct(x.continent) for x in db.country
             if (
                 func.sum(w.population) for w in db.country
@@ -172,7 +172,7 @@ class Tests(unittest.TestCase):
             ) > 100000000
         )
         sql_results = engine.execute(query).fetchall()
-        query_macro_results = query%(
+        query_macro_results = query(
             func.distinct(x.continent) for x in db.country
             if (
                 func.sum(w.population) for w in db.country
@@ -192,7 +192,7 @@ class Tests(unittest.TestCase):
             ON (t.country_code = c.code)
             WHERE c.continent = 'Asia'
             """,
-            sql%(
+            sql(
                 func.count(t.name)
                 for c in db.country
                 for t in db.city
@@ -211,7 +211,7 @@ class Tests(unittest.TestCase):
             ON t.country_code = c.code
             WHERE t.population > c.population / 2
             """,
-            sql%(
+            sql(
                 (t.name, t.population, c.name, c.population)
                 for c in db.country
                 for t in db.city
@@ -233,7 +233,7 @@ class Tests(unittest.TestCase):
                 WHERE tt.country_code = t.country_code
             )
             """,
-            sql%(
+            sql(
                 (t.name, t.population, c.name, c.population)
                 for c in db.country
                 for t in db.city
@@ -251,7 +251,7 @@ class Tests(unittest.TestCase):
         # the name of every country sorted in order
         compare_queries(
             "SELECT c.name FROM country c ORDER BY c.population",
-            sql%(c.name for c in db.country).order_by(c.population)
+            sql(c.name for c in db.country).order_by(c.population)
         )
 
         # sum up the population of every country using GROUP BY instead of a JOIN
@@ -261,7 +261,7 @@ class Tests(unittest.TestCase):
             FROM city t GROUP BY t.country_code
             ORDER BY sum(t.population)
             """,
-            sql%(
+            sql(
                 (t.country_code, func.sum(t.population)) for t in db.city
             ).group_by(t.country_code)
              .order_by(func.sum(t.population))
@@ -271,19 +271,19 @@ class Tests(unittest.TestCase):
         # bottom 10 countries by population
         compare_queries(
             "SELECT c.name FROM country c ORDER BY c.population LIMIT 10",
-            sql%(c.name for c in db.country).order_by(c.population).limit(10)
+            sql(c.name for c in db.country).order_by(c.population).limit(10)
         )
 
         # bottom 100 to 110 countries by population
         compare_queries(
             "SELECT c.name FROM country c ORDER BY c.population LIMIT 10 OFFSET 100",
-            sql%(c.name for c in db.country).order_by(c.population).limit(10).offset(100)
+            sql(c.name for c in db.country).order_by(c.population).limit(10).offset(100)
         )
 
         # top 10 countries by population
         compare_queries(
             "SELECT c.name FROM country c ORDER BY c.population DESC LIMIT 10",
-            sql%(c.name for c in db.country).order_by(c.population.desc()).limit(10)
+            sql(c.name for c in db.country).order_by(c.population.desc()).limit(10)
         )
 
 
