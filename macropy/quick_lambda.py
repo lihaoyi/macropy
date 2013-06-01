@@ -1,18 +1,17 @@
 from macropy.core.macros import *
-from macropy.core.quotes import macros, q, u
+from macropy.core.quotes import macros, q
 
 _ = None  # makes IDE happy
 
 macros = Macros()
 
 @macros.expr()
-def f(tree, **kw):
-    names = ('arg' + str(i) for i in xrange(100))
+def f(tree, gen_sym, **kw):
 
     @Walker
     def underscore_search(tree, collect, **kw):
         if isinstance(tree, Name) and tree.id == "_":
-            name = names.next()
+            name = gen_sym()
             tree.id = name
             collect(name)
             return tree

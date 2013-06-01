@@ -5,7 +5,7 @@ MacroPy
 ```python
 >>> import macropy.core.console
 0=[]=====> MacroPy Enabled <=====[]=0
->>> from macropy.macros.case_classes import macros, case
+>>> from macropy.case_classes import macros, case
 
 >>> @case
 ... class Point(x, y): pass
@@ -132,7 +132,7 @@ Python 2.7 (r27:82525, Jul  4 2010, 07:43:08) [MSC v.1500 64 bit (AMD64)] on win
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import macropy.core.console
 0=[]=====> MacroPy Enabled <=====[]=0
->>> from macropy.macros.tracing import macros, trace
+>>> from macropy.tracing import macros, trace
 >>> trace([x*2 for x in range(3)])
 range(3) -> [0, 1, 2]
 x*2 -> 0
@@ -155,7 +155,7 @@ Feel free to open up a REPL and try out the examples in the console; simply `imp
 Case Classes
 ------------
 ```python
-from macropy.macros.case_classes import macros, case
+from macropy.case_classes import macros, case
 
 @case
 class Point(x, y): pass
@@ -326,7 +326,7 @@ As the classes `Nil` are `Cons` are nested within `List`, both of them get trans
 
 ###Overriding
 
-Except for the `__init__` method, all the methods provided by case classes are inherited from `macropy.macros.case_classes.CaseClass`, and can thus be overriden, with the overriden method still accessible via the normal mechanisms:
+Except for the `__init__` method, all the methods provided by case classes are inherited from `macropy.case_classes.CaseClass`, and can thus be overriden, with the overriden method still accessible via the normal mechanisms:
 
 ```python
 @case
@@ -358,7 +358,7 @@ You cannot access the replaced `__init__` method, due to fact that it's generate
 Case classes provide a lot of functionality to the user, but come with their own set of limitations:
 
 - **No class members**: a consequence of the [body initializer](#body-initializer), you cannot assign class variables in the body of a class via the `foo = ...` syntax. However, `@static` and `@class` methods work fine
-- **Restricted inheritance**: A case class only inherits from `macropy.macros.case_classes.CaseClass`, as well as any case classes it is lexically scoped within. There is no way to express any other form of inheritance
+- **Restricted inheritance**: A case class only inherits from `macropy.case_classes.CaseClass`, as well as any case classes it is lexically scoped within. There is no way to express any other form of inheritance
 - **__slots__**: case classes get `__slots__` declarations by default. Thus you cannot assign ad-hoc members which are not defined in the class signature (the `class Point(x, y)` line).
 
 -------------------------------------------------------------------------------
@@ -370,7 +370,7 @@ In the cases where you desperately need additional flexibility [not afforded](#l
 Pattern Matching
 ----------------
 ```python
-from macropy.macros.case_classes import macros, case
+from macropy.case_classes import macros, case
 from macropy.experimental.pattern import macros, switch
 
 @case
@@ -444,7 +444,7 @@ It is also possible to use pattern matching outside of a `switch`, by using the 
 
 ```python
 from macropy.experimental.pattern import macros, patterns
-from macropy.macros.case_classes import macros, case
+from macropy.case_classes import macros, case
 
 @case
 class Rect(p1, p2): pass
@@ -527,6 +527,7 @@ Tail-call Optimization
 ----------------------
 ```python
 from macropy.experimental.tco import macros, tco
+
 @tco
 def fact(n, acc=0):
     if n == 0:
@@ -618,7 +619,7 @@ String Interpolation
 --------------------
 
 ```python
->>> from macropy.macros.string_interp import macros, s
+>>> from macropy.string_interp import macros, s
 
 >>> a, b = 1, 2
 >>> s%"{a} apple and {b} bananas"
@@ -640,7 +641,7 @@ and expands it into the expression
 Which is evaluated at run-time in the local scope, using whatever the values `a` and `b` happen to hold at the time. The contents of the `%{...}` can be any arbitrary python expression, and is not limited to variable names:
 
 ```python
->>> from macropy.macros.string_interp import macros, s
+>>> from macropy.string_interp import macros, s
 >>> A = 10
 >>> B = 5
 >>> s%"{A} + {B} = {A + B}"
@@ -685,7 +686,7 @@ Tracing
 -------
 
 ```python
->>> from macropy.macros.tracing import macros, log
+>>> from macropy.tracing import macros, log
 >>> log(1 + 2)
 1 + 2 -> 3
 3
@@ -707,7 +708,7 @@ and the `log()` macro (shown above) helps remove this duplication by automatical
 In addition to simple logging, MacroPy provides the `trace()` macro. This macro not only logs the source and result of the given expression, but also the source and result of all sub-expressions nested within it:
 
 ```python
->>> from macropy.macros.tracing import macros, trace
+>>> from macropy.tracing import macros, trace
 >>> trace([len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]])
 "b" * 2 -> 'bb'
 "b" * 2 + "q" -> 'bbq'
@@ -732,7 +733,7 @@ Lastly, `trace` can be used as a block macro:
 
 
 ```python
->>> from macropy.macros.tracing import macros, trace
+>>> from macropy.tracing import macros, trace
 >>> with trace:
 ...     sum = 0
 ...     for i in range(0, 5):
@@ -767,15 +768,15 @@ def log(x):
 
 The tracer uses whatever `log()` function it finds, falling back on printing only if none exists. Instead of printing, this `log()` function appends the traces to a list, and is used in our unit tests.
 
-We think that tracing is an extremely useful macro. For debugging what is happening, for teaching newbies how evaluation of expressions works, or for a myriad of other purposes, it is a powerful tool. The fact that it can be written as a [<100 line macro](macropy/macros/tracing.py) is a bonus.
+We think that tracing is an extremely useful macro. For debugging what is happening, for teaching newbies how evaluation of expressions works, or for a myriad of other purposes, it is a powerful tool. The fact that it can be written as a [<100 line macro](macropy.tracing.py) is a bonus.
 
 ###Smart Asserts
 ```python
->>> from macropy.macros.tracing import macros, require
+>>> from macropy.tracing import macros, require
 >>> require(3**2 + 4**2 != 5**2)
 Traceback (most recent call last):
   File "<console>", line 1, in <module>
-  File "macropy\macros\tracing.py", line 67, in handle
+  File "macropy.tracing.py", line 67, in handle
     raise AssertionError("Require Failed\n" + "\n".join(out))
 AssertionError: Require Failed
 3**2 -> 9
@@ -792,7 +793,7 @@ Unlike `assert`, `require` automatically tells you what code failed the conditio
 `require can also be used in block form:
 
 ```python
->>> from macropy.macros.tracing import macros, require
+>>> from macropy.tracing import macros, require
 >>> with require:
 ...     a > 5
 ...     a * b == 20
@@ -800,7 +801,7 @@ Unlike `assert`, `require` automatically tells you what code failed the conditio
 ...
 Traceback (most recent call last):
   File "<console>", line 4, in <module>
-  File "macropy\macros\tracing.py", line 67, in handle
+  File "macropy.tracing.py", line 67, in handle
     raise AssertionError("Require Failed\n" + "\n".join(out))
 AssertionError: Require Failed
 a < 2 -> False
@@ -811,8 +812,8 @@ This requires every statement in the block to be a boolean expression. Each expr
 ###`show_expanded`
 
 ```python
-from macropy.core.lift import macros, q
-from macropy.macros.tracing import macros, show_expanded
+from macropy.core.quotes import macros, q
+from macropy.tracing import macros, show_expanded
 
 show_expanded(q(1 + 2))
 # BinOp(left=Num(n=1), op=Add(), right=Num(n=2))
@@ -821,8 +822,8 @@ show_expanded(q(1 + 2))
 `show_expanded` is a macro which is similar to the simple `log` macro shown above, but prints out what the wrapped code looks like *after all macros have been expanded*. This makes it extremely useful for debugging macros, where you need to figure out exactly what your code is being expanded into. `show_expanded` also works in block form:
 
 ```python
-from macropy.core.lift import macros, q
-from macropy.macros.tracing import macros, show_expanded, trace
+from macropy.core.quotes import macros, q
+from macropy.tracing import macros, show_expanded, trace
 
 with show_expanded:
     a = 1
@@ -840,8 +841,8 @@ These examples show how the [quasiquote](#quasiquotes) macro works: it turns an 
 Here is a less trivial example: [case classes](#case-classes) are a pretty useful macro, which saves us the hassle of writing a pile of boilerplate ourselves. By using `show_expanded`, we can see what the case class definition expands into:
 
 ```python
-from macropy.macros.case_classes import macros, case
-from macropy.macros.tracing import macros, show_expanded
+from macropy.case_classes import macros, case
+from macropy.tracing import macros, show_expanded
 
 with show_expanded:
     @case
@@ -863,7 +864,7 @@ Pretty neat!
 
 ---------------------------------
 
-If you want to write your own custom logging, tracing or debugging macros, take a look at the [100 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/macros/tracing.py) that implements all the functionality shown above.
+If you want to write your own custom logging, tracing or debugging macros, take a look at the [100 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy.tracing.py) that implements all the functionality shown above.
 
 
 
@@ -1048,7 +1049,7 @@ PINQ demonstrates how easy it is to use macros to lift python snippets into an A
 Quick Lambdas
 -------------
 ```python
->>> from macropy.macros.quick_lambda import macros, f, _
+>>> from macropy.quick_lambda import macros, f, _
 >>> map(f(_ + 1), [1, 2, 3])
 [2, 3, 4]
 >>> reduce(f(_ + _), [1, 2, 3])
@@ -1071,7 +1072,7 @@ where the underscores get replaced by identifiers, which are then set to be the 
 Quick Lambdas can be also used as a concise, lightweight, more-readable substitute for `functools.partial`
 
 ```python
->>> from macropy.macros.quick_lambda import macros, f
+>>> from macropy.quick_lambda import macros, f
 >>> basetwo = f(int(_, base=2))
 >>> basetwo('10010')
 18
@@ -1103,7 +1104,7 @@ Parser Combinators
 ------------------
 ```python
 from macropy.experimental.peg import macros, peg
-from macropy.macros.quick_lambda import macros, f
+from macropy.quick_lambda import macros, f
 
 def reduce_chain(chain):
     chain = list(reversed(chain))
@@ -1590,7 +1591,7 @@ It prints `25`, as you would expect.
 ```python
 # macro_module.py
 from macropy.core.macros import *
-from macropy.core.lift import macros, q, ast
+from macropy.core.quotes import macros, q, ast
 
 macros = Macros()
 
@@ -1606,7 +1607,7 @@ Another unquote `u` allow us to dynamically include the value `10` in the AST at
 ```python
 # macro_module.py
 from macropy.core.macros import *
-from macropy.core.lift import macros, q, ast, u
+from macropy.core.quotes import macros, q, ast, u
 
 macros = Macros()
 
@@ -1623,7 +1624,7 @@ Apart from using the `u` and `ast` unquotes to put things into the AST, good old
 ```python
 # macro_module.py
 from macropy.core.macros import *
-from macropy.core.lift import macros, q
+from macropy.core.quotes import macros, q
 
 macros = Macros()
 
@@ -1718,7 +1719,7 @@ This snippet of code is equivalent to the one earlier, except that with a [Walke
 ```python
 # target.py
 from macro_module import macros, f
-from macropy.macros.tracing import macros, show_expanded
+from macropy.tracing import macros, show_expanded
 
 with show_expanded:
     my_func = f(_ + (1 * _))
@@ -1743,7 +1744,7 @@ The Walker function request the `collect` argument, and call `collect(item)` to 
 
 ```python
 from macropy.core.macros import *
-from macropy.core.lift import macros, q, u
+from macropy.core.quotes import macros, q, u
 
 macros = Macros()
 
@@ -1770,7 +1771,7 @@ This still fails at runtime, but now all we need now is to wrap everything in a 
 
 ```python
 from macropy.core.macros import *
-from macropy.core.lift import macros, q, u
+from macropy.core.quotes import macros, q, u
 
 _ = None  # makes IDE happy
 
@@ -1946,7 +1947,7 @@ Quasiquotes
 -----------
 
 ```python
-from macropy.core.lift import macros, q, name, ast
+from macropy.core.quotes import macros, q, name, ast
 
 a = 10
 b = 2
@@ -2124,8 +2125,8 @@ Expansion Order
 Macros are expanded in an outside-in order, with macros higher up in the AST being expanded before their children. Hence, if we have two macros inside each other, such as:
 
 ```python
->>> from macropy.macros.quick_lambda import macros, f
->>> from macropy.macros.tracing import macros, trace
+>>> from macropy.quick_lambda import macros, f
+>>> from macropy.tracing import macros, trace
 >>> trace(map(f(_ + 1), [1, 2, 3]))
 (f(_ + 1)) -> <function <lambda> at 0x00000000021F9128>
 (_ + 1) -> 2
@@ -2230,7 +2231,7 @@ As you can see, even though the line `x = x + 1` is expanded into 10 equivalent 
 
 ```python
 #target.py
-from macropy.core_tests.line_number_macro import macros, expand
+from macropy.core.test.macros.line_number_macro import macros, expand
 
 y = 0
 with expand:

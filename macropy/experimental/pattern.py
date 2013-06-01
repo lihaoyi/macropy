@@ -3,8 +3,8 @@ import inspect
 from ast import *
 from macropy.core import util
 from macropy.core.macros import *
-from macropy.core.lift import macros, q
-from macropy.core.lift import *
+from macropy.core.quotes import macros, q
+from macropy.core.quotes import *
 
 macros = Macros()
 

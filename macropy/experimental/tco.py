@@ -3,7 +3,7 @@
 from macropy.core.macros import *
 from macropy.experimental.pattern import macros, switch, _matching
 
-from macropy.core.lift import macros, q
+from macropy.core.quotes import macros, q
 
 macros = Macros()
 
