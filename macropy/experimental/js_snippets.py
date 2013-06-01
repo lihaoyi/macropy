@@ -3,6 +3,8 @@ from macropy.core.quotes import macros, q, u, ast
 import pjs
 from pjs.converter import Scope
 
+__all__ = ['std_lib_script']
+
 std_lib = [
     'modules.js',
     'functions.js',

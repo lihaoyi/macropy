@@ -1,6 +1,8 @@
 from macropy.core.macros import *
 from macropy.core.quotes import macros, q, u
 
+__all__ = ['CaseClass', 'singleton']
+
 macros = Macros()
 
 class CaseClass(object):

@@ -6,6 +6,8 @@ import copy
 
 macros = Macros()
 
+__all__ = ['wrap', 'wrap_simple', 'handle', 'log']
+
 def wrap(printer, txt, x):
     string = txt + " -> " + repr(x)
     printer(string)

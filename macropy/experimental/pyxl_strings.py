@@ -7,6 +7,8 @@ from pyxl.codec.tokenizer import pyxl_tokenize
 from pyxl.html import *
 
 
+__all__ = []
+
 macros = Macros()
 
 

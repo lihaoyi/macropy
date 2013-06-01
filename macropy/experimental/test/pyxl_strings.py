@@ -2,8 +2,9 @@
 from macropy.case_classes import macros, case
 from macropy.experimental.pyxl_strings import macros, p
 from macropy.tracing import macros, require
-from pyxl import html
-from pyxl.html import rawhtml
+
+
+from pyxl.html import *
 import re
 import unittest
 from xml.etree import ElementTree

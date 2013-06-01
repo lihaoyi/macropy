@@ -8,6 +8,8 @@ import re
 from collections import defaultdict
 macros = Macros()
 
+__all__ = ["Input", 'Parser']
+
 @macros.block()
 def peg(tree, **kw):
     for statement in tree:

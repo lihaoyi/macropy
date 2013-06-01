@@ -8,6 +8,7 @@ from macropy.core.quotes import *
 
 macros = Macros()
 
+__all__ = ['Matcher', 'TupleMatcher', 'PatternMatchException', 'LiteralMatcher', 'PatternVarConflict', 'ClassMatcher', 'NameMatcher', 'ListMatcher']
 
 class PatternMatchException(Exception):
     """

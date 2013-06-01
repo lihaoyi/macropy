@@ -5,6 +5,8 @@ from macropy.experimental.pattern import macros, switch, _matching
 
 from macropy.core.quotes import macros, q
 
+__all__ = ['tco']
+
 macros = Macros()
 
 # stupid read-only closures
