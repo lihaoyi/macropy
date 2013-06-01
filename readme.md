@@ -98,7 +98,7 @@ MacroPy intercepts the module-loading workflow, via the functionality provided b
 - Walk the AST and expand any macros that it finds
 - Compile the modified AST and resume loading it as a module
 
-![Workflow](media/Workflow.png)
+![Workflow](docs/media/Workflow.png)
 
 Note that this means **you cannot use macros in a file that is run directly**, as it will not be passed through the import hooks. Hence the minimum viable setup is:
 
@@ -1431,7 +1431,7 @@ Once you have an AST, there are a few possible forms that code can take:
 
 This map maps out how to convert from form to form:
 
-![Transforms](media/Transforms.png)
+![Transforms](docs/media/Transforms.png)
 
 Except for `eval`, these are all functions defined in the [macropy/core/__init__.py](macropy/core/__init__.py). For instance, in order to convert from a AST back into source code (for example if you want to print out the code which is being run), you would use the `unparse_ast()` method. These transformations will be used throughout this guide, to convert from one form to another or to print out the AST for inspection.
 
@@ -2343,7 +2343,7 @@ Levels of Magic
 ---------------
 MacroPy is an extreme measure; there is no doubting that. Intercepting the raw source code as it is being imported, parsing it and performing AST transforms just before loading it is not something to be taken lightly! However, macros are not the most extreme thing that you can do! If you look at an Magic Scale for the various things you can do in Python, it may look something like this:
 
-![Magic](media/Magic.png)
+![Magic](docs/media/Magic.png)
 
 Where basic language constructs are at **0** in the scale of magic, functions and classes can be mildly confusing. `hasattr` and `getattr` are at another level, letting you treat things objects as dictionaries and do all sorts of incredibly dynamic things.
 
