@@ -19,11 +19,11 @@ run(walkers_test.Tests)
 from macropy.macros import string_interp_test
 run(string_interp_test.Tests)
 
-from macropy.macros import quicklambda_test
-run(quicklambda_test.Tests)
+from macropy.macros import quick_lambda_test
+run(quick_lambda_test.Tests)
 
-from macropy.macros import adt_test
-run(adt_test.Tests)
+from macropy.macros import case_classes_test
+run(case_classes_test.Tests)
 
 from macropy.experimental import peg_test
 run(peg_test.Tests)

@@ -1,7 +1,7 @@
 import unittest
 from macropy.experimental.tco import macros, tco
 
-from macropy.macros.adt import macros, case
+from macropy.macros.case_classes import macros, case
 
 from macropy.experimental.pattern import macros, switch, _matching
 

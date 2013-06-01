@@ -146,7 +146,7 @@ This eample demonstrates the usage of the [Tracing](#tracing) macro, which helps
 
 Examples
 ========
-Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) and [macropy/experimental](macropy/experimental) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for some small (<30 lines), self contained examples. Their [unit](macropy/macros/string_interp_test.py) [tests](macropy/macros/quicklambda_test.py) demonstrate how these macros are used.
+Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) and [macropy/experimental](macropy/experimental) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quick_lambda.py) macros for some small (<30 lines), self contained examples. Their [unit](macropy/macros/string_interp_test.py) [tests](macropy/macros/quick_lambda_test.py) demonstrate how these macros are used.
 
 Note that all of these examples are **macros**; that is, they hold no special place in MacroPy. They are placed in [macropy/macros](macropy/macros) and [macropy/experimental](macropy/experimental), separate from the Macropy core in [macropy/core](macropy/core). All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 100 lines of code.
 
@@ -155,6 +155,8 @@ Feel free to open up a REPL and try out the examples in the console; simply `imp
 Case Classes
 ------------
 ```python
+from macropy.macros.adt import macros, case
+
 @case
 class Point(x, y): pass
 
@@ -324,7 +326,7 @@ As the classes `Nil` are `Cons` are nested within `List`, both of them get trans
 
 ###Overriding
 
-Except for the `__init__` method, all the methods provided by case classes are inherited from `macropy.macros.adt.CaseClass`, and can thus be overriden, with the overriden method still accessible via the normal mechanisms:
+Except for the `__init__` method, all the methods provided by case classes are inherited from `macropy.macros.case_classes.CaseClass`, and can thus be overriden, with the overriden method still accessible via the normal mechanisms:
 
 ```python
 @case
@@ -356,7 +358,7 @@ You cannot access the replaced `__init__` method, due to fact that it's generate
 Case classes provide a lot of functionality to the user, but come with their own set of limitations:
 
 - **No class members**: a consequence of the [body initializer](#body-initializer), you cannot assign class variables in the body of a class via the `foo = ...` syntax. However, `@static` and `@class` methods work fine
-- **Restricted inheritance**: A case class only inherits from `macropy.macros.adt.CaseClass`, as well as any case classes it is lexically scoped within. There is no way to express any other form of inheritance
+- **Restricted inheritance**: A case class only inherits from `macropy.macros.case_classes.CaseClass`, as well as any case classes it is lexically scoped within. There is no way to express any other form of inheritance
 - **__slots__**: case classes get `__slots__` declarations by default. Thus you cannot assign ad-hoc members which are not defined in the class signature (the `class Point(x, y)` line).
 
 -------------------------------------------------------------------------------
@@ -368,7 +370,7 @@ In the cases where you desperately need additional flexibility [not afforded](#l
 Pattern Matching
 ----------------
 ```python
-from macropy.macros.adt import macros, case
+from macropy.macros.case_classes import macros, case
 from macropy.experimental.pattern import macros, switch
 
 @case
@@ -442,7 +444,7 @@ It is also possible to use pattern matching outside of a `switch`, by using the 
 
 ```python
 from macropy.experimental.pattern import macros, patterns
-from macropy.macros.adt import macros, case
+from macropy.macros.case_classes import macros, case
 
 @case
 class Rect(p1, p2): pass
@@ -838,7 +840,7 @@ These examples show how the [quasiquote](#quasiquotes) macro works: it turns an 
 Here is a less trivial example: [case classes](#case-classes) are a pretty useful macro, which saves us the hassle of writing a pile of boilerplate ourselves. By using `show_expanded`, we can see what the case class definition expands into:
 
 ```python
-from macropy.macros.adt import macros, case
+from macropy.macros.case_classes import macros, case
 from macropy.macros.tracing import macros, show_expanded
 
 with show_expanded:
@@ -1046,7 +1048,7 @@ PINQ demonstrates how easy it is to use macros to lift python snippets into an A
 Quick Lambdas
 -------------
 ```python
->>> from macropy.macros.quicklambda import macros, f, _
+>>> from macropy.macros.quick_lambda import macros, f, _
 >>> map(f(_ + 1), [1, 2, 3])
 [2, 3, 4]
 >>> reduce(f(_ + _), [1, 2, 3])
@@ -1069,7 +1071,7 @@ where the underscores get replaced by identifiers, which are then set to be the 
 Quick Lambdas can be also used as a concise, lightweight, more-readable substitute for `functools.partial`
 
 ```python
->>> from macropy.macros.quicklambda import macros, f
+>>> from macropy.macros.quick_lambda import macros, f
 >>> basetwo = f(int(_, base=2))
 >>> basetwo('10010')
 18
@@ -1095,13 +1097,13 @@ Quick Lambdas can also be used entirely without the `_` placeholders, in which c
 0.817928092273
 ```
 
-This cuts out reduces the number of characters needed to make a thunk from 7 to 2, making it much easier to use thunks to do things like emulating [by name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html). The implementation of quicklambda is about [30 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/macros/quicklambda.py), and is worth a look if you want to see how a simple (but extremely useful!) macro can be written.
+This cuts out reduces the number of characters needed to make a thunk from 7 to 2, making it much easier to use thunks to do things like emulating [by name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html). The implementation of quicklambda is about [30 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/macros/quick_lambda.py), and is worth a look if you want to see how a simple (but extremely useful!) macro can be written.
 
 Parser Combinators
 ------------------
 ```python
 from macropy.experimental.peg import macros, peg
-from macropy.macros.quicklambda import macros, f
+from macropy.macros.quick_lambda import macros, f
 
 def reduce_chain(chain):
     chain = list(reversed(chain))
@@ -1827,7 +1829,7 @@ print filter(f(_ % 2 != 0), [1, 2, 3])  # [1, 3]
 print map(f(_  * 10), [1, 2, 3])  # [10, 20, 30]
 ```
 
-Mission Accomplished! You can see the completed self-contained example in [examples/full](examples/full). This macro is also defined in our library in [macropy/macros/quicklambda.py](macropy/macros/quicklambda.py), along with a suite of [unit tests](macropy/macros/quicklambda_test.py). It is also used throughout the implementation of the other macros.
+Mission Accomplished! You can see the completed self-contained example in [examples/full](examples/full). This macro is also defined in our library in [macropy/macros/quick_lambda.py](macropy/macros/quick_lambda.py), along with a suite of [unit tests](macropy/macros/quick_lambda_test.py). It is also used throughout the implementation of the other macros.
 
 Reference
 =========
@@ -2005,7 +2007,7 @@ print ast.dump(y)
 
 This is convenient in order to interpolate a string variable as an identifier, rather than interpolating it as a string literal. In this case, I want the syntax tree for the expression `x + x`, and not `'x' + 'x'`, so I use the `name` macro to unquote it.
 
-Overall, quasiquotes are an incredibly useful tool for assembling or manipulating the ASTs, and are used in the implementation in all of the following examples. See the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for short, practical examples of their usage.
+Overall, quasiquotes are an incredibly useful tool for assembling or manipulating the ASTs, and are used in the implementation in all of the following examples. See the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quick_lambda.py) macros for short, practical examples of their usage.
 
 Walkers
 -------
@@ -2122,7 +2124,7 @@ Expansion Order
 Macros are expanded in an outside-in order, with macros higher up in the AST being expanded before their children. Hence, if we have two macros inside each other, such as:
 
 ```python
->>> from macropy.macros.quicklambda import macros, f
+>>> from macropy.macros.quick_lambda import macros, f
 >>> from macropy.macros.tracing import macros, trace
 >>> trace(map(f(_ + 1), [1, 2, 3]))
 (f(_ + 1)) -> <function <lambda> at 0x00000000021F9128>
@@ -2177,7 +2179,7 @@ def f(tree, gen_sym):
     ... use new_name ...
 ```
 
-`gen_sym` is a function which produce a new identifier (as a string) every time it is called. This is guaranteed to produce a identifier that does not appear anywhere in the origial source code, or have been produced by an earlier call to `gen_sym`. You can thus use these identifiers without worrying about shadowing an identifier someone was using; see the source for the [quicklambda](blob/master/macropy/macros/quicklambda.py) macro to see it in action.
+`gen_sym` is a function which produce a new identifier (as a string) every time it is called. This is guaranteed to produce a identifier that does not appear anywhere in the origial source code, or have been produced by an earlier call to `gen_sym`. You can thus use these identifiers without worrying about shadowing an identifier someone was using; see the source for the [quicklambda](blob/master/macropy/macros/quick_lambda.py) macro to see it in action.
 
 ###Caveats
 

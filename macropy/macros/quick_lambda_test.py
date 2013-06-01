@@ -1,6 +1,6 @@
 import unittest
 
-from macropy.macros.quicklambda import macros, f, _
+from macropy.macros.quick_lambda import macros, f, _
 
 class Tests(unittest.TestCase):
     def test_basic(self):

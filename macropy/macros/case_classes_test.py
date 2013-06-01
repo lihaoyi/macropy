@@ -1,4 +1,4 @@
-from macropy.macros.adt import macros, case, CaseClass
+from macropy.macros.case_classes import macros, case, CaseClass
 
 import unittest
 

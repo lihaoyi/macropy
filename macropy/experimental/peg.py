@@ -2,8 +2,8 @@ import re
 
 from macropy.core.macros import *
 from macropy.core.lift import macros, q, u
-from macropy.macros.quicklambda import macros, f
-from macropy.macros.adt import macros, case
+from macropy.macros.quick_lambda import macros, f
+from macropy.macros.case_classes import macros, case
 import re
 from collections import defaultdict
 macros = Macros()

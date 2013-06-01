@@ -2,7 +2,7 @@ from ast import Call
 
 from macropy.core.macros import *
 from macropy.core.lift import macros, q, ast
-from macropy.macros.quicklambda import macros, f
+from macropy.macros.quick_lambda import macros, f
 import sqlalchemy
 
 

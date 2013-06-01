@@ -1,7 +1,7 @@
 import unittest
 from macropy.experimental.peg import macros, peg
 from macropy.macros.tracing import macros, require
-from macropy.macros.quicklambda import macros, f, _
+from macropy.macros.quick_lambda import macros, f, _
 class Tests(unittest.TestCase):
     def test_basic(self):
         parse1 = peg("Hello World")
