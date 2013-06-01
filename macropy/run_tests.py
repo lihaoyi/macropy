@@ -13,6 +13,9 @@ run(macros.Tests)
 from macropy.core.test import quotes
 run(quotes.Tests)
 
+from macropy.core.test import unparse_ast
+run(unparse_ast.Tests)
+
 from macropy.core.test import walkers
 run(walkers.Tests)
 
