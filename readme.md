@@ -132,7 +132,7 @@ Python 2.7 (r27:82525, Jul  4 2010, 07:43:08) [MSC v.1500 64 bit (AMD64)] on win
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import macropy.core.console
 0=[]=====> MacroPy Enabled <=====[]=0
->>> from macropy.macros2.tracing import macros, trace
+>>> from macropy.macros.tracing import macros, trace
 >>> trace([x*2 for x in range(3)])
 range(3) -> [0, 1, 2]
 x*2 -> 0
@@ -146,9 +146,9 @@ This eample demonstrates the usage of the [Tracing](#tracing) macro, which helps
 
 Examples
 ========
-Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for some small (<30 lines), self contained examples. Their [unit](macropy/macros/string_interp_test.py) [tests](macropy/macros/quicklambda_test.py) demonstrate how these macros are used.
+Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy/macros](macropy/macros) and [macropy/experimental](macropy/experimental) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/macros/string_interp.py) or [Quick Lambda](macropy/macros/quicklambda.py) macros for some small (<30 lines), self contained examples. Their [unit](macropy/macros/string_interp_test.py) [tests](macropy/macros/quicklambda_test.py) demonstrate how these macros are used.
 
-Note that all of these examples are **macros**; that is, they hold no special place in MacroPy. They are placed in [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2), separate from the Macropy core in [macropy/core](macropy/core). All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 100 lines of code.
+Note that all of these examples are **macros**; that is, they hold no special place in MacroPy. They are placed in [macropy/macros](macropy/macros) and [macropy/experimental](macropy/experimental), separate from the Macropy core in [macropy/core](macropy/core). All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 100 lines of code.
 
 Feel free to open up a REPL and try out the examples in the console; simply `import macropy.core.console`, and most of the examples should work right off the bat when pasted in!
 
@@ -369,7 +369,7 @@ Pattern Matching
 ----------------
 ```python
 from macropy.macros.adt import macros, case
-from macropy.macros.pattern import macros, switch
+from macropy.experimental.pattern import macros, switch
 
 @case
 class Nil():
@@ -441,7 +441,7 @@ As you can see, matching against `With(Name(name))` is a quick and easy way of c
 It is also possible to use pattern matching outside of a `switch`, by using the `patterns` macro. Within `patterns`, any left shift (`<<`) statement attempts to match the value on the right to the pattern on the left, allowing nested matches and binding variables as described earlier.
 
 ```python
-from macropy.macros.pattern import macros, patterns
+from macropy.experimental.pattern import macros, patterns
 from macropy.macros.adt import macros, case
 
 @case
@@ -524,7 +524,7 @@ with patterns:
 Tail-call Optimization
 ----------------------
 ```python
-from macropy.macros.tco import macros, tco
+from macropy.experimental.tco import macros, tco
 @tco
 def fact(n, acc=0):
     if n == 0:
@@ -542,7 +542,7 @@ The `@tco` decorator macro doesn't just work with tail-recursive functions, but
 also with any generic tail-calls (of either a function or a method) via [trampolining](#trampolining), such this mutually recursive example:
 
 ```python
-from macropy.macros.tco import macros, tco
+from macropy.experimental.tco import macros, tco
 
 class Example(object):
 
@@ -648,7 +648,7 @@ Which is evaluated at run-time in the local scope, using whatever the values `a`
 ###Pyxl Integration
 
 ```python
-from macropy.macros2.pyxl_strings import macros, p
+from macropy.experimental.pyxl_strings import macros, p
 
 image_name = "bolton.png"
 image = p%'<img src="/static/images/{image_name}" />'
@@ -677,7 +677,7 @@ element_list = [image, text]
 block2 = <div>{element_list}</div>
 ```
 
-While the MacroPy version requires each snippet to be wrapped in a `p%"..."` wrapper. This [three-line-of-code macro](https://github.com/lihaoyi/macropy/blob/master/macropy/macros2/pyxl_strings.py) simply uses pyxl as a macro (operating on string literals), rather than hooking into the UTF-8 decoder. In general, this demonstrates how easy it is to integrate an "external" DSL into your python program: MacroPy handles all the intricacies of hooking into the interpreter and intercepting the import workflow. The programmer simply needs to provide the source-to-source transformation, which in this case was already provided.
+While the MacroPy version requires each snippet to be wrapped in a `p%"..."` wrapper. This [three-line-of-code macro](https://github.com/lihaoyi/macropy/blob/master/macropy/experimental/pyxl_strings.py) simply uses pyxl as a macro (operating on string literals), rather than hooking into the UTF-8 decoder. In general, this demonstrates how easy it is to integrate an "external" DSL into your python program: MacroPy handles all the intricacies of hooking into the interpreter and intercepting the import workflow. The programmer simply needs to provide the source-to-source transformation, which in this case was already provided.
 
 Tracing
 -------
@@ -765,7 +765,7 @@ def log(x):
 
 The tracer uses whatever `log()` function it finds, falling back on printing only if none exists. Instead of printing, this `log()` function appends the traces to a list, and is used in our unit tests.
 
-We think that tracing is an extremely useful macro. For debugging what is happening, for teaching newbies how evaluation of expressions works, or for a myriad of other purposes, it is a powerful tool. The fact that it can be written as a [<100 line macro](macropy/macros2/tracing.py) is a bonus.
+We think that tracing is an extremely useful macro. For debugging what is happening, for teaching newbies how evaluation of expressions works, or for a myriad of other purposes, it is a powerful tool. The fact that it can be written as a [<100 line macro](macropy/macros/tracing.py) is a bonus.
 
 ###Smart Asserts
 ```python
@@ -773,7 +773,7 @@ We think that tracing is an extremely useful macro. For debugging what is happen
 >>> require(3**2 + 4**2 != 5**2)
 Traceback (most recent call last):
   File "<console>", line 1, in <module>
-  File "macropy\macros2\tracing.py", line 67, in handle
+  File "macropy\macros\tracing.py", line 67, in handle
     raise AssertionError("Require Failed\n" + "\n".join(out))
 AssertionError: Require Failed
 3**2 -> 9
@@ -798,7 +798,7 @@ Unlike `assert`, `require` automatically tells you what code failed the conditio
 ...
 Traceback (most recent call last):
   File "<console>", line 4, in <module>
-  File "macropy\macros2\tracing.py", line 67, in handle
+  File "macropy\macros\tracing.py", line 67, in handle
     raise AssertionError("Require Failed\n" + "\n".join(out))
 AssertionError: Require Failed
 a < 2 -> False
@@ -861,14 +861,14 @@ Pretty neat!
 
 ---------------------------------
 
-If you want to write your own custom logging, tracing or debugging macros, take a look at the [100 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/macros2/tracing.py) that implements all the functionality shown above.
+If you want to write your own custom logging, tracing or debugging macros, take a look at the [100 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/macros/tracing.py) that implements all the functionality shown above.
 
 
 
 PINQ to SQLAlchemy
 ------------------
 ```python
-from macropy.macros2.linq import macros, sql, query, generate_schema
+from macropy.experimental.linq import macros, sql, query, generate_schema
 
 db = generate_schema(engine)
 
@@ -1039,9 +1039,9 @@ for line in res:
 # (u'Nigeria',)
 ```
 
-In general, apart from the translation of generator expressions (and their guards) into `SELECT` an `WHERE` clauses, the rest of the functionality of SQL (like the `.order_by()`, `.limit()`, etc. functions shown above) is accessed as in the [SQLAlchemy Expression Language](http://docs.sqlalchemy.org/ru/latest/core/tutorial.html#ordering-grouping-limiting-offset-ing). See the [unit tests](https://github.com/lihaoyi/macropy/blob/master/macropy/macros2/linq_test.py) for a fuller set of examples of what PINQ can do, or browse the SQLAlchemy docs mentioned earlier.
+In general, apart from the translation of generator expressions (and their guards) into `SELECT` an `WHERE` clauses, the rest of the functionality of SQL (like the `.order_by()`, `.limit()`, etc. functions shown above) is accessed as in the [SQLAlchemy Expression Language](http://docs.sqlalchemy.org/ru/latest/core/tutorial.html#ordering-grouping-limiting-offset-ing). See the [unit tests](https://github.com/lihaoyi/macropy/blob/master/macropy/experimental/linq_test.py) for a fuller set of examples of what PINQ can do, or browse the SQLAlchemy docs mentioned earlier.
 
-PINQ demonstrates how easy it is to use macros to lift python snippets into an AST and cross-compile it into another language, and how nice the syntax and semantics can be for these embedded DSLs. PINQ's entire implementation comprises about [100 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/macros2/linq.py), which really isn't much considering how much it does for you!
+PINQ demonstrates how easy it is to use macros to lift python snippets into an AST and cross-compile it into another language, and how nice the syntax and semantics can be for these embedded DSLs. PINQ's entire implementation comprises about [100 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/experimental/linq.py), which really isn't much considering how much it does for you!
 
 Quick Lambdas
 -------------
@@ -1100,7 +1100,7 @@ This cuts out reduces the number of characters needed to make a thunk from 7 to 
 Parser Combinators
 ------------------
 ```python
-from macropy.macros2.peg import macros, peg
+from macropy.experimental.peg import macros, peg
 from macropy.macros.quicklambda import macros, f
 
 def reduce_chain(chain):
@@ -1164,7 +1164,7 @@ Parsers are generally built up from a few common building blocks:
 So far, these building blocks all return the raw parse tree: all the things like whitespace, curly-braces, etc. will still be there. Often, you want to take a parser e.g.
 
 ```python
->>> from macropy.macros2.peg import macros, peg
+>>> from macropy.experimental.peg import macros, peg
 >>> with peg:
 ...     num = '[0-9]+'.r
 >>> num.parse_all("123")
@@ -1332,7 +1332,7 @@ As you can see, the full parser parses that non-trivial blob of JSON into an ide
 JS Snippets
 ------------
 ```python
-from macropy.macros2.javascript import macros, pyjs
+from macropy.experimental.javascript import macros, pyjs
 
 code, javascript = pyjs(lambda x: x > 5 and x % 2 == 0)
 
@@ -1409,11 +1409,11 @@ print self.exec_js_func(javascript, 20)
 # [0, 1, 2, 3, 4, 5, 7, 11, 13, 17, 19]
 ```
 
-These examples are all taken from the [unit tests](macropy/macros2/javascript_test.py).
+These examples are all taken from the [unit tests](macropy/experimental/javascript_test.py).
 
 Like [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), JS Snippets demonstrates the feasibility, the convenience of being able to mark out sections of code using macros, to be cross-compiled into another language and run remotely. Unlike PINQ, which is built on top of the stable, battle-tested and widely used [SQLAlchemy](http://www.sqlalchemy.org/) library, JS Snippets is built on top of an relatively unknown and untested Python to Javascript cross-compiler, making it far from production ready.
 
-Nonetheless, JS Snippets demonstrate the promise of being able to cross-compile bits of your program and being able to run parts of it remotely. The code which performs the integration of PJs and MacroPy is a scant [25 lines long](macropy/macros2/javascript.py). If a better, more robust Python to Javascript cross-compiler appears some day, we could easily make use of it to provide a stable, seamless developer experience of sharing code between (web) client and server.
+Nonetheless, JS Snippets demonstrate the promise of being able to cross-compile bits of your program and being able to run parts of it remotely. The code which performs the integration of PJs and MacroPy is a scant [25 lines long](macropy/experimental/javascript.py). If a better, more robust Python to Javascript cross-compiler appears some day, we could easily make use of it to provide a stable, seamless developer experience of sharing code between (web) client and server.
 
 Detailed Guide
 ==============
@@ -2111,7 +2111,7 @@ def transform(tree, ctx, set_ctx, collect, stop, **kw):
 new_tree, collected = transform.recurse_real(old_tree, initial_ctx)
 ```
 
-This provides it a large amount of versatility, and lets you use the `Walker` to recursively traverse and transform Python ASTs in interesting ways. If you inspect the source code of the macros in the [macropy/macros](macropy/macros) and [macropy/macros2](macropy/macros2) folders, you will see most of them make extensive use of `Walker`s in order to concisely perform their transformations. If you find yourself needing a recursive traversal, you should think hard about why you cannot use a Walker before writing the recursion yourself.
+This provides it a large amount of versatility, and lets you use the `Walker` to recursively traverse and transform Python ASTs in interesting ways. If you inspect the source code of the macros in the [macropy/macros](macropy/macros) and [macropy/experimental](macropy/experimental) folders, you will see most of them make extensive use of `Walker`s in order to concisely perform their transformations. If you find yourself needing a recursive traversal, you should think hard about why you cannot use a Walker before writing the recursion yourself.
 
 Macro Subtleties
 ================
@@ -2123,7 +2123,7 @@ Macros are expanded in an outside-in order, with macros higher up in the AST bei
 
 ```python
 >>> from macropy.macros.quicklambda import macros, f
->>> from macropy.macros2.tracing import macros, trace
+>>> from macropy.macros.tracing import macros, trace
 >>> trace(map(f(_ + 1), [1, 2, 3]))
 (f(_ + 1)) -> <function <lambda> at 0x00000000021F9128>
 (_ + 1) -> 2
