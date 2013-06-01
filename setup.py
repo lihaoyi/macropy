@@ -54,19 +54,25 @@ Case Classes
 
 And more! All this runs perfectly on vanilla Python 2.7 or PyPy 2.0. For more details, see the `GitHub page <https://github.com/lihaoyi/macropy>`_
 """
-from distutils.core import setup
-import setuptools
+
+
+from setuptools import find_packages, setup
 from macropy import __version__
 
-setup(name='MacroPy',
-      version=__version__,
-      description='Macros for Python: Quasiquotes, Case Classes, LINQ and more!',
-      long_description=__doc__,
-      license='BSD',
-      author='Li Haoyi, Justin Holmgren',
-      author_email='haoyi.sg@gmail.com, justin.holmgren@gmail.com',
-      url='https://github.com/lihaoyi/macropy',
-      packages=['macropy', 'macropy.core', 'macropy.macros', 'macropy.experimental', 'macropy.macros'],
-      install_requires=['pyxl', 'SQLAlchemy', 'selenium', "pjs"],
-      classifiers=['Programming Language :: Python :: 2.7']
-     )
+setup(
+    name='MacroPy',
+    version=__version__,
+    description='Macros for Python: Quasiquotes, Case Classes, LINQ and more!',
+    long_description=__doc__,
+    license='BSD',
+    author='Li Haoyi, Justin Holmgren',
+    author_email='haoyi.sg@gmail.com, justin.holmgren@gmail.com',
+    url='https://github.com/lihaoyi/macropy',
+
+    extras_require = {
+    'pyxl':  ["pyxl"],
+    'pinq': ["SQLAlchemy"],
+    'js_snippets': ["selenium", "pjs"],
+    },
+    classifiers=['Programming Language :: Python :: 2.7']
+)

@@ -9,7 +9,7 @@ from macropy.tracing import macros, show_expanded
 
 engine = create_engine("sqlite://")
 
-for line in open("macropy/experimental/world.sql").read().split(";"):
+for line in open("macropy/experimental/test/world.sql").read().split(";"):
     engine.execute(line.strip())
 
 db = generate_schema(engine)
