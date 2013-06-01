@@ -1,4 +1,4 @@
+"""This is the root directory of the project, and directly contains a bunch of
+stable, useful and well-tested macros."""
 
-# pep 396 compatible version string [ http://www.python.org/dev/peps/pep-0396 ]
-version = (0, 2, 0)
-__version__ = ".".join(map(str, version))
+__version__ = "0.2.0"

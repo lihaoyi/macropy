@@ -1,8 +1,12 @@
 """
-This file contains the basic operations necessary to transform between
-code in various forms: Source, ASTs, and Values. These operations wrap
-more primitive forms (e.g. in the ast module) which should not be used
-directly.
+This package contains all the infrastructure required for MacroPy itself to
+function, separate from the individual implementation of cool macros. It
+bundles the `quotes` macro as it is a fundamental tool in the macro creation
+process.
+
+This file itself contains the basic operations necessary to transform between
+code in various forms: Source, ASTs, and Values. These operations wrap more
+primitive forms (e.g. in the ast module) which should not be used directly.
 
 This map maps out how to convert from form to form:
 

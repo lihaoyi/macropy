@@ -1,4 +1,4 @@
-from macro_module import macros, f
+from docs.examples.full.macro_module import f
 
 
 my_func = f(_ + (1 * _))

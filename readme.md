@@ -122,7 +122,7 @@ from macropy.macros.my_macro_module import macros, ...
 ... do stuff with macros ...
 ```
 
-Where you run `run.py` instead of `other.py`. For the same reason, you cannot directly run MacroPy's own unit tests directly using `unittest` or `nose`: you need to run the [macropy/run_tests.py](macropy/run_tests.py) file from the project root for the tests to run. See the [runnable, self-contained no-op example](examples/nop) to see exactly what this looks like.
+Where you run `run.py` instead of `other.py`. For the same reason, you cannot directly run MacroPy's own unit tests directly using `unittest` or `nose`: you need to run the [macropy/run_tests.py](macropy/run_tests.py) file from the project root for the tests to run. See the [runnable, self-contained no-op example](docs/examples/nop) to see exactly what this looks like.
 
 MacroPy also works in the REPL:
 
@@ -1478,7 +1478,7 @@ def expand(tree, **kw):
     return tree
 ```
 
-Running this via `python run.py` will print out `3`; so far `expand` is a simple no-op macro which does not do anything to the tree it is passed. This macro is provided in [examples/nop](examples/nop) if you want to try it out yourself; you can run it from the project root via `python examples/nop/run.py`.
+Running this via `python run.py` will print out `3`; so far `expand` is a simple no-op macro which does not do anything to the tree it is passed. This macro is provided in [docs/examples/nop](docs/examples/nop) if you want to try it out yourself; you can run it from the project root via `python docs/examples/nop/run.py`.
 
 The `**kw` serves to absorb all the arguments that you did not declare. The macro can take additional arguments (not shown here) which are documented [below](#arguments). Alternately, you can just take a look at what the `**kw` dictionary contains.
 
@@ -1600,7 +1600,7 @@ def expand(tree, **kw):
     return q(lambda x: x * ast(tree) + 10)
 ```
 
-the `q(..)` syntax means that the section following it is quoted as an AST, while the unquote `ast()` syntax means to place the *value* of `tree` into that part of the quoted AST, rather than simply the node `Name("tree")`. Running `run.py`, this also prints `25`. See [examples/quasiquote](examples/quasiquote) for the self-contained code for this example.
+the `q(..)` syntax means that the section following it is quoted as an AST, while the unquote `ast()` syntax means to place the *value* of `tree` into that part of the quoted AST, rather than simply the node `Name("tree")`. Running `run.py`, this also prints `25`. See [docs/examples/quasiquote](docs/examples/quasiquote) for the self-contained code for this example.
 
 Another unquote `u` allow us to dynamically include the value `10` in the AST at run time:
 
@@ -1830,7 +1830,7 @@ print filter(f(_ % 2 != 0), [1, 2, 3])  # [1, 3]
 print map(f(_  * 10), [1, 2, 3])  # [10, 20, 30]
 ```
 
-Mission Accomplished! You can see the completed self-contained example in [examples/full](examples/full). This macro is also defined in our library in [macropy/macros/quick_lambda.py](macropy/macros/quick_lambda.py), along with a suite of [unit tests](macropy/macros/quick_lambda_test.py). It is also used throughout the implementation of the other macros.
+Mission Accomplished! You can see the completed self-contained example in [docs/examples/full](docs/examples/full). This macro is also defined in our library in [macropy/macros/quick_lambda.py](macropy/macros/quick_lambda.py), along with a suite of [unit tests](macropy/macros/quick_lambda_test.py). It is also used throughout the implementation of the other macros.
 
 Reference
 =========
