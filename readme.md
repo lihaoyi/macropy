@@ -5,7 +5,7 @@ MacroPy
 ```python
 >>> import macropy.core.console
 0=[]=====> MacroPy Enabled <=====[]=0
->>> from macropy.macros.adt import macros, case
+>>> from macropy.macros.case_classes import macros, case
 
 >>> @case
 ... class Point(x, y): pass
@@ -155,7 +155,7 @@ Feel free to open up a REPL and try out the examples in the console; simply `imp
 Case Classes
 ------------
 ```python
-from macropy.macros.adt import macros, case
+from macropy.macros.case_classes import macros, case
 
 @case
 class Point(x, y): pass
@@ -792,7 +792,7 @@ Unlike `assert`, `require` automatically tells you what code failed the conditio
 `require can also be used in block form:
 
 ```python
->>> from macropy.macros.tracing import macros, trace
+>>> from macropy.macros.tracing import macros, require
 >>> with require:
 ...     a > 5
 ...     a * b == 20
