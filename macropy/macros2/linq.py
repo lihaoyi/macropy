@@ -37,7 +37,7 @@ def _recurse(tree, **kw):
         if type(elt) is Tuple:
             sel = q(ast_list(elt.elts))
         else:
-            sel = q(ast(elt))
+            sel = q([ast(elt)])
 
         out = q(select(ast(sel)))
 

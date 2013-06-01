@@ -4,7 +4,8 @@ import ast
 from sqlalchemy import *
 from macropy.macros2.linq import macros, sql, query, generate_schema
 from macropy.core.lift import macros, q
-from macropy.core import unparse_ast
+from macropy.macros.tracing import macros, show_expanded
+
 
 engine = create_engine("sqlite://")
 
@@ -251,7 +252,7 @@ class Tests(unittest.TestCase):
         # the name of every country sorted in order
         compare_queries(
             "SELECT c.name FROM country c ORDER BY c.population",
-            sql(c.name for c in db.country).order_by(c.population)
+            sql((c.name for c in db.country).order_by(c.population))
         )
 
         # sum up the population of every country using GROUP BY instead of a JOIN
@@ -261,29 +262,29 @@ class Tests(unittest.TestCase):
             FROM city t GROUP BY t.country_code
             ORDER BY sum(t.population)
             """,
-            sql(
+            sql((
                 (t.country_code, func.sum(t.population)) for t in db.city
             ).group_by(t.country_code)
-             .order_by(func.sum(t.population))
+             .order_by(func.sum(t.population)))
         )
 
     def test_limit_offset(self):
         # bottom 10 countries by population
         compare_queries(
             "SELECT c.name FROM country c ORDER BY c.population LIMIT 10",
-            sql(c.name for c in db.country).order_by(c.population).limit(10)
+            sql((c.name for c in db.country).order_by(c.population).limit(10))
         )
 
         # bottom 100 to 110 countries by population
         compare_queries(
             "SELECT c.name FROM country c ORDER BY c.population LIMIT 10 OFFSET 100",
-            sql(c.name for c in db.country).order_by(c.population).limit(10).offset(100)
+            sql((c.name for c in db.country).order_by(c.population).limit(10).offset(100))
         )
 
         # top 10 countries by population
         compare_queries(
             "SELECT c.name FROM country c ORDER BY c.population DESC LIMIT 10",
-            sql(c.name for c in db.country).order_by(c.population.desc()).limit(10)
+            sql((c.name for c in db.country).order_by(c.population.desc()).limit(10))
         )
 
 
