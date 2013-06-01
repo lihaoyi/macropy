@@ -2,7 +2,6 @@ import unittest
 
 from macropy.experimental.pattern import macros, _matching, switch, patterns
 
-
 class Foo(object):
     def __init__(self, x, y):
           self.x = x
@@ -33,6 +32,12 @@ class Tests(unittest.TestCase):
         with self.assertRaises(PatternMatchException):
             self.assertFalse(matcher.match(4))
 
+    def test_wildcard_matcher(self):
+        _ = 2
+        with patterns:
+            _ << 5
+        self.assertEquals(2, _)
+
     def test_tuple_matcher(self):
         matcher = TupleMatcher(
                 LiteralMatcher(5),
@@ -53,7 +58,7 @@ class Tests(unittest.TestCase):
 
         matcher1 = ClassMatcher(Foo, [NameMatcher('a'),
                 NameMatcher('b')])
-        matcher1.match_value(Foo(4, 5))
+        matcher1._match_value(Foo(4, 5))
         a = matcher1.get_var('a')
         b = matcher1.get_var('b')
 
@@ -76,11 +81,12 @@ class Tests(unittest.TestCase):
     def test_compound_matching(self):
         with _matching:
             Foo(x, Foo(4, y)) << Foo(2, Foo(4, 7))
-            self.assertEquals(2, x)
-            self.assertEquals(7, y)
+        self.assertEquals(2, x)
+        self.assertEquals(7, y)
+        with _matching:
             Foo("hey there", Foo(x, y)) << Foo("hey there", Foo(1, x))
-            self.assertEquals(1, x)
-            self.assertEquals(2, y)
+        self.assertEquals(1, x)
+        self.assertEquals(2, y)
 
     def test_match_exceptions(self):
         with self.assertRaises(Exception):
@@ -89,62 +95,81 @@ class Tests(unittest.TestCase):
             Foo(x, Foo(4, y)) << Foo(2, Foo(5, 7))
 
     def test_disjoint_varnames_assertion(self):
-        with _matching:
-            with self.assertRaises(PatternVarConflict):
+        with self.assertRaises(PatternVarConflict):
+            with _matching:
                 Foo(x, x) << Foo(3, 4)
-            with self.assertRaises(PatternVarConflict):
+        with self.assertRaises(PatternVarConflict):
+            with _matching:
                 Foo(x, Foo(4, x)) << Foo(3, 4)
 
     def test_boolean_matching(self):
-        with _matching:
-            with self.assertRaises(PatternMatchException):
+        with self.assertRaises(PatternMatchException):
+            with _matching:
                 Foo(True, x) << Foo(False, 5)
-            self.assertTrue(True)
-            self.assertFalse(False)
+        self.assertTrue(True)
+        self.assertFalse(False)
 
     def test_atomicity(self):
-        with _matching:
-            x = 1
-            y = 5
-            with self.assertRaises(PatternMatchException):
+        x = 1
+        y = 5
+        with self.assertRaises(PatternMatchException):
+            with _matching:
                 (x, (3, y)) << (2, (4, 6))
-            self.assertEquals(1, x)
-            self.assertEquals(5, y)
+        self.assertEquals(1, x)
+        self.assertEquals(5, y)
+        with _matching:
             (x, (3, y)) << (2, (3, 6))
-            self.assertEquals(2, x)
-            self.assertEquals(6, y)
+        self.assertEquals(2, x)
+        self.assertEquals(6, y)
 
     def test_switch(self):
+        branch_reached = -1
         with switch(Bar(6)):
             if Bar(5):
-                self.assertTrue(False)
+                branch_reached = 1
             else:
-                pass
+                branch_reached = 2
+        self.assertEquals(branch_reached, 2)
 
     def test_instance_checking(self):
         blah = Baz(5)
+        branch_reached = -1
+        reached_end = False
         with switch(blah):
             if Foo(lol, wat):
-                self.assertTrue(False)
+                branch_reached = 1
             elif Bar(4):
-                self.assertTrue(False)
+                branch_reached = 2
             elif Baz(x):
+                branch_reached = 3
                 self.assertEquals(5, x)
             self.assertEquals(8, 1 << 3)
+            reached_end=True
+        self.assertTrue(reached_end)
+        self.assertEquals(3, branch_reached)
 
     def test_patterns_macro(self):
         blah = Baz(5)
+        branch_reached = -1
         with patterns:
             if Foo(lol, wat) << blah:
-# this shouldn't happen
-                self.assertTrue(False)
+                branch_reached = 1
             elif Bar(4) << blah:
-                self.assertTrue(False)
+                branch_reached = 2
             elif Baz(x) << blah:
                 self.assertEquals(5, x)
+                branch_reached = 3
+        self.assertEquals(3, branch_reached)
 
     def test_keyword_matching(self):
         foo = Foo(21, 23)
         with patterns:
             Foo(x=x) << foo
-            self.assertEquals(21, x)
+        self.assertEquals(21, x)
+
+    def test_no_rewrite_normal_ifs(self):
+        branch_reached = -1
+        with patterns:
+            if False:
+                branch_reached = 1
+        self.assertEquals(-1, branch_reached)

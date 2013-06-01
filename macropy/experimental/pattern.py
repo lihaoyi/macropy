@@ -1,14 +1,28 @@
 import inspect
 
-from ast import *
+from abc import ABCMeta, abstractmethod
+from ast import (
+    Call,
+    List,
+    Tuple,
+    Load,
+    Store)
+
 from macropy.core import util
-from macropy.core.macros import *
 from macropy.core.quotes import macros, q
-from macropy.core.quotes import *
 
 macros = Macros()
 
-__all__ = ['Matcher', 'TupleMatcher', 'PatternMatchException', 'LiteralMatcher', 'PatternVarConflict', 'ClassMatcher', 'NameMatcher', 'ListMatcher']
+__all__ = ['Matcher', 'TupleMatcher', 'PatternMatchException',
+        'LiteralMatcher', 'PatternVarConflict', 'ClassMatcher', 'NameMatcher',
+        'ListMatcher', 'WildcardMatcher', 'DEFAULT']
+
+
+"""Use DEFAULT as a catch-all in a switch, otherwise the syntax tree can
+confuse the transformer (unavoidable due to elifs just being syntactic
+sugar)."""
+DEFAULT = None
+
 
 class PatternMatchException(Exception):
     """
@@ -25,23 +39,13 @@ class PatternVarConflict(Exception):
 
 
 def _vars_are_disjoint(var_names):
-    # We don't count _'s as being conflicting names, because these just stand
-    # for 'ignore'
-    real_names = set(var_names)
-    if '_' in real_names:
-        real_names.remove('_')
-    num_incl_dups = 0
-    for name in var_names:
-        if name != '_':
-            num_incl_dups += 1
-    return num_incl_dups == len(real_names)
+    return len(var_names)== len(set(var_names))
 
 
 class Matcher(object):
+    __metaclass__ = ABCMeta
 
-    def __init__(self):
-        pass
-
+    @abstractmethod
     def var_names(self):
         """
         Returns a container of the variable names which may be modified upon a
@@ -49,15 +53,15 @@ class Matcher(object):
         """
         pass
 
+    @abstractmethod
     def match(self, matchee):
         """
         Returns ([(varname, value)...]) if there is a match.  Otherwise,
-        raise PatternMatchException().  This guy is recursively implemented by
-        matchers, and is stateless.
+        raise PatternMatchException().  This should be stateless.
         """
         pass
 
-    def match_value(self, matchee):
+    def _match_value(self, matchee):
         """
         Match against matchee and produce an internal dictionary of the values
         for each variable.
@@ -156,12 +160,22 @@ class NameMatcher(Matcher):
         self.name = name
 
     def var_names(self):
-        if self.name == '_':
-            return []
         return [self.name]
 
     def match(self, matchee):
         return [(self.name, matchee)]
+
+
+class WildcardMatcher(Matcher):
+    
+    def __init__(self):
+        pass
+
+    def var_names(self):
+        return ['_']
+
+    def match(self, matchee):
+        return [('_', 3)]
 
 
 # Currently only works for positional arguments
@@ -231,6 +245,8 @@ def build_matcher(tree, modified):
     if isinstance(tree, Name):
         if tree.id in ['True', 'False', 'None']:
             return q(LiteralMatcher(ast(tree)))
+        elif tree.id in ['_']:
+            return q(WildcardMatcher())
         modified.add(tree.id)
         return q(NameMatcher(u(tree.id)))
     if isinstance(tree, List):
@@ -288,7 +304,7 @@ def _matching(tree, **kw):
             with q as assignment:
                 xsfvdy = ast(matcher)
 
-            statements = [assignment, Expr(q(xsfvdy.match_value(ast(tree.value.right))))]
+            statements = [assignment, Expr(q(xsfvdy._match_value(ast(tree.value.right))))]
 
             for var_name in modified:
                 statements.append(Assign([Name(var_name, Store())],
@@ -302,7 +318,20 @@ def _matching(tree, **kw):
     return [tree]
 
 
-def _rewrite_if(tree, var_name=None):
+def _rewrite_if(tree, var_name=None, **kw_args):
+    # TODO refactor into a _rewrite_switch and a _rewrite_if
+    """
+    Rewrite if statements to treat pattern matches as boolean expressions.
+
+    Recall that normally a pattern match is a statement which will throw a
+    PatternMatchException if the match fails.  We can therefore use try-blocks
+    to produce the desired branching behavior.
+
+    var_name is an optional parameter used for rewriting switch statements.  If
+    present, it will transform predicates which are expressions into pattern
+    matches.
+    """
+
     # with q as rewritten:
     #     try:
     #         with matching:
@@ -311,39 +340,41 @@ def _rewrite_if(tree, var_name=None):
     #     except PatternMatchException:
     #         u%(_maybe_rewrite_if(failBody))
     # return rewritten
-    handler = ExceptHandler(Name('PatternMatchException', Load()), None, tree.orelse)
-    try_stmt = TryExcept(tree.body, [handler], [])
+    if not isinstance(tree, If):
+        return tree
 
     if var_name:
         tree.test = BinOp(tree.test, LShift(), Name(var_name, Load()))
+    elif not (isinstance(tree.test, BinOp) and isinstance(tree.test.op, LShift)):
+        return tree      
+
+    handler = ExceptHandler(Name('PatternMatchException', Load()), None, tree.orelse)
+    try_stmt = TryExcept(tree.body, [handler], [])
 
     macroed_match = With(Name('_matching', Load()), None, [Expr(tree.test)])
     try_stmt.body = [macroed_match] + try_stmt.body
 
-    if len(handler.body) == 1:
-        handler.body = [_maybe_rewrite_if(handler.body[0], var_name)]
+    if len(handler.body) == 1: # (== tree.orelse)
+        # Might be an elif
+        handler.body = [_rewrite_if(handler.body[0], var_name)]
     elif not handler.body:
         handler.body = [Pass()]
 
     return try_stmt
 
 
-def _maybe_rewrite_if(stmt, var_name=None):
-    if isinstance(stmt, If):
-        return _rewrite_if(stmt, var_name)
-    return stmt
-
-
 @macros.block()
 def switch(tree, args, gen_sym, **kw):
     """
-    This only enables (refutable) pattern matching in top-level if statements.
-    The advantage of this is the limited reach ensures less interference with
-    existing code.
+    If supplied one argument x, switch will treat the predicates of any
+    top-level if statements as patten matches against x.
+
+    Pattern matches elsewhere are ignored.  The advantage of this is the
+    limited reach ensures less interference with existing code.
     """
     new_id = gen_sym()
     for i in xrange(len(tree)):
-        tree[i] = _maybe_rewrite_if(tree[i], new_id)
+        tree[i] = _rewrite_if(tree[i], new_id)
     tree = [Assign([Name(new_id, Store())], args[0])] + tree
     return tree
 
@@ -354,12 +385,10 @@ def patterns(tree, **kw):
     This enables patterns everywhere!  NB if you use this macro, you will not be
     able to use real left shifts anywhere.
     """
-    @Walker
-    def if_rewriter(tree, **kw):
-        return _maybe_rewrite_if(tree)
-
     with q as new:
         with _matching:
             None
-    if_rewriter.recurse(new)
+
+    new[0].body = Walker(_rewrite_if).recurse(tree)
+
     return new
