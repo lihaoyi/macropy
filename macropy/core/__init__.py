@@ -42,6 +42,8 @@ def ast_repr(x):
     elif type(x) is set:            return ast.Set(elts=map(ast_repr, x))
     elif type(x) is Literal:        return x.body
     elif x is None:                 return ast.Name(id="None")
+    elif x is True:                 return ast.Name(id="True")
+    elif x is False:                 return ast.Name(id="False")
     elif isinstance(x, ast.AST):
         fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
         return ast.Call(

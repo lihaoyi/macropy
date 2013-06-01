@@ -173,7 +173,8 @@ def _src_for(tree, src, indexes, line_lengths):
 
     first_successor_index = indexes()[min(indexes().index(last_child_index)+1, len(indexes())-1)]
 
-    for end_index in range(last_child_index, first_successor_index):
+    for end_index in range(last_child_index, first_successor_index+1):
+
         prelim = src[start_index:end_index]
         prelim = _transforms.get(type(tree), "%s") % prelim
 
@@ -205,6 +206,7 @@ def _expand_ast(tree, src, bindings):
     positions = Lazy(lambda: indexer.recurse_real(tree)[1])
     line_lengths = Lazy(lambda: map(len, src.split("\n")))
     indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)]))
+
     symbols = Lazy(lambda: _gen_syms(tree))
 
     allnames = [(m, name, asname) for m, names in bindings for name, asname in names]
@@ -230,6 +232,7 @@ def _expand_ast(tree, src, bindings):
                 args=args,
                 gen_sym=lambda: symbols().next(),
                 exact_src=lambda t: _src_for(t, src, indexes, line_lengths),
+                expand_macros=lambda t: _expand_ast(t, src, bindings),
                 **kwargs
             )
             new_tree = _ast_ctx_fixer.recurse(new_tree, Load())

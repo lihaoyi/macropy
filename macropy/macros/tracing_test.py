@@ -1,7 +1,7 @@
 import unittest
 
-from macropy.macros.tracing import macros, trace, log, require
-
+from macropy.macros.tracing import macros, trace, log, require, show_expanded
+from macropy.core.lift import macros, q
 result = []
 
 def log(x):
@@ -125,3 +125,20 @@ evens += [n]
                     a * b == 20
                     a < 2
             assert cm.exception.message == "Require Failed\na < 2 -> False"
+
+
+        def test_show_expanded(self):
+
+            show_expanded%(q%(1 + 2))
+            assert result[-1] == "BinOp(left=Num(n=1), op=Add(), right=Num(n=2))"
+
+            with show_expanded:
+                a = 1
+                b = 2
+                with q as code:
+                    print a + u%(b + 1)
+            assert result[-3:] == [
+                '\na = 1',
+                '\nb = 2',
+                "\ncode = [Print(dest=None, values=[BinOp(left=Name(id='a', ctx=Load()), op=Add(), right=ast_repr((b + 1)))], nl=True)]"
+            ]

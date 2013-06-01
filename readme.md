@@ -798,7 +798,60 @@ a < 2 -> False
 
 This requires every statement in the block to be a boolean expression. Each expression will then be wrapped in a `require%`, throwing an `AssertionError` with a nice trace when a condition fails.
 
+###`show_expanded`
+
+```python
+from macropy.macros.tracing import macros, show_expanded
+
+show_expanded%(q%(1 + 2))
+# BinOp(left=Num(n=1), op=Add(), right=Num(n=2))
+```
+
+`show_expanded` is a macro which is similar to the simple `log` macro shown above, but prints out what the wrapped code looks like *after all macros have been expanded*. This makes it extremely useful for debugging macros, where you need to figure out exactly what your code is being expanded into. `show_expanded` also works in block form:
+
+```python
+from macropy.core.lift import macros, q
+from macropy.macros.tracing import macros, show_expanded, trace
+
+with show_expanded:
+    a = 1
+    b = q%(1 + 2)
+    with q as code:
+        print a
+
+# a = 1
+# b = BinOp(left=Num(n=1), op=Add(), right=Num(n=2))
+# code = [Print(dest=None, values=[Name(id='a', ctx=Load())], nl=True)]
+```
+
+These examples show how the [quasiquote](#quasiquotes) macro works: it turns an expression or block of code into its AST, assigning the AST to a variable at runtime for other code to use.
+
+Here is a less trivial example: [case classes](#case-classes) are a pretty useful macro, which saves us the hassle of writing a pile of boilerplate ourselves. By using `show_expanded`, we can see what the case class definition expands into:
+
+```python
+with show_expanded:
+    @case
+    class Point(x, y):
+        pass
+
+# class Point(CaseClass):
+#     def __init__(self, x, y):
+#         self.x = x
+#         self.y = y
+#         pass
+#     _fields = ['x', 'y']
+#     _varargs = None
+#     _kwargs = None
+#     __slots__ = ['x', 'y']
+```
+
+Pretty neat!
+
+---------------------------------
+
 If you want to write your own custom logging, tracing or debugging macros, take a look at the [100 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/macros2/tracing.py) that implements all the functionality shown above.
+
+
 
 PINQ to SQLAlchemy
 ------------------
@@ -1645,7 +1698,21 @@ def f(tree, **kw):
     return newtree
 ```
 
-This snippet of code is equivalent to the one earlier, except that with a [Walker](#walkers), you only need to specify the AST nodes you are interested in (in this case `Name`s) and the Walker will do the recursion automatically. As you can see, when we print out the unparsed newtree, we can see that the transformed code looks like what we expect. This code then fails with a 
+This snippet of code is equivalent to the one earlier, except that with a [Walker](#walkers), you only need to specify the AST nodes you are interested in (in this case `Name`s) and the Walker will do the recursion automatically. As you can see, when we print out the unparsed newtree, we can see that the transformed code looks like what we expect. You could also use the [show_expanded](#show_expanded) macro in `target.py` to see what it looks like:
+
+```python
+# target.py
+from macro_module import macros, f
+from macropy.macros.tracing import macros, show_expanded
+
+with show_expanded:
+    my_func = f%(_ + (1 * _))
+# my_func = (arg0 + (1 * arg1))
+```
+
+Verifying that the code indeed is what we expect.
+
+When run, this code then fails with a
 
 ```
 NameError: name 'arg0' is not defined

@@ -11,11 +11,34 @@ def wrap(printer, txt, x):
     printer(string)
     return x
 
+def wrap_simple(printer, txt, x):
+    string = txt
+    printer(string)
+    return x
 
 @macros.expr()
 def log(tree, exact_src, **kw):
-
     new_tree = q%(wrap(log, u%exact_src(tree), ast%tree))
+    return new_tree
+
+@macros.expr()
+def show_expanded(tree, expand_macros, **kw):
+    import copy
+    expanded_tree = unparse_ast(expand_macros(copy.deepcopy(tree)))
+    new_tree = q%(wrap_simple(log, u%expanded_tree, ast%tree))
+    return new_tree
+
+@macros.block()
+def show_expanded(tree, expand_macros, **kw):
+    import copy
+    new_tree = []
+    for stmt in tree:
+        txt = unparse_ast(expand_macros(copy.deepcopy(stmt)))
+        with q as code:
+            log(u%txt)
+        new_tree.append(code)
+        new_tree.append(stmt)
+
     return new_tree
 
 @Walker
