@@ -1,6 +1,6 @@
 import unittest
 
-from macropy.macros.pattern import macros, _matching, switch, patterns
+from macropy.experimental.pattern import macros, _matching, switch, patterns
 
 
 class Foo(object):

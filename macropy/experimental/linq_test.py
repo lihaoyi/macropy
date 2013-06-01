@@ -2,14 +2,14 @@ import unittest
 import ast
 
 from sqlalchemy import *
-from macropy.macros2.linq import macros, sql, query, generate_schema
+from macropy.experimental.linq import macros, sql, query, generate_schema
 from macropy.core.lift import macros, q
 from macropy.macros.tracing import macros, show_expanded
 
 
 engine = create_engine("sqlite://")
 
-for line in open("macropy/macros2/world.sql").read().split(";"):
+for line in open("macropy/experimental/world.sql").read().split(";"):
     engine.execute(line.strip())
 
 db = generate_schema(engine)

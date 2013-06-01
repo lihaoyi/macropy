@@ -619,14 +619,14 @@ String Interpolation
 >>> from macropy.macros.string_interp import macros, s
 
 >>> a, b = 1, 2
->>> s%"%{a} apple and %{b} bananas"
+>>> s%"{a} apple and {b} bananas"
 '1 apple and 2 bananas'
 ```
 
 Unlike the normal string interpolation in Python, MacroPy's string interpolation allows the programmer to specify the variables to be interpolated _inline_ inside the string. The macro `s%` then takes the string literal
 
 ```python
-"%{a} apple and %{b} bananas"
+"{a} apple and {b} bananas"
 ```
 
 and expands it into the expression
@@ -641,7 +641,7 @@ Which is evaluated at run-time in the local scope, using whatever the values `a`
 >>> from macropy.macros.string_interp import macros, s
 >>> A = 10
 >>> B = 5
->>> s%"%{A} + %{B} = %{A + B}"
+>>> s%"{A} + {B} = {A + B}"
 '10 + 5 = 15'
 ```
 

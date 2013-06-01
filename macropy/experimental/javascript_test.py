@@ -1,6 +1,6 @@
 import unittest
 import ast
-from macropy.macros2.javascript import macros, pyjs, js, std_lib_script
+from macropy.experimental.javascript import macros, pyjs, js, std_lib_script
 from macropy.macros.tracing import macros, require
 import pjs
 

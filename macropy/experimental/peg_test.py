@@ -1,5 +1,5 @@
 import unittest
-from macropy.macros2.peg import macros, peg
+from macropy.experimental.peg import macros, peg
 from macropy.macros.tracing import macros, require
 from macropy.macros.quicklambda import macros, f, _
 class Tests(unittest.TestCase):

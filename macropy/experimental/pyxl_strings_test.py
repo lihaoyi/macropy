@@ -1,6 +1,6 @@
 
 from macropy.macros.adt import macros, case
-from macropy.macros2.pyxl_strings import macros, p
+from macropy.experimental.pyxl_strings import macros, p
 from macropy.macros.tracing import macros, require
 from pyxl import html
 from pyxl.html import rawhtml

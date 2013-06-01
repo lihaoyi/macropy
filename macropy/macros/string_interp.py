@@ -9,7 +9,7 @@ macros = Macros()
 def s(tree, **kw):
     captured = []
     new_string = ""
-    chunks = re.split("%{(.*?)}", tree.s)
+    chunks = re.split("{(.*?)}", tree.s)
     for i in range(0, len(chunks)):
         if i % 2 == 0:
             new_string += chunks[i]
