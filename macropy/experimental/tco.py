@@ -20,7 +20,7 @@ def trampoline(func, args, kwargs):
     while True:
         # We can only set this if we know it will be immediately unset by func
         if hasattr(func, 'tco'):
-            in_tc_stack[-1] = True
+            in_tc_stack[0] = True
         result = func(*args, **kwargs)
         # for performance reasons, do not use pattern matching here
         if isinstance(result, tuple):
@@ -36,10 +36,8 @@ def trampoline(func, args, kwargs):
                 kwargs = result[3]
                 continue
         if ignoring:
-            in_tc_stack.pop()
             return None
         else:
-            in_tc_stack.pop()
             return result
 
 
@@ -47,8 +45,8 @@ def trampoline_decorator(func):
     import functools
     @functools.wraps(func)
     def trampolined(*args, **kwargs):
-        if in_tc_stack[-1]:
-            in_tc_stack[-1] = False
+        if in_tc_stack[0]:
+            in_tc_stack[0] = False
             return func(*args, **kwargs)
         in_tc_stack.append(False)
         return trampoline(func, args, kwargs)
@@ -127,4 +125,3 @@ def tco(tree, **kw):
 tco.trampoline_decorator = trampoline_decorator
 tco.IGNORE = ['tco_ignore']
 tco.CALL = ['tco_call']
-tco.in_tc_stack = in_tc_stack
