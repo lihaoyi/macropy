@@ -1144,12 +1144,12 @@ The above example describes a simple parser for arithmetic expressions, using ou
 
 Anything within a `with peg:` block is transformed into a `Parser`. A `Parser` comes with a `.parse_string(input)` method that attempts to parse the given `input` string. This method returns:
 
-- `Success(output, bindings, remaining_input)` if the parser succeeded; `output` contains the result of the parsing, and is probably what you want, while `bindings` contains any variables bound via the `is` keyword and `remaining_input` is an object containing both the `input` string and the `index` of the last character that was parsed. The entire `input` must be consumed for parsing to succeed.
+- `Success(output, bindings, remaining)` if the parser succeeded; `output` contains the result of the parsing, and is probably what you want, while `bindings` contains any variables bound via the `is` keyword and `remaining` is an object containing both the `input` string and the `index` of the last character that was parsed. The entire `input` must be consumed for parsing to succeed.
 - `Failure(index, failed, fatal=False)`  if the parser failed to parse the input, where `index` contains the index in the input where parsing finally failed (after exhausting all backtracking) and `failed` contains the `Parser` object which failed at that `index`. 
 
 In addition to `parse_string`, a Parser also contains:
 
-- a `parse_partial(input)` method, which is identical but does not require the entire `input` to be consumed, as long as some prefix of the `input` string matches. The `remaining_input` attribute of the `Success` indicates how far into the `input` string parsing proceeded
+- a `parse_partial(input)` method, which is identical but does not require the entire `input` to be consumed, as long as some prefix of the `input` string matches. The `remaining` attribute of the `Success` indicates how far into the `input` string parsing proceeded
 - a `parse(input)` method, which is similar to `parse_string` except it returns an unboxed result in case of success (i.e. not wrapped in a `Success` object, and thus with no metadata) and raises a `ParseError` in the case of failure. This is intended to be a more human-friendly version of `parse_string`, whose `Success` and `Failure` return types are better suited to programmatic manipulation. The `ParseError` contains a nice human-readable string detailing exactly what went wrong:
 
 ```python
@@ -1257,7 +1257,6 @@ with peg:
 
 print expr1.parse("1bc").output # ['1', 'b', 'c']
 print expr2.parse("1bc").index # 1
-
 ```
 
 `cut` is a special token used in a sequence of parsers, which commits the parsing to the current sequence. As you can see above, without `cut`, the left alternative fails and the parsing then attempts the right alternative, which succeeds. On the other hand, in `expr2`, the parser is committed to the left alternative once it reaches the `cut` (after successfully parsing "1") and thus when the left alternative fails, the right alternative is not tried and the entire `parse` fails.

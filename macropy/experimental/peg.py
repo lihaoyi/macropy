@@ -4,10 +4,22 @@ from macropy.core.macros import *
 from macropy.core.quotes import macros, q, u
 from macropy.quick_lambda import macros, f
 from macropy.case_classes import macros, case
-from macropy.tracing import macros, show_expanded
-import re
 from collections import defaultdict
+
+"""
+PEG Parser Atoms
+================
+Sequence: e1 e2             ,       Seq
+Ordered choice: e1 / e2     |       Or
+Zero-or-more: e*            .rep    Rep
+One-or-more: e+             .rep1
+Optional: e?                .opt
+And-predicate: &e           &       And
+Not-predicate: !e           -       Not
+"""
+
 macros = Macros()
+
 
 __all__ = ["Input", 'Parser', 'Success', 'Failure', 'cut', 'ParseError']
 
@@ -65,17 +77,7 @@ def _PegWalker(tree, ctx, stop, collect, **kw):
         collect(bindings + [tree.comparators[0].id])
         return new_tree
 
-"""
-PEG Parser Atoms
-================
-Sequence: e1 e2             ,   8       Seq
-Ordered choice: e1 / e2     |   7       Or
-Zero-or-more: e*            ~   13      Rep
-One-or-more: e+             +   13      rep1
-Optional: e?                            opt
-And-(predicate: &e           &   9       And
-Not-predicate: !e           -   13      Not
-"""
+
 
 cut = object()
 
@@ -85,28 +87,38 @@ class Input(string, index):
 
 
 @case
-class Success(output, bindings, remaining_input):
+class Success(output, bindings, remaining):
+    """
+    output: the final value that was parsed
+    bindings: named value bindings, created by the `is` keyword
+    remaining: an Input representing the unread portion of the input
+    """
     pass
 
 
 @case
-class Failure(remaining_input, failed, fatal | False):
+class Failure(remaining, failed, fatal | False):
+    """
+    remaining: an Input representing the unread portion of the input
+    failed: a List[Parser], containing the stack of parsers in
+            effect at time of failure
+    fatal: whether a parent parser which receives this result from a child
+           should continue backtracking
+    """
     @property
     def index(self):
-        return self.remaining_input.index
+        return self.remaining.index
     @property
     def trace(self):
-        print [f.trace_name for f in self.failed]
         return [x for f in self.failed for x in f.trace_name]
 
-
-class ParseError(Exception):
-    def __init__(self, failure):
-        self.failure = failure
+    @property
+    def msg(self):
+        """A pretty human-readable error message representing this Failure"""
         line_length = 60
 
-        string = self.failure.remaining_input.string
-        index = self.failure.index
+        string = self.remaining.string
+        index = self.index
         line_start = string.rfind('\n', 0, index+1)
 
         line_end = string.find('\n', index+1, len(string))
@@ -117,41 +129,48 @@ class ParseError(Exception):
 
         offset = min(index - line_start , 40)
 
-        msg = "index: " + str(failure.index) + ", line: " + str(line_num + 1) + ", col: " + str(index - line_start) + "\n" + \
-              " / ".join([x for f in failure.failed for x in f.trace_name]) + "\n" + \
+        msg = "index: " + str(self.index) + ", line: " + str(line_num + 1) + ", col: " + str(index - line_start) + "\n" + \
+              " / ".join(self.trace) + "\n" + \
               string[line_start+1:line_end][index - offset - line_start:index+line_length-offset - line_start] + "\n" + \
               (offset-1) * " " + "^"
+        return msg
 
-        Exception.__init__(self, msg)
+class ParseError(Exception):
+    """An exception that wraps a Failure"""
+    def __init__(self, failure):
+        self.failure = failure
+        Exception.__init__(self, failure.msg)
 
 @case
 class Parser:
 
-    def bind_to(self, string):
-        return Parser.Binder(self, string)
 
-    def parse_partial(self, string):
-        return self.parse_input(Input(string, 0))
-
-    def parse_string(self, string):
-        return Parser.Full(self).parse_input(Input(string, 0))
 
     def parse(self, string):
+        """String -> value; throws ParseError in case of failure"""
         res = Parser.Full(self).parse_input(Input(string, 0))
         if type(res) is Success:
             return res.output
         else:
             raise ParseError(res)
 
+    def parse_partial(self, string):
+        """String -> Success | Failure"""
+        return self.parse_input(Input(string, 0))
+
+    def parse_string(self, string):
+        """String -> Success | Failure"""
+        return Parser.Full(self).parse_input(Input(string, 0))
+
+    def parse_input(self, input):
+        """Input -> Success | Failure"""
+
     @property
     def trace_name(self):
         return []
 
-    def parse_input(self, input):
-        """
-        input: Input -> success: (results: T, results_dict: dict, new_input: Input)
-                     -> failure: (index: int, failed: Parser, fatal: boolean)
-        """
+    def bind_to(self, string):
+        return Parser.Binder(self, string)
 
     def __and__(self, other):   return Parser.And([self, other])
 
@@ -183,16 +202,13 @@ class Parser:
 
     def __rshift__(self, other): return Parser.TransformBound(self, other)
 
-
     class Full(parser):
         def parse_input(self, input):
             res = self.parser.parse_input(input)
-            if type(res) is Success and res.remaining_input.index < len(input.string):
-                return Failure(res.remaining_input, [self])
+            if type(res) is Success and res.remaining.index < len(input.string):
+                return Failure(res.remaining, [self])
             else:
                 return res
-
-
 
     class Raw(string):
         def parse_input(self, input):
@@ -210,7 +226,6 @@ class Parser:
             else:
                 return Failure(input, [self])
 
-
     class Seq(children):
         def parse_input(self, input):
             current_input = input
@@ -223,20 +238,18 @@ class Parser:
                 else:
                     res = child.parse_input(current_input)
 
-
                     if type(res) is Failure:
                         if committed or res.fatal:
-                            return Failure(res.remaining_input, [self] + res.failed, True)
+                            return Failure(res.remaining, [self] + res.failed, True)
                         else:
                             return res
 
-                    current_input = res.remaining_input
+                    current_input = res.remaining
                     results.append(res.output)
                     for k, v in res.bindings.items():
                         result_dict[k] = v
 
             return Success(results, result_dict, current_input)
-
 
     class Or(children):
         def parse_input(self, input):
@@ -244,7 +257,7 @@ class Parser:
                 res = child.parse_input(input)
                 if type(res) is Success:
                     return res
-                elif type(res) is Failure and res.fatal:
+                elif res.fatal:
                     return res.copy(failed = [self] + res.failed)
 
             return Failure(input, [self])
@@ -252,15 +265,11 @@ class Parser:
     class And(children):
         def parse_input(self, input):
             results = [child.parse_input(input) for child in self.children]
-            failures = [
-                res for res in results
-                if type(res) is Failure
-            ]
+            failures = [res for res in results if type(res) is Failure]
             if failures == []:
                 return results[0]
             else:
                 return failures[0].copy(failed = [self] + failures[0].failed)
-
 
     class Not(parser):
         def parse_input(self, input):
@@ -268,7 +277,6 @@ class Parser:
                 return Failure(input, [self])
             else:
                 return Success(None, {}, input)
-
 
     class Rep(parser):
         def parse_input(self, input):
@@ -284,7 +292,7 @@ class Parser:
                     else:
                         return Success(results, result_dict, current_input)
 
-                current_input = res.remaining_input
+                current_input = res.remaining
 
                 for k, v in res.bindings.items():
                     result_dict[k] = result_dict[k] + [v]
@@ -303,7 +311,7 @@ class Parser:
                 if type(res) is Failure:
                     return res.copy(failed = [self] + res.failed)
 
-                current_input = res.remaining_input
+                current_input = res.remaining
 
                 for k, v in res.bindings.items():
                     result_dict[k] = result_dict[k] + [v]
@@ -328,9 +336,7 @@ class Parser:
         def parse_input(self, input):
             result = self.parser.parse_input(input)
             if type(result) is Success:
-
                 return result.copy(output = self.func(**result.bindings), bindings={})
-
             else:
                 return result.copy(failed = [self] + result.failed)
 
@@ -353,19 +359,10 @@ class Parser:
             else:
                 return res.copy(failed = [self] + res.failed)
 
-
     class Succeed(string):
         def parse_input(self, input):
             return Success(self.string, {}, input)
 
-
     class Fail():
         def parse_input(self, input):
             return Failure(input, [self])
-
-
-
-
-
-
-

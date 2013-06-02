@@ -5,6 +5,7 @@ __all__ = ['CaseClass', 'singleton']
 
 macros = Macros()
 
+
 class CaseClass(object):
     __slots__ = []
 
@@ -12,16 +13,20 @@ class CaseClass(object):
         old = map(lambda a: (a, getattr(self, a)), self._fields)
         new = kwargs.items()
         return self.__class__(**dict(old + new))
+
     def __str__(self):
         return self.__class__.__name__ + "(" + ", ".join(str(getattr(self, x)) for x in self.__class__._fields) + ")"
+
     def __repr__(self):
         return self.__str__()
+
     def __eq__(self, other):
         try:
             return self.__class__ == other.__class__ \
                 and all(getattr(self, x) == getattr(other, x) for x in self.__class__._fields)
-        except:
+        except AttributeError:
             return False
+
     def __ne__(self, other):
         return not self.__eq__(other)
 
@@ -77,7 +82,6 @@ def case(tree, gen_sym, **kw):
                     name(tree.name).b = name(statement.name)
                 a_old = a[0]
                 a_old.targets[0].attr = statement.name
-
 
                 a_new = parse_stmt(unparse_ast(a[0]))[0]
                 outer.append(a_new)
@@ -146,7 +150,3 @@ def case(tree, gen_sym, **kw):
     x = _case_transform(tree, ["CaseClass"])
 
     return x
-
-
-
-
