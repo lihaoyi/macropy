@@ -1,6 +1,7 @@
 import unittest
 
 from macropy.experimental.pattern import macros, _matching, switch, patterns
+from ast import BinOp
 
 class Foo(object):
     def __init__(self, x, y):
@@ -89,10 +90,12 @@ class Tests(unittest.TestCase):
         self.assertEquals(2, y)
 
     def test_match_exceptions(self):
-        with self.assertRaises(Exception):
-            Foo(x, Foo(4, y)) << Foo(2, 7)
-        with self.assertRaises(Exception):
-            Foo(x, Foo(4, y)) << Foo(2, Foo(5, 7))
+        with self.assertRaises(PatternMatchException):
+            with patterns:
+                Foo(x, Foo(4, y)) << Foo(2, 7)
+        with self.assertRaises(PatternMatchException):
+            with patterns:
+                Foo(x, Foo(4, y)) << Foo(2, Foo(5, 7))
 
     def test_disjoint_varnames_assertion(self):
         with self.assertRaises(PatternVarConflict):
@@ -173,3 +176,11 @@ class Tests(unittest.TestCase):
             if False:
                 branch_reached = 1
         self.assertEquals(-1, branch_reached)
+
+    def test_ast_pattern_matching(self):
+        binop_ast = BinOp(3, 4, 5)
+        with patterns:
+            BinOp(left=x, op=op, right=y) << binop_ast
+        self.assertEquals(3, x)
+        self.assertEquals(4, op)
+        self.assertEquals(5, y)
