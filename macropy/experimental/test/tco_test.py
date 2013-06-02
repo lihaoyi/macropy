@@ -98,6 +98,21 @@ class Tests(unittest.TestCase):
 
         self.assertEquals(1, Blah().foo(5000))
 
+    def test_non_tail_call_of_tcoed_method(self):
+        @tco
+        def one():
+            return 1
+
+        def fact(n):
+            @tco
+            def helper(n, cumulative):
+                if n == one():
+                    return cumulative
+                return helper(n - one(), n * cumulative)
+            return helper(n, one())
+
+        self.assertEquals(120, fact(5))
+        fact(1000)
 
 if __name__ == '__main__':
     unittest.main()

@@ -15,13 +15,7 @@ macros = Macros()
 
 __all__ = ['Matcher', 'TupleMatcher', 'PatternMatchException',
         'LiteralMatcher', 'PatternVarConflict', 'ClassMatcher', 'NameMatcher',
-        'ListMatcher', 'WildcardMatcher', 'DEFAULT']
-
-
-"""Use DEFAULT as a catch-all in a switch, otherwise the syntax tree can
-confuse the transformer (unavoidable due to elifs just being syntactic
-sugar)."""
-DEFAULT = None
+        'ListMatcher', 'WildcardMatcher']
 
 
 class PatternMatchException(Exception):

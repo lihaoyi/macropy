@@ -1,5 +1,3 @@
-# import pattern matching
-# import quoting / unquoting
 from macropy.core.macros import *
 from macropy.experimental.pattern import macros, switch, _matching
 
@@ -9,32 +7,21 @@ __all__ = ['tco']
 
 macros = Macros()
 
-# stupid read-only closures
-_in_trampoline = [False]
-
-
-def _enter_trampoline():
-    _in_trampoline[0] = True
-
-
-def _exit_trampoline():
-    _in_trampoline[0] = False
-
-
-def in_trampoline():
-    return _in_trampoline[0]
-
+in_tc_stack = [False]
 
 def trampoline(func, args, varargs, kwargs):
     """
     Repeatedly apply a function until it returns a value.
 
-    The function may return ('call', func, args, varargs, kwargs) or ('ignore', func, args) or ('return', val)
+    The function may return (tco.CALL, func, args, kwargs) or (tco.IGNORE,
+    func, args, kwargs) or just a value.
     """
-    _enter_trampoline()
     ignoring = False
     while True:
-        result = func(*(list(args) + varargs), **kwargs)
+        if hasattr(func, 'tco'):
+            in_tc_stack[-1] = True
+        result = func(*list(args), **kwargs)
+        # for performance reasons, do not use pattern matching here
         if isinstance(result, tuple):
             if result[0] is tco.CALL:
                 func = result[1]
@@ -50,10 +37,10 @@ def trampoline(func, args, varargs, kwargs):
                 kwargs = result[4]
                 continue
         if ignoring:
-            _exit_trampoline()
+            in_tc_stack.pop()
             return None
         else:
-            _exit_trampoline()
+            in_tc_stack.pop()
             return result
 
 
@@ -61,55 +48,60 @@ def trampoline_decorator(func):
     import functools
     @functools.wraps(func)
     def trampolined(*args, **kwargs):
-        if not in_trampoline():
-            return trampoline(func, args, [], kwargs)
-        return func(*args, **kwargs)
+        if in_tc_stack[-1]:
+            in_tc_stack[-1] = False
+            return func(*args, **kwargs)
+        in_tc_stack.append(False)
+        return trampoline(func, args, [], kwargs)
+
+    trampolined.tco = True
     return trampolined
 
 
 @macros.decorator()
 def tco(tree, **kw):
     @Walker
-    # Replace returns of calls - TODO use pattern matching here
+    # Replace returns of calls
     def return_replacer(tree, **kw):
-        if isinstance(tree, Return):
-            if isinstance(tree.value, Call):
+        with switch(tree):
+            if Return(value=Call(
+                    func=func, 
+                    args=args, 
+                    starargs=starargs, 
+                    kwargs=kwargs)):
                 with q as code:
                     return (tco.CALL,
-                            ast(tree.value.func),
-                            ast(List(tree.value.args, Load())),
-                            ast(tree.value.starargs or List([], Load())),
-                            ast(tree.value.kwargs or Dict([],[])))
+                            ast(func),
+                            ast(List(args, Load())),
+                            ast(starargs or List([], Load())),
+                            ast(kwargs or Dict([],[])))
                 return code
             else:
                 return tree
-        return tree
 
     # Replace calls (that aren't returned) which happen to be in a tail-call
     # position
     def replace_tc_pos(node):
-        if isinstance(node, Expr) and isinstance(node.value, Call):
-            with q as code:
-                return (tco.IGNORE,
-                        ast(node.value.func),
-                        ast(List(node.value.args, Load())),
-                        ast(node.value.starargs or List([], Load())),
-                        ast(node.value.kwargs or Dict([], [])))
-            return code
-        elif isinstance(node, If):
-            node.body[-1] = replace_tc_pos(node.body[-1])
-            if node.orelse:
-                node.orelse[-1] = replace_tc_pos(node.orelse[-1])
-            return node
-        return node
-
-    # We need to remove ourselves from the decorator list so we don't have
-    # infinite expansion
-
-    arg_list_node = List(tree.args.args, Load())
-    for x in arg_list_node.elts:
-        assert isinstance(x, Name)
-        x.ctx = Load()
+        with switch(node):
+            if Expr(value=Call(
+                    func=func,
+                    args=args,
+                    starargs=starargs,
+                    kwargs=kwargs)):
+                with q as code:
+                    return (tco.IGNORE,
+                            ast(func),
+                            ast(List(args, Load())),
+                            ast(starargs or List([], Load())),
+                            ast(kwargs or Dict([], [])))
+                return code
+            elif If(test=test, body=body, orelse=orelse):
+                body[-1] = replace_tc_pos(body[-1])
+                if orelse:
+                    orelse[-1] = replace_tc_pos(orelse[-1])
+                return If(test, body, orelse)
+            else:
+                return node
 
     tree = return_replacer.recurse(tree)
     tree.decorator_list = ([q(tco.trampoline_decorator)] +
@@ -122,3 +114,4 @@ def tco(tree, **kw):
 tco.trampoline_decorator = trampoline_decorator
 tco.IGNORE = ['tco_ignore']
 tco.CALL = ['tco_call']
+tco.in_tc_stack = in_tc_stack
