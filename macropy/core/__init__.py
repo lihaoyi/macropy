@@ -26,6 +26,7 @@ real_repr |     |    eval        _v________|_
 import ast
 import sys
 
+__all__ = ['Literal', 'ast_repr', 'parse_expr', 'parse_stmt', 'real_repr', 'unparse_ast']
 
 class Literal(object):
     """Used to wrap sections of an AST which must remain intact when
@@ -103,12 +104,12 @@ boolops = {
     And: 'and',     Or: 'or'
 }
 
-def elseRec(tree, i):
+def else_rec(tree, i):
     if not tree: 
         return ""
     if isinstance(tree[0], If):
         return tabs(i) + "elif " + rec(tree[0].test, i) + ":" + \
-                rec(tree[0].body, i+1) + elseRec(tree[0].orelse, i)
+                rec(tree[0].body, i+1) + else_rec(tree[0].orelse, i)
     return tabs(i) + "else:" + rec(tree[0], i+1)
     
 
@@ -165,7 +166,7 @@ trec = {
                                 rec(tree.iter, i) + ":" + rec(tree.body, i+1) +
                                 mix(tabs(i), "else:", rec(tree.orelse, i+1)),
     If:         lambda tree, i: tabs(i) + "if " + rec(tree.test, i) + ":" + rec(tree.body, i+1) +
-                                elseRec(tree.orelse, i),
+                                else_rec(tree.orelse, i),
     While:      lambda tree, i: tabs(i) + "while " + rec(tree.test, i) + ":" + rec(tree.body, i+1) +
                                 mix(tabs(i), "else:", rec(tree.orelse, i+1)),
     With:       lambda tree, i: tabs(i) + "with " + rec(tree.context_expr, i) +
