@@ -6,12 +6,15 @@ runner = unittest.TextTestRunner()
 def run(x):
     runner.run(unittest.TestLoader().loadTestsFromTestCase(x))
 
-"""
+
 from macropy.core.test import macros
 run(macros.Tests)
 
 from macropy.core.test import quotes
 run(quotes.Tests)
+
+from macropy.core.test import unparse_ast
+run(unparse_ast.Tests)
 
 from macropy.core.test import walkers
 run(walkers.Tests)
@@ -46,4 +49,3 @@ run(pinq.Tests)
 # this one needs chromedriver in order to run the javascript using Selenium
 from macropy.experimental.test import js_snippets
 run(js_snippets.Tests)
-"""
