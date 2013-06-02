@@ -1130,22 +1130,24 @@ with peg:
     op = '+' | '-' | '*' | '/'
     expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
 
-print expr.parse_all("123")             #[123]
-print expr.parse_all("((123))")         #[123]
-print expr.parse_all("(123+456+789)")   #[1368]
-print expr.parse_all("(6/2)")           #[3]
-print expr.parse_all("(1+2+3)+2")       #[8]
-print expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)") #[1804]
+print expr.parse("123").output             # 123
+print expr.parse("((123))").output         # 123
+print expr.parse("(123+456+789)").output   # 1368
+print expr.parse("(6/2)").output           # 3
+print expr.parse("(1+2+3)+2").output       # 8
+print expr.parse("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)").output # 1804
 ```
 
 [Parser Combinators](http://en.wikipedia.org/wiki/Parser_combinator) are a really nice way of building simple recursive descent parsers, when the task is too large for [regexes](http://en.wikipedia.org/wiki/Regex) but yet too small for the heavy-duty [parser generators](http://en.wikipedia.org/wiki/Comparison_of_parser_generators). These parser combinators are inspired by [Scala's](http://www.suryasuravarapu.com/2011/04/scala-parser-combinators-win.html), utilizing macros to make the syntax as clean as possible.
 
 The above example describes a simple parser for arithmetic expressions, using our own parser combinator library which roughly follows the [PEG](http://en.wikipedia.org/wiki/Parsing_expression_grammar) syntax. Note how that in the example, the bulk of the code goes into the loop that reduces sequences of numbers and operators to a single number, rather than the recursive-descent parser itself!
 
-Anything within a `with peg:` block is transformed into a *parser*. A parser is something with a `.parse_all(input)` method that attempts to parse the given `input` string. This method returns:
+Anything within a `with peg:` block is transformed into a `Parser`. A `Parser` comes with a `.parse(input)` method that attempts to parse the given `input` string. This method returns:
 
-- `None`, if the parser failed to parse the input
-- `[result]` if the parser succeeded with the value `result`
+- `Success(output, bindings, remaining_input)` if the parser succeeded; `output` contains the result of the parsing, and is probably what you want, while `bindings` contains any variables bound via the `is` keyword and `remaining_input` is an object containing both the `input` string and the `index` of the last character that was parsed. The entire `input` must be consumed for parsing to succeed.
+- `Failure(index, failed, fatal=False)`  if the parser failed to parse the input, where `index` contains the index in the input where parsing finally failed (after exhausting all backtracking) and `failed` contains the `Parser` object which failed at that `index`. 
+
+A Parser also contains a `parse_partial(input)` method, which is identical but does not require the entire `input` to be consumed, as long as some prefix of the `input` string matches. Again, the `remaining_input` attribute of the `Success` indicates how far into the `input` string parsing proceeded   
 
 ###Basic Combinators
 
@@ -1170,10 +1172,11 @@ So far, these building blocks all return the raw parse tree: all the things like
 >>> from macropy.experimental.peg import macros, peg
 >>> with peg:
 ...     num = '[0-9]+'.r
->>> num.parse_all("123")
-['123']
->>> num.parse_all("1 23")
-None
+
+>>> num.parse("123").output
+'123'
+>>> num.parse("1 23").index
+1
 ```
 
 which returns a string of digits, and convert it into a parser which returns an `int` with the value of that string. This can be done with the `//` operator:
@@ -1181,21 +1184,25 @@ which returns a string of digits, and convert it into a parser which returns an 
 ```python
 >>> with peg:
 ...     num = '[0-9]+'.r // int
->>>
->>> num.parse_all("123")
-[123]
+
+>>> num.parse("123").output
+123
+>>> num.parse("1 23").index
+1
 ```
 
-The `//` operator takes a function which will be used to transform the result of the parser: in this case, it is the function `int`, which transforms the returned string into an integer. Another example is:
+The `//` operator takes a function which will be used to transform the result of the parser: in this case, it is the function `int`, which transforms the returned string into an integer. As you can see, in the case of Failure, the `index` at which parsing failed is unchanged.
+
+Another example is:
 
 ```python
 with peg:
     laugh = 'lol'
     laughs1 = 'lol'.rep1
-    laughs2 = lots_of_laughs_1 // "".join
+    laughs2 = laughs1 // "".join
 
-print laughs1.parse_all("lollollol") # [['lol', 'lol', 'lol]]
-print laughs2.parse_all("lollollol") # ['lollollol]
+print laughs1.parse("lollollol") # [['lol', 'lol', 'lol]]
+print laughs2.parse("lollollol") # ['lollollol]
 ```
 
 Where the function `"".join"` is used to join together the list of results from `laughs1` into a single string.
@@ -1218,7 +1225,7 @@ In this case, the `is` keyword is used to bind the result of `expr` to the name 
 with peg:
     ...
     # parses an array and extracts the relevant bits into a Python list
-     array = ('[', (json_exp, (',', json_exp).rep), opt(space), ']')//(lambda x: [x[1][0]] + [y[1] for y in x[1][1]])
+     array = ('[', (json_exp, (',', json_exp).rep), opt(space), ']') // (lambda x: [x[1][0]] + [y[1] for y in x[1][1]])
     ...
 ```
 
@@ -1230,8 +1237,70 @@ array = ('[', json_exp is first, ~(',', json_exp is rest), opt(space), ']') >> [
 
 Now, it is clear that we are only interested in the result of the two `json_exp` parsers. The `>>` operator allows us to use those, while the rest of the parse tree (`[`s, `,`s, etc.) are conveniently discarded.
 
+###Cut
+
+```python
+with peg:
+    expr1 = ("1", "2", "3") | ("1", "b", "c")
+    expr2 = ("1", cut, "2", "3") | ("1", "b", "c")
+
+print expr1.parse("1bc").output # ['1', 'b', 'c']
+print expr2.parse("1bc").index # 1
+
+```
+
+`cut` is a special token used in a sequence of parsers, which commits the parsing to the current sequence. As you can see above, without `cut`, the left alternative fails and the parsing then attempts the right alternative, which succeeds. On the other hand, in `expr2`, the parser is committed to the left alternative once it reaches the `cut` (after successfully parsing "1") and thus when the left alternative fails, the right alternative is not tried and the entire `parse` fails.
+
+The purpose of `cut` is two-fold:
+
+####Increasing performance by removing unnecessary backtracking
+
+Using JSON as an example: if your parser sees a `{`, begins parsing a JSON object, but some time later it fails, it does not need to both backtracking and attempting to parse an Array (`[...`), or a String (`"...`), or a Number. None of those could possibly succeed, so cutting the backtracking and failing fast prevents this unnecessary computation
+
+####Better error reporting.
+
+For example, if you try to parse the JSON String;
+
+```javascript
+{        : "failed lol"}
+```
+
+if your JSON parser looks like:
+
+```python
+with peg:
+    ...
+    json = object | array | string | num | true | false | null
+```
+
+Without `cut`, the only information you could gain from attempting to parse that is something like:
+
+```
+Error parsing json
+{        : "failed lol"}
+^
+```
+
+On the other hand, using a `cut` inside the `object` parser immediately after parsing the first `{`, we could provide a much more specific error:
+
+```
+Error parsing json / object / string:
+{        : "failed lol"}
+         ^
+```
+
+In the first case, after failing to parse `object`, the `json` parser goes on to try all the other alternatives. After all to them fail to parse, it only knows that trying to parse `json` starting from character 0 doesn't work; it can't know that the alternative that was "supposed" to work was `object`!
+
+In the second case, `cut` is inserted inside the `object` parser, something like:
+
+```python
+object = "{", cut, string, ":", json, "}"
+```
+
+Once the first `{` is parsed, the parser is committed to that alternative. Thus, when it fails to parse `string`, it knows it cannot backtrack and can immediately end the parsing. It can now give a much more specific source location (character 10) as well as better information on what it was trying to parse (`json / object / string`)
+
 ###Full Example
-These parser combinators are not limited to toy problems, like the arithmetic expression parser above. Below is the full source of the JSON parser, along with it's PEG grammer:
+These parser combinators are not limited to toy problems, like the arithmetic expression parser above. Below is the full source of the JSON parser (without `cut`, for simplicity), along with it's PEG grammer:
 
 ```python
 """
@@ -1313,12 +1382,12 @@ test_string = """
 """
 
 import json
-print json_exp.parse_all(test_string)[0] == json.loads(test_string)
+print json_exp.parse(test_string).output == json.loads(test_string)
 # True
 
 import pprint
 pp = pprint.PrettyPrinter(4)
-pp.pprint(parser.parse_all(string)[0])
+pp.pprint(parser.parse(string).output)
 #{   'address': {   'city': 'New York',
 #                   'postalCode': 10021.0,
 #                   'state': 'NY',

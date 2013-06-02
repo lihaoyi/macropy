@@ -4,11 +4,12 @@ from macropy.core.macros import *
 from macropy.core.quotes import macros, q, u
 from macropy.quick_lambda import macros, f
 from macropy.case_classes import macros, case
+from macropy.tracing import macros, show_expanded
 import re
 from collections import defaultdict
 macros = Macros()
 
-__all__ = ["Input", 'Parser']
+__all__ = ["Input", 'Parser', 'Success', 'Failure', 'cut']
 
 @macros.block()
 def peg(tree, **kw):
@@ -76,8 +77,20 @@ And-(predicate: &e           &   9       And
 Not-predicate: !e           -   13      Not
 """
 
+cut = object()
+
 @case
 class Input(string, index):
+    pass
+
+
+@case
+class Success(output, bindings, remaining_input):
+    pass
+
+
+@case
+class Failure(index, failed, fatal | False):
     pass
 
 @case
@@ -86,25 +99,18 @@ class Parser:
     def bind_to(self, string):
         return Parser.Binder(self, string)
 
+    def parse_partial(self, string):
+        return self.parse_input(Input(string, 0))
+
     def parse(self, string):
-        res = self.parse_input(Input(string, 0))
-        if res is None:
-            return None
+        return Parser.Full(self).parse_input(Input(string, 0))
 
-        out, bindings, remaining_input = res
-        return [out]
 
-    def parse_all(self, string):
-        res = self.parse_input(Input(string, 0))
-        if res is None:
-            return None
-
-        (out, bindings, remaining_input) = res
-        if remaining_input.index != len(string):
-            return None
-
-        return [out]
-
+    def parse_input(self, input):
+        """
+        input: Input -> success: (results: T, results_dict: dict, new_input: Input)
+                     -> failure: (index: int, failed: Parser, fatal: boolean)
+        """
 
     def __and__(self, other):   return Parser.And([self, other])
 
@@ -137,21 +143,31 @@ class Parser:
     def __rshift__(self, other): return Parser.TransformBound(self, other)
 
 
+    class Full(parser):
+        def parse_input(self, input):
+            res = self.parser.parse_input(input)
+            if type(res) is Success and res.remaining_input.index < len(input.string):
+                return Failure(res.remaining_input.index, self)
+            else:
+                return res
+
+
+
     class Raw(string):
         def parse_input(self, input):
             if input.string[input.index:].startswith(self.string):
-                return self.string, {}, input.copy(index = input.index + len(self.string))
+                return Success(self.string, {}, input.copy(index = input.index + len(self.string)))
             else:
-                return None
+                return Failure(input.index, self)
 
     class Regex(regex_string):
         def parse_input(self, input):
             match = re.match(self.regex_string, input.string[input.index:])
             if match:
                 group = match.group()
-                return group, {}, input.copy(index = input.index + len(group))
+                return Success(group, {}, input.copy(index = input.index + len(group)))
             else:
-                return None
+                return Failure(input.index, self)
 
 
     class Seq(children):
@@ -159,41 +175,56 @@ class Parser:
             current_input = input
             results = []
             result_dict = defaultdict(lambda: [])
+            committed = False
             for child in self.children:
-                res = child.parse_input(current_input)
-                if res is None: return None
+                if child is cut:
+                    committed = True
+                else:
+                    res = child.parse_input(current_input)
 
-                (res, bindings, current_input) = res
-                results.append(res)
-                for k, v in bindings.items():
-                    result_dict[k] = v
 
-            return (results, result_dict, current_input)
+                    if type(res) is Failure:
+                        if committed or res.fatal:
+                            return Failure(res.index, res.failed, True)
+                        else:
+                            return res
+
+                    current_input = res.remaining_input
+                    results.append(res.output)
+                    for k, v in res.bindings.items():
+                        result_dict[k] = v
+
+            return Success(results, result_dict, current_input)
 
 
     class Or(children):
         def parse_input(self, input):
             for child in self.children:
                 res = child.parse_input(input)
-                if res != None: return res
+                if type(res) is Success or res.fatal:
+                    return res
 
-            return None
+            return Failure(input.index, self)
 
     class And(children):
         def parse_input(self, input):
             results = [child.parse_input(input) for child in self.children]
-            if all(results):
+            failures = [
+                res for res in results
+                if type(res) is Failure
+            ]
+            if failures == []:
                 return results[0]
-
-            return None
+            else:
+                return failures[0]
 
 
     class Not(parser):
         def parse_input(self, input):
-            if self.parser.parse_input(input):
-                return None
+            if type(self.parser.parse_input(input)) is Success:
+                return Failure(input.index, self)
             else:
-                return (None, {}, input)
+                return Success(None, {}, input)
 
 
     class Rep(parser):
@@ -204,15 +235,19 @@ class Parser:
 
             while True:
                 res = self.parser.parse_input(current_input)
-                if res is None:
-                    return (results, result_dict, current_input)
+                if type(res) is Failure:
+                    if res.fatal:
+                        return res
+                    else:
+                        return Success(results, result_dict, current_input)
 
-                (res, bindings, current_input) = res
+                current_input = res.remaining_input
 
-                for k, v in bindings.items():
+                for k, v in res.bindings.items():
                     result_dict[k] = result_dict[k] + [v]
 
-                results.append(res)
+                results.append(res.output)
+
 
     class RepN(parser, n):
         def parse_input(self, input):
@@ -222,47 +257,47 @@ class Parser:
 
             for i in range(self.n):
                 res = self.parser.parse_input(current_input)
-                if res is None:
-                    return None
+                if type(res) is not Success:
+                    return res
 
-                (res, bindings, current_input) = res
+                current_input = res.remaining_input
 
-                for k, v in bindings.items():
+                for k, v in res.bindings.items():
                     result_dict[k] = result_dict[k] + [v]
 
-                results.append(res)
+                results.append(res.output)
 
-            return (results, result_dict, current_input)
+            return Success(results, result_dict, current_input)
+
     class Transform(parser, func):
 
         def parse_input(self, input):
-            result = self.parser.parse_input(input)
-            if result is None:
-                return None
+            res = self.parser.parse_input(input)
+            if type(res) is Success:
+                res.output = self.func(res.output)
+                return res
             else:
-                res, bindings, new_input = result
-                return self.func(res), bindings, new_input
+                return res
+
 
     class TransformBound(parser, func):
 
         def parse_input(self, input):
             result = self.parser.parse_input(input)
-            if result is None:
-                return None
+            if type(result) is Success:
+
+                return result.copy(output = self.func(**result.bindings), bindings={})
+
             else:
-
-                res, bindings, new_input = result
-
-                return self.func(**bindings), {}, new_input
+                return result
 
     class Binder(parser, name):
         def parse_input(self, input):
             result = self.parser.parse_input(input)
-            if result is None: return None
-            result, bindings, new_input = result
+            if type(result) is Success:
 
-            bindings[self.name] = result
-            return result, bindings, new_input
+                result.bindings[self.name] = result.output
+            return result
 
     class Lazy(parser_thunk):
         def parse_input(self, input):
@@ -271,14 +306,14 @@ class Parser:
             return self.parser_thunk.parse_input(input)
 
 
-    class Success(string):
+    class Succeed(string):
         def parse_input(self, input):
-            return (self.string, {}, input)
+            return Success(self.string, {}, input)
 
 
-    class Failure():
+    class Fail():
         def parse_input(self, input):
-            return None
+            return Failure(input.index, self)
 
 
 

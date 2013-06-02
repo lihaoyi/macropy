@@ -1,71 +1,71 @@
 import unittest
-from macropy.experimental.peg import macros, peg
+from macropy.experimental.peg import macros, peg, Success, Failure
 from macropy.tracing import macros, require
 from macropy.quick_lambda import macros, f, _
 class Tests(unittest.TestCase):
     def test_basic(self):
         parse1 = peg("Hello World")
         with require:
-            parse1.parse_all("Hello World")[0] == 'Hello World'
-            parse1.parse_all("Hello, World") is None
-            
+            parse1.parse("Hello World").output == 'Hello World'
+            parse1.parse("Hello, World").index == 0
+
         parse2 = peg(("Hello World", (".").r))
         with require:
-            parse2.parse_all("Hello World") is None
-            parse2.parse_all("Hello World1")[0] == ['Hello World', '1']
-            parse2.parse_all("Hello World ")[0] == ['Hello World', ' ']
+            parse2.parse("Hello World").index == 11
+            parse2.parse("Hello World1").output == ['Hello World', '1']
+            parse2.parse("Hello World ").output == ['Hello World', ' ']
 
     def test_operators(self):
         parse1 = peg("Hello World")
 
         parse2 = peg((parse1, "!".rep1))
         with require:
-            parse2.parse_all("Hello World!!!")[0] == ['Hello World', ['!', '!', '!']]
-            parse2.parse_all("Hello World!")[0] == ['Hello World', ['!']]
-            parse2.parse_all("Hello World") is None
+            parse2.parse("Hello World!!!").output == ['Hello World', ['!', '!', '!']]
+            parse2.parse("Hello World!").output  == ['Hello World', ['!']]
+            parse2.parse("Hello World").index == 11
 
         parse3 = peg((parse1, ("!" | "?")))
-        
+
         with require:
-            parse3.parse_all("Hello World!")[0] == ['Hello World', '!']
-            parse3.parse_all("Hello World?")[0] == ['Hello World', '?']
-            parse3.parse_all("Hello World%") is None
+            parse3.parse("Hello World!").output == ['Hello World', '!']
+            parse3.parse("Hello World?").output == ['Hello World', '?']
+            parse3.parse("Hello World%").index == 11
 
         parse4 = peg((parse1, "!".rep & "!!!"))
-        
+
         with require:
-            parse4.parse_all("Hello World!!!")[0] == ['Hello World', ['!', '!', '!']]
-            parse4.parse_all("Hello World!!") is None
+            parse4.parse("Hello World!!!").output == ['Hello World', ['!', '!', '!']]
+            parse4.parse("Hello World!!").index == 11
 
         parse4 = peg((parse1, "!".rep & "!!!"))
-        
+
         with require:
-            parse4.parse_all("Hello World!!!")[0] == ["Hello World", ["!", "!", "!"]]
+            parse4.parse("Hello World!!!").output == ["Hello World", ["!", "!", "!"]]
 
         parse5 = peg((parse1, "!".rep & -"!!!"))
         with require:
-            parse5.parse_all("Hello World!!")[0] == ["Hello World", ['!', '!']]
-            parse5.parse_all("Hello World!!!") is None
+            parse5.parse("Hello World!!").output == ["Hello World", ['!', '!']]
+            parse5.parse("Hello World!!!").index == 11
 
         parse6 = peg((parse1, "!" * 3))
         with require:
-            parse6.parse_all("Hello World!") is None
-            parse6.parse_all("Hello World!!") is None
-            parse6.parse_all("Hello World!!!")[0] == ["Hello World", ['!', '!', '!']]
-            parse6.parse_all("Hello World!!!!") is None
+            parse6.parse("Hello World!").index == 12
+            parse6.parse("Hello World!!").index == 13
+            parse6.parse("Hello World!!!").output == ["Hello World", ['!', '!', '!']]
+            parse6.parse("Hello World!!!!").index == 14
 
 
     def test_conversion(self):
         parse1 = peg((("Hello World", "!".rep1) // f(_[1])))
-        
+
         with require:
-            parse1.parse("Hello World!!!")[0] == ['!', '!', '!']
-            parse1.parse("Hello World") is None
+            parse1.parse("Hello World!!!").output == ['!', '!', '!']
+            parse1.parse("Hello World").index == 11
 
         parse2 = parse1 // len
-        
+
         with require:
-            parse2.parse("Hello World!!!")[0] == 3
+            parse2.parse("Hello World!!!").output == 3
 
 
     def test_block(self):
@@ -74,25 +74,25 @@ class Tests(unittest.TestCase):
             parse2 = parse1 // len
 
         with require:
-            parse1.parse("Hello World!!!")[0] == ['!', '!', '!']
-            parse1.parse("Hello World") is None
-            parse2.parse("Hello World!!!")[0] == 3
+            parse1.parse("Hello World!!!").output == ['!', '!', '!']
+            parse1.parse("Hello World").index == 11
+            parse2.parse("Hello World!!!").output == 3
 
     def test_recursive(self):
         with peg:
             expr = ("(", expr, ")").rep | ""
 
         with require:
-            expr.parse("()") is not None
-            expr.parse("(()())") is not None
-            expr.parse("(((()))))") is not None
+            expr.parse("()").output
+            expr.parse("(()())").output
+            expr.parse_partial("(((()))))").output
 
-            expr.parse("((()))))") is not None
-            expr.parse_all("((()))))") is None
-            expr.parse(")((()()))(") is not None
-            expr.parse_all(")((()()))(") is None
-            expr.parse(")()") is not None
-            expr.parse_all(")()") is None
+            expr.parse_partial("((()))))").output
+            expr.parse("((()))))").index == 6
+            expr.parse_partial(")((()()))(").output == []
+            expr.parse(")((()()))(").index == 0
+            expr.parse_partial(")()").output == []
+            expr.parse(")()").index == 0
 
     def test_bindings(self):
         with peg:
@@ -102,17 +102,17 @@ class Tests(unittest.TestCase):
             seq2 = ("l", ("ol" is xxx).rep1) >> xxx
             seq3 = ("l", ("ol" is xxx).rep1) >> sum(map(len, xxx))
         with require:
-            short.parse_all('omg') == ['omgomg']
-            short.parse_all('omgg') is None
-            short.parse_all('cow') is None
-            medium.parse_all('omg wtf bbq') == ['omgwtfbbq']
-            medium.parse_all('omg wtf bbbbbq') == ['omgwtfbbbbbq']
-            medium.parse_all('omg wtf bbqq') is None
-            seq3.parse_all("lolololol") == [8]
+            short.parse('omg').output == 'omgomg'
+            short.parse('omgg').index == 3
+            short.parse('cow').index == 0
+            medium.parse('omg wtf bbq').output == 'omgwtfbbq'
+            medium.parse('omg wtf bbbbbq').output == 'omgwtfbbbbbq'
+            medium.parse('omg wtf bbqq').index == 11
+            seq3.parse("lolololol").output == 8
 
         for x in ["lol", "lolol", "ol", "'"]:
             with require:
-                seq1.parse_all(x) == seq2.parse_all(x)
+                seq1.parse(x) == seq2.parse(x)
 
 
 
@@ -146,23 +146,31 @@ class Tests(unittest.TestCase):
             expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
 
         with require:
-            expr.parse_all("123") == [123]
-            expr.parse_all("((123))") == [123]
-            expr.parse_all("(123+456+789)") == [1368]
-            expr.parse_all("(6/2)") == [3]
-            expr.parse_all("(1+2+3)+2") == [8]
-            expr.parse_all("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)") == [1804]
+            expr.parse("123").output == 123
+            expr.parse("((123))").output == 123
+            expr.parse("(123+456+789)").output == 1368
+            expr.parse("(6/2)").output == 3
+            expr.parse("(1+2+3)+2").output == 8
+            expr.parse("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)").output == 1804
 
 
+    def test_cut(self):
+        with peg:
+            expr1 = ("1", cut, "2", "3") | ("1", "b", "c")
+            expr2 = ("1", "2", "3") | ("1", "b", "c")
+
+        with require:
+            expr1.parse("1bc").index == 1
+            expr2.parse("1bc").output == ['1', 'b', 'c']
 
     def test_bindings_json(self):
 
         def test(parser, string):
             import json
             try:
-                    parser.parse_all(string)[0] == json.loads(string)
+                    parser.parse(string).output == json.loads(string)
             except Exception, e:
-                print(parser.parse_all(string))
+                print(parser.parse(string))
                 print(json.loads(string))
                 raise e
         """
