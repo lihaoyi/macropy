@@ -35,19 +35,26 @@ def trampoline(func, args, varargs, kwargs):
     ignoring = False
     while True:
         result = func(*(list(args) + varargs), **kwargs)
-        with switch(result):
-            if ('macropy-tco-call', func, args, varargs, kwargs):
-                pass
-            elif ('macropy-tco-ignore', func, args, varargs, kwargs):
+        if isinstance(result, tuple):
+            if result[0] is tco.CALL:
+                func = result[1]
+                args = result[2]
+                varargs = result[3]
+                kwargs = result[4]
+                continue
+            elif result[0] is tco.IGNORE:
                 ignoring = True
-            else:
-                pass # break out of switch >.<
-                if ignoring:
-                    _exit_trampoline()
-                    return None
-                else:
-                    _exit_trampoline()
-                    return result
+                func = result[1]
+                args = result[2]
+                varargs = result[3]
+                kwargs = result[4]
+                continue
+        if ignoring:
+            _exit_trampoline()
+            return None
+        else:
+            _exit_trampoline()
+            return result
 
 
 def trampoline_decorator(func):
@@ -68,7 +75,7 @@ def tco(tree, **kw):
         if isinstance(tree, Return):
             if isinstance(tree.value, Call):
                 with q as code:
-                    return ('macropy-tco-call',
+                    return (tco.CALL,
                             ast(tree.value.func),
                             ast(List(tree.value.args, Load())),
                             ast(tree.value.starargs or List([], Load())),
@@ -83,7 +90,7 @@ def tco(tree, **kw):
     def replace_tc_pos(node):
         if isinstance(node, Expr) and isinstance(node.value, Call):
             with q as code:
-                return ('macropy-tco-ignore',
+                return (tco.IGNORE,
                         ast(node.value.func),
                         ast(List(node.value.args, Load())),
                         ast(node.value.starargs or List([], Load())),
@@ -113,3 +120,5 @@ def tco(tree, **kw):
 
 # ok, so now you will only need to import tco...
 tco.trampoline_decorator = trampoline_decorator
+tco.IGNORE = ['tco_ignore']
+tco.CALL = ['tco_call']
