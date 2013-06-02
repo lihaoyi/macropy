@@ -102,6 +102,16 @@ cmpops = {
 boolops = {
     And: 'and',     Or: 'or'
 }
+
+def elseRec(tree, i):
+    if not tree: 
+        return ""
+    if isinstance(tree[0], If):
+        return tabs(i) + "elif " + rec(tree[0].test, i) + ":" + \
+                rec(tree[0].body, i+1) + elseRec(tree[0].orelse, i)
+    return tabs(i) + "else:" + rec(tree[0], i+1)
+    
+
 trec = {
     #Misc
     type(None): lambda tree, i: "",
@@ -121,16 +131,17 @@ trec = {
     Break:      lambda tree, i: tabs(i) + "break",
     Continue:   lambda tree, i: tabs(i) + "continue",
     Delete:     lambda tree, i: tabs(i) + "del " + jmap(", ", lambda t: rec(t, i), tree.targets),
-    Assert:     lambda tree, i: tabs(i) + "assert " + rec(tree.test) + mix(", ", rec(tree.msg, i)),
+    Assert:     lambda tree, i: tabs(i) + "assert " + rec(tree.test, i) + mix(", ", rec(tree.msg, i)),
     Exec:       lambda tree, i: tabs(i) + "exec " + rec(tree.body, i) +
                                 mix(" in ", rec(tree.globals, i)) +
                                 mix(", ", rec(tree.locals, i)),
     Print:      lambda tree, i: tabs(i) + "print " +
                                 ", ".join(box(mix(">>", rec(tree.dest, i))) + map(lambda t: rec(t, i),tree.values)) +
                                 ("," if not tree.nl else ""),
-    Global:     lambda tree, i: tabs(i) + "global " + jmap(", ", lambda t: rec(t, i), tree.names),
+    Global:     lambda tree, i: tabs(i) + "global " + ", ".join(tree.names),
     Yield:      lambda tree, i: "(yield " + rec(tree.value, i) + ")",
-    Raise:      lambda tree, i: tabs(i) + "raise " + rec(tree.type, i) +
+    Raise:      lambda tree, i: tabs(i) + "raise" + 
+                                mix(" ", rec(tree.type, i)) +
                                 mix(", ", rec(tree.inst, i)) +
                                 mix(", ", rec(tree.tback, i)),
     TryExcept:  lambda tree, i: tabs(i) + "try:" + rec(tree.body, i+1) +
@@ -142,7 +153,7 @@ trec = {
                                 tabs(i) + "finally:" + rec(tree.finalbody, i+1),
     ExceptHandler: lambda tree, i: tabs(i) + "except" +
                                 mix(" ", rec(tree.type, i)) +
-                                 mix(" as ", rec(tree.name, i)) + ":" +
+                                mix(" as ", rec(tree.name, i)) + ":" +
                                 rec(tree.body, i+1),
     ClassDef:   lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
                                 tabs(i) + "class " + tree.name +
@@ -152,10 +163,9 @@ trec = {
                                 tabs(i) + "def " + tree.name + "(" + rec(tree.args, i) + "):" + rec(tree.body, i+1),
     For:        lambda tree, i: tabs(i) + "for " + rec(tree.target, i) + " in " +
                                 rec(tree.iter, i) + ":" + rec(tree.body, i+1) +
-                                mix(tabs(i), "else: ", rec(tree.orelse, i+1)),
-    If:         lambda tree, i: tabs(i) + "if " + rec(tree.test, i) + ":" + rec(tree.body, i+1) +
-                                # this doesn't collapse nested ifs into elifs
                                 mix(tabs(i), "else:", rec(tree.orelse, i+1)),
+    If:         lambda tree, i: tabs(i) + "if " + rec(tree.test, i) + ":" + rec(tree.body, i+1) +
+                                elseRec(tree.orelse, i),
     While:      lambda tree, i: tabs(i) + "while " + rec(tree.test, i) + ":" + rec(tree.body, i+1) +
                                 mix(tabs(i), "else:", rec(tree.orelse, i+1)),
     With:       lambda tree, i: tabs(i) + "with " + rec(tree.context_expr, i) +
@@ -210,9 +220,10 @@ trec = {
                                     box(mix("**", tree.kwarg))
                                 ),
     keyword:    lambda tree, i: tree.arg + "=" + rec(tree.value, i),
-    Lambda:     lambda tree, i: "(lambda " + rec(tree.args, i) + ": "+ rec(tree.body, i) + ")",
+    Lambda:     lambda tree, i: "(lambda" + mix(" ", rec(tree.args, i)) + ": "+ rec(tree.body, i) + ")",
     alias:      lambda tree, i: tree.name + mix(" as ", tree.asname)
 }
+
 def box(x):
     "None | T => [T]"
     return [x] if x else []
@@ -222,7 +233,7 @@ def mix(*x):
     return "".join(x) if all(x) else ""
 
 def rec(tree, i):
-    """Recurse with same iation"""
+    """Recurse with same indentation"""
     return trec[tree.__class__](tree, i)
 
 def jmap(s, f, *l):
@@ -234,7 +245,5 @@ def tabs(i):
 
 def unparse_ast(tree):
     """Converts an AST back into the source code from whence it came!"""
-
-
     return trec[tree.__class__](tree, 0)
 
