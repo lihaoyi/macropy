@@ -15,13 +15,7 @@ macros = Macros()
 
 __all__ = ['Matcher', 'TupleMatcher', 'PatternMatchException',
         'LiteralMatcher', 'PatternVarConflict', 'ClassMatcher', 'NameMatcher',
-        'ListMatcher', 'WildcardMatcher', 'DEFAULT']
-
-
-"""Use DEFAULT as a catch-all in a switch, otherwise the syntax tree can
-confuse the transformer (unavoidable due to elifs just being syntactic
-sugar)."""
-DEFAULT = None
+        'ListMatcher', 'WildcardMatcher']
 
 
 class PatternMatchException(Exception):
@@ -178,7 +172,6 @@ class WildcardMatcher(Matcher):
         return [('_', 3)]
 
 
-# Currently only works for positional arguments
 class ClassMatcher(Matcher):
 
     def __init__(self, clazz, positionalMatchers, **kwMatchers):
@@ -188,16 +181,12 @@ class ClassMatcher(Matcher):
 
         # This stores which fields of the object we will need to look at.
         if not _vars_are_disjoint(util.flatten([m.var_names() for m in
-            positionalMatchers])):
+            positionalMatchers + kwMatchers.values()])):
             raise PatternVarConflict()
-
 
     def var_names(self):
         return (util.flatten([matcher.var_names() 
-            for matcher in self.positionalMatchers]) + 
-            util.flatten([matcher.var_names() for matcher in
-                self.kwMatchers.values()]))
-
+            for matcher in self.positionalMatchers + self.kwMatchers.values()]))
 
     def default_unapply(self, matchee, kw_keys):
         if not isinstance(matchee, self.clazz):
@@ -205,21 +194,20 @@ class ClassMatcher(Matcher):
                     (self.clazz,))
         pos_values = []
         kw_dict = {}
-        arg_spec = inspect.getargspec(self.clazz.__init__)
+
+# We don't get the argspec unless there are actually positional matchers
         def genPosValues():
+            arg_spec = inspect.getargspec(self.clazz.__init__)
             for arg in arg_spec.args:
                 if arg != 'self':
                     yield(getattr(matchee, arg, None))
         pos_values = genPosValues()
-        # if arg_spec.varargs:
-        #     pos_values.extend(getattr(matchee, varargs, []))
         for kw_key in kw_keys:
             if not hasattr(matchee, kw_key):
                 raise PatternMatchException("Keyword argument match failed: no"
                         + " attribute %r" % (kw_key,))
             kw_dict[kw_key] = getattr(matchee, kw_key)
         return pos_values, kw_dict
-
 
     def match(self, matchee):
         updates = []
