@@ -1,71 +1,71 @@
 import unittest
-from macropy.experimental.peg import macros, peg, Success, Failure
+from macropy.experimental.peg import macros, peg, Success, Failure, cut, ParseError
 from macropy.tracing import macros, require
 from macropy.quick_lambda import macros, f, _
 class Tests(unittest.TestCase):
     def test_basic(self):
         parse1 = peg("Hello World")
         with require:
-            parse1.parse("Hello World").output == 'Hello World'
-            parse1.parse("Hello, World").index == 0
+            parse1.parse_string("Hello World").output == 'Hello World'
+            parse1.parse_string("Hello, World").index == 0
 
         parse2 = peg(("Hello World", (".").r))
         with require:
-            parse2.parse("Hello World").index == 11
-            parse2.parse("Hello World1").output == ['Hello World', '1']
-            parse2.parse("Hello World ").output == ['Hello World', ' ']
+            parse2.parse_string("Hello World").index == 11
+            parse2.parse_string("Hello World1").output == ['Hello World', '1']
+            parse2.parse_string("Hello World ").output == ['Hello World', ' ']
 
     def test_operators(self):
         parse1 = peg("Hello World")
 
         parse2 = peg((parse1, "!".rep1))
         with require:
-            parse2.parse("Hello World!!!").output == ['Hello World', ['!', '!', '!']]
-            parse2.parse("Hello World!").output  == ['Hello World', ['!']]
-            parse2.parse("Hello World").index == 11
+            parse2.parse_string("Hello World!!!").output == ['Hello World', ['!', '!', '!']]
+            parse2.parse_string("Hello World!").output  == ['Hello World', ['!']]
+            parse2.parse_string("Hello World").index == 11
 
         parse3 = peg((parse1, ("!" | "?")))
 
         with require:
-            parse3.parse("Hello World!").output == ['Hello World', '!']
-            parse3.parse("Hello World?").output == ['Hello World', '?']
-            parse3.parse("Hello World%").index == 11
+            parse3.parse_string("Hello World!").output == ['Hello World', '!']
+            parse3.parse_string("Hello World?").output == ['Hello World', '?']
+            parse3.parse_string("Hello World%").index == 11
 
         parse4 = peg((parse1, "!".rep & "!!!"))
 
         with require:
-            parse4.parse("Hello World!!!").output == ['Hello World', ['!', '!', '!']]
-            parse4.parse("Hello World!!").index == 11
+            parse4.parse_string("Hello World!!!").output == ['Hello World', ['!', '!', '!']]
+            parse4.parse_string("Hello World!!").index == 11
 
         parse4 = peg((parse1, "!".rep & "!!!"))
 
         with require:
-            parse4.parse("Hello World!!!").output == ["Hello World", ["!", "!", "!"]]
+            parse4.parse_string("Hello World!!!").output == ["Hello World", ["!", "!", "!"]]
 
         parse5 = peg((parse1, "!".rep & -"!!!"))
         with require:
-            parse5.parse("Hello World!!").output == ["Hello World", ['!', '!']]
-            parse5.parse("Hello World!!!").index == 11
+            parse5.parse_string("Hello World!!").output == ["Hello World", ['!', '!']]
+            parse5.parse_string("Hello World!!!").index == 11
 
         parse6 = peg((parse1, "!" * 3))
         with require:
-            parse6.parse("Hello World!").index == 12
-            parse6.parse("Hello World!!").index == 13
-            parse6.parse("Hello World!!!").output == ["Hello World", ['!', '!', '!']]
-            parse6.parse("Hello World!!!!").index == 14
+            parse6.parse_string("Hello World!").index == 12
+            parse6.parse_string("Hello World!!").index == 13
+            parse6.parse_string("Hello World!!!").output == ["Hello World", ['!', '!', '!']]
+            parse6.parse_string("Hello World!!!!").index == 14
 
 
     def test_conversion(self):
         parse1 = peg((("Hello World", "!".rep1) // f(_[1])))
 
         with require:
-            parse1.parse("Hello World!!!").output == ['!', '!', '!']
-            parse1.parse("Hello World").index == 11
+            parse1.parse_string("Hello World!!!").output == ['!', '!', '!']
+            parse1.parse_string("Hello World").index == 11
 
         parse2 = parse1 // len
 
         with require:
-            parse2.parse("Hello World!!!").output == 3
+            parse2.parse_string("Hello World!!!").output == 3
 
 
     def test_block(self):
@@ -74,25 +74,25 @@ class Tests(unittest.TestCase):
             parse2 = parse1 // len
 
         with require:
-            parse1.parse("Hello World!!!").output == ['!', '!', '!']
-            parse1.parse("Hello World").index == 11
-            parse2.parse("Hello World!!!").output == 3
+            parse1.parse_string("Hello World!!!").output == ['!', '!', '!']
+            parse1.parse_string("Hello World").index == 11
+            parse2.parse_string("Hello World!!!").output == 3
 
     def test_recursive(self):
         with peg:
             expr = ("(", expr, ")").rep | ""
 
         with require:
-            expr.parse("()").output
-            expr.parse("(()())").output
+            expr.parse_string("()").output
+            expr.parse_string("(()())").output
             expr.parse_partial("(((()))))").output
 
             expr.parse_partial("((()))))").output
-            expr.parse("((()))))").index == 6
+            expr.parse_string("((()))))").index == 6
             expr.parse_partial(")((()()))(").output == []
-            expr.parse(")((()()))(").index == 0
+            expr.parse_string(")((()()))(").index == 0
             expr.parse_partial(")()").output == []
-            expr.parse(")()").index == 0
+            expr.parse_string(")()").index == 0
 
     def test_bindings(self):
         with peg:
@@ -102,18 +102,21 @@ class Tests(unittest.TestCase):
             seq2 = ("l", ("ol" is xxx).rep1) >> xxx
             seq3 = ("l", ("ol" is xxx).rep1) >> sum(map(len, xxx))
         with require:
-            short.parse('omg').output == 'omgomg'
-            short.parse('omgg').index == 3
-            short.parse('cow').index == 0
-            medium.parse('omg wtf bbq').output == 'omgwtfbbq'
-            medium.parse('omg wtf bbbbbq').output == 'omgwtfbbbbbq'
-            medium.parse('omg wtf bbqq').index == 11
-            seq3.parse("lolololol").output == 8
+            short.parse_string('omg').output == 'omgomg'
+            short.parse_string('omgg').index == 3
+            short.parse_string('cow').index == 0
+            medium.parse_string('omg wtf bbq').output == 'omgwtfbbq'
+            medium.parse_string('omg wtf bbbbbq').output == 'omgwtfbbbbbq'
+            medium.parse_string('omg wtf bbqq').index == 11
+            seq3.parse_string("lolololol").output == 8
 
         for x in ["lol", "lolol", "ol", "'"]:
-            with require:
-                seq1.parse(x) == seq2.parse(x)
+            if type(seq1.parse_string(x)) is Success:
 
+                require(seq1.parse_string(x).output == seq2.parse_string(x).output)
+            else:
+
+                require(seq1.parse_string(x).index == seq2.parse_string(x).index)
 
 
     def test_arithmetic(self):
@@ -146,12 +149,12 @@ class Tests(unittest.TestCase):
             expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
 
         with require:
-            expr.parse("123").output == 123
-            expr.parse("((123))").output == 123
-            expr.parse("(123+456+789)").output == 1368
-            expr.parse("(6/2)").output == 3
-            expr.parse("(1+2+3)+2").output == 8
-            expr.parse("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)").output == 1804
+            expr.parse_string("123").output == 123
+            expr.parse_string("((123))").output == 123
+            expr.parse_string("(123+456+789)").output == 1368
+            expr.parse_string("(6/2)").output == 3
+            expr.parse_string("(1+2+3)+2").output == 8
+            expr.parse_string("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)").output == 1804
 
 
     def test_cut(self):
@@ -160,17 +163,17 @@ class Tests(unittest.TestCase):
             expr2 = ("1", "2", "3") | ("1", "b", "c")
 
         with require:
-            expr1.parse("1bc").index == 1
-            expr2.parse("1bc").output == ['1', 'b', 'c']
+            expr1.parse_string("1bc").index == 1
+            expr2.parse_string("1bc").output == ['1', 'b', 'c']
 
     def test_bindings_json(self):
 
         def test(parser, string):
             import json
             try:
-                    parser.parse(string).output == json.loads(string)
+                    parser.parse_string(string).output == json.loads(string)
             except Exception, e:
-                print(parser.parse(string))
+                print(parser.parse_string(string))
                 print(json.loads(string))
                 raise e
         """
@@ -208,9 +211,9 @@ class Tests(unittest.TestCase):
         with peg:
             json_exp = (space.opt, (obj | array | string | true | false | null | number) is exp, space.opt) >> exp
 
-            pair = (string is k, ':', json_exp is v) >> (k, v)
-            obj = ('{', pair is first, (',', pair is rest).rep, space.opt, '}') >> dict([first] + rest)
-            array = ('[', json_exp is first, (',', json_exp is rest).rep, space.opt, ']') >> [first] + rest
+            pair = (string is k, ':', cut, json_exp is v) >> (k, v)
+            obj = ('{', cut, pair is first, (',', pair is rest).rep, space.opt, '}') >> dict([first] + rest)
+            array = ('[', cut, json_exp is first, (',', json_exp is rest).rep, space.opt, ']') >> [first] + rest
 
             string = (space.opt, '"', ('[^"]'.r | escape).rep // ("".join) is body, '"') >> "".join(body)
             escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
@@ -228,6 +231,7 @@ class Tests(unittest.TestCase):
 
             space = '\s+'.r
 
+        # test Success
         test(number, "12031.33123E-2")
         test(string, '"i am a cow lol omfg"')
         test(array, '[1, 2, "omg", ["wtf", "bbq", 42]]')
@@ -256,3 +260,58 @@ class Tests(unittest.TestCase):
                 ]
             }
         """)
+
+        # test Failure
+        with self.assertRaises(ParseError) as e:
+            json_exp.parse('{    : 1, "wtf": 12.4123}')
+
+        assert e.exception.message ==\
+"""
+index: 5, line: 1, col: 6
+json_exp / obj / pair / string
+{    : 1, "wtf": 12.4123}
+     ^
+""".strip()
+
+        with self.assertRaises(ParseError) as e:
+            json_exp.parse('{"omg": "123", "wtf": , "bbq": "789"}')
+
+        assert e.exception.message ==\
+"""
+index: 22, line: 1, col: 23
+json_exp / obj / pair / json_exp
+{"omg": "123", "wtf": , "bbq": "789"}
+                      ^
+""".strip()
+
+        with self.assertRaises(ParseError) as e:
+            json_exp.parse("""{
+                    "firstName": "John",
+                    "lastName": "Smith",
+                    "age": 25,
+                    "address": {
+                        "streetAddress": "21 2nd Street",
+                        "city": "New York",
+                        "state": "NY",
+                        "postalCode": 10021
+                    },
+                    "phoneNumbers": [
+                        {
+                            "type": "home",
+                            "number": "212 555-1234"
+                        },
+                        {
+                            "type": "fax",
+                            "number": 646 555-4567"
+                        }
+                    ]
+                }
+            """)
+
+        assert e.exception.message == \
+"""
+index: 655, line: 18, col: 43
+json_exp / obj / pair / json_exp / array / json_exp / obj
+                         "number": 646 555-4567"
+                                       ^
+""".strip()

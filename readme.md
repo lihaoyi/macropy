@@ -1142,12 +1142,23 @@ print expr.parse("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)").output # 1804
 
 The above example describes a simple parser for arithmetic expressions, using our own parser combinator library which roughly follows the [PEG](http://en.wikipedia.org/wiki/Parsing_expression_grammar) syntax. Note how that in the example, the bulk of the code goes into the loop that reduces sequences of numbers and operators to a single number, rather than the recursive-descent parser itself!
 
-Anything within a `with peg:` block is transformed into a `Parser`. A `Parser` comes with a `.parse(input)` method that attempts to parse the given `input` string. This method returns:
+Anything within a `with peg:` block is transformed into a `Parser`. A `Parser` comes with a `.parse_string(input)` method that attempts to parse the given `input` string. This method returns:
 
 - `Success(output, bindings, remaining_input)` if the parser succeeded; `output` contains the result of the parsing, and is probably what you want, while `bindings` contains any variables bound via the `is` keyword and `remaining_input` is an object containing both the `input` string and the `index` of the last character that was parsed. The entire `input` must be consumed for parsing to succeed.
 - `Failure(index, failed, fatal=False)`  if the parser failed to parse the input, where `index` contains the index in the input where parsing finally failed (after exhausting all backtracking) and `failed` contains the `Parser` object which failed at that `index`. 
 
-A Parser also contains a `parse_partial(input)` method, which is identical but does not require the entire `input` to be consumed, as long as some prefix of the `input` string matches. Again, the `remaining_input` attribute of the `Success` indicates how far into the `input` string parsing proceeded   
+In addition to `parse_string`, a Parser also contains:
+
+- a `parse_partial(input)` method, which is identical but does not require the entire `input` to be consumed, as long as some prefix of the `input` string matches. The `remaining_input` attribute of the `Success` indicates how far into the `input` string parsing proceeded
+- a `parse(input)` method, which is similar to `parse_string` except it returns an unboxed result in case of success (i.e. not wrapped in a `Success` object, and thus with no metadata) and raises a `ParseError` in the case of failure. This is intended to be a more human-friendly version of `parse_string`, whose `Success` and `Failure` return types are better suited to programmatic manipulation. The `ParseError` contains a nice human-readable string detailing exactly what went wrong:
+
+```python
+json_exp.parse('{"omg": "123", "wtf": , "bbq": "789"}')
+# ParseError: index: 22, line: 1, col: 23
+# json_exp / obj / pair / json_exp
+# {"omg": "123", "wtf": , "bbq": "789"}
+#                       ^
+```
 
 ###Basic Combinators
 
@@ -1294,13 +1305,13 @@ In the first case, after failing to parse `object`, the `json` parser goes on to
 In the second case, `cut` is inserted inside the `object` parser, something like:
 
 ```python
-object = "{", cut, string, ":", json, "}"
+object = '{', cut, pair, (',', pair).rep, space.opt, '}'
 ```
 
 Once the first `{` is parsed, the parser is committed to that alternative. Thus, when it fails to parse `string`, it knows it cannot backtrack and can immediately end the parsing. It can now give a much more specific source location (character 10) as well as better information on what it was trying to parse (`json / object / string`)
 
 ###Full Example
-These parser combinators are not limited to toy problems, like the arithmetic expression parser above. Below is the full source of the JSON parser (without `cut`, for simplicity), along with it's PEG grammer:
+These parser combinators are not limited to toy problems, like the arithmetic expression parser above. Below is the full source of the JSON parser, along with it's PEG grammer:
 
 ```python
 """
@@ -1335,28 +1346,27 @@ ExponentPart <- ( "e" / "E" ) ( "+" / "-" )? [0-9]+
 S <- [ U+0009 U+000A U+000D U+0020 ]+
 """
 with peg:
-    json_exp = (space.opt, (obj | array | string | true | false | null | number) is exp, space.opt) >> exp
+        json_exp = (space.opt, (obj | array | string | true | false | null | number) is exp, space.opt) >> exp
 
-    pair = (string is k, ':', json_exp is v) >> (k, v)
-    obj = ('{', pair is first, (',', pair is rest).rep, space.opt, '}') >> dict([first] + rest)
-    array = ('[', json_exp is first, (',', json_exp is rest).rep, space.opt, ']') >> [first] + rest
+        pair = (string is k, ':', cut, json_exp is v) >> (k, v)
+        obj = ('{', cut, pair is first, (',', pair is rest).rep, space.opt, '}') >> dict([first] + rest)
+        array = ('[', cut, json_exp is first, (',', json_exp is rest).rep, space.opt, ']') >> [first] + rest
 
-    string = (space.opt, '"', ('[^"]'.r | escape).rep // ("".join) is body, '"') >> "".join(body)
-    escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
-    unicode_escape = 'u', '[0-9A-Fa-f]'.r * 4
+        string = (space.opt, '"', ('[^"]'.r | escape).rep // ("".join) is body, '"') >> "".join(body)
+        escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
+        unicode_escape = 'u', '[0-9A-Fa-f]'.r * 4
 
-    true = 'true' >> True
-    false = 'false' >> False
-    null = 'null' >> None
+        true = 'true' >> True
+        false = 'false' >> False
+        null = 'null' >> None
 
-    number = (minus.opt, integral, fractional.opt, exponent.opt) // f(float("".join(_)))
-    minus = '-'
-    integral = '0' | '[1-9][0-9]*'.r
-    fractional = ('.', '[0-9]+'.r) // "".join
-    exponent = (('e' | 'E'), ('+' | '-').opt, "[0-9]+".r) // "".join
+        number = (minus.opt, integral, fractional.opt, exponent.opt) // f(float("".join(_)))
+        minus = '-'
+        integral = '0' | '[1-9][0-9]*'.r
+        fractional = ('.', '[0-9]+'.r) // "".join
+        exponent = (('e' | 'E'), ('+' | '-').opt, "[0-9]+".r) // "".join
 
-    space = '\s+'.r
-
+        space = '\s+'.r
 test_string = """
     {
         "firstName": "John",
@@ -1399,7 +1409,50 @@ pp.pprint(parser.parse(string).output)
 #                        {   'number': '646 555-4567', 'type': 'fax'}]}
 ```
 
-As you can see, the full parser parses that non-trivial blob of JSON into an identical structure as the in-built `json` package. In addition, the source of the parser looks almost identical to the PEG grammar it is parsing, shown above. Pretty neat!
+As you can see, the full parser parses that non-trivial blob of JSON into an identical structure as the in-built `json` package. In addition, the source of the parser looks almost identical to the PEG grammar it is parsing, shown above. As shown earlier, it also provides exceptions with nice error messages when the `parse` method is used:
+
+```python
+json_exp.parse('{    : 1, "wtf": 12.4123}')
+# ParseError: index: 5, line: 1, col: 6
+# json_exp / obj / pair / string
+# {    : 1, "wtf": 12.4123}
+#      ^
+```
+
+Even when parsing larger documents, the error reporting rises to the challenge:
+
+```python
+json_exp.parse("""
+    {
+        "firstName": "John",
+        "lastName": "Smith",
+        "age": 25,
+        "address": {
+            "streetAddress": "21 2nd Street",
+            "city": "New York",
+            "state": "NY",
+            "postalCode": 10021
+        },
+        "phoneNumbers": [
+            {
+                "type": "home",
+                "number": "212 555-1234"
+            },
+            {
+                "type": "fax",
+                "number": 646 555-4567"
+            }
+        ]
+    }
+""")
+
+# ParseError: index: 456, line: 19, col: 31
+# json_exp / obj / pair / json_exp / array / json_exp / obj
+#                 "number": 646 555-4567"
+#                               ^
+```
+
+Pretty neat!
 
 JS Snippets
 ------------
