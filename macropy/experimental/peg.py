@@ -4,6 +4,7 @@ from macropy.core.macros import *
 from macropy.core.quotes import macros, q, u
 from macropy.quick_lambda import macros, f
 from macropy.case_classes import macros, case
+from macropy.string_interp import  macros, s
 from collections import defaultdict
 
 """
@@ -24,59 +25,70 @@ macros = Macros()
 __all__ = ["Input", 'Parser', 'Success', 'Failure', 'cut', 'ParseError']
 
 @macros.block()
-def peg(tree, **kw):
+def peg(tree, gen_sym, **kw):
+    potential_targets = [
+        target.id for stmt in tree
+        if type(stmt) is Assign
+        for target in stmt.targets
+    ]
+
     for statement in tree:
         if type(statement) is Assign:
-            new_tree, bindings = _PegWalker.recurse_real(statement.value)
-            statement.value = q(Parser.Lazy(lambda: ast(new_tree), [u%statement.targets[0].id]))
+            new_tree = process(statement.value, potential_targets, gen_sym)
+            statement.value = q(Parser.Named(lambda: ast(new_tree), [u%statement.targets[0].id]))
 
     return tree
 
 
 @macros.expr()
-def peg(tree, **kw):
+def peg(tree, gen_sym, **kw):
+    return process(tree, [], gen_sym)
+
+def process(tree, potential_targets, gen_sym):
+    @Walker
+    def _PegWalker(tree, stop, collect, **kw):
+        if type(tree) is Str:
+            stop()
+            return q(Parser.Raw(ast(tree)))
+        if type(tree) is Name and tree.id in potential_targets:
+            collect(tree.id)
+        if type(tree) is BinOp and type(tree.op) is RShift:
+            tree.left, b_left = _PegWalker.recurse_real(tree.left)
+            tree.right = q(lambda bindings: ast(tree.right))
+            names = distinct(flatten(b_left))
+            tree.right.args.args = map(f(Name(id = _)), names)
+            tree.right.args.defaults = [Name(id="None")] * len(names)
+            tree.right.args.kwarg = gen_sym()
+            stop()
+
+            return tree
+
+        if type(tree) is BinOp and type(tree.op) is FloorDiv:
+            tree.left, b_left = _PegWalker.recurse_real(tree.left)
+            stop()
+            collect(b_left)
+            return tree
+
+        if type(tree) is Tuple:
+            result = q(Parser.Seq([]))
+
+            result.args[0].elts = tree.elts
+            all_bindings = []
+            for i, elt in enumerate(tree.elts):
+                result.args[0].elts[i], bindings = _PegWalker.recurse_real(tree.elts[i])
+                all_bindings.append(bindings)
+            stop()
+            collect(all_bindings)
+            return result
+
+        if type(tree) is Compare and type(tree.ops[0]) is Is:
+            left_tree, bindings = _PegWalker.recurse_real(tree.left)
+            new_tree = q(ast(left_tree).bind_to(u(tree.comparators[0].id)))
+            stop()
+            collect(bindings + [tree.comparators[0].id])
+            return new_tree
     new_tree, bindings = _PegWalker.recurse_real(tree)
     return new_tree
-
-
-@Walker
-def _PegWalker(tree, ctx, stop, collect, **kw):
-    if type(tree) is Str:
-        stop()
-        return q(Parser.Raw(ast(tree)))
-
-    if type(tree) is BinOp and type(tree.op) is RShift:
-        tree.left, b_left = _PegWalker.recurse_real(tree.left)
-        tree.right = q(lambda bindings: ast(tree.right))
-        tree.right.args.args = map(f(Name(id = _)), flatten(b_left))
-        stop()
-        return tree
-
-    if type(tree) is BinOp and type(tree.op) is FloorDiv:
-        tree.left, b_left = _PegWalker.recurse_real(tree.left)
-        stop()
-        collect(b_left)
-        return tree
-
-    if type(tree) is Tuple:
-        result = q(Parser.Seq([]))
-
-        result.args[0].elts = tree.elts
-        all_bindings = []
-        for i, elt in enumerate(tree.elts):
-            result.args[0].elts[i], bindings = _PegWalker.recurse_real(tree.elts[i])
-            all_bindings.append(bindings)
-        stop()
-        collect(all_bindings)
-        return result
-
-    if type(tree) is Compare and type(tree.ops[0]) is Is:
-        left_tree, bindings = _PegWalker.recurse_real(tree.left)
-        new_tree = q(ast(left_tree).bind_to(u(tree.comparators[0].id)))
-        stop()
-        collect(bindings + [tree.comparators[0].id])
-        return new_tree
-
 
 
 cut = object()
@@ -143,9 +155,6 @@ class ParseError(Exception):
 
 @case
 class Parser:
-
-
-
     def parse(self, string):
         """String -> value; throws ParseError in case of failure"""
         res = Parser.Full(self).parse_input(Input(string, 0))
@@ -170,7 +179,7 @@ class Parser:
         return []
 
     def bind_to(self, string):
-        return Parser.Binder(self, string)
+        return Parser.Named(self, [string])
 
     def __and__(self, other):   return Parser.And([self, other])
 
@@ -258,7 +267,8 @@ class Parser:
                 if type(res) is Success:
                     return res
                 elif res.fatal:
-                    return res.copy(failed = [self] + res.failed)
+                    res.failed = [self] + res.failed
+                    return res
 
             return Failure(input, [self])
 
@@ -269,7 +279,8 @@ class Parser:
             if failures == []:
                 return results[0]
             else:
-                return failures[0].copy(failed = [self] + failures[0].failed)
+                failures[0].failed = [self] + failures[0].failed
+                return failures[0]
 
     class Not(parser):
         def parse_input(self, input):
@@ -288,7 +299,8 @@ class Parser:
                 res = self.parser.parse_input(current_input)
                 if type(res) is Failure:
                     if res.fatal:
-                        return res.copy(failed = [self] + res.failed)
+                        res.failed = [self] + res.failed
+                        return res
                     else:
                         return Success(results, result_dict, current_input)
 
@@ -309,7 +321,8 @@ class Parser:
             for i in range(self.n):
                 res = self.parser.parse_input(current_input)
                 if type(res) is Failure:
-                    return res.copy(failed = [self] + res.failed)
+                    res.failed = [self] + res.failed
+                    return res
 
                 current_input = res.remaining
 
@@ -321,43 +334,34 @@ class Parser:
             return Success(results, result_dict, current_input)
 
     class Transform(parser, func):
-
         def parse_input(self, input):
             res = self.parser.parse_input(input)
             if type(res) is Success:
                 res.output = self.func(res.output)
-                return res
             else:
-                return res.copy(failed = [self] + res.failed)
-
+                res.failed = [self] + res.failed
+            return res
 
     class TransformBound(parser, func):
-
         def parse_input(self, input):
-            result = self.parser.parse_input(input)
-            if type(result) is Success:
-                return result.copy(output = self.func(**result.bindings), bindings={})
+            res = self.parser.parse_input(input)
+            if type(res) is Success:
+                res.output = self.func(**res.bindings)
+                res.bindings = {}
             else:
-                return result.copy(failed = [self] + result.failed)
+                res.failed = [self] + res.failed
+            return res
 
-    class Binder(parser, name):
-        def parse_input(self, input):
-            result = self.parser.parse_input(input)
-            if type(result) is Success:
-                result.bindings[self.name] = result.output
-                return result
-            else:
-                return result.copy(failed = [self] + result.failed)
-
-    class Lazy(parser_thunk, trace_name):
+    class Named(parser_thunk, trace_name):
         def parse_input(self, input):
             if not isinstance(self.parser_thunk, Parser):
                 self.parser_thunk = self.parser_thunk()
             res = self.parser_thunk.parse_input(input)
             if type(res) is Success:
-                return res
+                res.bindings = {self.trace_name[0]: res.output}
             else:
-                return res.copy(failed = [self] + res.failed)
+                res.failed = [self] + res.failed
+            return res
 
     class Succeed(string):
         def parse_input(self, input):

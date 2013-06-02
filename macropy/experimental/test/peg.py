@@ -118,7 +118,6 @@ class Tests(unittest.TestCase):
 
                 require(seq1.parse_string(x).index == seq2.parse_string(x).index)
 
-
     def test_arithmetic(self):
         """
         PEG grammar from Wikipedia
@@ -146,7 +145,7 @@ class Tests(unittest.TestCase):
         with peg:
             value = '[0-9]+'.r // int | ('(', expr, ')') // (f(_[1]))
             op = '+' | '-' | '*' | '/'
-            expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
+            expr = (value, (op, value).rep is rest) >> reduce_chain([value] + rest)
 
         with require:
             expr.parse_string("123").output == 123
@@ -268,7 +267,7 @@ class Tests(unittest.TestCase):
         assert e.exception.message ==\
 """
 index: 5, line: 1, col: 6
-json_exp / obj / pair / string
+json_exp / exp / obj / first / pair / k / string
 {    : 1, "wtf": 12.4123}
      ^
 """.strip()
@@ -279,7 +278,7 @@ json_exp / obj / pair / string
         assert e.exception.message ==\
 """
 index: 22, line: 1, col: 23
-json_exp / obj / pair / json_exp
+json_exp / exp / obj / rest / pair / v / json_exp / exp
 {"omg": "123", "wtf": , "bbq": "789"}
                       ^
 """.strip()
@@ -311,7 +310,8 @@ json_exp / obj / pair / json_exp
         assert e.exception.message == \
 """
 index: 655, line: 18, col: 43
-json_exp / obj / pair / json_exp / array / json_exp / obj
+json_exp / exp / obj / rest / pair / v / json_exp / exp / array / rest / json_exp / exp / obj
                          "number": 646 555-4567"
                                        ^
 """.strip()
+        #json_exp.parse(open("macropy/experimental/test/peg_json/pass1.json").read())
