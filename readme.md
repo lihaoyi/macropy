@@ -1189,10 +1189,8 @@ So far, these building blocks all return the raw parse tree: all the things like
 >>> with peg:
 ...     num = '[0-9]+'.r
 
->>> num.parse("123").output
+>>> num.parse("123")
 '123'
->>> num.parse("1 23").index
-1
 ```
 
 which returns a string of digits, and convert it into a parser which returns an `int` with the value of that string. This can be done with the `//` operator:
@@ -1201,7 +1199,7 @@ which returns a string of digits, and convert it into a parser which returns an 
 >>> with peg:
 ...     num = '[0-9]+'.r // int
 
->>> num.parse("123").output
+>>> num.parse("123")
 123
 ```
 
@@ -1280,8 +1278,12 @@ with peg:
     expr1 = ("1", "2", "3") | ("1", "b", "c")
     expr2 = ("1", cut, "2", "3") | ("1", "b", "c")
 
-print expr1.parse("1bc").output # ['1', 'b', 'c']
-print expr2.parse("1bc").index # 1
+print expr1.parse("1bc") # ['1', 'b', 'c']
+print expr2.parse("1bc")
+# ParseError: index: 1, line: 1, col: 2
+# expr2
+# 1bc
+#  ^
 ```
 
 `cut` is a special token used in a sequence of parsers, which commits the parsing to the current sequence. As you can see above, without `cut`, the left alternative fails and the parsing then attempts the right alternative, which succeeds. In contrast, with `expr2`, the parser is committed to the left alternative once it reaches the `cut` (after successfully parsing "1") and thus when the left alternative fails, the right alternative is not tried and the entire `parse` fails.
@@ -1395,7 +1397,7 @@ with peg:
     obj = ('{', cut, pair.rep_with(",") // dict, space, '}') // f(_[1])
     array = ('[', cut, json_exp.rep_with(","), space, ']') // f(_[1])
 
-    string = (space, '"', (r'[^"\\\t\n]'.r | escape | unicode_escape).rep // ("".join) is body, '"') >> "".join(body)
+    string = (space, '"', (r'[^"\\\t\n]'.r | escape | unicode_escape).rep.join is body, '"') >> "".join(body)
     escape = ('\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't') // escape_map.get) // f(_[1])
     unicode_escape = ('\\', 'u', ('[0-9A-Fa-f]'.r * 4).join).join // f(decode(_))
 
@@ -1405,7 +1407,7 @@ with peg:
 
     number = decimal | integer
     integer = ('-'.opt, integral).join // int
-    decimal = ('-'.opt, integral, ((fract, exp) // "".join) | fract | exp).join // float
+    decimal = ('-'.opt, integral, ((fract, exp).join) | fract | exp).join // float
 
     integral = '0' | '[1-9][0-9]*'.r
     fract = ('.', '[0-9]+'.r).join

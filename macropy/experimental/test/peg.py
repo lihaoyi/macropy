@@ -143,17 +143,17 @@ class Tests(unittest.TestCase):
             return chain[0]
 
         with peg:
-            value = '[0-9]+'.r // int | ('(', expr, ')') // (f(_[1]))
             op = '+' | '-' | '*' | '/'
+            value = '[0-9]+'.r // int | ('(', expr, ')') // (f(_[1]))
             expr = (value, (op, value).rep is rest) >> reduce_chain([value] + rest)
 
         with require:
-            expr.parse_string("123").output == 123
-            expr.parse_string("((123))").output == 123
-            expr.parse_string("(123+456+789)").output == 1368
-            expr.parse_string("(6/2)").output == 3
-            expr.parse_string("(1+2+3)+2").output == 8
-            expr.parse_string("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)").output == 1804
+            expr.parse("123") == 123
+            expr.parse("((123))") == 123
+            expr.parse("(123+456+789)") == 1368
+            expr.parse("(6/2)")  == 3
+            expr.parse("(1+2+3)+2") == 8
+            expr.parse("(((((((11)))))+22+33)*(4+5+((6))))/12*(17+5)")  == 1804
 
 
     def test_cut(self):
@@ -232,7 +232,7 @@ class Tests(unittest.TestCase):
             obj = ('{', cut, pair.rep_with(",") // dict, space, '}') // f(_[1])
             array = ('[', cut, json_exp.rep_with(","), space, ']') // f(_[1])
 
-            string = (space, '"', (r'[^"\\\t\n]'.r | escape | unicode_escape).rep // ("".join) is body, '"') >> "".join(body)
+            string = (space, '"', (r'[^"\\\t\n]'.r | escape | unicode_escape).rep.join is body, '"') >> "".join(body)
             escape = ('\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't') // escape_map.get) // f(_[1])
             unicode_escape = ('\\', 'u', ('[0-9A-Fa-f]'.r * 4).join).join // f(decode(_))
 
@@ -242,7 +242,7 @@ class Tests(unittest.TestCase):
 
             number = decimal | integer
             integer = ('-'.opt, integral).join // int
-            decimal = ('-'.opt, integral, ((fract, exp) // "".join) | fract | exp).join // float
+            decimal = ('-'.opt, integral, ((fract, exp).join) | fract | exp).join // float
 
             integral = '0' | '[1-9][0-9]*'.r
             fract = ('.', '[0-9]+'.r).join
