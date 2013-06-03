@@ -1154,6 +1154,7 @@ json_exp.parse('{"omg": "123", "wtf": , "bbq": "789"}')
 # json_exp / obj / pair / json_exp
 # {"omg": "123", "wtf": , "bbq": "789"}
 #                       ^
+# expected: (obj | array | string | true | false | null | number)
 ```
 
 In addition to `.parse(input)`, a Parser also contains:
@@ -1284,6 +1285,7 @@ print expr2.parse("1bc")
 # expr2
 # 1bc
 #  ^
+# expected: '2'
 ```
 
 `cut` is a special token used in a sequence of parsers, which commits the parsing to the current sequence. As you can see above, without `cut`, the left alternative fails and the parsing then attempts the right alternative, which succeeds. In contrast, with `expr2`, the parser is committed to the left alternative once it reaches the `cut` (after successfully parsing "1") and thus when the left alternative fails, the right alternative is not tried and the entire `parse` fails.
@@ -1307,31 +1309,37 @@ if your JSON parser looks like:
 ```python
 with peg:
     ...
-    json = object | array | string | num | true | false | null
+    json_exp = obj | array | string | num | true | false | null
+    obj = '{', pair.rep_with(",") , space, '}'
+    ...
 ```
 
 Without `cut`, the only information you could gain from attempting to parse that is something like:
 
 ```
-Error parsing json
-{        : "failed lol"}
+index: 0, line: 1, col: 1
+json_exp
+{    : 1, "wtf": 12.4123}
 ^
+expected: (obj | array | string | true | false | null | number)
 ```
 
 On the other hand, using a `cut` inside the `object` parser immediately after parsing the first `{`, we could provide a much more specific error:
 
 ```
-Error parsing json / object / string:
-{        : "failed lol"}
-         ^
+index: 5, line: 1, col: 6
+json_exp / obj
+{    : 1, "wtf": 12.4123}
+     ^
+expected: '}'
 ```
 
-In the first case, after failing to parse `object`, the `json` parser goes on to try all the other alternatives. After all to them fail to parse, it only knows that trying to parse `json` starting from character 0 doesn't work; it has no way of knowing that the alternative that was "supposed" to work was `object`.
+In the first case, after failing to parse `obj`, the `json_exp` parser goes on to try all the other alternatives. After all to them fail to parse, it only knows that trying to parse `json_exp` starting from character 0 doesn't work; it has no way of knowing that the alternative that was "supposed" to work was `obj`.
 
 In the second case, `cut` is inserted inside the `object` parser, something like:
 
 ```python
-object = '{', cut, pair, (',', pair).rep, space.opt, '}'
+obj = '{', cut, pair.rep_with(",") , space, '}'
 ```
 
 Once the first `{` is parsed, the parser is committed to that alternative. Thus, when it fails to parse `string`, it knows it cannot backtrack and can immediately end the parsing. It can now give a much more specific source location (character 10) as well as better information on what it was trying to parse (`json / object / string`)
@@ -1463,17 +1471,7 @@ pp.pprint(parser.parse(string))
 
 You can see that `json_exp` parses that non-trivial blob of JSON into an identical structure as Python's in-built `json` package. In addition, the source of the parser looks almost identical to the PEG grammar it is parsing, shown above. This parser makes good use of the `//` and `>>` operators to transform the output of its individual components, as well as using `rep_with` method to easily parse the comma-separated JSON objects and arrays. This parser is almost fully compliant with the [test cases](http://www.json.org/JSON_checker/) found on the [json.org](www.json.org) website (it doesn't fail, as it should, for deeply-nested JSON arrays), which isn't bad for 50 lines of code.
 
-As mentioned earlier, MacroPEG parsers also provide exceptions with nice error messages when the `parse` method fails, and the JSON parser is no exception:
-
-```python
-json_exp.parse('{    : 1, "wtf": 12.4123}')
-# ParseError: index: 5, line: 1, col: 6
-# json_exp / obj / pair / string
-# {    : 1, "wtf": 12.4123}
-#      ^
-```
-
-Even when parsing larger documents, the error reporting rises to the challenge:
+As mentioned earlier, MacroPEG parsers also provide exceptions with nice error messages when the `parse` method fails, and the JSON parser is no exception. Even when parsing larger documents, the error reporting rises to the challenge:
 
 ```python
 json_exp.parse("""
@@ -1504,6 +1502,7 @@ json_exp.parse("""
 # json_exp / obj / pair / json_exp / array / json_exp / obj
 #                 "number": 646 555-4567"
 #                               ^
+# expected: '}'
 ```
 
 Pretty neat! This full example of a JSON parser demonstrates what MacroPEG provides to a programmer trying to write a parser:

@@ -165,6 +165,27 @@ class Tests(unittest.TestCase):
             expr1.parse_string("1bc").index == 1
             expr2.parse_string("1bc").output == ['1', 'b', 'c']
 
+    def test_short_str(self):
+        with peg:
+            p1 = "omg"
+            p2 = "omg".r
+            p3 = "omg" | "wtf"
+            p4 = "omg", "wtf"
+            p5 = "omg" & "wtf"
+            p6 = p1
+            p7 = "a" | "b" | "c"
+            p8 = ("1" | "2" | "3") & "\d".r & ("2" | "3") | p7
+
+        with require:
+            p1.parser.short_str() == "'omg'"
+            p2.parser.short_str() == "'omg'.r"
+            p3.parser.short_str() == "('omg' | 'wtf')"
+            p4.parser.short_str() == "('omg', 'wtf')"
+            p5.parser.short_str() == "('omg' & 'wtf')"
+            p6.parser.short_str() == "p1"
+            p7.parser.short_str() == "('a' | 'b' | 'c')"
+            p8.parser.short_str() == "((('1' | '2' | '3') & '\\\\d'.r & ('2' | '3')) | p7)"
+
     def test_bindings_json(self):
 
         def test(parser, string):
@@ -293,6 +314,7 @@ index: 5, line: 1, col: 6
 json_exp / obj
 {    : 1, "wtf": 12.4123}
      ^
+expected: '}'
 """.strip()
 
         with self.assertRaises(ParseError) as e:
@@ -304,6 +326,7 @@ index: 22, line: 1, col: 23
 json_exp / obj / pair / v / json_exp
 {"omg": "123", "wtf": , "bbq": "789"}
                       ^
+expected: (obj | array | string | true | false | null | number)
 """.strip()
 
         with self.assertRaises(ParseError) as e:
@@ -336,6 +359,7 @@ index: 655, line: 18, col: 43
 json_exp / obj / pair / v / json_exp / array / json_exp / obj
                          "number": 646 555-4567"
                                        ^
+expected: '}'
 """.strip()
 
 

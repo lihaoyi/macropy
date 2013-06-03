@@ -144,7 +144,8 @@ class Failure(remaining, failed, fatal | False):
         msg = "index: " + str(self.index) + ", line: " + str(line_num + 1) + ", col: " + str(index - line_start) + "\n" + \
               " / ".join(self.trace) + "\n" + \
               string[line_start+1:line_end][index - offset - line_start:index+line_length-offset - line_start] + "\n" + \
-              (offset-1) * " " + "^"
+              (offset-1) * " " + "^" + "\n" +\
+              "expected: " + self.failed[-1].short_str()
         return msg
 
 class ParseError(Exception):
@@ -179,7 +180,7 @@ class Parser:
         return []
 
     def bind_to(self, string):
-        return Parser.Named(self, [string])
+        return Parser.Named(lambda: self, [string])
 
     def __and__(self, other):   return Parser.And([self, other])
 
@@ -226,6 +227,8 @@ class Parser:
                 return Failure(res.remaining, [self])
             else:
                 return res
+        def short_str(self):
+            return self.parser.short_str()
 
     class Raw(string):
         def parse_input(self, input):
@@ -233,6 +236,9 @@ class Parser:
                 return Success(self.string, {}, input.copy(index = input.index + len(self.string)))
             else:
                 return Failure(input, [self])
+
+        def short_str(self):
+            return repr(self.string)
 
     class Regex(regex_string):
         def parse_input(self, input):
@@ -242,6 +248,9 @@ class Parser:
                 return Success(group, {}, input.copy(index = input.index + len(group)))
             else:
                 return Failure(input, [self])
+
+        def short_str(self):
+            return repr(self.regex_string) + ".r"
 
     class Seq(children):
         def parse_input(self, input):
@@ -268,6 +277,8 @@ class Parser:
 
             return Success(results, result_dict, current_input)
 
+        def short_str(self):
+            return "(" + ", ".join(map(lambda x: x.short_str(), self.children)) + ")"
     class Or(children):
         def parse_input(self, input):
             for child in self.children:
@@ -282,6 +293,11 @@ class Parser:
 
             return Failure(input, [self])
 
+        def __or__(self, other):   return Parser.Or(self.children + [other])
+
+        def short_str(self):
+            return "(" + " | ".join(map(lambda x: x.short_str(), self.children)) + ")"
+
     class And(children):
         def parse_input(self, input):
             results = [child.parse_input(input) for child in self.children]
@@ -292,12 +308,20 @@ class Parser:
                 failures[0].failed = [self] + failures[0].failed
                 return failures[0]
 
+        def __and__(self, other):   return Parser.And(self.children + [other])
+
+        def short_str(self):
+            return "(" + " & ".join(map(lambda x: x.short_str(), self.children)) + ")"
+
     class Not(parser):
         def parse_input(self, input):
             if type(self.parser.parse_input(input)) is Success:
                 return Failure(input, [self])
             else:
                 return Success(None, {}, input)
+
+        def short_str(self):
+            return "-" + self.parser.short_str()
 
     class Rep(parser):
         def parse_input(self, input):
@@ -343,6 +367,9 @@ class Parser:
 
             return Success(results, result_dict, current_input)
 
+        def short_str(self):
+            return self.parser.short_str() + "*" + n
+
     class Transform(parser, func):
         def parse_input(self, input):
             res = self.parser.parse_input(input)
@@ -352,6 +379,9 @@ class Parser:
             else:
                 res.failed = [self] + res.failed
             return res
+
+        def short_str(self):
+            return self.parser.short_str()
 
     class TransformBound(parser, func):
         def parse_input(self, input):
@@ -363,21 +393,37 @@ class Parser:
                 res.failed = [self] + res.failed
             return res
 
+        def short_str(self):
+            return self.parser.short_str()
+
     class Named(parser_thunk, trace_name):
+        self.stored_parser = None
+        @property
+        def parser(self):
+            if not self.stored_parser:
+                self.stored_parser = self.parser_thunk()
+
+            return self.stored_parser
         def parse_input(self, input):
-            if not isinstance(self.parser_thunk, Parser):
-                self.parser_thunk = self.parser_thunk()
-            res = self.parser_thunk.parse_input(input)
+
+            res = self.parser.parse_input(input)
             if type(res) is Success:
                 res.bindings = {self.trace_name[0]: res.output}
             else:
                 res.failed = [self] + res.failed
             return res
 
+        def short_str(self):
+            return self.trace_name[0]
+
     class Succeed(string):
         def parse_input(self, input):
             return Success(self.string, {}, input)
 
+
     class Fail():
         def parse_input(self, input):
             return Failure(input, [self])
+
+        def short_str(self):
+            return "fail"
