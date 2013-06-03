@@ -28,7 +28,7 @@ MacroPy has been used to implement features such as:
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts), and [show_expanded](#show_expanded), to help in the debugging effort
 - [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), a shameless clone of LINQ to SQL from C#
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy
-- [MacroPEG](#macropeg-parser-combinators), PEG Parser combinators, inspired by Scala's
+- [MacroPEG](#macropeg-parser-combinators), Parser combinators inspired by Scala's
 - [JS Snippets](#js-snippets), cross compiling snippets of Python into equivalent Javascript
 
 The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through [creating a simple macro](#writing-your-first-macro), with [self-contained examples](docs/examples) and [reference documentation](#reference) for
@@ -1367,6 +1367,9 @@ escape_map = {
 }
 
 """
+JSON PEG grammar for reference, shameless stolen from
+https://github.com/azatoth/PanPG/blob/master/grammars/JSON.peg
+
 JSON <- S? ( Object / Array / String / True / False / Null / Number ) S?
 
 Object <- "{"
