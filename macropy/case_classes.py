@@ -123,7 +123,7 @@ def case(tree, gen_sym, **kw):
         if vararg:
             set_varargs.value = Str(vararg)
         if kwarg:
-            set_kwargs = Str(kwarg)
+            set_kwargs.value = Str(kwarg)
 
         additional_members = find_member_assignments.recurse_real(tree.body)[1]
 
