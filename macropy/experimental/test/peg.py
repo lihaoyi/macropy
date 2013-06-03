@@ -170,11 +170,29 @@ class Tests(unittest.TestCase):
         def test(parser, string):
             import json
             try:
-                    parser.parse_string(string).output == json.loads(string)
+                assert parser.parse(string) == json.loads(string)
             except Exception, e:
                 print(parser.parse_string(string))
                 print(json.loads(string))
                 raise e
+
+        def decode(x):
+            x = x.decode('unicode-escape')
+            try:
+                return str(x)
+            except:
+                return x
+        escape_map = {
+            '"': '"',
+            '/': '/',
+            '\\': '\\',
+            'b': '\b',
+            'f': '\f',
+            'n': '\n',
+            'r': '\r',
+            't': '\t'
+        }
+
         """
         JSON <- S? ( Object / Array / String / True / False / Null / Number ) S?
 
@@ -198,40 +216,45 @@ class Tests(unittest.TestCase):
         False <- "false"
         Null <- "null"
 
-        Number <- Minus? IntegralPart FractionalPart? ExponentPart?
+        Number <- Minus? IntegralPart fractPart? expPart?
 
         Minus <- "-"
         IntegralPart <- "0" / [1-9] [0-9]*
-        FractionalPart <- "." [0-9]+
-        ExponentPart <- ( "e" / "E" ) ( "+" / "-" )? [0-9]+
+        fractPart <- "." [0-9]+
+        expPart <- ( "e" / "E" ) ( "+" / "-" )? [0-9]+
         S <- [ U+0009 U+000A U+000D U+0020 ]+
-
         """
         with peg:
-            json_exp = (space.opt, (obj | array | string | true | false | null | number) is exp, space.opt) >> exp
+            json_doc = (space, (obj | array), space) // f(_[1])
+            json_exp = (space, (obj | array | string | true | false | null | number), space) // f(_[1])
 
-            pair = (string is k, ':', cut, json_exp is v) >> (k, v)
-            obj = ('{', cut, pair is first, (',', pair is rest).rep, space.opt, '}') >> dict([first] + rest)
-            array = ('[', cut, json_exp is first, (',', json_exp is rest).rep, space.opt, ']') >> [first] + rest
+            pair = (string is k, space, ':', cut, json_exp is v) >> (k, v)
+            obj = ('{', cut, pair.rep_with(",") // dict, space, '}') // f(_[1])
+            array = ('[', cut, json_exp.rep_with(","), space, ']') // f(_[1])
 
-            string = (space.opt, '"', ('[^"]'.r | escape).rep // ("".join) is body, '"') >> "".join(body)
-            escape = '\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't' | unicode_escape)
-            unicode_escape = 'u', '[0-9A-Fa-f]'.r * 4
+            string = (space, '"', (r'[^"\\\t\n]'.r | escape | unicode_escape).rep // ("".join) is body, '"') >> "".join(body)
+            escape = ('\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't') // escape_map.get) // f(_[1])
+            unicode_escape = ('\\', 'u', ('[0-9A-Fa-f]'.r * 4).join).join // f(decode(_))
 
             true = 'true' >> True
             false = 'false' >> False
             null = 'null' >> None
 
-            number = (minus.opt, integral, fractional.opt, exponent.opt) // f(float("".join(_)))
-            minus = '-'
-            integral = '0' | '[1-9][0-9]*'.r
-            fractional = ('.', '[0-9]+'.r) // "".join
-            exponent = (('e' | 'E'), ('+' | '-').opt, "[0-9]+".r) // "".join
+            number = decimal | integer
+            integer = ('-'.opt, integral).join // int
+            decimal = ('-'.opt, integral, ((fract, exp) // "".join) | fract | exp).join // float
 
-            space = '\s+'.r
+            integral = '0' | '[1-9][0-9]*'.r
+            fract = ('.', '[0-9]+'.r).join
+            exp = (('e' | 'E'), ('+' | '-').opt, "[0-9]+".r).join
+
+            space = '\s*'.r
 
         # test Success
-        test(number, "12031.33123E-2")
+        number.parse("0.123456789e-12")
+        test(json_exp, r'{"\\": 123}')
+        test(json_exp, "{}")
+
         test(string, '"i am a cow lol omfg"')
         test(array, '[1, 2, "omg", ["wtf", "bbq", 42]]')
         test(obj, '{"omg": "123", "wtf": 456, "bbq": "789"}')
@@ -267,7 +290,7 @@ class Tests(unittest.TestCase):
         assert e.exception.message ==\
 """
 index: 5, line: 1, col: 6
-json_exp / exp / obj / first / pair / k / string
+json_exp / obj
 {    : 1, "wtf": 12.4123}
      ^
 """.strip()
@@ -278,7 +301,7 @@ json_exp / exp / obj / first / pair / k / string
         assert e.exception.message ==\
 """
 index: 22, line: 1, col: 23
-json_exp / exp / obj / rest / pair / v / json_exp / exp
+json_exp / obj / pair / v / json_exp
 {"omg": "123", "wtf": , "bbq": "789"}
                       ^
 """.strip()
@@ -310,8 +333,17 @@ json_exp / exp / obj / rest / pair / v / json_exp / exp
         assert e.exception.message == \
 """
 index: 655, line: 18, col: 43
-json_exp / exp / obj / rest / pair / v / json_exp / exp / array / rest / json_exp / exp / obj
+json_exp / obj / pair / v / json_exp / array / json_exp / obj
                          "number": 646 555-4567"
                                        ^
 """.strip()
-        #json_exp.parse(open("macropy/experimental/test/peg_json/pass1.json").read())
+
+
+        # full tests, taken from http://www.json.org/JSON_checker/
+        for i in range(1, 34):
+            if i not in [18]: # skipping the "too much nesting" failure test
+                with self.assertRaises(ParseError):
+                    json_doc.parse(open("macropy/experimental/test/peg_json/fail%s.json" % i).read())
+
+        for i in [1, 2, 3]:
+            test(json_exp, open("macropy/experimental/test/peg_json/pass%s.json" % i).read())

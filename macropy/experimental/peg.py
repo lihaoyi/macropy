@@ -57,7 +57,7 @@ def process(tree, potential_targets, gen_sym):
             tree.right = q(lambda bindings: ast(tree.right))
             names = distinct(flatten(b_left))
             tree.right.args.args = map(f(Name(id = _)), names)
-            tree.right.args.defaults = [Name(id="None")] * len(names)
+            tree.right.args.defaults = [q%[]] * len(names)
             tree.right.args.kwarg = gen_sym()
             stop()
 
@@ -188,6 +188,9 @@ class Parser:
     def __neg__(self):          return Parser.Not(self)
 
     @property
+    def join(self):
+        return self // "".join
+    @property
     def rep1(self):
         return Parser.And([Parser.Rep(self), self])
 
@@ -195,6 +198,11 @@ class Parser:
     def rep(self):
         return Parser.Rep(self)
 
+    def rep1_with(self, other):
+        return Parser.Seq([self, Parser.Seq([other, self]).rep]) // (lambda x: [x[0]] + [y[1] for y in x[1]])
+
+    def rep_with(self, other):
+        return self.rep1_with(other) | Parser.Succeed([])
     @property
     def opt(self):
         return Parser.Or([self, Parser.Raw("")])
@@ -264,11 +272,13 @@ class Parser:
         def parse_input(self, input):
             for child in self.children:
                 res = child.parse_input(input)
+
                 if type(res) is Success:
                     return res
                 elif res.fatal:
                     res.failed = [self] + res.failed
                     return res
+
 
             return Failure(input, [self])
 
@@ -336,6 +346,7 @@ class Parser:
     class Transform(parser, func):
         def parse_input(self, input):
             res = self.parser.parse_input(input)
+
             if type(res) is Success:
                 res.output = self.func(res.output)
             else:
