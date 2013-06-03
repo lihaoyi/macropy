@@ -9,7 +9,7 @@ macros = Macros()
 
 in_tc_stack = [False]
 
-def trampoline(func, args, varargs, kwargs):
+def trampoline(func, args, kwargs):
     """
     Repeatedly apply a function until it returns a value.
 
@@ -18,29 +18,26 @@ def trampoline(func, args, varargs, kwargs):
     """
     ignoring = False
     while True:
+        # We can only set this if we know it will be immediately unset by func
         if hasattr(func, 'tco'):
-            in_tc_stack[-1] = True
-        result = func(*list(args), **kwargs)
+            in_tc_stack[0] = True
+        result = func(*args, **kwargs)
         # for performance reasons, do not use pattern matching here
         if isinstance(result, tuple):
             if result[0] is tco.CALL:
                 func = result[1]
                 args = result[2]
-                varargs = result[3]
-                kwargs = result[4]
+                kwargs = result[3]
                 continue
             elif result[0] is tco.IGNORE:
                 ignoring = True
                 func = result[1]
                 args = result[2]
-                varargs = result[3]
-                kwargs = result[4]
+                kwargs = result[3]
                 continue
         if ignoring:
-            in_tc_stack.pop()
             return None
         else:
-            in_tc_stack.pop()
             return result
 
 
@@ -48,11 +45,11 @@ def trampoline_decorator(func):
     import functools
     @functools.wraps(func)
     def trampolined(*args, **kwargs):
-        if in_tc_stack[-1]:
-            in_tc_stack[-1] = False
+        if in_tc_stack[0]:
+            in_tc_stack[0] = False
             return func(*args, **kwargs)
         in_tc_stack.append(False)
-        return trampoline(func, args, [], kwargs)
+        return trampoline(func, args, kwargs)
 
     trampolined.tco = True
     return trampolined
@@ -69,12 +66,19 @@ def tco(tree, **kw):
                     args=args, 
                     starargs=starargs, 
                     kwargs=kwargs)):
-                with q as code:
-                    return (tco.CALL,
-                            ast(func),
-                            ast(List(args, Load())),
-                            ast(starargs or List([], Load())),
-                            ast(kwargs or Dict([],[])))
+                if starargs:
+                    with q as code:
+                    # get rid of starargs
+                        return (tco.CALL,
+                                ast(func),
+                                ast(List(args, Load())) + list(ast(starargs)),
+                                ast(kwargs or Dict([],[])))
+                else:
+                    with q as code:
+                        return (tco.CALL,
+                                ast(func),
+                                ast(List(args, Load())),
+                                ast(kwargs or Dict([], [])))
                 return code
             else:
                 return tree
@@ -88,12 +92,19 @@ def tco(tree, **kw):
                     args=args,
                     starargs=starargs,
                     kwargs=kwargs)):
-                with q as code:
-                    return (tco.IGNORE,
-                            ast(func),
-                            ast(List(args, Load())),
-                            ast(starargs or List([], Load())),
-                            ast(kwargs or Dict([], [])))
+                if starargs:
+                    with q as code:
+                    # get rid of starargs
+                        return (tco.IGNORE,
+                                ast(func),
+                                ast(List(args, Load())) + list(ast(starargs)),
+                                ast(kwargs or Dict([],[])))
+                else:
+                    with q as code:
+                        return (tco.IGNORE,
+                                ast(func),
+                                ast(List(args, Load())),
+                                ast(kwargs or Dict([], [])))
                 return code
             elif If(test=test, body=body, orelse=orelse):
                 body[-1] = replace_tc_pos(body[-1])
@@ -114,4 +125,3 @@ def tco(tree, **kw):
 tco.trampoline_decorator = trampoline_decorator
 tco.IGNORE = ['tco_ignore']
 tco.CALL = ['tco_call']
-tco.in_tc_stack = in_tc_stack
