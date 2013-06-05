@@ -132,3 +132,11 @@ class Tests(unittest.TestCase):
                 self.y = 10
 
         assert str(Point()) == "mooo Point(10, 10)"
+
+    def test_destructuring(self):
+        @case
+        class Point(x, y):
+            pass
+
+        p = Point(1, 2)
+        x, y = p

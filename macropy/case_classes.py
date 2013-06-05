@@ -30,6 +30,10 @@ class CaseClass(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __iter__(self):
+        for x in self.__class__._fields:
+            yield getattr(self, x)
+
 
 def extract_args(init_fun, bases):
     args = []
