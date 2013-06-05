@@ -170,6 +170,9 @@ print p.y
 # 2
 print Point(1, 2) == Point(1, 2)
 # True
+x, y = p
+print x, y
+# (1, 2)
 ```
 
 [Case classes](http://www.codecommit.com/blog/scala/case-classes-are-cool) are classes with extra goodies:
@@ -179,6 +182,7 @@ print Point(1, 2) == Point(1, 2)
 - Structural equality by default
 - A copy-constructor, for creating modified copies of instances
 - A `__slots__` declaration, to improve memory efficiency
+- An `__iter__` method, to allow destructuring
 
 The reasoning being that although you may sometimes want complex, custom-built classes with custom features and fancy inheritance, very (very!) often you want a simple class with a constructor, pretty `__str__` and `__repr__` methods, and structural equality which doesn't inherit from anything. Case classes provide you just that, with an extremely concise declaration:
 
@@ -207,9 +211,13 @@ class Point(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __iter__(self, other):
+        yield self.x
+        yield self.y
 ```
 
-Whew, what a lot of boilerplate! This is clearly a pain to do, error prone to deal with, and violates [DRY](http://en.wikipedia.org/wiki/Don't_repeat_yourself) in an extreme way: each member of the class (`x` and `y` in this case) has to be repeated _7 times_, with loads and loads of boilerplate. It is also *buggy*, and will fail at runtime when the above example is run, so see if you can spot the bug in it! Given how tedious writing all this code is, it is no surprise that most python classes do not come with proper `__str__` or useful `__eq__` functions! With case classes, there is no excuse, since all this will be generated for you.
+Whew, what a lot of boilerplate! This is clearly a pain to do, error prone to deal with, and violates [DRY](http://en.wikipedia.org/wiki/Don't_repeat_yourself) in an extreme way: each member of the class (`x` and `y` in this case) has to be repeated _8 times_, with loads and loads of boilerplate. It is also *buggy*, and will fail at runtime when the above example is run, so see if you can spot the bug in it! Given how tedious writing all this code is, it is no surprise that most python classes do not come with proper `__str__` or useful `__eq__` functions! With case classes, there is no excuse, since all this will be generated for you.
 
 Case classes also provide a convenient *copy-constructor*, which creates a shallow copy of the case class with modified fields, leaving the original unchanged:
 
