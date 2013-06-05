@@ -822,7 +822,7 @@ This requires every statement in the block to be a boolean expression. Each expr
 from macropy.core.quotes import macros, q
 from macropy.tracing import macros, show_expanded
 
-show_expanded(q(1 + 2))
+show_expanded(q[1 + 2])
 # BinOp(left=Num(n=1), op=Add(), right=Num(n=2))
 ```
 
@@ -834,7 +834,7 @@ from macropy.tracing import macros, show_expanded, trace
 
 with show_expanded:
     a = 1
-    b = q(1 + 2)
+    b = q[1 + 2]
     with q as code:
         print a
 
@@ -1127,16 +1127,15 @@ Op      <- "+" / "-" / "*" / "/"
 Value   <- [0-9]+ / '(' Expr ')'
 Expr <- Value (Op Value)*
 
-simplified it to remove operator precedence
+Simplified to remove operator precedence
 """
-
 def reduce_chain(chain):
     chain = list(reversed(chain))
     o_dict = {
-        "+": f(_+_),
-        "-": f(_-_),
-        "*": f(_*_),
-        "/": f(_/_),
+        "+": f[_+_],
+        "-": f[_-_],
+        "*": f[_*_],
+        "/": f[_/_],
     }
     while len(chain) > 1:
         a, [o, b] = chain.pop(), chain.pop()
@@ -1145,7 +1144,7 @@ def reduce_chain(chain):
 
 with peg:
     op = '+' | '-' | '*' | '/'
-    value = '[0-9]+'.r // int | ('(', expr, ')') // (f(_[1]))
+    value = '[0-9]+'.r // int | ('(', expr, ')') // f[_[1]]
     expr = (value, (op, value).rep is rest) >> reduce_chain([value] + rest)
 
 print expr.parse("123")             # 123
@@ -1381,7 +1380,7 @@ escape_map = {
 }
 
 """
-JSON PEG grammar for reference, shameless stolen from
+Sample JSON PEG grammar for reference, shameless stolen from
 https://github.com/azatoth/PanPG/blob/master/grammars/JSON.peg
 
 JSON <- S? ( Object / Array / String / True / False / Null / Number ) S?
@@ -1415,30 +1414,30 @@ expPart <- ( "e" / "E" ) ( "+" / "-" )? [0-9]+
 S <- [ U+0009 U+000A U+000D U+0020 ]+
 """
 with peg:
-    json_doc = (space, (obj | array), space) // f(_[1])
-    json_exp = (space, (obj | array | string | true | false | null | number), space) // f(_[1])
+        json_doc = (space, (obj | array), space) // f[_[1]]
+        json_exp = (space, (obj | array | string | true | false | null | number), space) // f[_[1]]
 
-    pair = (string is k, space, ':', cut, json_exp is v) >> (k, v)
-    obj = ('{', cut, pair.rep_with(",") // dict, space, '}') // f(_[1])
-    array = ('[', cut, json_exp.rep_with(","), space, ']') // f(_[1])
+        pair = (string is k, space, ':', cut, json_exp is v) >> (k, v)
+        obj = ('{', cut, pair.rep_with(",") // dict, space, '}') // f[_[1]]
+        array = ('[', cut, json_exp.rep_with(","), space, ']') // f[_[1]]
 
-    string = (space, '"', (r'[^"\\\t\n]'.r | escape | unicode_escape).rep.join is body, '"') >> "".join(body)
-    escape = ('\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't') // escape_map.get) // f(_[1])
-    unicode_escape = ('\\', 'u', ('[0-9A-Fa-f]'.r * 4).join).join // f(decode(_))
+        string = (space, '"', (r'[^"\\\t\n]'.r | escape | unicode_escape).rep.join is body, '"') >> "".join(body)
+        escape = ('\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't') // escape_map.get) // f[_[1]]
+        unicode_escape = ('\\', 'u', ('[0-9A-Fa-f]'.r * 4).join).join // decode
 
-    true = 'true' >> True
-    false = 'false' >> False
-    null = 'null' >> None
+        true = 'true' >> True
+        false = 'false' >> False
+        null = 'null' >> None
 
-    number = decimal | integer
-    integer = ('-'.opt, integral).join // int
-    decimal = ('-'.opt, integral, ((fract, exp).join) | fract | exp).join // float
+        number = decimal | integer
+        integer = ('-'.opt, integral).join // int
+        decimal = ('-'.opt, integral, ((fract, exp).join) | fract | exp).join // float
 
-    integral = '0' | '[1-9][0-9]*'.r
-    fract = ('.', '[0-9]+'.r).join
-    exp = (('e' | 'E'), ('+' | '-').opt, "[0-9]+".r).join
+        integral = '0' | '[1-9][0-9]*'.r
+        fract = ('.', '[0-9]+'.r).join
+        exp = (('e' | 'E'), ('+' | '-').opt, "[0-9]+".r).join
 
-    space = '\s*'.r
+        space = '\s*'.r
 ```
 
 Testing it out with some input, we can see it works as we would expect:
@@ -1816,7 +1815,7 @@ def expand(tree, **kw):
     return q[lambda x: x * ast[tree] + u[addition]]
 ```
 
-This will insert the a literal representing the value of `addition` into the position of the `u(addition)`, in this case `10`. This *also* prints 25. For a more detailed description of how quoting and unquoting works, and what more you can do with it, check out the documentation for [Quaasiquotes](#quasiquotes).
+This will insert the a literal representing the value of `addition` into the position of the `u[addition]`, in this case `10`. This *also* prints 25. For a more detailed description of how quoting and unquoting works, and what more you can do with it, check out the documentation for [Quaasiquotes](#quasiquotes).
 
 Apart from using the `u` and `ast` unquotes to put things into the AST, good old fashioned assignment works too:
 
@@ -1921,7 +1920,7 @@ from macro_module import macros, f
 from macropy.tracing import macros, show_expanded
 
 with show_expanded:
-    my_func = f(_ + (1 * _))
+    my_func = f[_ + (1 * _)]
 # my_func = (arg0 + (1 * arg1))
 ```
 
@@ -2473,7 +2472,7 @@ This may seem counter-intuitive, but just because you have the ability to do AST
 For example, let us look at the [Parser Combinator](#parser-combinators) macro, shown in the examples above. You may look at the syntax:
 
 ```python
-value = '[0-9]+'.r // int | ('(', expr, ')') // f(_[1])
+value = '[0-9]+'.r // int | ('(', expr, ')') // f[_[1]]
 op = '+' | '-' | '*' | '/'
 expr = (value is first, (op, value).rep is rest) >> reduce_chain([first] + rest)
 ```
