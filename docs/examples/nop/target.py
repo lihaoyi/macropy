@@ -1,3 +1,3 @@
-from docs.examples.nop.macro_module import expand
+from macro_module import macros, expand
 
-print expand(1 + 2)
+print expand[1 + 2]

@@ -1,5 +1,5 @@
-from docs.examples.quasiquote.macro_module import expand
+from macro_module import macros, expand
 
 
-func = (expand(1 + 2))
+func = expand[1 + 2]
 print func(5)
