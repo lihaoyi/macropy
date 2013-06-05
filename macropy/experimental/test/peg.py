@@ -4,50 +4,50 @@ from macropy.tracing import macros, require
 from macropy.quick_lambda import macros, f, _
 class Tests(unittest.TestCase):
     def test_basic(self):
-        parse1 = peg("Hello World")
+        parse1 = peg["Hello World"]
         with require:
             parse1.parse_string("Hello World").output == 'Hello World'
             parse1.parse_string("Hello, World").index == 0
 
-        parse2 = peg(("Hello World", (".").r))
+        parse2 = peg[("Hello World", (".").r)]
         with require:
             parse2.parse_string("Hello World").index == 11
             parse2.parse_string("Hello World1").output == ['Hello World', '1']
             parse2.parse_string("Hello World ").output == ['Hello World', ' ']
 
     def test_operators(self):
-        parse1 = peg("Hello World")
+        parse1 = peg["Hello World"]
 
-        parse2 = peg((parse1, "!".rep1))
+        parse2 = peg[(parse1, "!".rep1)]
         with require:
             parse2.parse_string("Hello World!!!").output == ['Hello World', ['!', '!', '!']]
             parse2.parse_string("Hello World!").output  == ['Hello World', ['!']]
             parse2.parse_string("Hello World").index == 11
 
-        parse3 = peg((parse1, ("!" | "?")))
+        parse3 = peg[(parse1, ("!" | "?"))]
 
         with require:
             parse3.parse_string("Hello World!").output == ['Hello World', '!']
             parse3.parse_string("Hello World?").output == ['Hello World', '?']
             parse3.parse_string("Hello World%").index == 11
 
-        parse4 = peg((parse1, "!".rep & "!!!"))
+        parse4 = peg[(parse1, "!".rep & "!!!")]
 
         with require:
             parse4.parse_string("Hello World!!!").output == ['Hello World', ['!', '!', '!']]
             parse4.parse_string("Hello World!!").index == 11
 
-        parse4 = peg((parse1, "!".rep & "!!!"))
+        parse4 = peg[(parse1, "!".rep & "!!!")]
 
         with require:
             parse4.parse_string("Hello World!!!").output == ["Hello World", ["!", "!", "!"]]
 
-        parse5 = peg((parse1, "!".rep & -"!!!"))
+        parse5 = peg[(parse1, "!".rep & -"!!!")]
         with require:
             parse5.parse_string("Hello World!!").output == ["Hello World", ['!', '!']]
             parse5.parse_string("Hello World!!!").index == 11
 
-        parse6 = peg((parse1, "!" * 3))
+        parse6 = peg[(parse1, "!" * 3)]
         with require:
             parse6.parse_string("Hello World!").index == 12
             parse6.parse_string("Hello World!!").index == 13
@@ -56,7 +56,7 @@ class Tests(unittest.TestCase):
 
 
     def test_conversion(self):
-        parse1 = peg((("Hello World", "!".rep1) // f(_[1])))
+        parse1 = peg[("Hello World", "!".rep1) // f[_[1]]]
 
         with require:
             parse1.parse_string("Hello World!!!").output == ['!', '!', '!']
@@ -70,7 +70,7 @@ class Tests(unittest.TestCase):
 
     def test_block(self):
         with peg:
-            parse1 = ("Hello World", "!".rep1) // f(_[1])
+            parse1 = ("Hello World", "!".rep1) // f[_[1]]
             parse2 = parse1 // len
 
         with require:
@@ -113,10 +113,10 @@ class Tests(unittest.TestCase):
         for x in ["lol", "lolol", "ol", "'"]:
             if type(seq1.parse_string(x)) is Success:
 
-                require(seq1.parse_string(x).output == seq2.parse_string(x).output)
+                require[seq1.parse_string(x).output == seq2.parse_string(x).output]
             else:
 
-                require(seq1.parse_string(x).index == seq2.parse_string(x).index)
+                require[seq1.parse_string(x).index == seq2.parse_string(x).index]
 
     def test_arithmetic(self):
         """
@@ -132,10 +132,10 @@ class Tests(unittest.TestCase):
         def reduce_chain(chain):
             chain = list(reversed(chain))
             o_dict = {
-                "+": f(_+_),
-                "-": f(_-_),
-                "*": f(_*_),
-                "/": f(_/_),
+                "+": f[_+_],
+                "-": f[_-_],
+                "*": f[_*_],
+                "/": f[_/_],
             }
             while len(chain) > 1:
                 a, [o, b] = chain.pop(), chain.pop()
@@ -144,7 +144,7 @@ class Tests(unittest.TestCase):
 
         with peg:
             op = '+' | '-' | '*' | '/'
-            value = '[0-9]+'.r // int | ('(', expr, ')') // (f(_[1]))
+            value = '[0-9]+'.r // int | ('(', expr, ')') // f[_[1]]
             expr = (value, (op, value).rep is rest) >> reduce_chain([value] + rest)
 
         with require:
@@ -246,16 +246,16 @@ class Tests(unittest.TestCase):
         S <- [ U+0009 U+000A U+000D U+0020 ]+
         """
         with peg:
-            json_doc = (space, (obj | array), space) // f(_[1])
-            json_exp = (space, (obj | array | string | true | false | null | number), space) // f(_[1])
+            json_doc = (space, (obj | array), space) // f[_[1]]
+            json_exp = (space, (obj | array | string | true | false | null | number), space) // f[_[1]]
 
             pair = (string is k, space, ':', cut, json_exp is v) >> (k, v)
-            obj = ('{', cut, pair.rep_with(",") // dict, space, '}') // f(_[1])
-            array = ('[', cut, json_exp.rep_with(","), space, ']') // f(_[1])
+            obj = ('{', cut, pair.rep_with(",") // dict, space, '}') // f[_[1]]
+            array = ('[', cut, json_exp.rep_with(","), space, ']') // f[_[1]]
 
             string = (space, '"', (r'[^"\\\t\n]'.r | escape | unicode_escape).rep.join is body, '"') >> "".join(body)
-            escape = ('\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't') // escape_map.get) // f(_[1])
-            unicode_escape = ('\\', 'u', ('[0-9A-Fa-f]'.r * 4).join).join // f(decode(_))
+            escape = ('\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't') // escape_map.get) // f[_[1]]
+            unicode_escape = ('\\', 'u', ('[0-9A-Fa-f]'.r * 4).join).join // decode
 
             true = 'true' >> True
             false = 'false' >> False

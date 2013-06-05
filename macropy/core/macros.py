@@ -270,19 +270,13 @@ def _expand_ast(tree, src, bindings):
                 assert isinstance(new_tree, list), type(new_tree)
                 return macro_expand(new_tree)
 
-        if isinstance(tree, Call) and len(tree.args) == 1:
-            new_tree = expand_if_in_registry(tree.func, tree.args[0], [], expr_registry)
+        if isinstance(tree, Subscript) and type(tree.slice) is Index:
+            new_tree = expand_if_in_registry(tree.value, tree.slice.value, [], expr_registry)
 
             if new_tree:
                 assert isinstance(new_tree, expr), type(new_tree)
                 return macro_expand(new_tree)
 
-        if isinstance(tree, BinOp) and type(tree.op) is Mod:
-            new_tree = expand_if_in_registry(tree.left, tree.right, [], expr_registry)
-
-            if new_tree:
-                assert isinstance(new_tree, expr), type(new_tree)
-                return macro_expand(new_tree)
 
         if isinstance(tree, ClassDef) or isinstance(tree, FunctionDef):
             seen_decs = []

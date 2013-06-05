@@ -26,7 +26,7 @@ class Tests(unittest.TestCase):
 
     def test_ignore_macros_not_explicitly_imported(self):
         import not_imported
-        assert not_imported.run() == 21
+        assert not_imported.run() == 1
 
     def test_line_numbers_should_match_source(self):
         import line_number_source

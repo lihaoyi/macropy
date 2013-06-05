@@ -35,7 +35,7 @@ def peg(tree, gen_sym, **kw):
     for statement in tree:
         if type(statement) is Assign:
             new_tree = process(statement.value, potential_targets, gen_sym)
-            statement.value = q(Parser.Named(lambda: ast(new_tree), [u%statement.targets[0].id]))
+            statement.value = q[Parser.Named(lambda: ast[new_tree], [u[statement.targets[0].id]])]
 
     return tree
 
@@ -49,15 +49,15 @@ def process(tree, potential_targets, gen_sym):
     def _PegWalker(tree, stop, collect, **kw):
         if type(tree) is Str:
             stop()
-            return q(Parser.Raw(ast(tree)))
+            return q[Parser.Raw(ast[tree])]
         if type(tree) is Name and tree.id in potential_targets:
             collect(tree.id)
         if type(tree) is BinOp and type(tree.op) is RShift:
             tree.left, b_left = _PegWalker.recurse_real(tree.left)
-            tree.right = q(lambda bindings: ast(tree.right))
+            tree.right = q[lambda bindings: ast[tree.right]]
             names = distinct(flatten(b_left))
-            tree.right.args.args = map(f(Name(id = _)), names)
-            tree.right.args.defaults = [q%[]] * len(names)
+            tree.right.args.args = map(f[Name(id = _)], names)
+            tree.right.args.defaults = [q[[]]] * len(names)
             tree.right.args.kwarg = gen_sym()
             stop()
 
@@ -70,7 +70,7 @@ def process(tree, potential_targets, gen_sym):
             return tree
 
         if type(tree) is Tuple:
-            result = q(Parser.Seq([]))
+            result = q[Parser.Seq([])]
 
             result.args[0].elts = tree.elts
             all_bindings = []
@@ -83,7 +83,7 @@ def process(tree, potential_targets, gen_sym):
 
         if type(tree) is Compare and type(tree.ops[0]) is Is:
             left_tree, bindings = _PegWalker.recurse_real(tree.left)
-            new_tree = q(ast(left_tree).bind_to(u(tree.comparators[0].id)))
+            new_tree = q[ast[left_tree].bind_to(u[tree.comparators[0].id])]
             stop()
             collect(bindings + [tree.comparators[0].id])
             return new_tree

@@ -1,6 +1,6 @@
 from macropy.core.test.macros.not_imported_macro import macros, g
 
 def run():
-    f = lambda x: x+1
-    g = 10
-    return f(g(3))
+    f = [1, 2, 3, 4, 5]
+    g = 1
+    return f[g[3]]

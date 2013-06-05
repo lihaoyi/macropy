@@ -2,7 +2,7 @@ from macropy.core.test.macros.argument_macros import macros, expr_macro, block_m
 import math
 
 def run():
-    x = expr_macro(1 + math.sqrt(5))(10 + 10 + 10)
+    x = expr_macro(1 + math.sqrt(5))[10 + 10 + 10]
 
     with block_macro(1 + math.sqrt(5)) as y:
         x = x + 1

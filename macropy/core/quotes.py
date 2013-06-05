@@ -7,13 +7,14 @@ def u(tree):
 
 def name(tree):
     """Stub to make the IDE happy"""
-
-
+def ast(tree):
+    """Stub to make the IDE happy"""
+def ast_list(tree):
+    """Stub to make the IDE happy"""
 def extract(tree):
-    if isinstance(tree, BinOp) and type(tree.left) is Name and type(tree.op) is Mod:
-        return tree.left.id, tree.right
-    if isinstance(tree, Call) and type(tree.func) is Name and len(tree.args) == 1:
-        return tree.func.id, tree.args[0]
+    if isinstance(tree, Subscript) and type(tree.slice) is Index:
+        return tree.value.id, tree.slice.value
+
 @Walker
 def _unquote_search(tree, **kw):
 

@@ -70,15 +70,15 @@ def tco(tree, **kw):
                     with q as code:
                     # get rid of starargs
                         return (tco.CALL,
-                                ast(func),
-                                ast(List(args, Load())) + list(ast(starargs)),
-                                ast(kwargs or Dict([],[])))
+                                ast[func],
+                                ast[List(args, Load())] + list(ast[starargs]),
+                                ast[kwargs or Dict([],[])])
                 else:
                     with q as code:
                         return (tco.CALL,
-                                ast(func),
-                                ast(List(args, Load())),
-                                ast(kwargs or Dict([], [])))
+                                ast[func],
+                                ast[List(args, Load())],
+                                ast[kwargs or Dict([], [])])
                 return code
             else:
                 return tree
@@ -96,15 +96,15 @@ def tco(tree, **kw):
                     with q as code:
                     # get rid of starargs
                         return (tco.IGNORE,
-                                ast(func),
-                                ast(List(args, Load())) + list(ast(starargs)),
-                                ast(kwargs or Dict([],[])))
+                                ast[func],
+                                ast[List(args, Load())] + list(ast[starargs]),
+                                ast[kwargs or Dict([],[])])
                 else:
                     with q as code:
                         return (tco.IGNORE,
-                                ast(func),
-                                ast(List(args, Load())),
-                                ast(kwargs or Dict([], [])))
+                                ast[func],
+                                ast[List(args, Load())],
+                                ast[kwargs or Dict([], [])])
                 return code
             elif If(test=test, body=body, orelse=orelse):
                 body[-1] = replace_tc_pos(body[-1])
@@ -115,7 +115,7 @@ def tco(tree, **kw):
                 return node
 
     tree = return_replacer.recurse(tree)
-    tree.decorator_list = ([q(tco.trampoline_decorator)] +
+    tree.decorator_list = ([q[tco.trampoline_decorator]] +
             tree.decorator_list)
     tree.body[-1] = replace_tc_pos(tree.body[-1])
     return tree

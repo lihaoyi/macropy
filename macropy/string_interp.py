@@ -19,6 +19,6 @@ def s(tree, **kw):
             new_string += "%s"
             captured += [chunks[i]]
 
-    result = q(u(new_string) % tuple(ast_list(map(parse_expr, captured))))
+    result = q[u[new_string] % tuple(ast_list[map(parse_expr, captured)])]
 
     return result

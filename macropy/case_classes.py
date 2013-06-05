@@ -83,7 +83,7 @@ def case(tree, gen_sym, **kw):
             if type(statement) is ClassDef:
                 outer.append(_case_transform(statement, [tree.name]))
                 with q as a:
-                    name(tree.name).b = name(statement.name)
+                    name[tree.name].b = name[statement.name]
                 a_old = a[0]
                 a_old.targets[0].attr = statement.name
 
@@ -104,9 +104,10 @@ def case(tree, gen_sym, **kw):
         )
         for x in all_args:
             with q as a:
-                self.x = x
+                self.x = name[x]
+
             a[0].targets[0].attr = x
-            a[0].value = Name(id=x)
+
             init_fun.body.append(a[0])
 
     def _case_transform(tree, parents):
