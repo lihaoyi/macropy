@@ -314,9 +314,9 @@ def _expand_ast(tree, src, bindings):
     return tree
 
 
-@sys.meta_path.append
+
 @singleton
-class _MacroFinder(object):
+class MacroFinder(object):
     """Loads a module and looks for macros inside, only providing a loader if
     it finds some."""
     def find_module(self, module_name, package_path):

@@ -3,7 +3,7 @@ MacroPy
 **MacroPy** is an implementation of [Syntactic Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (macros) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree) (AST) of a Python program at _import time_. This is an easy way to enhance the semantics of a Python program in ways which are otherwise impossible, for example providing an extremely concise way of declaring classes:
 
 ```python
->>> import macropy.core.console
+>>> import macropy.console
 0=[]=====> MacroPy Enabled <=====[]=0
 >>> from macropy.case_classes import macros, case
 
@@ -103,8 +103,8 @@ Note that this means **you cannot use macros in a file that is run directly**, a
 
 ```python
 # run.py
-import macropy.core.macros  # sets up macro import hooks
-import other                # imports other.py and passes it through import hooks
+import macropy      # sets up macro import hooks
+import other        # imports other.py and passes it through import hooks
 
 
 # my_macro_module.py
@@ -121,7 +121,7 @@ from macropy.macros.my_macro_module import macros, ...
 ... do stuff with macros ...
 ```
 
-Where you run `run.py` instead of `other.py`. For the same reason, you cannot directly run MacroPy's own unit tests directly using `unittest` or `nose`: you need to run the [macropy/run_tests.py](macropy/run_tests.py) file from the project root for the tests to run. See the [runnable, self-contained no-op example](docs/examples/nop) to see exactly what this looks like.
+Where you run `run.py` instead of `other.py`. For the same reason, you cannot directly run MacroPy's own unit tests directly using `unittest` or `nose`: you need to run the [macropy/run_tests.py](macropy/run_tests.py) file from the project root for the tests to run. See the [runnable, self-contained no-op example](docs/examples/nop) to see exactly what this looks like, or the example for [using existing macros](docs/examples/using_macros).
 
 MacroPy also works in the REPL:
 
@@ -129,7 +129,7 @@ MacroPy also works in the REPL:
 PS C:\Dropbox\Workspace\macropy> python
 Python 2.7 (r27:82525, Jul  4 2010, 07:43:08) [MSC v.1500 64 bit (AMD64)] on win32
 Type "help", "copyright", "credits" or "license" for more information.
->>> import macropy.core.console
+>>> import macropy.console
 0=[]=====> MacroPy Enabled <=====[]=0
 >>> from macropy.tracing import macros, trace
 >>> trace[[x*2 for x in range(3)]]
@@ -149,7 +149,7 @@ Below are a few example uses of macros that are implemented (together with test 
 
 Note that all of these examples are **macros**; that is, they hold no special place in MacroPy. They are placed in [macropy](macropy) and [macropy/experimental](macropy/experimental), separate from the Macropy core in [macropy/core](macropy/core). All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 100 lines of code.
 
-Feel free to open up a REPL and try out the examples in the console; simply `import macropy.core.console`, and most of the examples should work right off the bat when pasted in!
+Feel free to open up a REPL and try out the examples in the console; simply `import macropy.console`, and most of the examples should work right off the bat when pasted in!
 
 Case Classes
 ------------
@@ -1647,7 +1647,7 @@ As mentioned earlier, you cannot use macros in the `__main__` module (the file t
 
 ```python
 # run.py
-import macropy.core.macros
+import macropy
 import target
 
 # target.py
@@ -1658,7 +1658,7 @@ Now, let us define a simple macro, in `macro_module.py`
 
 ```python
 # run.py
-import macropy.core.macros
+import macropy
 import target
 
 # target.py
