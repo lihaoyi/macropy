@@ -1,5 +1,5 @@
 import unittest
-
+from ast import *
 from macropy.tracing import macros, trace, log, require, show_expanded
 from macropy.core.quotes import macros, q
 result = []
@@ -13,8 +13,8 @@ class Tests(unittest.TestCase):
 
         def test_basic(self):
 
-            log(1 + 2)
-            log("omg" * 3)
+            log[1 + 2]
+            log["omg" * 3]
 
             assert(result[-2:] == [
                 "1 + 2 -> 3",
@@ -23,7 +23,7 @@ class Tests(unittest.TestCase):
 
         def test_combo(self):
 
-            trace(1 + 2 + 3 + 4)
+            trace[1 + 2 + 3 + 4]
 
             assert(result[-3:] == [
                 "1 + 2 -> 3",
@@ -32,7 +32,7 @@ class Tests(unittest.TestCase):
             ])
 
         def test_fancy(self):
-            trace([len(x)*3 for x in ['omg', 'wtf', 'b' * 2 + 'q', 'lo' * 3 + 'l']])
+            trace[[len(x)*3 for x in ['omg', 'wtf', 'b' * 2 + 'q', 'lo' * 3 + 'l']]]
 
             assert(result[-14:] == [
                 "'b' * 2 -> 'bb'",
@@ -52,7 +52,7 @@ class Tests(unittest.TestCase):
             ])
 
         def test_function_call(self):
-            trace(sum([sum([1, 2, 3]), min(4, 5, 6), max(7, 8, 9)]))
+            trace[sum([sum([1, 2, 3]), min(4, 5, 6), max(7, 8, 9)])]
             assert(result[-5:] == [
                 "sum([1, 2, 3]) -> 6",
                 "min(4, 5, 6) -> 4",
@@ -104,17 +104,17 @@ evens += [n]
 
         def test_require(self):
             with self.assertRaises(AssertionError) as cm:
-                require(1 == 10)
+                require[1 == 10]
 
             assert cm.exception.message == "Require Failed\n1 == 10 -> False"
 
-            require%(1 == 1)
+            require[1 == 1]
 
             with self.assertRaises(AssertionError) as cm:
-                require%(3**2 + 4**2 != 5**2)
+                require[3**2 + 4**2 != 5**2]
 
 
-            require%(3**2 + 4**2 == 5**2)
+            require[3**2 + 4**2 == 5**2]
 
         def test_require_block(self):
             with self.assertRaises(AssertionError) as cm:
@@ -129,14 +129,16 @@ evens += [n]
 
         def test_show_expanded(self):
 
-            show_expanded(q(1 + 2))
-            assert result[-1] == "BinOp(left=Num(n=1), op=Add(), right=Num(n=2))"
+            from macropy.core import ast_repr
+            show_expanded[q[1 + 2]]
+            print result[-1]
+            assert result[-1] == "rename(BinOp(left=Num(n=1), op=Add(), right=Num(n=2)), hygienic_names)"
 
             with show_expanded:
                 a = 1
                 b = 2
                 with q as code:
-                    print a + u(b + 1)
+                    print a + u[b + 1]
             assert result[-3:] == [
                 '\na = 1',
                 '\nb = 2',

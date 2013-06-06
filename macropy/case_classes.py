@@ -1,11 +1,15 @@
 from macropy.core.macros import *
 from macropy.core.quotes import macros, q, u
 
-__all__ = ['CaseClass', 'singleton']
+__all__ = []
 
 macros = Macros()
 
+@macros.expose()
+def apply(f):
+    return f()
 
+@macros.expose()
 class CaseClass(object):
     __slots__ = []
 
@@ -74,7 +78,7 @@ def find_member_assignments(tree, collect, stop, **kw):
         map(collect, self_assigns)
 
 @macros.decorator()
-def case(tree, gen_sym, **kw):
+def case(tree, gen_sym, hygienic_names, **kw):
     def split_body(tree):
         new_body = []
         outer = []
@@ -139,7 +143,7 @@ def case(tree, gen_sym, **kw):
         new_body, outer, init_body = split_body(tree)
         init_fun.body.extend(init_body)
         with q as assign:
-            @singleton
+            @apply
             def x():
                 pass
 
@@ -152,6 +156,6 @@ def case(tree, gen_sym, **kw):
         tree.body = methods + tree.body
 
         return [tree] + (assign if len(outer) > 0 else [])
-    x = _case_transform(tree, ["CaseClass"])
 
+    x = _case_transform(tree, [hygienic_names("CaseClass")])
     return x

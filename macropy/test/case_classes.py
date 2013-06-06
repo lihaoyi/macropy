@@ -1,4 +1,4 @@
-from macropy.case_classes import macros, case, CaseClass
+from macropy.case_classes import macros, case
 
 import unittest
 
@@ -125,7 +125,7 @@ class Tests(unittest.TestCase):
         @case
         class Point(x, y):
             def __str__(self):
-                return "mooo " + CaseClass.__str__(self)
+                return "mooo " + super(Point, self).__str__()
 
             def __init__(self):
                 self.x = 10

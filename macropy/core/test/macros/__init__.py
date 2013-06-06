@@ -80,5 +80,10 @@ else:
         import aliases
         assert aliases.run_normal() == "omg"
         assert aliases.run_aliased() == "wtf"
-        with self.assertRaises(TypeError):
+        with self.assertRaises(Exception):
             aliases.run_ignored()
+
+
+    def test_hygienic_quotes(self):
+        import hygienic_quotes
+        assert hygienic_quotes.run() == 10

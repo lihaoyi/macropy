@@ -5,7 +5,7 @@ import macropy.core.macros
 runner = unittest.TextTestRunner()
 def run(x):
     runner.run(unittest.TestLoader().loadTestsFromTestCase(x))
-
+"""
 from macropy.core.test import macros
 run(macros.Tests)
 
@@ -27,11 +27,13 @@ run(quick_lambda.Tests)
 from macropy.test import case_classes
 run(case_classes.Tests)
 
-
+from macropy.test import tracing
+run(tracing.Tests)
+"""
 from macropy.experimental.test import peg
 run(peg.Tests)
 
-
+"""
 from macropy.experimental.test import tco_test
 run(tco_test.Tests)
 
@@ -40,6 +42,7 @@ run(pattern.Tests)
 
 from macropy.experimental.test import pyxl_strings
 run(pyxl_strings.Tests)
+"""
 """
 # this one creates a sqlite database to run, so may take a while
 from macropy.experimental.test import pinq

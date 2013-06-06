@@ -22,7 +22,6 @@ Not-predicate: !e           -       Not
 macros = Macros()
 
 
-__all__ = ["Input", 'Parser', 'Success', 'Failure', 'cut', 'ParseError']
 
 @macros.block()
 def peg(tree, gen_sym, **kw):
@@ -92,6 +91,7 @@ def process(tree, potential_targets, gen_sym):
 
 
 cut = object()
+
 
 @case
 class Input(string, index):

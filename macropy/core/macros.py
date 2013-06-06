@@ -25,8 +25,13 @@ class Macros(object):
         def __init__(self):
             self.registry = {}
         def __call__(self):
-            def register(f):
-                self.registry[f.func_name] = f
+            def register(f, name=None):
+                if name is not None:
+                    self.registry[name] = f
+                if hasattr(f, "func_name"):
+                    self.registry[f.func_name] = f
+                if hasattr(f, "__name__"):
+                    self.registry[f.__name__] = f
                 return f
             return register
 
@@ -34,6 +39,10 @@ class Macros(object):
         self.expr = Macros.Registry()
         self.block = Macros.Registry()
         self.decorator = Macros.Registry()
+        self.expose = Macros.Registry()
+        self.expose_unhygienic = Macros.Registry()
+
+
 
 def fill_line_numbers(tree, lineno, col_offset):
     """Fill in line numbers somewhat more cleverly than the
@@ -95,13 +104,13 @@ def _ast_ctx_fixer(tree, ctx, stop, **kw):
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
-    def __init__(self, module_name, tree, source, file_name, bindings):
+    def __init__(self, module_name, tree, source, file_name, bindings, renames):
         self.module_name = module_name
         self.tree = tree
         self.source = source
         self.file_name = file_name
         self.bindings = bindings
-
+        self.renames = renames
     def load_module(self, fullname):
 
         for (p, _) in self.bindings:
@@ -110,7 +119,7 @@ class _MacroLoader(object):
         modules = [(sys.modules[p], bindings) for (p, bindings) in self.bindings]
 
         tree = process_ast(self.tree, self.source, modules)
-
+        if "peg" in self.module_name: print unparse_ast(tree)
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
         mod.__loader__ = self
@@ -120,28 +129,18 @@ class _MacroLoader(object):
         else:
             mod.__package__ = fullname.rpartition('.')[0]
         mod.__file__ = self.file_name
-        exec compile(tree, self.file_name, "exec") in mod.__dict__
+        try:
+            exec compile(tree, self.file_name, "exec") in mod.__dict__
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            exit()
         return mod
 
 def process_ast(tree, src, bindings):
     """Takes an AST and spits out an AST, doing macro expansion in additon to
     some post-processing"""
     return _expand_ast(tree, src, bindings)
-
-def detect_macros(tree):
-    """Look for macros imports within an AST, transforming them and extracting
-    the list of macro modules."""
-    bindings = []
-    for stmt in tree.body:
-        if isinstance(stmt, ImportFrom) \
-                and stmt.names[0].name == 'macros' \
-                and stmt.names[0].asname is None:
-            bindings.append((
-                stmt.module,
-                [(t.name, t.asname or t.name) for t in stmt.names[1:]]
-            ))
-            stmt.names = [alias(name='*', asname=None)]
-    return bindings
 
 
 def linear_index(line_lengths, lineno, col_offset):
@@ -206,14 +205,23 @@ def _expand_ast(tree, src, bindings):
     positions = Lazy(lambda: indexer.recurse_real(tree)[1])
     line_lengths = Lazy(lambda: map(len, src.split("\n")))
     indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)]))
-
     symbols = Lazy(lambda: _gen_syms(tree))
+
+    @Lazy
+    def hygienic_names():
+        return {
+            mod: {
+                key: symbols().next()
+                for key, exposed in mod.macros.expose.registry.items()
+            }
+            for mod, macros in bindings
+        }
 
     allnames = [(m, name, asname) for m, names in bindings for name, asname in names]
 
     def extract_macros(pick_registry):
         return {
-            asname: registry[name]
+            asname: (registry[name], ma)
             for ma, name, asname in allnames
             for registry in [pick_registry(ma.macros).registry]
             if name in registry.keys()
@@ -226,15 +234,18 @@ def _expand_ast(tree, src, bindings):
     def expand_if_in_registry(tree, body, args, registry, **kwargs):
         """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
         if isinstance(tree, Name) and tree.id in registry:
-            the_macro = registry[tree.id]
+
+            (the_macro, the_module) = registry[tree.id]
             new_tree = the_macro(
                 tree=body,
                 args=args,
                 gen_sym=lambda: symbols().next(),
+                hygienic_names=lambda n: hygienic_names()[the_module].get(n, n),
                 exact_src=lambda t: _src_for(t, src, indexes, line_lengths),
                 expand_macros=lambda t: _expand_ast(t, src, bindings),
                 **kwargs
             )
+
             new_tree = _ast_ctx_fixer.recurse(new_tree, Load())
             fill_line_numbers(new_tree, tree.lineno, tree.col_offset)
             return new_tree
@@ -271,6 +282,7 @@ def _expand_ast(tree, src, bindings):
                 return macro_expand(new_tree)
 
         if isinstance(tree, Subscript) and type(tree.slice) is Index:
+
             new_tree = expand_if_in_registry(tree.value, tree.slice.value, [], expr_registry)
 
             if new_tree:
@@ -307,7 +319,8 @@ def _expand_ast(tree, src, bindings):
 
     @Walker
     def macro_searcher(tree, **kw):
-        return macro_expand(tree)
+        x = macro_expand(tree)
+        return x
 
     tree = macro_searcher.recurse(tree)
 
@@ -334,11 +347,13 @@ class MacroFinder(object):
 
             # check properly the AST if the macro import really exists
             tree = ast.parse(txt)
-            bindings = detect_macros(tree)
+
+            bindings, renames = detect_macros(tree)
+
             if bindings == []:
                 return # no macros found, carry on
             else:
-                return _MacroLoader(module_name, tree, txt, file.name, bindings)
+                return _MacroLoader(module_name, tree, txt, file.name, bindings, renames)
         except Exception, e:
             pass
 
@@ -355,4 +370,47 @@ def _gen_syms(tree):
     tree, found_names = name_finder.recurse_real(tree)
     names = ("sym" + str(i) for i in itertools.count())
     return itertools.ifilter(lambda x: x not in found_names, names)
+
+def detect_macros(tree):
+    """Look for macros imports within an AST, transforming them and extracting
+    the list of macro modules."""
+    bindings = []
+    renamed_imports = {}
+    symbols = Lazy(lambda: _gen_syms(tree))
+    for stmt in tree.body:
+        if isinstance(stmt, ImportFrom) \
+                and stmt.names[0].name == 'macros' \
+                and stmt.names[0].asname is None:
+            __import__(stmt.module)
+            mod = sys.modules[stmt.module]
+
+            bindings.append((
+                stmt.module,
+                [(t.name, t.asname or t.name) for t in stmt.names[1:]]
+            ))
+
+            stmt.names = [
+                name for name in stmt.names
+                if name.name not in mod.macros.block.registry
+                if name.name not in mod.macros.expr.registry
+                if name.name not in mod.macros.decorator.registry
+            ]
+            renames = [
+                (name, symbols().next())
+                for name
+                in mod.macros.expose.registry
+            ]
+            stmt.names.extend(alias(a, b) for a,b in renames)
+            renamed_imports.update(renames)
+
+            print "OMG"
+
+            stmt.names.extend(
+                [alias(x, x) for x in
+                 mod.macros.expose_unhygienic.registry.keys()]
+            )
+            print "WTF", unparse_ast(stmt)
+            print bindings
+
+    return bindings, renamed_imports
 

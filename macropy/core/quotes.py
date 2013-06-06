@@ -2,6 +2,7 @@ from macropy.core.macros import *
 from macropy.core import *
 macros = Macros()
 
+
 def u(tree):
     """Stub to make the IDE happy"""
 
@@ -9,11 +10,13 @@ def name(tree):
     """Stub to make the IDE happy"""
 def ast(tree):
     """Stub to make the IDE happy"""
-def ast_list(tree):
+def name(tree):
     """Stub to make the IDE happy"""
 def extract(tree):
     if isinstance(tree, Subscript) and type(tree.slice) is Index:
         return tree.value.id, tree.slice.value
+
+
 
 @Walker
 def _unquote_search(tree, **kw):
@@ -36,10 +39,29 @@ def _unquote_search(tree, **kw):
 @macros.expr()
 def q(tree, **kw):
     tree = _unquote_search.recurse(tree)
-    return ast_repr(tree)
-
+    return Call(
+        func=Name(id="rename", ctx=Load()),
+        args=[ast_repr(tree), Name(id="hygienic_names", ctx=Load())],
+        keywords=[],
+        starargs=None,
+        kwargs=None
+    )
 
 @macros.block()
 def q(tree, target, **kw):
     body = _unquote_search.recurse(tree)
     return [Assign([Name(id=target.id)], ast_repr(body))]
+
+@macros.expose_unhygienic()
+def rename(tree, hygienic_names):
+    @Walker
+    def renamer(tree, **kw):
+        if type(tree) is Name:
+            tree.id = hygienic_names(tree.id)
+    return renamer.recurse(tree)
+from collections import defaultdict
+
+
+@macros.expose_unhygienic()
+def hygienic_names(x):
+    return x
