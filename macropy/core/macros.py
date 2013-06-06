@@ -6,7 +6,7 @@ from ast import *
 from util import *
 from walkers import *
 import parser
-
+from misc import *
 class Macros(object):
     """A registry of macros belonging to a module; used via
 
@@ -44,63 +44,6 @@ class Macros(object):
 
 
 
-def fill_line_numbers(tree, lineno, col_offset):
-    """Fill in line numbers somewhat more cleverly than the
-    ast.fix_missing_locations method, which doesn't take into account the
-    fact that line numbers are monotonically increasing down lists of AST
-    nodes."""
-    if type(tree) is list:
-        for sub in tree:
-            if isinstance(sub, AST) \
-                    and hasattr(sub, "lineno") \
-                    and hasattr(sub, "col_offset") \
-                    and (sub.lineno, sub.col_offset) > (lineno, col_offset):
-
-                lineno = sub.lineno
-                col_offset = sub.col_offset
-
-            fill_line_numbers(sub, lineno, col_offset)
-    elif isinstance(tree, AST):
-        if not (hasattr(tree, "lineno") and hasattr(tree, "col_offset")):
-            tree.lineno = lineno
-            tree.col_offset = col_offset
-        for name, sub in ast.iter_fields(tree):
-            fill_line_numbers(sub, tree.lineno, tree.col_offset)
-
-@Walker
-def _ast_ctx_fixer(tree, ctx, stop, **kw):
-    """Fix any missing `ctx` attributes within an AST; allows you to build
-    your ASTs without caring about that stuff and just filling it in later."""
-    if "ctx" in type(tree)._fields and not hasattr(tree, "ctx"):
-        tree.ctx = ctx
-
-    if type(tree) is arguments:
-        for arg in tree.args:
-            _ast_ctx_fixer.recurse(arg, Param())
-        for default in tree.defaults:
-            _ast_ctx_fixer.recurse(default, Load())
-        stop()
-        return tree
-
-    if type(tree) is AugAssign:
-        _ast_ctx_fixer.recurse(tree.target, AugStore())
-        _ast_ctx_fixer.recurse(tree.value, AugLoad())
-        stop()
-        return tree
-
-    if type(tree) is Assign:
-        for target in tree.targets:
-            _ast_ctx_fixer.recurse(target, Store())
-
-        _ast_ctx_fixer.recurse(tree.value, Load())
-        stop()
-        return tree
-
-    if type(tree) is Delete:
-        for target in tree.targets:
-            _ast_ctx_fixer.recurse(target, Del())
-        stop()
-        return tree
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
@@ -118,8 +61,8 @@ class _MacroLoader(object):
 
         modules = [(sys.modules[p], bindings) for (p, bindings) in self.bindings]
 
-        tree = process_ast(self.tree, self.source, modules)
-        if "peg" in self.module_name: print unparse_ast(tree)
+        tree = process_ast(self.tree, self.source, modules, self.renames)
+
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
         mod.__loader__ = self
@@ -137,67 +80,14 @@ class _MacroLoader(object):
             exit()
         return mod
 
-def process_ast(tree, src, bindings):
+def process_ast(tree, src, bindings, hygienic_names):
     """Takes an AST and spits out an AST, doing macro expansion in additon to
     some post-processing"""
-    return _expand_ast(tree, src, bindings)
+    return _expand_ast(tree, src, bindings, hygienic_names)
 
 
-def linear_index(line_lengths, lineno, col_offset):
-    prev_length = sum(line_lengths[:lineno-1]) + lineno-2
-    out = prev_length + col_offset + 1
-    return out
 
-@Walker
-def indexer(tree, collect, **kw):
-    try:
-        unparse_ast(tree)
-        collect((tree.lineno, tree.col_offset))
-    except Exception, e:
-        pass
-
-_transforms = {
-    GeneratorExp: "(%s)",
-    ListComp: "[%s]",
-    SetComp: "{%s}",
-    DictComp: "{%s}"
-}
-
-def _src_for(tree, src, indexes, line_lengths):
-    all_child_pos = sorted(indexer.recurse_real(tree)[1])
-    start_index = linear_index(line_lengths(), *all_child_pos[0])
-
-    last_child_index = linear_index(line_lengths(), *all_child_pos[-1])
-
-    first_successor_index = indexes()[min(indexes().index(last_child_index)+1, len(indexes())-1)]
-
-    for end_index in range(last_child_index, first_successor_index+1):
-
-        prelim = src[start_index:end_index]
-        prelim = _transforms.get(type(tree), "%s") % prelim
-
-
-        if isinstance(tree, stmt):
-            prelim = prelim.replace("\n" + " " * tree.col_offset, "\n")
-
-        if isinstance(tree, list):
-            prelim = prelim.replace("\n" + " " * tree[0].col_offset, "\n")
-
-        try:
-            if isinstance(tree, expr):
-                x = "(" + prelim + ")"
-            else:
-                x = prelim
-            parsed = ast.parse(x)
-            if unparse_ast(parsed).strip() == unparse_ast(tree).strip():
-                return prelim
-
-        except SyntaxError as e:
-            pass
-    raise Exception("Can't find working source")
-
-
-def _expand_ast(tree, src, bindings):
+def _expand_ast(tree, src, bindings, hygienic_names):
     """Go through an AST, hunting for macro invocations and expanding any that
     are found"""
 
@@ -207,15 +97,6 @@ def _expand_ast(tree, src, bindings):
     indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)]))
     symbols = Lazy(lambda: _gen_syms(tree))
 
-    @Lazy
-    def hygienic_names():
-        return {
-            mod: {
-                key: symbols().next()
-                for key, exposed in mod.macros.expose.registry.items()
-            }
-            for mod, macros in bindings
-        }
 
     allnames = [(m, name, asname) for m, names in bindings for name, asname in names]
 
@@ -240,13 +121,13 @@ def _expand_ast(tree, src, bindings):
                 tree=body,
                 args=args,
                 gen_sym=lambda: symbols().next(),
-                hygienic_names=lambda n: hygienic_names()[the_module].get(n, n),
-                exact_src=lambda t: _src_for(t, src, indexes, line_lengths),
-                expand_macros=lambda t: _expand_ast(t, src, bindings),
+                hygienic_names=lambda n: hygienic_names[the_module].get(n, n),
+                exact_src=lambda t: src_for(t, src, indexes, line_lengths),
+                expand_macros=lambda t: _expand_ast(t, src, bindings, hygienic_names),
                 **kwargs
             )
 
-            new_tree = _ast_ctx_fixer.recurse(new_tree, Load())
+            new_tree = ast_ctx_fixer.recurse(new_tree, Load())
             fill_line_numbers(new_tree, tree.lineno, tree.col_offset)
             return new_tree
         elif isinstance(tree, Call):
@@ -401,16 +282,12 @@ def detect_macros(tree):
                 in mod.macros.expose.registry
             ]
             stmt.names.extend(alias(a, b) for a,b in renames)
-            renamed_imports.update(renames)
-
-            print "OMG"
+            renamed_imports[mod] = dict(renames)
 
             stmt.names.extend(
                 [alias(x, x) for x in
                  mod.macros.expose_unhygienic.registry.keys()]
             )
-            print "WTF", unparse_ast(stmt)
-            print bindings
 
     return bindings, renamed_imports
 

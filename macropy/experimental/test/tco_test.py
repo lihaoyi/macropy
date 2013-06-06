@@ -5,7 +5,6 @@ from macropy.experimental.pattern import macros, switch, _matching
 
 
 class Tests(unittest.TestCase):
-
     def test_tco_basic(self):
         @tco
         def foo(n):
@@ -37,7 +36,7 @@ class Tests(unittest.TestCase):
                 else:
                     return evenLength(xs.rest)
 
-        @tco 
+        @tco
         def evenLength(xs):
             with switch(xs):
                 if Nil():
@@ -119,7 +118,7 @@ class Tests(unittest.TestCase):
             return helper(n, 1)
 
         self.assertEquals(120, fact(5))
- 
+
 
 if __name__ == '__main__':
     unittest.main()

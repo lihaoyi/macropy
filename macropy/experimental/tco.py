@@ -1,5 +1,5 @@
 from macropy.core.macros import *
-from macropy.experimental.pattern import macros, switch, _matching
+from macropy.experimental.pattern import macros, switch, _matching, ClassMatcher, NameMatcher
 
 from macropy.core.quotes import macros, q
 
@@ -8,6 +8,15 @@ __all__ = ['tco']
 macros = Macros()
 
 in_tc_stack = [False]
+
+
+
+TcoIgnore = object()
+macros.expose()(TcoIgnore, "TcoIgnore")
+
+
+TcoCall = object()
+macros.expose()(TcoCall, "TcoCall")
 
 def trampoline(func, args, kwargs):
     """
@@ -24,12 +33,12 @@ def trampoline(func, args, kwargs):
         result = func(*args, **kwargs)
         # for performance reasons, do not use pattern matching here
         if isinstance(result, tuple):
-            if result[0] is tco.CALL:
+            if result[0] is TcoCall:
                 func = result[1]
                 args = result[2]
                 kwargs = result[3]
                 continue
-            elif result[0] is tco.IGNORE:
+            elif result[0] is TcoIgnore:
                 ignoring = True
                 func = result[1]
                 args = result[2]
@@ -41,6 +50,7 @@ def trampoline(func, args, kwargs):
             return result
 
 
+@macros.expose()
 def trampoline_decorator(func):
     import functools
     @functools.wraps(func)
@@ -56,7 +66,8 @@ def trampoline_decorator(func):
 
 
 @macros.decorator()
-def tco(tree, **kw):
+def tco(tree, hygienic_names, **kw):
+
     @Walker
     # Replace returns of calls
     def return_replacer(tree, **kw):
@@ -69,16 +80,17 @@ def tco(tree, **kw):
                 if starargs:
                     with q as code:
                     # get rid of starargs
-                        return (tco.CALL,
+                        return (TcoCall,
                                 ast[func],
                                 ast[List(args, Load())] + list(ast[starargs]),
                                 ast[kwargs or Dict([],[])])
                 else:
                     with q as code:
-                        return (tco.CALL,
+                        return (TcoCall,
                                 ast[func],
                                 ast[List(args, Load())],
                                 ast[kwargs or Dict([], [])])
+
                 return code
             else:
                 return tree
@@ -95,13 +107,13 @@ def tco(tree, **kw):
                 if starargs:
                     with q as code:
                     # get rid of starargs
-                        return (tco.IGNORE,
+                        return (TcoIgnore,
                                 ast[func],
                                 ast[List(args, Load())] + list(ast[starargs]),
                                 ast[kwargs or Dict([],[])])
                 else:
                     with q as code:
-                        return (tco.IGNORE,
+                        return (TcoIgnore,
                                 ast[func],
                                 ast[List(args, Load())],
                                 ast[kwargs or Dict([], [])])
@@ -115,13 +127,15 @@ def tco(tree, **kw):
                 return node
 
     tree = return_replacer.recurse(tree)
-    tree.decorator_list = ([q[tco.trampoline_decorator]] +
+
+    tree.decorator_list = ([q[trampoline_decorator]] +
             tree.decorator_list)
+
     tree.body[-1] = replace_tc_pos(tree.body[-1])
+
     return tree
 
 
 # ok, so now you will only need to import tco...
-tco.trampoline_decorator = trampoline_decorator
-tco.IGNORE = ['tco_ignore']
-tco.CALL = ['tco_call']
+
+

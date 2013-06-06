@@ -1,23 +1,15 @@
 import inspect
 
 from abc import ABCMeta, abstractmethod
-from ast import (
-    Call,
-    List,
-    Tuple,
-    Load,
-    Store)
+from ast import *
 
 from macropy.core import util
+from macropy.core.macros import *
 from macropy.core.quotes import macros, q
 
 macros = Macros()
 
-__all__ = ['Matcher', 'TupleMatcher', 'PatternMatchException',
-        'LiteralMatcher', 'PatternVarConflict', 'ClassMatcher', 'NameMatcher',
-        'ListMatcher', 'WildcardMatcher']
-
-
+@macros.expose_unhygienic()
 class PatternMatchException(Exception):
     """
     Thrown when a nonrefutable pattern match fails
@@ -25,6 +17,7 @@ class PatternMatchException(Exception):
     pass
 
 
+@macros.expose_unhygienic()
 class PatternVarConflict(Exception):
     """
     Thrown when a pattern attempts to match a variable more than once.
@@ -35,7 +28,7 @@ class PatternVarConflict(Exception):
 def _vars_are_disjoint(var_names):
     return len(var_names)== len(set(var_names))
 
-
+@macros.expose()
 class Matcher(object):
     __metaclass__ = ABCMeta
 
@@ -67,7 +60,7 @@ class Matcher(object):
     def get_var(self, var_name):
         return self.var_dict[var_name]
 
-
+@macros.expose()
 class LiteralMatcher(Matcher):
 
     def __init__(self, val):
@@ -81,7 +74,7 @@ class LiteralMatcher(Matcher):
             raise PatternMatchException("Literal match failed")
         return []
 
-
+@macros.expose()
 class TupleMatcher(Matcher):
 
     def __init__(self, *matchers):
@@ -104,7 +97,7 @@ class TupleMatcher(Matcher):
             updates.extend(match)
         return updates
 
-
+@macros.expose()
 class ParallelMatcher(Matcher):
 
     def __init__(self, matcher1, matcher2):
@@ -125,7 +118,7 @@ class ParallelMatcher(Matcher):
             updates.extend(match)
         return updates
 
-
+@macros.expose()
 class ListMatcher(Matcher):
 
     def __init__(self, *matchers):
@@ -147,7 +140,7 @@ class ListMatcher(Matcher):
             updates.extend(match)
         return updates
 
-
+@macros.expose()
 class NameMatcher(Matcher):
 
     def __init__(self, name):
@@ -159,7 +152,7 @@ class NameMatcher(Matcher):
     def match(self, matchee):
         return [(self.name, matchee)]
 
-
+@macros.expose()
 class WildcardMatcher(Matcher):
     
     def __init__(self):
@@ -171,7 +164,7 @@ class WildcardMatcher(Matcher):
     def match(self, matchee):
         return [('_', 3)]
 
-
+@macros.expose()
 class ClassMatcher(Matcher):
 
     def __init__(self, clazz, positionalMatchers, **kwMatchers):
@@ -225,7 +218,7 @@ class ClassMatcher(Matcher):
         return updates
 
 
-def build_matcher(tree, modified):
+def build_matcher(tree, modified, hygienic_names):
     if isinstance(tree, Num):
         return q[LiteralMatcher(u[tree.n])]
     if isinstance(tree, Str):
@@ -240,27 +233,27 @@ def build_matcher(tree, modified):
     if isinstance(tree, List):
         sub_matchers = []
         for child in tree.elts:
-            sub_matchers.append(build_matcher(child, modified))
+            sub_matchers.append(build_matcher(child, modified, hygienic_names))
         return Call(Name('ListMatcher', Load()), sub_matchers, [], None, None)
     if isinstance(tree, Tuple):
         sub_matchers = []
         for child in tree.elts:
-            sub_matchers.append(build_matcher(child, modified))
+            sub_matchers.append(build_matcher(child, modified, hygienic_names))
         return Call(Name('TupleMatcher', Load()), sub_matchers, [], None, None)
     if isinstance(tree, Call):
         sub_matchers = []
         for child in tree.args:
-            sub_matchers.append(build_matcher(child, modified))
+            sub_matchers.append(build_matcher(child, modified, hygienic_names))
         positional_matchers = List(sub_matchers, Load())
         kw_matchers = []
         for kw in tree.keywords:
             kw_matchers.append(
-                    keyword(kw.arg, build_matcher(kw.value, modified)))
+                    keyword(kw.arg, build_matcher(kw.value, modified, hygienic_names)))
         return Call(Name('ClassMatcher', Load()), [tree.func,
             positional_matchers], kw_matchers, None, None)
     if (isinstance(tree, BinOp) and isinstance(tree.op, BitAnd)):
-        sub1 = build_matcher(tree.left, modified)
-        sub2 = build_matcher(tree.right, modified)
+        sub1 = build_matcher(tree.left, modified, hygienic_names)
+        sub2 = build_matcher(tree.right, modified, hygienic_names)
         return Call(Name('ParallelMatcher', Load()), [sub1, sub2], [], None,
                 None)
 
@@ -278,7 +271,7 @@ def _is_pattern_match_expr(tree):
 
 
 @macros.block()
-def _matching(tree, **kw):
+def _matching(tree, hygienic_names, **kw):
     """
     This macro will enable non-refutable pattern matching.  If a pattern match
     fails, an exception will be thrown.
@@ -287,7 +280,7 @@ def _matching(tree, **kw):
     def func(tree, **kw):
         if _is_pattern_match_stmt(tree):
             modified = set()
-            matcher = build_matcher(tree.value.left, modified)
+            matcher = build_matcher(tree.value.left, modified, hygienic_names)
             # lol random names for hax
             with q as assignment:
                 xsfvdy = ast[matcher]
@@ -305,7 +298,7 @@ def _matching(tree, **kw):
     return [tree]
 
 
-def _rewrite_if(tree, var_name=None, **kw_args):
+def _rewrite_if(tree, hygienic_names, var_name=None, **kw_args):
     # TODO refactor into a _rewrite_switch and a _rewrite_if
     """
     Rewrite if statements to treat pattern matches as boolean expressions.
@@ -343,7 +336,7 @@ def _rewrite_if(tree, var_name=None, **kw_args):
 
     if len(handler.body) == 1: # (== tree.orelse)
         # Might be an elif
-        handler.body = [_rewrite_if(handler.body[0], var_name)]
+        handler.body = [_rewrite_if(handler.body[0], hygienic_names, var_name)]
     elif not handler.body:
         handler.body = [Pass()]
 
@@ -351,7 +344,7 @@ def _rewrite_if(tree, var_name=None, **kw_args):
 
 
 @macros.block()
-def switch(tree, args, gen_sym, **kw):
+def switch(tree, args, gen_sym, hygienic_names, **kw):
     """
     If supplied one argument x, switch will treat the predicates of any
     top-level if statements as patten matches against x.
@@ -361,13 +354,13 @@ def switch(tree, args, gen_sym, **kw):
     """
     new_id = gen_sym()
     for i in xrange(len(tree)):
-        tree[i] = _rewrite_if(tree[i], new_id)
+        tree[i] = _rewrite_if(tree[i], hygienic_names, new_id)
     tree = [Assign([Name(new_id, Store())], args[0])] + tree
     return tree
 
 
 @macros.block()
-def patterns(tree, **kw):
+def patterns(tree, hygienic_names, **kw):
     """
     This enables patterns everywhere!  NB if you use this macro, you will not be
     able to use real left shifts anywhere.
@@ -376,6 +369,6 @@ def patterns(tree, **kw):
         with _matching:
             None
 
-    new[0].body = Walker(_rewrite_if).recurse(tree)
+    new[0].body = Walker(lambda tree, **kw: _rewrite_if(tree, hygienic_names)).recurse(tree)
 
     return new

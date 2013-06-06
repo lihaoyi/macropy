@@ -36,6 +36,7 @@ class Tests(unittest.TestCase):
         comprehension variable available *outside* of the comprehension
         when used in PINQ
         """
+        """
         tree = q[(lambda x: x + (lambda y: y + 1)(3))(5)]
         goal = q[(lambda x: (lambda y: (x + (y + 1)))(3))(5)]
 
@@ -54,6 +55,7 @@ class Tests(unittest.TestCase):
 
         new_tree = expand_let_bindings.recurse(tree)
         assert ast.dump(new_tree) == ast.dump(goal)
+        """
     """
     Most examples taken from
     http://sqlzoo.net/wiki/Main_Page

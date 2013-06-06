@@ -5,7 +5,7 @@ import macropy.core.macros
 runner = unittest.TextTestRunner()
 def run(x):
     runner.run(unittest.TestLoader().loadTestsFromTestCase(x))
-"""
+
 from macropy.core.test import macros
 run(macros.Tests)
 
@@ -29,21 +29,19 @@ run(case_classes.Tests)
 
 from macropy.test import tracing
 run(tracing.Tests)
-"""
+
 from macropy.experimental.test import peg
 run(peg.Tests)
-
-"""
-from macropy.experimental.test import tco_test
-run(tco_test.Tests)
 
 from macropy.experimental.test import pattern
 run(pattern.Tests)
 
+from macropy.experimental.test import tco_test
+run(tco_test.Tests)
+
 from macropy.experimental.test import pyxl_strings
 run(pyxl_strings.Tests)
-"""
-"""
+
 # this one creates a sqlite database to run, so may take a while
 from macropy.experimental.test import pinq
 run(pinq.Tests)
@@ -51,4 +49,3 @@ run(pinq.Tests)
 # this one needs chromedriver in order to run the javascript using Selenium
 from macropy.experimental.test import js_snippets
 run(js_snippets.Tests)
-"""

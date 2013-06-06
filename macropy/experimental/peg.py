@@ -154,6 +154,7 @@ class ParseError(Exception):
         self.failure = failure
         Exception.__init__(self, failure.msg)
 
+@macros.expose_unhygienic()
 @case
 class Parser:
     def parse(self, string):

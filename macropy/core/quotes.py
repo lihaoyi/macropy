@@ -50,7 +50,14 @@ def q(tree, **kw):
 @macros.block()
 def q(tree, target, **kw):
     body = _unquote_search.recurse(tree)
-    return [Assign([Name(id=target.id)], ast_repr(body))]
+    new_body = Call(
+        func=Name(id="rename", ctx=Load()),
+        args=[ast_repr(body), Name(id="hygienic_names", ctx=Load())],
+        keywords=[],
+        starargs=None,
+        kwargs=None
+    )
+    return [Assign([Name(id=target.id)], new_body)]
 
 @macros.expose_unhygienic()
 def rename(tree, hygienic_names):
