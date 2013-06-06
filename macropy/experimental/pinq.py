@@ -5,8 +5,6 @@ from macropy.core.quotes import macros, q, ast
 from macropy.quick_lambda import macros, f
 import sqlalchemy
 
-__all__ = ['generate_schema', 'expand_let_bindings']
-
 macros = Macros()
 
 @macros.expr()

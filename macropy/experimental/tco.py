@@ -9,14 +9,16 @@ macros = Macros()
 
 in_tc_stack = [False]
 
+@macros.expose()
+@singleton
+class TcoIgnore:
+    pass
 
+@macros.expose()
+@singleton
+class TcoCall:
+    pass
 
-TcoIgnore = object()
-macros.expose()(TcoIgnore, "TcoIgnore")
-
-
-TcoCall = object()
-macros.expose()(TcoCall, "TcoCall")
 
 def trampoline(func, args, kwargs):
     """
@@ -134,8 +136,3 @@ def tco(tree, hygienic_names, **kw):
     tree.body[-1] = replace_tc_pos(tree.body[-1])
 
     return tree
-
-
-# ok, so now you will only need to import tco...
-
-

@@ -16,7 +16,9 @@ def flatten(xs):
 
 def singleton(cls):
     """Decorates a class to turn it into a singleton."""
-    return cls()
+    obj = cls()
+    obj.__name__ = cls.__name__
+    return obj
 
 
 def safe_splat(func, **kwargs):

@@ -1,8 +1,6 @@
 from macropy.core.macros import *
 from macropy.core.quotes import macros, q, u
 
-__all__ = []
-
 macros = Macros()
 
 @macros.expose()

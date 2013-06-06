@@ -36,11 +36,22 @@ class Macros(object):
             return register
 
     def __init__(self):
+        # Different kinds of macros
         self.expr = Macros.Registry()
         self.block = Macros.Registry()
         self.decorator = Macros.Registry()
+
+        # Different kind of exposed values
+
+        # Values which will get renamed and won't shadow or be shadowed
         self.expose = Macros.Registry()
+
+        # Values, which will not get renamed, and can shadow or be shadowed
         self.expose_unhygienic = Macros.Registry()
+
+        # Transient values, which appear in the source code but should be
+        # removed from the expanded code
+        self.expose_transient = Macros.Registry()
 
 
 

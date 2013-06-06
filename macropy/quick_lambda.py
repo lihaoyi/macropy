@@ -1,11 +1,11 @@
 from macropy.core.macros import *
 from macropy.core.quotes import macros, q
 
-__all__ = []
-
-_ = None  # makes IDE happy
-
 macros = Macros()
+
+@macros.expose_transient()
+@singleton
+class _(): pass
 
 @macros.expr()
 def f(tree, gen_sym, **kw):

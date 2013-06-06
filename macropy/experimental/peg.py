@@ -21,8 +21,6 @@ Not-predicate: !e           -       Not
 
 macros = Macros()
 
-
-
 @macros.block()
 def peg(tree, gen_sym, **kw):
     potential_targets = [

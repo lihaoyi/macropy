@@ -3,28 +3,28 @@ from macropy.core import *
 macros = Macros()
 
 
-def u(tree):
-    """Stub to make the IDE happy"""
 
-def name(tree):
-    """Stub to make the IDE happy"""
-def ast(tree):
-    """Stub to make the IDE happy"""
-def name(tree):
-    """Stub to make the IDE happy"""
-def extract(tree):
-    if isinstance(tree, Subscript) and type(tree.slice) is Index:
-        return tree.value.id, tree.slice.value
+@macros.expose_transient()
+@singleton
+class u(): pass
 
+@macros.expose_transient()
+@singleton
+class name(): pass
 
+@macros.expose_transient()
+@singleton
+class ast(): pass
+
+@macros.expose_transient()
+@singleton
+class ast_list(): pass
 
 @Walker
 def _unquote_search(tree, **kw):
+    if isinstance(tree, Subscript) and type(tree.slice) is Index:
 
-    e = extract(tree)
-
-    if e:
-        func, right = e
+        func, right = tree.value.id, tree.slice.value
 
         if 'u' == func:
             return Literal(Call(Name(id="ast_repr"), [right], [], None, None))
@@ -66,7 +66,7 @@ def rename(tree, hygienic_names):
         if type(tree) is Name:
             tree.id = hygienic_names(tree.id)
     return renamer.recurse(tree)
-from collections import defaultdict
+
 
 
 @macros.expose_unhygienic()
