@@ -85,7 +85,7 @@ class Walker(object):
         """Traverse the given AST and return the transformed tree together
         with any values which were collected along with way."""
 
-        if isinstance(tree, AST):
+        if isinstance(tree, AST) or type(tree) is Literal:
             aggregates = []
             stop_now = [False]
 

@@ -83,6 +83,7 @@ class _MacroLoader(object):
         else:
             mod.__package__ = fullname.rpartition('.')[0]
         mod.__file__ = self.file_name
+
         try:
             exec compile(tree, self.file_name, "exec") in mod.__dict__
         except Exception as e:

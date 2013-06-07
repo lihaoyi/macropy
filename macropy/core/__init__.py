@@ -47,7 +47,14 @@ def ast_repr(x):
     elif type(x) is list:           return ast.List(elts=map(ast_repr, x))
     elif type(x) is dict:           return ast.Dict(keys=map(ast_repr, x.keys()), values=map(ast_repr, x.values()))
     elif type(x) is set:            return ast.Set(elts=map(ast_repr, x))
-    elif type(x) is Literal:        return x.body
+    elif type(x) is Literal:
+        return ast.Call(
+            func = ast.Name(id="Literal"),
+            args = [x.body],
+            keywords = [],
+            starargs = None,
+            kwargs = None
+        )
     elif x is None:                 return ast.Name(id="None")
     elif x is True:                 return ast.Name(id="True")
     elif x is False:                 return ast.Name(id="False")

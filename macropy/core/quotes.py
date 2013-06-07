@@ -2,7 +2,7 @@ from macropy.core.macros import *
 from macropy.core import *
 macros = Macros()
 
-
+macros.expose()(Literal)
 
 @macros.expose_transient()
 @singleton
@@ -62,9 +62,12 @@ def q(tree, target, **kw):
 @macros.expose_unhygienic()
 def rename(tree, hygienic_names):
     @Walker
-    def renamer(tree, **kw):
+    def renamer(tree, stop, **kw):
         if type(tree) is Name:
             tree.id = hygienic_names(tree.id)
+        if type(tree) is Literal:
+            stop()
+            return tree.body
     return renamer.recurse(tree)
 
 

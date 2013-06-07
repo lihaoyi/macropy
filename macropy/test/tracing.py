@@ -1,7 +1,7 @@
 import unittest
 from ast import *
 from macropy.tracing import macros, trace, log, require, show_expanded
-from macropy.core.quotes import macros, q
+from macropy.core.quotes import macros, q, Literal
 result = []
 
 def log(x):
@@ -143,5 +143,5 @@ evens += [n]
             assert result[-3:] == [
                 '\na = 1',
                 '\nb = 2',
-                "\ncode = rename([Print(dest=None, values=[BinOp(left=Name(id='a', ctx=Load()), op=Add(), right=ast_repr((b + 1)))], nl=True)], hygienic_names)"
+                "\ncode = rename([Print(dest=None, values=[BinOp(left=Name(id='a', ctx=Load()), op=Add(), right=Literal(ast_repr((b + 1))))], nl=True)], hygienic_names)"
             ]

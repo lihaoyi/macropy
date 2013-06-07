@@ -1,5 +1,5 @@
 from macropy.core.test.macros.hygienic_quotes_macro import macros, my_macro
-from macropy.tracing import macros, show_expanded
+
 
 def log(thing):
     # print thing
