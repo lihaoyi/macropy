@@ -2,10 +2,9 @@ from macropy.core.macros import *
 from macropy.core.quotes import macros, q
 
 macros = Macros()
+_ = object()
+macros.expose_transient()(_, "_")
 
-@macros.expose_transient()
-@singleton
-class _(): pass
 
 @macros.expr()
 def f(tree, gen_sym, **kw):

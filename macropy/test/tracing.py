@@ -132,7 +132,7 @@ evens += [n]
             from macropy.core import ast_repr
             show_expanded[q[1 + 2]]
 
-            assert result[-1] == "rename(BinOp(left=Num(n=1), op=Add(), right=Num(n=2)), hygienic_names)"
+            assert "(BinOp(left=Num(n=1), op=Add(), right=Num(n=2)), hygienic_names)" in result[-1]
 
             with show_expanded:
                 a = 1
@@ -140,8 +140,6 @@ evens += [n]
                 with q as code:
                     print a + u[b + 1]
 
-            assert result[-3:] == [
-                '\na = 1',
-                '\nb = 2',
-                "\ncode = rename([Print(dest=None, values=[BinOp(left=Name(id='a', ctx=Load()), op=Add(), right=Literal(ast_repr((b + 1))))], nl=True)], hygienic_names)"
-            ]
+            assert result[-3] == '\na = 1'
+            assert result[-2] == '\nb = 2'
+            assert "([Print(dest=None, values=[BinOp(left=Name(id='a', ctx=Load()), op=Add(), right=Literal(ast_repr((b + 1))))], nl=True)], hygienic_names)" in result[-1]

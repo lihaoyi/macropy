@@ -11,6 +11,7 @@ class MacroConsole(code.InteractiveConsole):
     def __init__(self, locals=None, filename="<console>"):
         code.InteractiveConsole.__init__(self, locals, filename)
         self.bindings = []
+        self.renames = {}
 
     def runsource(self, source, filename="<input>", symbol="single"):
         try:
@@ -25,13 +26,15 @@ class MacroConsole(code.InteractiveConsole):
 
         try:
             tree = ast.parse(source)
-            bindings = detect_macros(tree)
+            bindings, renamed_imports = detect_macros(tree)
+            self.renames.update(renamed_imports)
+
             for p, names in bindings:
                 __import__(p)
 
             self.bindings.extend([(sys.modules[p], bindings) for (p, bindings) in bindings])
 
-            tree = process_ast(tree, source, self.bindings)
+            tree = process_ast(tree, source, self.bindings, self.renames)
 
             tree = ast.Interactive(tree.body)
             code = compile(tree, filename, symbol, self.compile.compiler.flags, 1)

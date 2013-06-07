@@ -37,10 +37,10 @@ def _unquote_search(tree, **kw):
 
 
 @macros.expr()
-def q(tree, **kw):
+def q(tree, hygienic_names, **kw):
     tree = _unquote_search.recurse(tree)
     return Call(
-        func=Name(id="rename", ctx=Load()),
+        func=Name(id=hygienic_names("rename"), ctx=Load()),
         args=[ast_repr(tree), Name(id="hygienic_names", ctx=Load())],
         keywords=[],
         starargs=None,
@@ -48,10 +48,10 @@ def q(tree, **kw):
     )
 
 @macros.block()
-def q(tree, target, **kw):
+def q(tree, target, hygienic_names, **kw):
     body = _unquote_search.recurse(tree)
     new_body = Call(
-        func=Name(id="rename", ctx=Load()),
+        func=Name(id=hygienic_names("rename"), ctx=Load()),
         args=[ast_repr(body), Name(id="hygienic_names", ctx=Load())],
         keywords=[],
         starargs=None,
@@ -59,7 +59,7 @@ def q(tree, target, **kw):
     )
     return [Assign([Name(id=target.id)], new_body)]
 
-@macros.expose_unhygienic()
+@macros.expose()
 def rename(tree, hygienic_names):
     @Walker
     def renamer(tree, stop, **kw):
