@@ -2365,7 +2365,7 @@ There is a way out of this: if you create a new variable, but use an identifier 
 
 ```python
 @macros.expr()
-def f(tree, gen_sym):
+def f(tree, gen_sym, **kw):
     ...
     new_name = gen_sym()
     ... use new_name ...
