@@ -2498,7 +2498,7 @@ def log_func(x):
 
 In this example, the `log` macro uses `expose_unhygienic` on a `log_func` function. The macro-expanded code by default will capture the `log_func` function imported from `macro_module.py`, which prints the log to the console:
 
-```
+```python
 # test.py
 from macro_module import macros, log
 
@@ -2508,7 +2508,7 @@ log[1 + 1]
 
 But a user can intentionally shadow `log_func` in order to redirect the logging, for example to a list
 
-```
+```python
 # test.py
 from macro_module import macros, log
 
@@ -2531,7 +2531,7 @@ The current system for hygiene is somewhat ad-hoc and inelegant. It should be po
 
 Macro Subtleties
 ================
-When writing AST-transforming macros, there are some edge cases and subtleties which you don't notice at first, but eventually you will have to come around to. Things such as the [macro expansion order](#expansion-order), [hygiene](#hygiene) and [line numbers in error messages](#line-numbers):
+When writing AST-transforming macros, there are some edge cases and subtleties which you don't notice at first, but eventually you will have to come around to. Things such as the [macro expansion order](#expansion-order) and [line numbers in error messages](#line-numbers):
 
 Expansion Order
 ---------------
@@ -2550,7 +2550,9 @@ map(f[_ + 1], [1, 2, 3]) -> [2, 3, 4]
 >>>
 ```
 
-As you can see, the `trace` macro is expanded first, and hence the when it prints out the expressions being executed, we see the un-expanded `f[_ + 1]` rather than the expanded `(lammbda arg0: arg0 + 1)`. After the tracing is inserted, the `f` is finally expanded into a `lambda` and the final output of this expression is `[2, 3, 4]`. This decision is arbitrary.
+As you can see, the `trace` macro is expanded first, and hence the when it prints out the expressions being executed, we see the un-expanded `f[_ + 1]` rather than the expanded `(lammbda arg0: arg0 + 1)`. After the tracing is inserted, the `f` is finally expanded into a `lambda` and the final output of this expression is `[2, 3, 4]`.
+
+If your macro needs to perform an operation *after* all macros in its sub-tree have been expanded, simply use the [expand_macros](#expand_macros) function on the sub-tree. This recursively expands all the macros in that sub-tree before returning, after which your macro can then do what it needs to do
 
 
 Line Numbers
