@@ -2328,28 +2328,6 @@ new_tree, collected = transform.recurse_real(old_tree, initial_ctx)
 
 This provides it a large amount of versatility, and lets you use the `Walker` to recursively traverse and transform Python ASTs in interesting ways. If you inspect the source code of the macros in the [macropy](macropy) and [macropy/experimental](macropy/experimental) folders, you will see most of them make extensive use of `Walker`s in order to concisely perform their transformations. If you find yourself needing a recursive traversal, you should think hard about why you cannot use a Walker before writing the recursion yourself.
 
-Macro Subtleties
-================
-When writing AST-transforming macros, there are some edge cases and subtleties which you don't notice at first, but eventually you will have to come around to. Things such as the [macro expansion order](#expansion-order), [hygiene](#hygiene) and [line numbers in error messages](#line-numbers):
-
-Expansion Order
----------------
-Macros are expanded in an outside-in order, with macros higher up in the AST being expanded before their children. Hence, if we have two macros inside each other, such as:
-
-```python
->>> from macropy.quick_lambda import macros, f
->>> from macropy.tracing import macros, trace
->>> trace[map(f[_ + 1], [1, 2, 3])]
-f[_ + 1] -> <function <lambda> at 0x00000000021F9128>
-_ + 1 -> 2
-_ + 1 -> 3
-_ + 1 -> 4
-map(f[_ + 1], [1, 2, 3]) -> [2, 3, 4]
-[2, 3, 4]
->>>
-```
-
-As you can see, the `trace` macro is expanded first, and hence the when it prints out the expressions being executed, we see the un-expanded `f[_ + 1]` rather than the expanded `(lammbda arg0: arg0 + 1)`. After the tracing is inserted, the `f` is finally expanded into a `lambda` and the final output of this expression is `[2, 3, 4]`. This decision is arbitrary.
 
 Hygiene
 -------
@@ -2394,16 +2372,171 @@ def f(tree, gen_sym):
 
 `gen_sym` is a function which produce a new identifier (as a string) every time it is called. This is guaranteed to produce a identifier that does not appear anywhere in the origial source code, or have been produced by an earlier call to `gen_sym`. You can thus use these identifiers without worrying about shadowing an identifier someone was using; see the source for the [quicklambda](macropy/quick_lambda.py) macro to see it in action.
 
-###Caveats
+###Runtime Support
+It is very common for macros to require runtime support in order to operate. Consider a simple `log` macro:
 
-This system is not perfect. Although it prevents you from using any identifier that is present in the source, or which you have generated earlier, there are still ways you could get into trouble:
+```python
+# macro_module.py
+@macros.expr()
+def log(tree, exact_src, **kw):
+    new_tree = q[wrap(u[exact_src(tree)], ast[tree])]
+    return new_tree
 
-- Some other package is using an identifier in the current package, without the current package's knowledge. For example, a `package_b` may be storing a variable called `sym0` in `package_a`'s package namespace and retrieving it later. If you use macros in `package_a`, `gen_sym` has no way of knowing what `package_a` is doing and may still give you the identifier `sym0`, clobbering `package_b`'s value
-- You could have manually inserted a brand new identifier into the AST without consulting `gen_sym`. For example, if I forcefully place a variable called `sym0` into the AST, it could end up shadowing an already existing `sym0`, and it may end up being shadowed by `gen_sym` when it itself generates a name `sym0`, since `gen_sym` has no way of knowing you put it there.
+def wrap(txt, x):
+    print string = txt + " -> " + repr(x)
+    return x
+```
 
-We think these are acceptable restrictions. The first can be solved via *don't do that*, and the second can be solved by ensuring you only create new identifiers via `gen_sym`. That is, when you create a identifier in the AST, make sure you either use `gen_sym` (if you don't want it to be accessible from using code) or make use of a name already present in the AST (if you want it to be accessible from user code) and be conscious of the scoping and shadowing consequences.
+This macro aims to perform a conversion like:
 
-MacroPy doesn't guarantee hygiene like some other macro systems do, as it provides low level, direct access to the AST. Nonetheless, `gen_sym` should be sufficient to give yourself hygiene if you really want it, and avoid any unexpected identifier collisions between user-written and macro-generated code.
+```python
+log[1 + 2] -> wrap("1 + 2", 1 + 2)
+```
+
+Where the `wrap` function then prints out both the source code and the `repr` of the logged expression. However, naively performing this transform runs into problems:
+
+```python
+# test.py
+from macro_module import macros, log
+
+log[1 + 1]
+# NameError: name 'wrap' is not defined
+```
+
+This is because although `wrap` is available in `macro_module.py`, it is not available in `test.py`. Hence the expanded code fails when it tries to reference `wrap`.There are several ways which this can be accomplished:
+
+###Manual Imports
+
+```python
+# test.py
+from macro_module import macros, log, wrap
+
+log[1 + 1]
+# 1 + 1 -> 2
+```
+
+You can simply import `wrap` from `macro_module.py` into `test.py`, along with the `log` macro itself. This way, the expanded code has a `wrap` function that it can call. Although this works in this example, it is somewhat fragile in the general case, as the programmer could easily accidentally create a variable named `wrap`, not knowing that it was being used by `log` (after all, you can't see it used anywhere in the source doe!), causing it to fail:
+
+```python
+# test.py
+from macro_module import macros, log, wrap
+
+wrap = "chicken salad"
+
+log[1 + 1]
+# TypeError: 'str' object is not callable
+```
+
+###`expose`
+
+```python
+# macro_module.py
+@macros.expr()
+def log(tree, exact_src, hygienic_names, **kw):
+    new_tree = q[wrap(u[exact_src(tree)], ast[tree])]
+    return new_tree
+
+@macros.expose()
+def wrap(txt, x):
+    print string = txt + " -> " + repr(x)
+    return x
+
+# test.py
+from macro_module import macros, log
+
+wrap = "chicken salad"
+
+log[1 + 1]
+# 1 + 1 -> 2
+```
+
+The important changes in this snippet, as compared to the previous, is:
+
+- The removal of `wrap` from the import statement.
+- The use of `@macros.expose()` on the `wrap` function
+- The introduction of `hygienic_names` in the `log` function
+
+The use of `@macros.expose()` causes `wrap` to be automatically inserted into the import statement (hence letting the programmer elide it) aliased to a new, un-used name generated via [gen_sym](#gen_sym). This ensures that the name `wrap` is imported under does not collide (shadow or be shadowed) by any other identifier used in the file. `hygienic_names` is a function that allows you to find the aliased version of an identifier marked via `@macros.expose()`, which is automatically used by the `q` macro to rename the use of `wrap` within the quasiquote to the aliased name.
+
+Note that `hygienic_names` is automatically pulled in by the `q` quasiquote macro; hence, if you are using the quasiquote macro in other parts of the source code, ensure `hygienic_names` is in scope (e.g. passing it as an argument, if you're using quasiquotes in other functions).
+
+This may seem very complicated, but in general, it means that the macro can define a runtime function `wrap`, use `wrap` in the expanded code without having to worry that `wrap` may shadow or be shadowed by another identifier. This is a significant gain, that can help prevent weird bugs that happen when a name you choose accidentally shadows a name used by the macro.
+
+###`expose_unhygienic`
+
+```python
+# macro_module.py
+@macros.expose()
+def wrap(printer, txt, x):
+    string = txt + " -> " + repr(x)
+    printer(string)
+    return x
+
+@macros.expr()
+def log(tree, exact_src, hygienic_names, **kw):
+    new_tree = q[name[hygienic_names("wrap")](log_func, u[exact_src(tree)], ast[tree])]
+    return new_tree
+
+@macros.expose_unhygienic()
+def log_func(x):
+    print(x)
+```
+`expose_unhygienic` is a hybrid between manual importing and `expose`. Like manual importing, decorating functions with `expose_unhygienic` causes them to be imported under their un-modified name, meaning they can shadow and be shadowed by other identifiers in the macro-expanded code. Like `expose`, it does not require the source file using the macros to put the identifier in the import list. This helps match what users of the macro expect: since the name doesn't ever appear anywhere in the source, it doesn't make sense for the macro to require the name being imported to work.
+
+In this example, the `log` macro uses `expose_unhygienic` on a `log_func` function. The macro-expanded code by default will capture the `log_func` function imported from `macro_module.py`, which prints the log to the console:
+
+```
+# test.py
+from macro_module import macros, log
+
+log[1 + 1]
+# 1 + 1 -> 2
+```
+
+But a user can intentionally shadow `log_func` in order to redirect the logging, for example to a list
+
+```
+# test.py
+from macro_module import macros, log
+
+output = []
+log_func = output.append
+
+log[1 + 1]
+# nothing gets printed
+print output
+# ['1 + 1']
+```
+
+In general, `expose_unhygienic` is useful when you want the macro to use a name that can be intentionally shadowed by the programmer using the macro, allowing the programmer to implicitly modify the behavior of the macro via this shadowing.
+
+----------------------------------------
+
+In general, MacroPy does not enforce hygiene on the macros you write; it is entirely possible to write macros which require manual importing, or whose identifiers collide with identifiers in the macro-expanded file with unpredictable results. However, with `gen_sym` and `expose`, MacroPy provides the support needed to avoid these problems if you wish to do so.
+
+Macro Subtleties
+================
+When writing AST-transforming macros, there are some edge cases and subtleties which you don't notice at first, but eventually you will have to come around to. Things such as the [macro expansion order](#expansion-order), [hygiene](#hygiene) and [line numbers in error messages](#line-numbers):
+
+Expansion Order
+---------------
+Macros are expanded in an outside-in order, with macros higher up in the AST being expanded before their children. Hence, if we have two macros inside each other, such as:
+
+```python
+>>> from macropy.quick_lambda import macros, f
+>>> from macropy.tracing import macros, trace
+>>> trace[map(f[_ + 1], [1, 2, 3])]
+f[_ + 1] -> <function <lambda> at 0x00000000021F9128>
+_ + 1 -> 2
+_ + 1 -> 3
+_ + 1 -> 4
+map(f[_ + 1], [1, 2, 3]) -> [2, 3, 4]
+[2, 3, 4]
+>>>
+```
+
+As you can see, the `trace` macro is expanded first, and hence the when it prints out the expressions being executed, we see the un-expanded `f[_ + 1]` rather than the expanded `(lammbda arg0: arg0 + 1)`. After the tracing is inserted, the `f` is finally expanded into a `lambda` and the final output of this expression is `[2, 3, 4]`. This decision is arbitrary.
+
 
 Line Numbers
 ------------
