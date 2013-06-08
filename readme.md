@@ -35,7 +35,8 @@ The [Rough Overview](#rough-overview) will give a birds eye view of how it works
 
 - [Arguments](#arguments), what a macro is given to do its work
 - [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
-- The [Walker](#walkers), a flexible tool to traverse and transform ASTs
+- [Walkers](#walkers), a flexible tool to traverse and transform ASTs
+- [Hygiene](#hygiene), how to avoid weird bugs related to name collisions and shadowing
 
 Or just skip ahead to the [Subtleties](#macro-subtleties), [Lessons](#lessons), [Conclusion](#macropy-the-last-refuge-of-the-competent) and [Future Plans](#future). We're open to contributions, so send us your ideas/questions/issues/pull-requests and we'll do our best to accomodate you! If you need ideas on how to contribute, check out our [issues](issues) page.
 
@@ -2525,6 +2526,8 @@ In general, `expose_unhygienic` is useful when you want the macro to use a name 
 ----------------------------------------
 
 In general, MacroPy does not enforce hygiene on the macros you write; it is entirely possible to write macros which require manual importing, or whose identifiers collide with identifiers in the macro-expanded file with unpredictable results. However, with `gen_sym` and `expose`, MacroPy provides the support needed to avoid these problems if you wish to do so.
+
+The current system for hygiene is somewhat ad-hoc and inelegant. It should be possible to do much better in terms of reducing the amount of manual annotation while broadening its applicability (e.g. hygienic capture for non-module-level names) but that will take additional work and research. Contributions are welcome!
 
 Macro Subtleties
 ================
