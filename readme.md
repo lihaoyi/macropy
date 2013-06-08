@@ -2415,7 +2415,7 @@ log[1 + 1]
 # 1 + 1 -> 2
 ```
 
-You can simply import `wrap` from `macro_module.py` into `test.py`, along with the `log` macro itself. This way, the expanded code has a `wrap` function that it can call. Although this works in this example, it is somewhat fragile in the general case, as the programmer could easily accidentally create a variable named `wrap`, not knowing that it was being used by `log` (after all, you can't see it used anywhere in the source doe!), causing it to fail:
+You can simply import `wrap` from `macro_module.py` into `test.py`, along with the `log` macro itself. This way, the expanded code has a `wrap` function that it can call. Although this works in this example, it is somewhat fragile in the general case, as the programmer could easily accidentally create a variable named `wrap`, not knowing that it was being used by `log` (after all, you can't see it used anywhere in the source code!), causing it to fail:
 
 ```python
 # test.py
@@ -2426,6 +2426,18 @@ wrap = "chicken salad"
 log[1 + 1]
 # TypeError: 'str' object is not callable
 ```
+
+Alternately, the programmer so simply forget to import it, for the same reason:
+
+ ```python
+# test.py
+from macro_module import macros, log
+
+log[1 + 1]
+# NameError: name 'wrap' is not defined
+```
+
+which gives a rather unintuitive error message: `wrap` is not defined? From the programmer's perspective, `wrap` isn't used at all! These very common pitfalls mean you should probably avoid this approach in favor of the latter two.
 
 ###`expose`
 
@@ -2450,7 +2462,7 @@ log[1 + 1]
 # 1 + 1 -> 2
 ```
 
-The important changes in this snippet, as compared to the previous, is:
+The important changes in this snippet, as compared to the previous, are:
 
 - The removal of `wrap` from the import statement.
 - The use of `@macros.expose()` on the `wrap` function
