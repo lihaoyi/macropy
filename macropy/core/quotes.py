@@ -85,17 +85,21 @@ def hygienic_names(x):
 def hq(tree, module_alias, target, **kw):
     tree = _unquote_search.recurse(tree)
     tree = hygienate(tree, module_alias)
+    tree1 = [With(
+        Name(id='q'),
+        target,
+        tree
+    )]
+    tree2 = parse_stmt("with q as %s:\n%s" % (target.id, unparse_ast(tree).replace("\n", "\n    ")))
 
-    tree = parse_stmt("with q as %s:\n%s" % (target.id, unparse_ast(tree).replace("\n", "\n    ")))
-
-    return tree
+    return tree1
 
 @macros.expr()
 def hq(tree, module_alias, **kw):
 
     tree = _unquote_search.recurse(tree)
     tree = hygienate(tree, module_alias)
-    tree = parse_expr("q[%s]" % unparse_ast(tree))
+    tree = Subscript(Name(id="q"), Index(tree), Load())
     return tree
 
 def hygienate(tree, module_alias):
@@ -116,5 +120,6 @@ def hygienate(tree, module_alias):
 
             if 'unhygienic' == tree.value.id:
                 stop()
+                del tree.slice.value.ctx
                 return tree.slice.value
     return hygienator.recurse(tree)

@@ -97,12 +97,15 @@ def case(tree, gen_sym, hygienic_names, module_alias, **kw):
         return new_body, outer, init_body
 
     def prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args):
+
         init_fun.args = arguments(
             args = [Name(id="self")] + [Name(id = id) for id in args],
             vararg = vararg,
             kwarg = kwarg,
             defaults = defaults
         )
+
+
         for x in all_args:
             with q as a:
                 self.x = name[x]
@@ -155,4 +158,5 @@ def case(tree, gen_sym, hygienic_names, module_alias, **kw):
         return [tree] + ([assign] if len(outer) > 0 else [])
 
     x = _case_transform(tree, [hq[CaseClass]])
+
     return x

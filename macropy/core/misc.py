@@ -29,6 +29,7 @@ def ast_ctx_fixer(tree, ctx, stop, **kw):
     """Fix any missing `ctx` attributes within an AST; allows you to build
     your ASTs without caring about that stuff and just filling it in later."""
     if "ctx" in type(tree)._fields and not hasattr(tree, "ctx"):
+
         tree.ctx = ctx
 
     if type(tree) is arguments:
