@@ -1,21 +1,37 @@
-from macropy.experimental.pinq import macros, sql, query, generate_schema
-from sqlalchemy import *
+# macro_module.py
+    from macropy.core.macros import *
+    from macropy.core.quotes import macros, hq
 
-# prepare database
-engine = create_engine("sqlite://")
-for line in open("macropy/experimental/test/world.sql").read().split(";"):
-    engine.execute(line.strip())
+    macros = Macros
+
+    def double(x):
+        return x * 2
+
+    @macros.expr()
+    def my_macro(tree, **kw):
+        return hq[double(ast[tree])]
+
+# test.py
 
 
-db = generate_schema(engine)
 
-# Countries in Europe with a GNP per Capita greater than the UK
-results = query[(
-    x.name for x in db.country
-    if x.gnp / x.population > (
-        y.gnp / y.population for y in db.country
-        if y.name == 'United Kingdom'
-    ).as_scalar()
-    if (x.continent == 'Europe')
-)]
-for line in results: print line
+# macro_module.py
+    from macropy.core.macros import *
+    from macropy.core.quotes import macros, hq
+
+    macros = Macros
+
+    def double(x):
+        return x * 2
+
+    @macros.expr()
+    def my_macro(tree, **kw):
+        return q[sym1.macros.registered[u[macros.register(double)]](ast[tree])]
+
+# test.py
+    from . import macro_module as sym1
+
+    print sym1.macros[0](10)
+
+
+

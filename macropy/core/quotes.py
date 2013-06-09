@@ -22,7 +22,10 @@ class ast_list(): pass
 
 @Walker
 def _unquote_search(tree, **kw):
-    if isinstance(tree, Subscript) and type(tree.slice) is Index:
+
+    if isinstance(tree, Subscript) and \
+                    type(tree.slice) is Index and \
+                    type(tree.value) is Name:
 
         func, right = tree.value.id, tree.slice.value
 
@@ -39,13 +42,14 @@ def _unquote_search(tree, **kw):
 @macros.expr()
 def q(tree, hygienic_names, **kw):
     tree = _unquote_search.recurse(tree)
-    return Call(
+    tree = Call(
         func=Name(id=hygienic_names("rename"), ctx=Load()),
         args=[ast_repr(tree), Name(id="hygienic_names", ctx=Load())],
         keywords=[],
         starargs=None,
         kwargs=None
     )
+    return tree
 
 @macros.block()
 def q(tree, target, hygienic_names, **kw):
@@ -75,3 +79,19 @@ def rename(tree, hygienic_names):
 @macros.expose_unhygienic()
 def hygienic_names(x):
     return x
+
+
+@macros.expr()
+def hq(tree, module_alias, **kw):
+    @Walker
+    def hygienator(tree, stop, **kw):
+        if type(tree) is Name:
+            stop()
+            return parse_expr("name[module_alias].macros.registered[u[macros.register(%s)]]" % (tree.id))
+        if type(tree) is Literal:
+            stop()
+            return parse_expr("ast[%s]" % unparse_ast(tree.body))
+    tree = _unquote_search.recurse(tree)
+    tree = hygienator.recurse(tree)
+    tree = parse_expr("q[%s]" % unparse_ast(tree))
+    return tree

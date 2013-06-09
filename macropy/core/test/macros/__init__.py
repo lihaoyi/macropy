@@ -2,7 +2,7 @@
 import unittest
 import sys
 import macropy.core.macros
-from macropy.core.test.macros import exact_src
+
 
 
 
@@ -65,6 +65,7 @@ class Tests(unittest.TestCase):
             assert exc_traceback.tb_next.tb_lineno == 6
 
     def test_exact_src(self):
+        import exact_src
         assert exact_src.run0() == "1 * max(1, 2, 3)"
         assert exact_src.run1() == """1 * max((1,'2',"3"))"""
         assert exact_src.run_block() == """
@@ -88,5 +89,10 @@ else:
     def test_hygienic_quotes(self):
         import hygienic_quotes
         assert hygienic_quotes.run() == 10
-        print hygienic_quotes.run1()
+
         assert hygienic_quotes.run1() == 20
+
+    def test_hq(self):
+        import hq_macro
+        import hq
+        assert hq.run() == "2x: 1 double 1 double "

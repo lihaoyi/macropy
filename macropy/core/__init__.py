@@ -125,6 +125,7 @@ def else_rec(tree, i):
 trec = {
     #Misc
     type(None): lambda tree, i: "",
+    Literal:    lambda tree, i: "Literal(%s)" % rec(tree.body, i),
     list:       lambda tree, i: jmap("", lambda t: rec(t, i), tree),
 
     Module:     lambda tree, i: jmap("", lambda t: rec(t, i), tree.body),
