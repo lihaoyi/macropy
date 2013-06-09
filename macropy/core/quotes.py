@@ -20,6 +20,11 @@ class ast(): pass
 @singleton
 class ast_list(): pass
 
+@macros.expose_transient()
+@singleton
+class unhygienic(): pass
+
+
 @Walker
 def _unquote_search(tree, **kw):
 
@@ -81,17 +86,40 @@ def hygienic_names(x):
     return x
 
 
+@macros.block()
+def hq(tree, module_alias, target, **kw):
+    tree = _unquote_search.recurse(tree)
+    tree = hygienate(tree, module_alias)
+    print "A", unparse_ast(tree)
+    tree = parse_stmt("with q as %s:\n%s" % (target.id, unparse_ast(tree).replace("\n", "\n    ")))
+    print "B"
+    return tree
+
 @macros.expr()
 def hq(tree, module_alias, **kw):
+
+    tree = _unquote_search.recurse(tree)
+    tree = hygienate(tree, module_alias)
+    tree = parse_expr("q[%s]" % unparse_ast(tree))
+    return tree
+
+def hygienate(tree, module_alias):
     @Walker
     def hygienator(tree, stop, **kw):
         if type(tree) is Name and type(tree.ctx) is Load:
             stop()
-            return parse_expr("name[module_alias].macros.registered[u[macros.register(%s)]]" % (tree.id))
+            return parse_expr(
+                "name[module_alias].macros.registered[u[macros.register(%s)]]" % (tree.id)
+            )
         if type(tree) is Literal:
             stop()
             return parse_expr("ast[%s]" % unparse_ast(tree.body))
-    tree = _unquote_search.recurse(tree)
-    tree = hygienator.recurse(tree)
-    tree = parse_expr("q[%s]" % unparse_ast(tree))
-    return tree
+        if isinstance(tree, Subscript) and \
+                    type(tree.slice) is Index and \
+                    type(tree.value) is Name:
+
+
+            if 'unhygienic' == tree.value.id:
+                stop()
+                return tree.slice.value
+    return hygienator.recurse(tree)

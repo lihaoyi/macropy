@@ -95,4 +95,8 @@ else:
     def test_hq(self):
         import hq_macro
         import hq
-        assert hq.run() == "2x: 1 double 1 double "
+        assert hq.run1() == "2x: 1 double 1 double "
+
+        assert hq.run2() == 5
+
+        assert hq.run3() == 6

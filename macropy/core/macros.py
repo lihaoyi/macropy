@@ -94,7 +94,7 @@ class _MacroLoader(object):
         except Exception as e:
             import traceback
             traceback.print_exc()
-            exit()
+
         return mod
 
 def process_ast(tree, src, bindings, hygienic_names, module_aliases):
