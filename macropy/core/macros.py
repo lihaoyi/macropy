@@ -111,7 +111,7 @@ def expand_ast(tree, src, bindings, module_aliases):
     are found"""
 
     # you don't pay for what you don't use
-    positions = Lazy(lambda: indexer.recurse_real(tree)[1])
+    positions = Lazy(lambda: indexer.collect(tree))
     line_lengths = Lazy(lambda: map(len, src.split("\n")))
     indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)]))
     symbols = Lazy(lambda: _gen_syms(tree))
@@ -273,7 +273,7 @@ def _gen_syms(tree):
             names = [x.asname or x.name for x in tree.names]
             map(collect, names)
 
-    tree, found_names = name_finder.recurse_real(tree)
+    found_names = name_finder.collect(tree)
     names = ("sym" + str(i) for i in itertools.count())
     return itertools.ifilter(lambda x: x not in found_names, names)
 

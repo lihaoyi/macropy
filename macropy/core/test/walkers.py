@@ -31,8 +31,11 @@ class Tests(unittest.TestCase):
                 total[0] = total[0] + tree.n
                 return collect(tree.n)
 
-        tree, collected = sum.recurse_real(tree)
+        tree, collected = sum.recurse_collect(tree)
         assert total[0] == 36
+        assert collected == [1, 2, 3, 4, 5, 6, 7, 8]
+
+        collected = sum.collect(tree)
         assert collected == [1, 2, 3, 4, 5, 6, 7, 8]
 
     def test_ctx(self):

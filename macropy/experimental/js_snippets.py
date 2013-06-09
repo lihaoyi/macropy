@@ -9,16 +9,19 @@ std_lib = [
     'classes.js',
     '__builtin__.js',
 ]
+
 import os
 path = os.path.dirname(pjs.__file__) + "/data/pjslib.js"
 std_lib_script = open(path).read()
 
 macros = Macros()
 
+
 @macros.expr
 def js(tree, **kw):
     javascript = pjs.converter.Converter("").convert_node(tree, Scope())
     return Str(javascript)
+
 
 @macros.expr
 def pyjs(tree, **kw):

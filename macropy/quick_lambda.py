@@ -5,7 +5,6 @@ macros = Macros()
 _ = object()
 
 
-
 @macros.expr
 def f(tree, gen_sym, **kw):
 
@@ -17,7 +16,7 @@ def f(tree, gen_sym, **kw):
             collect(name)
             return tree
 
-    tree, used_names = underscore_search.recurse_real(tree)
+    tree, used_names = underscore_search.recurse_collect(tree)
 
     new_tree = q[lambda: ast[tree]]
     new_tree.args.args = [Name(id = x) for x in used_names]

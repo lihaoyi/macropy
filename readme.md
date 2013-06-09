@@ -1939,7 +1939,7 @@ More Walking
 ------------
 The function being passed to the Walker can return a variety of things. In this case, let's say we want to collect the names we extracted from the `names` generator, so we can use them to populate the arguments of the `lambda`.
 
-The Walker function request the `collect` argument, and call `collect(item)` to have the `Walker` aggregate them all in one large list which you can extract by using `recurse_real` instead of `recurse`:
+The Walker function request the `collect` argument, and call `collect(item)` to have the `Walker` aggregate them all in one large list which you can extract by using `recurse_collect` instead of `recurse`:
 
 ```python
 from macropy.core.macros import *
@@ -1959,7 +1959,7 @@ def f(tree, **kw):
             collect(name)
             return tree
 
-    new_tree, used_names = underscore_search.recurse_real(tree)
+    new_tree, used_names = underscore_search.recurse_collect(tree)
     print used_names # ['arg0', 'arg1']
     return new_tree
 ```
@@ -1987,7 +1987,7 @@ def f(tree, **kw):
             tree.id = name
             return tree, collect(name)
 
-    tree, used_names = underscore_search.recurse_real(tree)
+    tree, used_names = underscore_search.recurse_collect(tree)
 
     new_tree = q[lambda: ast[tree]]
     new_tree.args.args = [Name(id = x) for x in used_names]
@@ -2294,10 +2294,10 @@ def transform(tree, collect, **kw):
     ...
     collect(value)
     return new_tree
-new_tree, collected = transform.recurse_real(old_tree)
+new_tree, collected = transform.recurse_collect(old_tree)
 ```
 
-Using the `recurse_real` instead of the `recurse` method to return both the new `tree` as well as the collected data, as a list. This is a simple way of aggregating values as you traverse the AST.
+Using the `recurse_collect` instead of the `recurse` method to return both the new `tree` as well as the collected data, as a list. This is a simple way of aggregating values as you traverse the AST.
 
 ###`stop`
 
@@ -2324,7 +2324,7 @@ def transform(tree, ctx, set_ctx, collect, stop, **kw):
     ...
     return new_tree
 
-new_tree, collected = transform.recurse_real(old_tree, initial_ctx)
+new_tree, collected = transform.recurse_collect(old_tree, initial_ctx)
 ```
 
 This provides it a large amount of versatility, and lets you use the `Walker` to recursively traverse and transform Python ASTs in interesting ways. If you inspect the source code of the macros in the [macropy](macropy) and [macropy/experimental](macropy/experimental) folders, you will see most of them make extensive use of `Walker`s in order to concisely perform their transformations. If you find yourself needing a recursive traversal, you should think hard about why you cannot use a Walker before writing the recursion yourself.

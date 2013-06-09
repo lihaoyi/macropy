@@ -1,6 +1,8 @@
 from macropy.core import *
 from ast import *
 from walkers import Walker
+
+
 def fill_line_numbers(tree, lineno, col_offset):
     """Fill in line numbers somewhat more cleverly than the
     ast.fix_missing_locations method, which doesn't take into account the
@@ -81,7 +83,7 @@ _transforms = {
 }
 
 def src_for(tree, src, indexes, line_lengths):
-    all_child_pos = sorted(indexer.recurse_real(tree)[1])
+    all_child_pos = sorted(indexer.collect(tree))
     start_index = linear_index(line_lengths(), *all_child_pos[0])
 
     last_child_index = linear_index(line_lengths(), *all_child_pos[-1])

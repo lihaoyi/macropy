@@ -18,19 +18,19 @@ class Walker(object):
 
     new_tree = transform.recurse(old_tree, initial_ctx)
     new_tree = transform.recurse(old_tree)
-    new_tree, collected = transform.recurse_real(old_tree, initial_ctx)
-    new_tree, collected = transform.recurse_real(old_tree)
+    new_tree, collected = transform.recurse_collect(old_tree, initial_ctx)
+    new_tree, collected = transform.recurse_collect(old_tree)
 
     The `transform` function takes the tree to be transformed, in addition to
     a set of `**kw` which provides additional functionality:
 
     - `ctx`: this is the value that is (optionally) passed in to the `recurse`
-      and `recurse_real` methods.
+      and `recurse_collect` methods.
     - `set_ctx`: this is a function, used via `set_ctx(new_ctx)` anywhere in
       `transform`, which will cause any children of `tree` to receive `new_ctx`
       as their `ctx` variable.
     - `collect`: this is a function used via `collect(thing)`, which adds
-      `thing` to the `collected` list returned by `recurse_real`.
+      `thing` to the `collected` list returned by `recurse_collect`.
     - `stop`: when called via `stop()`, this prevents recursion on children
       of the current tree.
 
@@ -53,7 +53,7 @@ class Walker(object):
 
             for field, old_value in iter_fields(tree):
                 old_value = getattr(tree, field, None)
-                new_value, new_aggregate = self.recurse_real(old_value, ctx)
+                new_value, new_aggregate = self.recurse_collect(old_value, ctx)
                 aggregates.extend(new_aggregate)
                 setattr(tree, field, new_value)
 
@@ -64,7 +64,7 @@ class Walker(object):
             aggregates = []
             new_tree = []
             for t in tree:
-                new_t, new_a = self.recurse_real(t, ctx)
+                new_t, new_a = self.recurse_collect(t, ctx)
                 if type(new_t) is list:
                     new_tree.extend(new_t)
                 else:
@@ -79,9 +79,13 @@ class Walker(object):
 
     def recurse(self, tree, ctx=None):
         """Traverse the given AST and return the transformed tree."""
-        return self.recurse_real(tree, ctx)[0]
+        return self.recurse_collect(tree, ctx)[0]
 
-    def recurse_real(self, tree, ctx=None):
+    def collect(self, tree, ctx=None):
+        """Traverse the given AST and return the transformed tree."""
+        return self.recurse_collect(tree, ctx)[1]
+
+    def recurse_collect(self, tree, ctx=None):
         """Traverse the given AST and return the transformed tree together
         with any values which were collected along with way."""
 

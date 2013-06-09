@@ -82,7 +82,7 @@ def case(tree, gen_sym, module_alias, **kw):
         init_body = []
         for statement in tree.body:
             if type(statement) is ClassDef:
-                outer.append(_case_transform(statement, [Name(id=tree.name, ctx=Load())]))
+                outer.append(case_transform(statement, [Name(id=tree.name, ctx=Load())]))
                 with q as a:
                     name[tree.name].b = name[statement.name]
                 a_old = a[0]
@@ -114,7 +114,7 @@ def case(tree, gen_sym, module_alias, **kw):
 
             init_fun.body.append(a[0])
 
-    def _case_transform(tree, parents):
+    def case_transform(tree, parents):
 
         with q as methods:
             def __init__(self, *args, **kwargs):
@@ -134,7 +134,7 @@ def case(tree, gen_sym, module_alias, **kw):
         if kwarg:
             set_kwargs.value = Str(kwarg)
 
-        additional_members = find_member_assignments.recurse_real(tree.body)[1]
+        additional_members = find_member_assignments.collect(tree.body)
 
         prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args)
         set_fields.value.elts = map(Str, args)
@@ -157,6 +157,6 @@ def case(tree, gen_sym, module_alias, **kw):
 
         return [tree] + ([assign] if len(outer) > 0 else [])
 
-    x = _case_transform(tree, [hq[CaseClass]])
+    x = case_transform(tree, [hq[CaseClass]])
 
     return x
