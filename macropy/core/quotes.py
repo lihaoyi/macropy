@@ -21,11 +21,9 @@ class unhygienic(): pass
 @Walker
 def _unquote_search(tree, **kw):
 
-    if isinstance(tree, Subscript) and \
-                    type(tree.slice) is Index and \
-                    type(tree.value) is Name:
-
-        func, right = tree.value.id, tree.slice.value
+    res = check_annotated(tree)
+    if res:
+        func, right = res
 
         if 'u' == func:
             return Literal(Call(Name(id="ast_repr"), [right], [], None, None))
@@ -38,13 +36,13 @@ def _unquote_search(tree, **kw):
 
 
 @macros.expr()
-def q(tree, hygienic_names, **kw):
+def q(tree, **kw):
     tree = _unquote_search.recurse(tree)
     tree = ast_repr(tree)
     return tree
 
 @macros.block()
-def q(tree, target, hygienic_names, **kw):
+def q(tree, target, **kw):
     body = _unquote_search.recurse(tree)
     new_body = ast_repr(body)
     return [Assign([Name(id=target.id)], new_body)]
@@ -72,17 +70,16 @@ def hygienate(tree, module_alias):
         if type(tree) is Name and type(tree.ctx) is Load:
             stop()
             return parse_expr(
-                "name[module_alias].macros.registered[u[macros.register(%s)]]" % (tree.id)
+                "name[module_alias].macros.registered[u[macros.register(%s)]]" % tree.id
             )
         if type(tree) is Literal:
             stop()
-            return parse_expr("ast[%s]" % unparse_ast(tree.body))
-        if isinstance(tree, Subscript) and \
-                    type(tree.slice) is Index and \
-                    type(tree.value) is Name:
+            return Subscript(Name(id="ast"), Index(tree.body), Load())
 
-
-            if 'unhygienic' == tree.value.id:
+        res = check_annotated(tree)
+        if res:
+            id, subtree = res
+            if 'unhygienic' == id:
                 stop()
                 del tree.slice.value.ctx
                 return tree.slice.value

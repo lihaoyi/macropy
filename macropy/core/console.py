@@ -4,14 +4,14 @@ import ast
 from codeop import CommandCompiler, Compile, _features
 import sys
 import inspect
-from macropy.core.macros import process_ast, detect_macros
+from macropy.core.macros import expand_ast, detect_macros
 
 
 class MacroConsole(code.InteractiveConsole):
     def __init__(self, locals=None, filename="<console>"):
         code.InteractiveConsole.__init__(self, locals, filename)
         self.bindings = []
-        self.renames = {}
+        self.module_aliases = {}
 
     def runsource(self, source, filename="<input>", symbol="single"):
         try:
@@ -26,15 +26,15 @@ class MacroConsole(code.InteractiveConsole):
 
         try:
             tree = ast.parse(source)
-            bindings, renamed_imports = detect_macros(tree)
-            self.renames.update(renamed_imports)
+            bindings, module_aliases = detect_macros(tree)
+            self.module_aliases.update(module_aliases)
 
             for p, names in bindings:
                 __import__(p)
 
             self.bindings.extend([(sys.modules[p], bindings) for (p, bindings) in bindings])
 
-            tree = process_ast(tree, source, self.bindings, self.renames)
+            tree = expand_ast(tree, source, self.bindings, self.module_aliases)
 
             tree = ast.Interactive(tree.body)
             code = compile(tree, filename, symbol, self.compile.compiler.flags, 1)

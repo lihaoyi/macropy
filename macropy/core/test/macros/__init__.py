@@ -1,9 +1,6 @@
 
 import unittest
 import sys
-import macropy.core.macros
-
-
 
 
 class Tests(unittest.TestCase):
