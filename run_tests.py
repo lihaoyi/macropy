@@ -8,7 +8,7 @@ def run(x):
 
 from macropy.core.test import macros
 run(macros.Tests)
-"""
+
 from macropy.core.test import quotes
 run(quotes.Tests)
 
@@ -49,4 +49,3 @@ run(pinq.Tests)
 # this one needs chromedriver in order to run the javascript using Selenium
 from macropy.experimental.test import js_snippets
 run(js_snippets.Tests)
-"""

@@ -140,7 +140,7 @@ def _expand_ast(tree, src, bindings, hygienic_names, module_aliases):
                 gen_sym=lambda: symbols().next(),
                 hygienic_names=lambda n: hygienic_names[the_module].get(n, n),
                 exact_src=lambda t: src_for(t, src, indexes, line_lengths),
-                expand_macros=lambda t: _expand_ast(t, src, bindings, hygienic_names),
+                expand_macros=lambda t: _expand_ast(t, src, bindings, hygienic_names, module_aliases),
                 module_alias=module_aliases[the_module],
                 **kwargs
             )

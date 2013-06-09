@@ -20,7 +20,7 @@ def wrap_simple(printer, txt, x):
 
 @macros.expr()
 def log(tree, exact_src, hygienic_names, **kw):
-    new_tree = q[name[hygienic_names("wrap")](log, u[exact_src(tree)], ast[tree])]
+    new_tree = q[wrap(log, u[exact_src(tree)], ast[tree])]
     return new_tree
 
 @macros.expr()
