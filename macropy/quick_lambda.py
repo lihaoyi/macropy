@@ -3,7 +3,7 @@ from macropy.core.quotes import macros, q
 
 macros = Macros()
 _ = object()
-macros.expose_transient()(_, "_")
+
 
 
 @macros.expr()

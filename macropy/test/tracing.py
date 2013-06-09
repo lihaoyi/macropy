@@ -92,7 +92,7 @@ class Tests(unittest.TestCase):
             from macropy.core import ast_repr
             show_expanded[q[1 + 2]]
 
-            assert "(BinOp(left=Num(n=1), op=Add(), right=Num(n=2)), hygienic_names)" in result[-1]
+            assert "BinOp(left=Num(n=1), op=Add(), right=Num(n=2))" in result[-1]
 
             with show_expanded:
                 a = 1
@@ -102,4 +102,4 @@ class Tests(unittest.TestCase):
 
             assert result[-3] == '\na = 1'
             assert result[-2] == '\nb = 2'
-            assert "([Print(dest=None, values=[BinOp(left=Name(id='a', ctx=Load()), op=Add(), right=Literal(ast_repr((b + 1))))], nl=True)], hygienic_names)" in result[-1]
+            assert "code = [Print(dest=None, values=[BinOp(left=Name(id='a', ctx=Load()), op=Add(), right=ast_repr((b + 1)))], nl=True)]" in result[-1]

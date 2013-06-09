@@ -2,8 +2,6 @@ from macropy.core.macros import *
 from macropy.core import *
 macros = Macros()
 
-macros.expose()(Literal)
-
 @singleton
 class u(): pass
 
@@ -42,55 +40,21 @@ def _unquote_search(tree, **kw):
 @macros.expr()
 def q(tree, hygienic_names, **kw):
     tree = _unquote_search.recurse(tree)
-    tree = Call(
-        func=Name(id=hygienic_names("rename"), ctx=Load()),
-        args=[ast_repr(tree), Name(id="hygienic_names", ctx=Load())],
-        keywords=[],
-        starargs=None,
-        kwargs=None
-    )
+    tree = ast_repr(tree)
     return tree
 
 @macros.block()
 def q(tree, target, hygienic_names, **kw):
     body = _unquote_search.recurse(tree)
-    new_body = Call(
-        func=Name(id=hygienic_names("rename"), ctx=Load()),
-        args=[ast_repr(body), Name(id="hygienic_names", ctx=Load())],
-        keywords=[],
-        starargs=None,
-        kwargs=None
-    )
+    new_body = ast_repr(body)
     return [Assign([Name(id=target.id)], new_body)]
-
-@macros.expose()
-def rename(tree, hygienic_names):
-    @Walker
-    def renamer(tree, stop, **kw):
-        if type(tree) is Name:
-            tree.id = hygienic_names(tree.id)
-        if type(tree) is Literal:
-            stop()
-            return tree.body
-    return renamer.recurse(tree)
-
-
-
-@macros.expose_unhygienic()
-def hygienic_names(x):
-    return x
 
 
 @macros.block()
 def hq(tree, module_alias, target, **kw):
     tree = _unquote_search.recurse(tree)
     tree = hygienate(tree, module_alias)
-    tree1 = [With(
-        Name(id='q'),
-        target,
-        tree
-    )]
-    tree2 = parse_stmt("with q as %s:\n%s" % (target.id, unparse_ast(tree).replace("\n", "\n    ")))
+    tree1 = [With(Name(id='q'), target, tree)]
 
     return tree1
 

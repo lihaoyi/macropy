@@ -41,17 +41,8 @@ class Macros(object):
         self.block = Macros.Registry()
         self.decorator = Macros.Registry()
 
-        # Different kind of exposed values
 
-        # Values which will get renamed and won't shadow or be shadowed
-        self.expose = Macros.Registry()
-
-        # Values, which will not get renamed, and can shadow or be shadowed
         self.expose_unhygienic = Macros.Registry()
-
-        # Transient values, which appear in the source code but should be
-        # removed from the expanded code
-        self.expose_transient = Macros.Registry()
 
         self.registered = []
     def register(self, thing):
@@ -301,13 +292,7 @@ def detect_macros(tree):
                 if name.name not in mod.macros.expr.registry
                 if name.name not in mod.macros.decorator.registry
             ]
-            renames = [
-                (name, symbols().next())
-                for name
-                in mod.macros.expose.registry
-            ]
-            stmt.names.extend(alias(a, b) for a,b in renames)
-            renamed_imports[mod] = dict(renames)
+
             module_aliases[mod] = symbols().next()
             stmt.names.extend(
                 [alias(x, x) for x in
