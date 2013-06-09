@@ -7,6 +7,17 @@ from util import *
 from walkers import *
 from misc import *
 import weakref
+
+class MacroFunction(object):
+    def __init__(self, func):
+        self.func = func
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
+    def __getitem__(self, i):
+        raise TypeError(
+            "Macro `%s` illegally invoked at runtime; did you import it "
+            "properly using `from ... import macros, %s`?" % ((self.func.func_name,) * 2)
+        )
 class Macros(object):
     """A registry of macros belonging to a module; used via
 
@@ -21,25 +32,30 @@ class Macros(object):
     Where the decorators are used to register functions as macros belonging
     to that module.
     """
+
     class Registry(object):
-        def __init__(self):
+        def __init__(self, wrap = lambda x: x):
             self.registry = {}
+            self.wrap = wrap
+
         def __call__(self):
             def register(f, name=None):
                 if name is not None:
-                    self.registry[name] = f
+                    self.registry[name] = self.wrap(f)
                 if hasattr(f, "func_name"):
-                    self.registry[f.func_name] = f
+                    self.registry[f.func_name] = self.wrap(f)
                 if hasattr(f, "__name__"):
-                    self.registry[f.__name__] = f
-                return f
+                    self.registry[f.__name__] = self.wrap(f)
+
+                return self.wrap(f)
             return register
 
     def __init__(self):
+
         # Different kinds of macros
-        self.expr = Macros.Registry()
-        self.block = Macros.Registry()
-        self.decorator = Macros.Registry()
+        self.expr = Macros.Registry(MacroFunction)
+        self.block = Macros.Registry(MacroFunction)
+        self.decorator = Macros.Registry(MacroFunction)
 
 
         self.expose_unhygienic = Macros.Registry()

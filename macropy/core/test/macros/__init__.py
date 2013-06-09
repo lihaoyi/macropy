@@ -24,7 +24,15 @@ class Tests(unittest.TestCase):
 
     def test_ignore_macros_not_explicitly_imported(self):
         import not_imported
-        assert not_imported.run() == 1
+        assert not_imported.run1() == 1
+
+        with self.assertRaises(TypeError) as c:
+            assert not_imported.run2() == 1
+
+        assert c.exception.message == (
+            "Macro `f` illegally invoked at runtime; did you import it " +
+            "properly using `from ... import macros, f`?"
+        )
 
     def test_line_numbers_should_match_source(self):
         import line_number_source

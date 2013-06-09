@@ -110,6 +110,6 @@ def require(tree, exact_src, module_alias, **kw):
 
     return tree
 
-
+@macros.expose_unhygienic()
 def log(x):
     print(x)
