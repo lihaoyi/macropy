@@ -85,7 +85,7 @@ def hygienic_names(x):
 def hq(tree, module_alias, **kw):
     @Walker
     def hygienator(tree, stop, **kw):
-        if type(tree) is Name:
+        if type(tree) is Name and type(tree.ctx) is Load:
             stop()
             return parse_expr("name[module_alias].macros.registered[u[macros.register(%s)]]" % (tree.id))
         if type(tree) is Literal:

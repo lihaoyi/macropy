@@ -12,4 +12,6 @@ def expand(tree, module_alias, gen_sym, **kw):
     tree = hq[str(value) + "x: " + double(ast[tree])]
     return tree
 
-
+def expand2(tree, module_alias, gen_sym, **kw):
+    tree = hq[lambda x: ast[tree]]
+    return tree

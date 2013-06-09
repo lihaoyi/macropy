@@ -1,7 +1,7 @@
 import re
 
 from macropy.core.macros import *
-from macropy.core.quotes import macros, q, u
+from macropy.core.quotes import macros, q, hq, u
 from macropy.quick_lambda import macros, f
 from macropy.case_classes import macros, case
 from macropy.string_interp import  macros, s
@@ -22,7 +22,7 @@ Not-predicate: !e           -       Not
 macros = Macros()
 
 @macros.block()
-def peg(tree, gen_sym, **kw):
+def peg(tree, gen_sym, module_alias, **kw):
     potential_targets = [
         target.id for stmt in tree
         if type(stmt) is Assign
@@ -31,30 +31,30 @@ def peg(tree, gen_sym, **kw):
 
     for statement in tree:
         if type(statement) is Assign:
-            new_tree = process(statement.value, potential_targets, gen_sym)
-            statement.value = q[Parser.Named(lambda: ast[new_tree], [u[statement.targets[0].id]])]
+            new_tree = process(statement.value, potential_targets, gen_sym, module_alias)
+            statement.value = hq[Parser.Named(lambda: ast[new_tree], [u[statement.targets[0].id]])]
 
     return tree
 
 
 @macros.expr()
-def peg(tree, gen_sym, **kw):
-    return process(tree, [], gen_sym)
+def peg(tree, gen_sym, module_alias, **kw):
+    return process(tree, [], gen_sym, module_alias)
 
-def process(tree, potential_targets, gen_sym):
+def process(tree, potential_targets, gen_sym, module_alias):
     @Walker
     def _PegWalker(tree, stop, collect, **kw):
         if type(tree) is Str:
             stop()
-            return q[Parser.Raw(ast[tree])]
+            return hq[Parser.Raw(ast[tree])]
         if type(tree) is Name and tree.id in potential_targets:
             collect(tree.id)
         if type(tree) is BinOp and type(tree.op) is RShift:
             tree.left, b_left = _PegWalker.recurse_real(tree.left)
-            tree.right = q[lambda bindings: ast[tree.right]]
+            tree.right = hq[lambda bindings: ast[tree.right]]
             names = distinct(flatten(b_left))
             tree.right.args.args = map(f[Name(id = _)], names)
-            tree.right.args.defaults = [q[[]]] * len(names)
+            tree.right.args.defaults = [hq[[]]] * len(names)
             tree.right.args.kwarg = gen_sym()
             stop()
 
@@ -67,7 +67,7 @@ def process(tree, potential_targets, gen_sym):
             return tree
 
         if type(tree) is Tuple:
-            result = q[Parser.Seq([])]
+            result = hq[Parser.Seq([])]
 
             result.args[0].elts = tree.elts
             all_bindings = []
@@ -80,7 +80,7 @@ def process(tree, potential_targets, gen_sym):
 
         if type(tree) is Compare and type(tree.ops[0]) is Is:
             left_tree, bindings = _PegWalker.recurse_real(tree.left)
-            new_tree = q[ast[left_tree].bind_to(u[tree.comparators[0].id])]
+            new_tree = hq[ast[left_tree].bind_to(u[tree.comparators[0].id])]
             stop()
             collect(bindings + [tree.comparators[0].id])
             return new_tree
@@ -152,7 +152,7 @@ class ParseError(Exception):
         self.failure = failure
         Exception.__init__(self, failure.msg)
 
-@macros.expose_unhygienic()
+
 @case
 class Parser:
     def parse(self, string):
