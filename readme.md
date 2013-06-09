@@ -2223,6 +2223,7 @@ This is convenient in order to interpolate a string variable as an identifier, r
 
 Overall, quasiquotes are an incredibly useful tool for assembling or manipulating the ASTs, and are used in the implementation in all of the following examples. See the [String Interpolation](macropy/string_interp.py) or [Quick Lambda](macropy/quick_lambda.py) macros for short, practical examples of their usage.
 
+
 Walkers
 -------
 
@@ -2373,7 +2374,7 @@ def f(tree, gen_sym, **kw):
 
 `gen_sym` is a function which produce a new identifier (as a string) every time it is called. This is guaranteed to produce a identifier that does not appear anywhere in the origial source code, or have been produced by an earlier call to `gen_sym`. You can thus use these identifiers without worrying about shadowing an identifier someone was using; see the source for the [quicklambda](macropy/quick_lambda.py) macro to see it in action.
 
-###Runtime Support
+###Hygienic Quasiquotes
 It is very common for macros to require runtime support in order to operate. Consider a simple `log` macro:
 
 ```python
@@ -2394,7 +2395,9 @@ This macro aims to perform a conversion like:
 log[1 + 2] -> wrap("1 + 2", 1 + 2)
 ```
 
-Where the `wrap` function then prints out both the source code and the `repr` of the logged expression. However, naively performing this transform runs into problems:
+Where the `wrap` function then prints out both the source code and the `repr` of the logged expression. This is but a single example of the myriad of things that expanded macros may need at run time.
+
+Naively performing this transform runs into problems:
 
 ```python
 # test.py
@@ -2430,7 +2433,7 @@ log[1 + 1]
 
 Alternately, the programmer so simply forget to import it, for the same reason:
 
- ```python
+```python
 # test.py
 from macro_module import macros, log
 
@@ -2440,16 +2443,15 @@ log[1 + 1]
 
 which gives a rather unintuitive error message: `wrap` is not defined? From the programmer's perspective, `wrap` isn't used at all! These very common pitfalls mean you should probably avoid this approach in favor of the latter two.
 
-###`expose`
+###`hq` and `hygienic_alias`
 
 ```python
 # macro_module.py
 @macros.expr
-def log(tree, exact_src, hygienic_names, **kw):
-    new_tree = q[wrap(u[exact_src(tree)], ast[tree])]
+def log(tree, exact_src, hygienic_alias, **kw):
+    new_tree = hq[wrap(u[exact_src(tree)], ast[tree])]
     return new_tree
 
-@macros.expose()
 def wrap(txt, x):
     print string = txt + " -> " + repr(x)
     return x
@@ -2466,14 +2468,69 @@ log[1 + 1]
 The important changes in this snippet, as compared to the previous, are:
 
 - The removal of `wrap` from the import statement.
-- The use of `@macros.expose()` on the `wrap` function
-- The introduction of `hygienic_names` in the `log` function
+- Replacement of `q` with `hq`
+- The introduction of `hygienic_alias` in the `log` function
 
-The use of `@macros.expose()` causes `wrap` to be automatically inserted into the import statement (hence letting the programmer elide it) aliased to a new, un-used name generated via [gen_sym](#gen_sym). This ensures that the name `wrap` is imported under does not collide (shadow or be shadowed) by any other identifier used in the file. `hygienic_names` is a function that allows you to find the aliased version of an identifier marked via `@macros.expose()`, which is automatically used by the `q` macro to rename the use of `wrap` within the quasiquote to the aliased name.
+`hq` is the hygienic quasiquote macro. Unlike traditional quasiquotes (`q`), `hq` jumps through some hoops in order to ensure that the `wrap` you are using inside the `hq[...]` expression really-truly refers to the `wrap that is in scope *at the macro definition point*, not at tbe macro expansion point (as would be the case using the normal `q` macro).
 
-Note that `hygienic_names` is automatically pulled in by the `q` quasiquote macro; hence, if you are using the quasiquote macro in other parts of the source code, ensure `hygienic_names` is in scope (e.g. passing it as an argument, if you're using quasiquotes in other functions).
+Note that `hq` requires that the `hygienic_alias` be present in scope; this means that if you want to use `hq` in a separate function, you need to make sure you pass it in, e.g. as follows:
 
-This may seem very complicated, but in general, it means that the macro can define a runtime function `wrap`, use `wrap` in the expanded code without having to worry that `wrap` may shadow or be shadowed by another identifier. This is a significant gain, that can help prevent weird bugs that happen when a name you choose accidentally shadows a name used by the macro.
+```python
+# macro_module.py
+
+@macros.expr
+def log(tree, exact_src, hygienic_alias, **kw):
+    new_tree = helper_func(tree, exact_src(tree), hygienic_alias)
+    return new_tree
+
+def helper_function(tree, txt, hygienic_alias):
+    return hq[wrap(u[txt], ast[tree])]
+
+def wrap(txt, x):
+    print string = txt + " -> " + repr(x)
+    return x
+```
+
+In general, `hq` allows you to refer to anything that is in scope where `hq` is being used. Apart from module-level global variables and functions, this includes things like locally scoped variables, which will be properly saved so they can be referred to later even when the macro has completed:
+
+```python
+# macro_module.py
+@macros.block
+def expand(tree, hygienic_alias, gen_sym, **kw):
+    v = 5
+    with hq as new_tree:
+        return v
+    return new_tree
+
+# test.py
+
+def run():
+    x = 1
+    with expand:
+        pass
+
+print run() # prints 5
+```
+
+In this case, the value of `v` is captured by the `hq`, such that even when `expand` has returned, it can still be used to return `6` to the caller of the `run()` function.
+
+###Breaking Hygiene
+By default, all top-level names in the `hq[...]` expression (this excludes things like the contents of `u[]` `name[]` `ast[]` unquotes) are hygienic, and are bound to the variable of that name at the macro definition point. This means that if you want a name to bind to some variable *at the macro expansion point*, you can always manually break hygiene by using the `name[]` or `ast[]` unquotes. The `hq` macro also provides an `unhygienic[...]` unquote just to streamline this common requirement:
+
+```python
+@macros.block
+def expand(tree, hygienic_alias, gen_sym, **kw):
+    v = 5
+    with hq as new_tree:
+        # all these do the same thing, and will refer to the variable named
+        # 'v' whereever the macro is expanded
+        return name["v"]
+        return ast[Name(id="v")]
+        return unhygienic[v]
+    return new_tree
+```
+
+Although all these do the same thing, you should prefer to use `unhygienic[...]` as it makes the intention clearer than using `name[...]` or `ast[...]` with hard-coded strings.
 
 ###`expose_unhygienic`
 
@@ -2494,7 +2551,7 @@ def log(tree, exact_src, hygienic_names, **kw):
 def log_func(x):
     print(x)
 ```
-`expose_unhygienic` is a hybrid between manual importing and `expose`. Like manual importing, decorating functions with `expose_unhygienic` causes them to be imported under their un-modified name, meaning they can shadow and be shadowed by other identifiers in the macro-expanded code. Like `expose`, it does not require the source file using the macros to put the identifier in the import list. This helps match what users of the macro expect: since the name doesn't ever appear anywhere in the source, it doesn't make sense for the macro to require the name being imported to work.
+`expose_unhygienic` is a hybrid between manual importing and `hq`. Like manual importing, decorating functions with `expose_unhygienic` causes them to be imported under their un-modified name, meaning they can shadow and be shadowed by other identifiers in the macro-expanded code. Like `expose`, it does not require the source file using the macros to put the identifier in the import list. This helps match what users of the macro expect: since the name doesn't ever appear anywhere in the source, it doesn't make sense for the macro to require the name being imported to work.
 
 In this example, the `log` macro uses `expose_unhygienic` on a `log_func` function. The macro-expanded code by default will capture the `log_func` function imported from `macro_module.py`, which prints the log to the console:
 
@@ -2525,9 +2582,9 @@ In general, `expose_unhygienic` is useful when you want the macro to use a name 
 
 ----------------------------------------
 
-In general, MacroPy does not enforce hygiene on the macros you write; it is entirely possible to write macros which require manual importing, or whose identifiers collide with identifiers in the macro-expanded file with unpredictable results. However, with `gen_sym` and `expose`, MacroPy provides the support needed to avoid these problems if you wish to do so.
+In general, MacroPy does not enforce hygiene on the macros you write; it is entirely possible to write macros which require manual importing, or whose identifiers collide with identifiers in the macro-expanded file with unpredictable results. At any time, the entire AST of the Python code fragment is directly available to you, and you can stich together raw quasiquotes any way you like.
 
-The current system for hygiene is somewhat ad-hoc and inelegant. It should be possible to do much better in terms of reducing the amount of manual annotation while broadening its applicability (e.g. hygienic capture for non-module-level names) but that will take additional work and research. Contributions are welcome!
+Nonetheless, by providing `gen_sym` and the `hq` hygienic quasiquote macro, MacroPy makes it trivially easy to have hygiene. `gen_sym` provides a way of creating temporary names which are guaranteed not to collide with names already in use, and hygienic quasiquotes take it a step further and allow you to directly reference anything in scope at the macro definition point without having to worry about things like name collisions or fiddling with imports. These tools should be sufficient to make your macros hygienic, and are used throughout the suite of macros bundled with MacroPy.
 
 Macro Subtleties
 ================
