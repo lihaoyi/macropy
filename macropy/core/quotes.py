@@ -52,17 +52,20 @@ def q(tree, target, **kw):
 def hq(tree, hygienic_alias, target, **kw):
     tree = _unquote_search.recurse(tree)
     tree = hygienate(tree, hygienic_alias)
-    tree1 = [With(Name(id='q'), target, tree)]
+    body = _unquote_search.recurse(tree)
+    new_body = ast_repr(body)
+    return [Assign([Name(id=target.id)], new_body)]
 
-    return tree1
 
 @macros.expr
 def hq(tree, hygienic_alias, **kw):
 
     tree = _unquote_search.recurse(tree)
     tree = hygienate(tree, hygienic_alias)
-    tree = Subscript(Name(id="q"), Index(tree), Load())
+    tree = _unquote_search.recurse(tree)
+    tree = ast_repr(tree)
     return tree
+
 
 def hygienate(tree, hygienic_alias):
     @Walker
@@ -70,7 +73,8 @@ def hygienate(tree, hygienic_alias):
         if type(tree) is Name and type(tree.ctx) is Load:
             stop()
             return parse_expr(
-                "name[hygienic_alias].macros.registered[u[macros.register(%s)]]" % tree.id
+                "name[hygienic_alias].macros.registered[u[macros.register(%s)]]"
+                % tree.id
             )
         if type(tree) is Literal:
             stop()
