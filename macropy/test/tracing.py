@@ -61,46 +61,6 @@ class Tests(unittest.TestCase):
                 "sum([sum([1, 2, 3]), min(4, 5, 6), max(7, 8, 9)]) -> 19"
             ])
 
-        def test_block_trace(self):
-
-            with trace:
-                evens = []
-                odds = []
-
-                for n in range(0, 2):
-                    if n / 2 == n // 2:
-                        evens += [n]
-                    else:
-                        odds += [n]
-
-            assert("\n".join(result[-16:]).strip() == """
-evens = []
-odds = []
-for n in range(0, 2):
-    if n / 2 == n // 2:
-        evens += [n]
-    else:
-        odds += [n]
-range(0, 2) -> [0, 1]
-if n / 2 == n // 2:
-    evens += [n]
-else:
-    odds += [n]
-n / 2 -> 0
-n // 2 -> 0
-n / 2 == n // 2 -> True
-evens += [n]
-[n] -> [0]
-if n / 2 == n // 2:
-    evens += [n]
-else:
-    odds += [n]
-n / 2 -> 0
-n // 2 -> 0
-n / 2 == n // 2 -> True
-evens += [n]
-[n] -> [1]
-            """.strip())
 
         def test_require(self):
             with self.assertRaises(AssertionError) as cm:

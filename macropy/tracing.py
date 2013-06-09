@@ -63,7 +63,6 @@ def trace_walk_func(tree, exact_src, module_alias):
                 trace_walk.walk_children(tree)
 
                 wrapped = hq[wrap(unhygienic[log], u[txt], ast[tree])]
-                print unparse_ast(wrapped)
                 stop()
                 return wrapped
 
@@ -84,6 +83,7 @@ def trace(tree, exact_src, module_alias, **kw):
 @macros.block()
 def trace(tree, exact_src, module_alias, **kw):
     ret = trace_walk_func(tree, exact_src, module_alias)
+
     return ret
 
 

@@ -23,13 +23,13 @@ run(string_interp.Tests)
 
 from macropy.test import quick_lambda
 run(quick_lambda.Tests)
-
+"""
 from macropy.test import case_classes
 run(case_classes.Tests)
 """
 from macropy.test import tracing
 run(tracing.Tests)
-"""
+
 from macropy.experimental.test import peg
 run(peg.Tests)
 

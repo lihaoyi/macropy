@@ -1,13 +1,12 @@
 from macropy.core.macros import *
-from macropy.core.quotes import macros, q, u
+from macropy.core.quotes import macros, q, u, hq
 
 macros = Macros()
 
-@macros.expose()
 def apply(f):
     return f()
 
-@macros.expose()
+
 class CaseClass(object):
     __slots__ = []
 
@@ -76,14 +75,14 @@ def find_member_assignments(tree, collect, stop, **kw):
         map(collect, self_assigns)
 
 @macros.decorator()
-def case(tree, gen_sym, hygienic_names, **kw):
+def case(tree, gen_sym, hygienic_names, module_alias, **kw):
     def split_body(tree):
         new_body = []
         outer = []
         init_body = []
         for statement in tree.body:
             if type(statement) is ClassDef:
-                outer.append(_case_transform(statement, [tree.name]))
+                outer.append(_case_transform(statement, [Name(id=tree.name, ctx=Load())]))
                 with q as a:
                     name[tree.name].b = name[statement.name]
                 a_old = a[0]
@@ -140,20 +139,20 @@ def case(tree, gen_sym, hygienic_names, **kw):
 
         new_body, outer, init_body = split_body(tree)
         init_fun.body.extend(init_body)
-        with q as assign:
-            @apply
-            def x():
-                pass
 
-        assign[0].name = gen_sym()
-        assign[0].body += outer
+        assign = FunctionDef(
+            gen_sym(),
+            arguments([], None, None, []),
+            outer,
+            [hq[apply]]
+        )
 
         tree.body = new_body
-        tree.bases = [Name(id=x, ctx=Load()) for x in parents]
+        tree.bases = parents
 
         tree.body = methods + tree.body
 
-        return [tree] + (assign if len(outer) > 0 else [])
+        return [tree] + ([assign] if len(outer) > 0 else [])
 
-    x = _case_transform(tree, [hygienic_names("CaseClass")])
+    x = _case_transform(tree, [hq[CaseClass]])
     return x
