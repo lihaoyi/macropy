@@ -19,6 +19,8 @@ class MacroFunction(object):
             "properly using `from ... import macros, %s`?"
             % (self.func.func_name, self.func.func_name)
         )
+
+
 class Macros(object):
     """A registry of macros belonging to a module; used via
 
@@ -69,13 +71,13 @@ class Macros(object):
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
-    def __init__(self, module_name, tree, source, file_name, bindings, module_aliases):
+    def __init__(self, module_name, tree, source, file_name, bindings, hygienic_aliases):
         self.module_name = module_name
         self.tree = tree
         self.source = source
         self.file_name = file_name
         self.bindings = bindings
-        self.module_aliases = module_aliases
+        self.hygienic_aliases = hygienic_aliases
 
     def load_module(self, fullname):
 
@@ -84,7 +86,7 @@ class _MacroLoader(object):
 
         modules = [(sys.modules[p], bindings) for (p, bindings) in self.bindings]
 
-        tree = expand_ast(self.tree, self.source, modules, self.module_aliases)
+        tree = expand_ast(self.tree, self.source, modules, self.hygienic_aliases)
 
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
@@ -106,7 +108,7 @@ class _MacroLoader(object):
 
 
 
-def expand_ast(tree, src, bindings, module_aliases):
+def expand_ast(tree, src, bindings, hygienic_aliases):
     """Go through an AST, hunting for macro invocations and expanding any that
     are found"""
 
@@ -142,8 +144,8 @@ def expand_ast(tree, src, bindings, module_aliases):
                 gen_sym=lambda: symbols().next(),
 
                 exact_src=lambda t: src_for(t, src, indexes, line_lengths),
-                expand_macros=lambda t: expand_ast(t, src, bindings, module_aliases),
-                module_alias=module_aliases[the_module],
+                expand_macros=lambda t: expand_ast(t, src, bindings, hygienic_aliases),
+                hygienic_alias=hygienic_aliases[the_module],
                 **kwargs
             )
 
@@ -248,12 +250,12 @@ class MacroFinder(object):
             # check properly the AST if the macro import really exists
             tree = ast.parse(txt)
 
-            bindings, module_aliases = detect_macros(tree)
+            bindings, hygienic_aliases = detect_macros(tree)
 
             if bindings == []:
                 return # no macros found, carry on
             else:
-                return _MacroLoader(module_name, tree, txt, file.name, bindings,  module_aliases)
+                return _MacroLoader(module_name, tree, txt, file.name, bindings,  hygienic_aliases)
         except Exception, e:
             pass
 
@@ -283,7 +285,7 @@ def detect_macros(tree):
     bindings = []
 
 
-    module_aliases = {}
+    hygienic_aliases = {}
     symbols = Lazy(lambda: _gen_syms(tree))
     for stmt in tree.body:
         if isinstance(stmt, ImportFrom) \
@@ -304,7 +306,7 @@ def detect_macros(tree):
                 if name.name not in mod.macros.decorator.registry
             ]
 
-            module_aliases[mod] = symbols().next()
+            hygienic_aliases[mod] = symbols().next()
             stmt.names.extend(
                 [alias(x, x) for x in
                  mod.macros.expose_unhygienic.registry.keys()]
@@ -312,14 +314,14 @@ def detect_macros(tree):
     try:
         tree.body = [
             Import([alias(mod.__name__, name)], lineno = 1, col_offset = 0)
-            for (mod, name) in module_aliases.items()
+            for (mod, name) in hygienic_aliases.items()
         ] + tree.body
     except Exception, e:
         import traceback
         traceback.print_exc()
         raise e
 
-    return bindings, module_aliases
+    return bindings, hygienic_aliases
 
 def check_annotated(tree):
     if isinstance(tree, Subscript) and \

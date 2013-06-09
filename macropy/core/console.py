@@ -11,7 +11,7 @@ class MacroConsole(code.InteractiveConsole):
     def __init__(self, locals=None, filename="<console>"):
         code.InteractiveConsole.__init__(self, locals, filename)
         self.bindings = []
-        self.module_aliases = {}
+        self.hygienic_aliases = {}
 
     def runsource(self, source, filename="<input>", symbol="single"):
         try:
@@ -26,15 +26,15 @@ class MacroConsole(code.InteractiveConsole):
 
         try:
             tree = ast.parse(source)
-            bindings, module_aliases = detect_macros(tree)
-            self.module_aliases.update(module_aliases)
+            bindings, hygienic_aliases = detect_macros(tree)
+            self.hygienic_aliases.update(hygienic_aliases)
 
             for p, names in bindings:
                 __import__(p)
 
             self.bindings.extend([(sys.modules[p], bindings) for (p, bindings) in bindings])
 
-            tree = expand_ast(tree, source, self.bindings, self.module_aliases)
+            tree = expand_ast(tree, source, self.bindings, self.hygienic_aliases)
 
             tree = ast.Interactive(tree.body)
             code = compile(tree, filename, symbol, self.compile.compiler.flags, 1)

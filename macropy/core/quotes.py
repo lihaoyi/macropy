@@ -49,28 +49,28 @@ def q(tree, target, **kw):
 
 
 @macros.block
-def hq(tree, module_alias, target, **kw):
+def hq(tree, hygienic_alias, target, **kw):
     tree = _unquote_search.recurse(tree)
-    tree = hygienate(tree, module_alias)
+    tree = hygienate(tree, hygienic_alias)
     tree1 = [With(Name(id='q'), target, tree)]
 
     return tree1
 
 @macros.expr
-def hq(tree, module_alias, **kw):
+def hq(tree, hygienic_alias, **kw):
 
     tree = _unquote_search.recurse(tree)
-    tree = hygienate(tree, module_alias)
+    tree = hygienate(tree, hygienic_alias)
     tree = Subscript(Name(id="q"), Index(tree), Load())
     return tree
 
-def hygienate(tree, module_alias):
+def hygienate(tree, hygienic_alias):
     @Walker
     def hygienator(tree, stop, **kw):
         if type(tree) is Name and type(tree.ctx) is Load:
             stop()
             return parse_expr(
-                "name[module_alias].macros.registered[u[macros.register(%s)]]" % tree.id
+                "name[hygienic_alias].macros.registered[u[macros.register(%s)]]" % tree.id
             )
         if type(tree) is Literal:
             stop()

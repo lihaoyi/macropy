@@ -213,7 +213,7 @@ class ClassMatcher(Matcher):
         return updates
 
 
-def build_matcher(tree, modified, module_alias):
+def build_matcher(tree, modified, hygienic_alias):
     if isinstance(tree, Num):
         return hq[LiteralMatcher(u[tree.n])]
     if isinstance(tree, Str):
@@ -228,27 +228,27 @@ def build_matcher(tree, modified, module_alias):
     if isinstance(tree, List):
         sub_matchers = []
         for child in tree.elts:
-            sub_matchers.append(build_matcher(child, modified, module_alias))
+            sub_matchers.append(build_matcher(child, modified, hygienic_alias))
         return Call(Name('ListMatcher', Load()), sub_matchers, [], None, None)
     if isinstance(tree, Tuple):
         sub_matchers = []
         for child in tree.elts:
-            sub_matchers.append(build_matcher(child, modified, module_alias))
+            sub_matchers.append(build_matcher(child, modified, hygienic_alias))
         return Call(Name('TupleMatcher', Load()), sub_matchers, [], None, None)
     if isinstance(tree, Call):
         sub_matchers = []
         for child in tree.args:
-            sub_matchers.append(build_matcher(child, modified, module_alias))
+            sub_matchers.append(build_matcher(child, modified, hygienic_alias))
         positional_matchers = List(sub_matchers, Load())
         kw_matchers = []
         for kw in tree.keywords:
             kw_matchers.append(
-                    keyword(kw.arg, build_matcher(kw.value, modified, module_alias)))
+                    keyword(kw.arg, build_matcher(kw.value, modified, hygienic_alias)))
         return Call(Name('ClassMatcher', Load()), [tree.func,
             positional_matchers], kw_matchers, None, None)
     if (isinstance(tree, BinOp) and isinstance(tree.op, BitAnd)):
-        sub1 = build_matcher(tree.left, modified, module_alias)
-        sub2 = build_matcher(tree.right, modified, module_alias)
+        sub1 = build_matcher(tree.left, modified, hygienic_alias)
+        sub2 = build_matcher(tree.right, modified, hygienic_alias)
         return Call(Name('ParallelMatcher', Load()), [sub1, sub2], [], None,
                 None)
 
@@ -266,7 +266,7 @@ def _is_pattern_match_expr(tree):
 
 
 @macros.block
-def _matching(tree, module_alias, gen_sym, **kw):
+def _matching(tree, hygienic_alias, gen_sym, **kw):
     """
     This macro will enable non-refutable pattern matching.  If a pattern match
     fails, an exception will be thrown.
@@ -275,7 +275,7 @@ def _matching(tree, module_alias, gen_sym, **kw):
     def func(tree, **kw):
         if _is_pattern_match_stmt(tree):
             modified = set()
-            matcher = build_matcher(tree.value.left, modified, module_alias)
+            matcher = build_matcher(tree.value.left, modified, hygienic_alias)
             temp = gen_sym()
             # lol random names for hax
             with q as assignment:
@@ -294,7 +294,7 @@ def _matching(tree, module_alias, gen_sym, **kw):
     return [tree]
 
 
-def _rewrite_if(tree, module_alias, var_name=None, **kw_args):
+def _rewrite_if(tree, hygienic_alias, var_name=None, **kw_args):
     # TODO refactor into a _rewrite_switch and a _rewrite_if
     """
     Rewrite if statements to treat pattern matches as boolean expressions.
@@ -332,7 +332,7 @@ def _rewrite_if(tree, module_alias, var_name=None, **kw_args):
 
     if len(handler.body) == 1: # (== tree.orelse)
         # Might be an elif
-        handler.body = [_rewrite_if(handler.body[0], module_alias, var_name)]
+        handler.body = [_rewrite_if(handler.body[0], hygienic_alias, var_name)]
     elif not handler.body:
         handler.body = [Pass()]
 
@@ -340,7 +340,7 @@ def _rewrite_if(tree, module_alias, var_name=None, **kw_args):
 
 
 @macros.block
-def switch(tree, args, gen_sym, module_alias, **kw):
+def switch(tree, args, gen_sym, hygienic_alias, **kw):
     """
     If supplied one argument x, switch will treat the predicates of any
     top-level if statements as patten matches against x.
@@ -350,13 +350,13 @@ def switch(tree, args, gen_sym, module_alias, **kw):
     """
     new_id = gen_sym()
     for i in xrange(len(tree)):
-        tree[i] = _rewrite_if(tree[i], module_alias, new_id)
+        tree[i] = _rewrite_if(tree[i], hygienic_alias, new_id)
     tree = [Assign([Name(new_id, Store())], args[0])] + tree
     return tree
 
 
 @macros.block
-def patterns(tree, module_alias, **kw):
+def patterns(tree, hygienic_alias, **kw):
     """
     This enables patterns everywhere!  NB if you use this macro, you will not be
     able to use real left shifts anywhere.
@@ -365,6 +365,6 @@ def patterns(tree, module_alias, **kw):
         with _matching:
             None
 
-    new[0].body = Walker(lambda tree, **kw: _rewrite_if(tree, module_alias)).recurse(tree)
+    new[0].body = Walker(lambda tree, **kw: _rewrite_if(tree, hygienic_alias)).recurse(tree)
 
     return new

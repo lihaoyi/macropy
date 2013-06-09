@@ -23,7 +23,7 @@ macros = Macros()
 
 
 @macros.block
-def peg(tree, gen_sym, module_alias, **kw):
+def peg(tree, gen_sym, hygienic_alias, **kw):
     potential_targets = [
         target.id for stmt in tree
         if type(stmt) is Assign
@@ -32,18 +32,18 @@ def peg(tree, gen_sym, module_alias, **kw):
 
     for statement in tree:
         if type(statement) is Assign:
-            new_tree = process(statement.value, potential_targets, gen_sym, module_alias)
+            new_tree = process(statement.value, potential_targets, gen_sym, hygienic_alias)
             statement.value = hq[Parser.Named(lambda: ast[new_tree], [u[statement.targets[0].id]])]
 
     return tree
 
 
 @macros.expr
-def peg(tree, gen_sym, module_alias, **kw):
-    return process(tree, [], gen_sym, module_alias)
+def peg(tree, gen_sym, hygienic_alias, **kw):
+    return process(tree, [], gen_sym, hygienic_alias)
 
 
-def process(tree, potential_targets, gen_sym, module_alias):
+def process(tree, potential_targets, gen_sym, hygienic_alias):
     @Walker
     def _PegWalker(tree, stop, collect, **kw):
         if type(tree) is Str:
