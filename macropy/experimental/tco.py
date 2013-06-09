@@ -1,7 +1,7 @@
 from macropy.core.macros import *
 from macropy.experimental.pattern import macros, switch, _matching, ClassMatcher, NameMatcher
 
-from macropy.core.quotes import macros, q
+from macropy.core.quotes import macros, q, hq
 
 __all__ = ['tco']
 
@@ -9,12 +9,10 @@ macros = Macros()
 
 in_tc_stack = [False]
 
-@macros.expose()
 @singleton
 class TcoIgnore:
     pass
 
-@macros.expose()
 @singleton
 class TcoCall:
     pass
@@ -52,7 +50,7 @@ def trampoline(func, args, kwargs):
             return result
 
 
-@macros.expose()
+
 def trampoline_decorator(func):
     import functools
     @functools.wraps(func)
@@ -68,7 +66,7 @@ def trampoline_decorator(func):
 
 
 @macros.decorator()
-def tco(tree, hygienic_names, **kw):
+def tco(tree, module_alias, **kw):
 
     @Walker
     # Replace returns of calls
@@ -80,14 +78,14 @@ def tco(tree, hygienic_names, **kw):
                     starargs=starargs, 
                     kwargs=kwargs)):
                 if starargs:
-                    with q as code:
+                    with hq as code:
                     # get rid of starargs
                         return (TcoCall,
                                 ast[func],
                                 ast[List(args, Load())] + list(ast[starargs]),
                                 ast[kwargs or Dict([],[])])
                 else:
-                    with q as code:
+                    with hq as code:
                         return (TcoCall,
                                 ast[func],
                                 ast[List(args, Load())],
@@ -107,14 +105,14 @@ def tco(tree, hygienic_names, **kw):
                     starargs=starargs,
                     kwargs=kwargs)):
                 if starargs:
-                    with q as code:
+                    with hq as code:
                     # get rid of starargs
                         return (TcoIgnore,
                                 ast[func],
                                 ast[List(args, Load())] + list(ast[starargs]),
                                 ast[kwargs or Dict([],[])])
                 else:
-                    with q as code:
+                    with hq as code:
                         return (TcoIgnore,
                                 ast[func],
                                 ast[List(args, Load())],
@@ -130,7 +128,7 @@ def tco(tree, hygienic_names, **kw):
 
     tree = return_replacer.recurse(tree)
 
-    tree.decorator_list = ([q[trampoline_decorator]] +
+    tree.decorator_list = ([hq[trampoline_decorator]] +
             tree.decorator_list)
 
     tree.body[-1] = replace_tc_pos(tree.body[-1])

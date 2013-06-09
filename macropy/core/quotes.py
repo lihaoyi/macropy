@@ -4,23 +4,18 @@ macros = Macros()
 
 macros.expose()(Literal)
 
-@macros.expose_transient()
 @singleton
 class u(): pass
 
-@macros.expose_transient()
 @singleton
 class name(): pass
 
-@macros.expose_transient()
 @singleton
 class ast(): pass
 
-@macros.expose_transient()
 @singleton
 class ast_list(): pass
 
-@macros.expose_transient()
 @singleton
 class unhygienic(): pass
 
@@ -90,9 +85,9 @@ def hygienic_names(x):
 def hq(tree, module_alias, target, **kw):
     tree = _unquote_search.recurse(tree)
     tree = hygienate(tree, module_alias)
-    print "A", unparse_ast(tree)
+
     tree = parse_stmt("with q as %s:\n%s" % (target.id, unparse_ast(tree).replace("\n", "\n    ")))
-    print "B"
+
     return tree
 
 @macros.expr()

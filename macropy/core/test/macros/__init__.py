@@ -86,12 +86,6 @@ else:
             aliases.run_ignored()
 
 
-    def test_hygienic_quotes(self):
-        import hygienic_quotes
-        assert hygienic_quotes.run() == 10
-
-        assert hygienic_quotes.run1() == 20
-
     def test_hq(self):
         import hq_macro
         import hq
