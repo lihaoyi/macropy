@@ -5,7 +5,7 @@ _ = None  # makes IDE happy
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def f(tree, **kw):
     names = ('arg' + str(i) for i in xrange(100))
 

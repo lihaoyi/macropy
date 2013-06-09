@@ -16,7 +16,8 @@ class MacroFunction(object):
     def __getitem__(self, i):
         raise TypeError(
             "Macro `%s` illegally invoked at runtime; did you import it "
-            "properly using `from ... import macros, %s`?" % ((self.func.func_name,) * 2)
+            "properly using `from ... import macros, %s`?"
+            % (self.func.func_name, self.func.func_name)
         )
 class Macros(object):
     """A registry of macros belonging to a module; used via
@@ -24,7 +25,7 @@ class Macros(object):
     ```python
     macros = Macros()
 
-    @macros.expr()
+    @macros.expr
     def my_macro(tree):
         ...
     ```
@@ -38,17 +39,17 @@ class Macros(object):
             self.registry = {}
             self.wrap = wrap
 
-        def __call__(self):
-            def register(f, name=None):
-                if name is not None:
-                    self.registry[name] = self.wrap(f)
-                if hasattr(f, "func_name"):
-                    self.registry[f.func_name] = self.wrap(f)
-                if hasattr(f, "__name__"):
-                    self.registry[f.__name__] = self.wrap(f)
+        def __call__(self, f, name=None):
 
-                return self.wrap(f)
-            return register
+            if name is not None:
+                self.registry[name] = self.wrap(f)
+            if hasattr(f, "func_name"):
+                self.registry[f.func_name] = self.wrap(f)
+            if hasattr(f, "__name__"):
+                self.registry[f.__name__] = self.wrap(f)
+
+            return self.wrap(f)
+
 
     def __init__(self):
 

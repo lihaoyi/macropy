@@ -11,17 +11,12 @@ macros = Macros()
 
 
 class PatternMatchException(Exception):
-    """
-    Thrown when a nonrefutable pattern match fails
-    """
+    """Thrown when a nonrefutable pattern match fails"""
     pass
 
 
-
 class PatternVarConflict(Exception):
-    """
-    Thrown when a pattern attempts to match a variable more than once.
-    """
+    """Thrown when a pattern attempts to match a variable more than once."""
     pass
 
 
@@ -270,7 +265,7 @@ def _is_pattern_match_expr(tree):
             isinstance(tree.op, LShift))
 
 
-@macros.block()
+@macros.block
 def _matching(tree, module_alias, gen_sym, **kw):
     """
     This macro will enable non-refutable pattern matching.  If a pattern match
@@ -344,7 +339,7 @@ def _rewrite_if(tree, module_alias, var_name=None, **kw_args):
     return try_stmt
 
 
-@macros.block()
+@macros.block
 def switch(tree, args, gen_sym, module_alias, **kw):
     """
     If supplied one argument x, switch will treat the predicates of any
@@ -360,7 +355,7 @@ def switch(tree, args, gen_sym, module_alias, **kw):
     return tree
 
 
-@macros.block()
+@macros.block
 def patterns(tree, module_alias, **kw):
     """
     This enables patterns everywhere!  NB if you use this macro, you will not be

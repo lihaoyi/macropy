@@ -7,13 +7,13 @@ import sqlalchemy
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def sql(tree, **kw):
     x = _recurse.recurse(tree)
     x = expand_let_bindings.recurse(x)
     return x
 
-@macros.expr()
+@macros.expr
 def query(tree, **kw):
     x = _recurse.recurse(tree)
     x = expand_let_bindings.recurse(x)

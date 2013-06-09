@@ -21,7 +21,7 @@ Not-predicate: !e           -       Not
 
 macros = Macros()
 
-@macros.block()
+@macros.block
 def peg(tree, gen_sym, module_alias, **kw):
     potential_targets = [
         target.id for stmt in tree
@@ -37,7 +37,7 @@ def peg(tree, gen_sym, module_alias, **kw):
     return tree
 
 
-@macros.expr()
+@macros.expr
 def peg(tree, gen_sym, module_alias, **kw):
     return process(tree, [], gen_sym, module_alias)
 

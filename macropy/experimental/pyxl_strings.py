@@ -10,7 +10,7 @@ from pyxl.html import *
 macros = Macros()
 
 
-@macros.expr()
+@macros.expr
 def p(tree, **kw):
     import StringIO
     new_string = tokenize.untokenize(pyxl_tokenize(StringIO.StringIO('(' + tree.s + ')').readline)).rstrip().rstrip("\\")

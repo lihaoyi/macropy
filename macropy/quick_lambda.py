@@ -6,7 +6,7 @@ _ = object()
 
 
 
-@macros.expr()
+@macros.expr
 def f(tree, gen_sym, **kw):
 
     @Walker

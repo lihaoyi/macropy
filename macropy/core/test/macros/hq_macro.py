@@ -8,19 +8,19 @@ value = 2
 def double(x):
     return x * value
 
-@macros.expr()
+@macros.expr
 def expand(tree, module_alias, gen_sym, **kw):
     tree = hq[str(value) + "x: " + double(ast[tree])]
     return tree
 
-@macros.block()
+@macros.block
 def expand(tree, module_alias, gen_sym, **kw):
     v = 5
     with hq as new_tree:
         return v
     return new_tree
 
-@macros.block()
+@macros.block
 def expand_unhygienic(tree, module_alias, gen_sym, **kw):
 
     v = 5

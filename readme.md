@@ -51,17 +51,17 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def my_expr_macro(tree, **kw):
     ...
     return new_tree
 
-@macros.block()
+@macros.block
 def my_block_macro(tree, **kw):
     ...
     return new_tree
 
-@macros.decorator()
+@macros.decorator
 def my_decorator_macro(tree, **kw):
     ...
     return new_tree
@@ -1672,7 +1672,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def expand(tree, **kw):
     return tree
 ```
@@ -1705,7 +1705,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def expand(tree, **kw):
     print tree
     print real_repr(tree)
@@ -1732,7 +1732,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def expand(tree, **kw):
     return Num(100)
 ```
@@ -1744,7 +1744,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def expand(tree, **kw):
     newtree = BinOp(tree, Mult(), tree)
     return newtree
@@ -1762,7 +1762,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def expand(tree, **kw):
     return Lambda(arguments([Name("x", Param())], None, None, []), BinOp(BinOp(Name('x', Load()), Mult(), tree), Add(), Num(10)))
 ```
@@ -1794,7 +1794,7 @@ from macropy.core.quotes import macros, q, ast
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def expand(tree, **kw):
     return q[lambda x: x * ast[tree] + 10]
 ```
@@ -1810,7 +1810,7 @@ from macropy.core.quotes import macros, q, ast, u
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def expand(tree, **kw):
     addition = 10
     return q[lambda x: x * ast[tree] + u[addition]]
@@ -1827,7 +1827,7 @@ from macropy.core.quotes import macros, q
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def expand(tree, **kw):
     newtree = q[lambda x: x * None + 10]
     newtree.body.left.right = tree          # replace the None in the AST with the given tree
@@ -1869,7 +1869,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def f(tree, **kw):
     names = ('arg' + str(i) for i in xrange(100))
 
@@ -1899,7 +1899,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def f(tree, **kw):
     names = ('arg' + str(i) for i in xrange(100))
 
@@ -1947,7 +1947,7 @@ from macropy.core.quotes import macros, q, u
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def f(tree, **kw):
     names = ('arg' + str(i) for i in xrange(100))
 
@@ -1976,7 +1976,7 @@ _ = None  # makes IDE happy
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def f(tree, **kw):
     names = ('arg' + str(i) for i in xrange(100))
 
@@ -2040,7 +2040,7 @@ Arguments
 Any macro which is called receives a number of things from MacroPy in order to perform its duties (the syntax transformation). A simple macro may just require
 
 ```python
-@macros.expr()
+@macros.expr
 def my_simple_macro(tree, **kw):
     ...
 ```
@@ -2048,7 +2048,7 @@ def my_simple_macro(tree, **kw):
 While a more complex macro may require more of the functionality provided by MacroPy:
 
 ```python
-@macros.expr()
+@macros.expr
 def my_complex_macro(tree, args, gen_sym, target, **kw):
     ...
 ```
@@ -2147,7 +2147,7 @@ It does this by analyzing the `lineno` and `col_offset` values on the AST it is 
 `expand_macros` is a function that can be called by a macro to expand any macros in the target AST. For example, the `tracing` module's `show_expanded` macro uses it to print out what the captured AST looks like after expansion:
 
 ```python
-@macros.expr()
+@macros.expr
 def show_expanded(tree, expand_macros, **kw):
     expanded_tree = expand_macros(tree)
     new_tree = q[wrap_simple(log, u[unparse_ast(expanded_tree)], ast[expanded_tree])]
@@ -2364,7 +2364,7 @@ It does not behave as we may expect; we probably want it to produce `11`. this i
 There is a way out of this: if you create a new variable, but use an identifier that has not been used before, you don't stand the risk of accidentally shadowing something you didn't intend to. To help with this, MacroPy provides the `gen_sym` function, which you can acquire by adding an extra parameter named `gen_sym` to your macro definition:
 
 ```python
-@macros.expr()
+@macros.expr
 def f(tree, gen_sym, **kw):
     ...
     new_name = gen_sym()
@@ -2378,7 +2378,7 @@ It is very common for macros to require runtime support in order to operate. Con
 
 ```python
 # macro_module.py
-@macros.expr()
+@macros.expr
 def log(tree, exact_src, **kw):
     new_tree = q[wrap(u[exact_src(tree)], ast[tree])]
     return new_tree
@@ -2444,7 +2444,7 @@ which gives a rather unintuitive error message: `wrap` is not defined? From the 
 
 ```python
 # macro_module.py
-@macros.expr()
+@macros.expr
 def log(tree, exact_src, hygienic_names, **kw):
     new_tree = q[wrap(u[exact_src(tree)], ast[tree])]
     return new_tree
@@ -2485,12 +2485,12 @@ def wrap(printer, txt, x):
     printer(string)
     return x
 
-@macros.expr()
+@macros.expr
 def log(tree, exact_src, hygienic_names, **kw):
     new_tree = q[name[hygienic_names("wrap")](log_func, u[exact_src(tree)], ast[tree])]
     return new_tree
 
-@macros.expose_unhygienic()
+@macros.expose_unhygienic
 def log_func(x):
     print(x)
 ```
@@ -2574,7 +2574,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.block()
+@macros.block
 def expand(tree, **kw):
     import copy
     return tree.body * 10

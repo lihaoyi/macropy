@@ -2,7 +2,7 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.decorator()
+@macros.decorator
 def my_macro(tree, **kw):
     assert unparse_ast(tree).strip() == "\n".join([
     "@inner",
@@ -15,7 +15,7 @@ def my_macro(tree, **kw):
     tree.body = [b[0], b[1], b[1], b[1], b[1], b[2]]
     return tree
 
-@macros.decorator()
+@macros.decorator
 def my_macro2(tree, **kw):
     assert unparse_ast(tree).strip() == "\n".join([
     "@middle",

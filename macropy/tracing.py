@@ -18,18 +18,18 @@ def wrap_simple(printer, txt, x):
     printer(string)
     return x
 
-@macros.expr()
+@macros.expr
 def log(tree, exact_src,  module_alias, **kw):
     new_tree = hq[wrap(unhygienic[log], u[exact_src(tree)], ast[tree])]
     return new_tree
 
-@macros.expr()
+@macros.expr
 def show_expanded(tree, expand_macros,  module_alias, **kw):
     expanded_tree = expand_macros(tree)
     new_tree = hq[wrap_simple(unhygienic[log], u[unparse_ast(expanded_tree)], ast[expanded_tree])]
     return new_tree
 
-@macros.block()
+@macros.block
 def show_expanded(tree, expand_macros, **kw):
 
     new_tree = []
@@ -75,12 +75,12 @@ def trace_walk_func(tree, exact_src, module_alias):
             return [code, tree]
 
     return trace_walk.recurse(tree)
-@macros.expr()
+@macros.expr
 def trace(tree, exact_src, module_alias, **kw):
     ret = trace_walk_func(tree, exact_src, module_alias)
     return ret
 
-@macros.block()
+@macros.block
 def trace(tree, exact_src, module_alias, **kw):
     ret = trace_walk_func(tree, exact_src, module_alias)
 
@@ -99,17 +99,17 @@ def handle(thunk):
     thunk(out.append)
     raise AssertionError("Require Failed\n" + "\n".join(out))
 
-@macros.expr()
+@macros.expr
 def require(tree, exact_src, module_alias, **kw):
     return _require_transform(tree, exact_src, module_alias)
 
-@macros.block()
+@macros.block
 def require(tree, exact_src, module_alias, **kw):
     for expr in tree:
         expr.value = _require_transform(expr.value, exact_src, module_alias)
 
     return tree
 
-@macros.expose_unhygienic()
+@macros.expose_unhygienic
 def log(x):
     print(x)

@@ -2,10 +2,10 @@ from macropy.core.macros import *
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def g(tree, **kw):
     return Num(n = 0)
 
-@macros.expr()
+@macros.expr
 def f(tree, **kw):
     return Num(n = 0)

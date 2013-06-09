@@ -35,20 +35,20 @@ def _unquote_search(tree, **kw):
             return Literal(Call(Name(id="List"), [], [keyword("elts", right)], None, None))
 
 
-@macros.expr()
+@macros.expr
 def q(tree, **kw):
     tree = _unquote_search.recurse(tree)
     tree = ast_repr(tree)
     return tree
 
-@macros.block()
+@macros.block
 def q(tree, target, **kw):
     body = _unquote_search.recurse(tree)
     new_body = ast_repr(body)
     return [Assign([Name(id=target.id)], new_body)]
 
 
-@macros.block()
+@macros.block
 def hq(tree, module_alias, target, **kw):
     tree = _unquote_search.recurse(tree)
     tree = hygienate(tree, module_alias)
@@ -56,7 +56,7 @@ def hq(tree, module_alias, target, **kw):
 
     return tree1
 
-@macros.expr()
+@macros.expr
 def hq(tree, module_alias, **kw):
 
     tree = _unquote_search.recurse(tree)

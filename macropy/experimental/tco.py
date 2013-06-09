@@ -65,7 +65,7 @@ def trampoline_decorator(func):
     return trampolined
 
 
-@macros.decorator()
+@macros.decorator
 def tco(tree, module_alias, **kw):
 
     @Walker

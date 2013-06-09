@@ -74,7 +74,7 @@ def find_member_assignments(tree, collect, stop, **kw):
         ]
         map(collect, self_assigns)
 
-@macros.decorator()
+@macros.decorator
 def case(tree, gen_sym, module_alias, **kw):
     def split_body(tree):
         new_body = []

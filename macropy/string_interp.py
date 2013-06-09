@@ -5,7 +5,7 @@ from macropy.core.quotes import macros, q, u
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def s(tree, **kw):
     captured = []
     new_string = ""

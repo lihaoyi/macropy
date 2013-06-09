@@ -15,12 +15,12 @@ std_lib_script = open(path).read()
 
 macros = Macros()
 
-@macros.expr()
+@macros.expr
 def js(tree, **kw):
     javascript = pjs.converter.Converter("").convert_node(tree, Scope())
     return Str(javascript)
 
-@macros.expr()
+@macros.expr
 def pyjs(tree, **kw):
     javascript = pjs.converter.Converter("").convert_node(tree, Scope())
     return q[(ast[tree], u[javascript])]
