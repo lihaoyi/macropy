@@ -1,3 +1,5 @@
+"""The main source of all things MacroPy"""
+
 import sys
 import imp
 import ast
@@ -6,9 +8,11 @@ from ast import *
 from util import *
 from walkers import *
 from misc import *
-import weakref
+
 
 class MacroFunction(object):
+    """Wraps a macro-function, to provide nicer error-messages in the common
+    case where the macro is imported but macro-expansion isn't triggered"""
     def __init__(self, func):
         self.func = func
 
@@ -65,11 +69,12 @@ class Macros(object):
 
         self.expose_unhygienic = Macros.Registry()
 
-        self.registered = []
-    def register(self, thing):
-        self.registered.append(thing)
-
-        return len(self.registered)-1
+        self.saved = []
+    def save(self, thing):
+        self.saved.append(thing)
+        return len(self.saved)-1
+    def load(self, id):
+        return self.saved[id]
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
@@ -326,6 +331,7 @@ def detect_macros(tree):
     return bindings, hygienic_aliases
 
 def check_annotated(tree):
+    """Shorthand for checking if an AST is of the form something[...]"""
     if isinstance(tree, Subscript) and \
                     type(tree.slice) is Index and \
                     type(tree.value) is Name:

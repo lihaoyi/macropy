@@ -1,3 +1,5 @@
+"""Hygienic Quasiquotes, which pull in names from their definition scope rather
+than their expansion scope."""
 from macropy.core.macros import *
 
 from macropy.core.quotes import macros, q, _unquote_search, u, ast, ast_list, name
@@ -6,7 +8,8 @@ from macropy.core.quotes import macros, q, _unquote_search, u, ast, ast_list, na
 macros = Macros()
 
 @singleton
-class unhygienic(): pass
+class unhygienic():
+    """Used to delimit a section of a hq[...] that should not be hygienified"""
 
 
 @macros.block
@@ -34,9 +37,9 @@ def hygienate(tree, hygienic_alias):
             return q[
                 ast[name.wrap(q[hygienic_alias])]
                 .macros
-                .registered[
-                    ast[u.wrap(q[macros.register(name[tree.id])])]
-                ]
+                .load(
+                    ast[u.wrap(q[macros.save(name[tree.id])])]
+                )
             ]
 
         if type(tree) is Literal:

@@ -1,3 +1,45 @@
+"""Implementation of Walkers, a nice way of transforming and traversing ASTs.
+
+@Walker decorates a function of the form:
+
+@Walker
+def transform(tree, **kw):
+    ...
+    return new_tree
+
+
+Which is used via:
+
+new_tree = transform.recurse(old_tree, initial_ctx)
+new_tree = transform.recurse(old_tree)
+new_tree, collected = transform.recurse_collect(old_tree, initial_ctx)
+new_tree, collected = transform.recurse_collect(old_tree)
+collected = transform.collect(old_tree, initial_ctx)
+collected = transform.collect(old_tree)
+
+The `transform` function takes the tree to be transformed, in addition to
+a set of `**kw` which provides additional functionality:
+
+- `ctx`: this is the value that is (optionally) passed in to the `recurse`
+  and `recurse_collect` methods.
+- `set_ctx`: this is a function, used via `set_ctx(new_ctx)` anywhere in
+  `transform`, which will cause any children of `tree` to receive `new_ctx`
+  as their `ctx` variable.
+- `collect`: this is a function used via `collect(thing)`, which adds
+  `thing` to the `collected` list returned by `recurse_collect`.
+- `stop`: when called via `stop()`, this prevents recursion on children
+  of the current tree.
+
+These additional arguments can be declared in the signature, e.g.:
+
+@Walker
+def transform(tree, ctx, set_ctx, **kw):
+    ... do stuff with ctx ...
+    set_ctx(...)
+    return new_tree
+
+for ease of use.
+"""
 from macropy.core import *
 from macropy.core.util import *
 from ast import *
@@ -5,45 +47,7 @@ from ast import *
 
 
 class Walker(object):
-    """
-    Decorates a function of the form:
 
-    @Walker
-    def transform(tree, **kw):
-        ...
-        return new_tree
-
-
-    Which is used via:
-
-    new_tree = transform.recurse(old_tree, initial_ctx)
-    new_tree = transform.recurse(old_tree)
-    new_tree, collected = transform.recurse_collect(old_tree, initial_ctx)
-    new_tree, collected = transform.recurse_collect(old_tree)
-
-    The `transform` function takes the tree to be transformed, in addition to
-    a set of `**kw` which provides additional functionality:
-
-    - `ctx`: this is the value that is (optionally) passed in to the `recurse`
-      and `recurse_collect` methods.
-    - `set_ctx`: this is a function, used via `set_ctx(new_ctx)` anywhere in
-      `transform`, which will cause any children of `tree` to receive `new_ctx`
-      as their `ctx` variable.
-    - `collect`: this is a function used via `collect(thing)`, which adds
-      `thing` to the `collected` list returned by `recurse_collect`.
-    - `stop`: when called via `stop()`, this prevents recursion on children
-      of the current tree.
-
-    These additional arguments can be declared in the signature, e.g.:
-
-    @Walker
-    def transform(tree, ctx, set_ctx, **kw):
-        ... do stuff with ctx ...
-        set_ctx(...)
-        return new_tree
-
-    for ease of use.
-    """
     def __init__(self, func):
         self.func = func
 

@@ -1,3 +1,5 @@
+"""Non-trivial AST operations used in macros.py"""
+
 from macropy.core import *
 from ast import *
 from walkers import Walker

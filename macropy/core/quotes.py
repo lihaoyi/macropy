@@ -1,5 +1,10 @@
+"""Implementation of the Quasiquotes macro.
+
+`u`, `name`, `ast` and `ast_list` are the unquote delimiters, used to
+interpolate things into a quoted section.
+"""
 from macropy.core.macros import *
-from macropy.core import *
+
 macros = Macros()
 
 @singleton

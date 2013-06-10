@@ -1,9 +1,9 @@
-from _ast import Load
+"""Implementation and activation of a basic macro-powered REPL."""
 import code
 import ast
-from codeop import CommandCompiler, Compile, _features
+
 import sys
-import inspect
+
 from macropy.core.macros import expand_ast, detect_macros
 
 
