@@ -17,22 +17,27 @@ MacroPy
 Point(1, 2)
 ```
 
-Try it out in the REPL, it should just work! You could also try out the [Tracing](#tracing) or [Quick Lambda](#quick-lambdas) examples to get a feel for what Macros can do for you.
+Try it out in the REPL, it should just work! You can also see the [docs/examples/using_macros](docs/examples/using_macros) folder for a minimal example of using MacroPy's existing macros.
 
 MacroPy has been used to implement features such as:
 
 - [Case Classes](#case-classes), easy Algebraic Data Types from Scala
+- [Quick Lambdas](#quick-lambdas) from Scala and Groovy
+- [String Interpolation](#string-interpolation), a common feature in many programming languages
+- [Tracing](#tracing) and [Smart Asserts](#smart-asserts), and [show_expanded](#show_expanded), to help in the debugging effort
+
+As well as a number of more experimental macros such as:
+
+- [MacroPEG](#macropeg-parser-combinators), Parser combinators inspired by Scala's
 - [Pattern Matching](#pattern-matching) from the Functional Programming world
 - [Tail-call Optimization](#tail-call-optimization), preventing unnecessary stack overflows
-- [String Interpolation](#string-interpolation), a common feature, and [Pyxl](#pyxl-integration), which is basically XML interpolation
-- [Tracing](#tracing) and [Smart Asserts](#smart-asserts), and [show_expanded](#show_expanded), to help in the debugging effort
 - [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), a shameless clone of LINQ to SQL from C#
-- [Quick Lambdas](#quick-lambdas) from Scala and Groovy
-- [MacroPEG](#macropeg-parser-combinators), Parser combinators inspired by Scala's
+- [Pyxl Snippets](#pyxl-snippets), XML interpolation within your Python code
 - [JS Snippets](#js-snippets), cross compiling snippets of Python into equivalent Javascript
 
-The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Detailed Guide](#detailed-guide) will go into greater detail and walk you through [creating a simple macro](#writing-your-first-macro), with [self-contained examples](docs/examples) and [reference documentation](#reference) for
+The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Tutorials](#tutorials) will go into greater detail and walk you through [writing your first macro](#writing-your-first-macro), and [making your macros hygienic](#making-your-macros-hygienic). The [Reference Documentation](#reference) contains information about:
 
+- [Data Model](#data-model), what MacroPy gives you to work with
 - [Arguments](#arguments), what a macro is given to do its work
 - [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
 - [Walkers](#walkers), a flexible tool to traverse and transform ASTs
@@ -42,8 +47,8 @@ Or just skip ahead to the [Subtleties](#macro-subtleties), [Lessons](#lessons), 
 
 MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy), using a standard [setup.py](setup.py) to manage dependencies, installation and other things. Check out [this gist](https://gist.github.com/lihaoyi/5577609) for an example of setting it up on a clean system.
 
-Rough Overview
-==============
+How Macropy Works
+=================
 Macro functions are defined in three ways:
 
 ```python
@@ -144,13 +149,11 @@ x*2 for x in range(3) -> [0, 2, 4]
 
 This example demonstrates the usage of the [Tracing](#tracing) macro, which helps trace the evaluation of a Python expression. Although support for the REPL is still experimental, many examples on this page will work when copied and pasted into the REPL verbatim, except those with multi-line class and function definitions (those seem to confuse it). MacroPy also works in the PyPy and [IPython](http://ipython.org/) REPLs.
 
-Examples
-========
+Demo Macros
+===========
 Below are a few example uses of macros that are implemented (together with test cases!) in the [macropy](macropy) and [macropy/experimental](macropy/experimental) folders. These are also the ideal places to go look at to learn to write your own macros: check out the source code of the [String Interpolation](macropy/string_interp.py) or [Quick Lambda](macropy/quick_lambda.py) macros for some small (<30 lines), self contained examples. Their [unit](macropy/test/string_interp.py) [tests](macropy/test/quick_lambda.py) demonstrate how these macros are used.
 
-Note that all of these examples are **macros**; that is, they hold no special place in MacroPy. They are placed in [macropy](macropy) and [macropy/experimental](macropy/experimental), separate from the Macropy core in [macropy/core](macropy/core). All of these are advanced language features that each would have been a massive effort to implement in the [CPython](http://en.wikipedia.org/wiki/CPython) interpreter. Using macros, the implementation of each feature fits in a single file, often taking less than 100 lines of code.
-
-Feel free to open up a REPL and try out the examples in the console; simply `import macropy.console`, and most of the examples should work right off the bat when pasted in!
+Feel free to open up a REPL and try out the examples in the console; simply `import macropy.console`, and most of the examples should work right off the bat when pasted in! Macros in this section are also relatively stable and well-tested, and you can rely on them to work and not to suddenly change from version to version (as much as can be said for a two-month-old project!).
 
 Case Classes
 ------------
@@ -374,6 +377,283 @@ Case classes provide a lot of functionality to the user, but come with their own
 Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.org/2/library/collections.html#collections.namedtuple), but far more flexible (methods, inheritance, etc.), and provides the programmer with a much better experience (e.g. no arguments-as-space-separated-string definition). Unlike `namedtuple`s, they are flexible enough that they can be used to replace a large fraction of user defined classes, rather than being relegated to niche uses.
 
 In the cases where you desperately need additional flexibility [not afforded](#limitations) by case classes, you can always fall back on normal Python classes and do without the case class functionality.
+
+Quick Lambdas
+-------------
+```python
+>>> from macropy.quick_lambda import macros, f, _
+>>> map(f[_ + 1], [1, 2, 3])
+[2, 3, 4]
+>>> reduce(f[_ + _], [1, 2, 3])
+6
+```
+
+Macropy provides a syntax for lambda expressions similar to Scala's [anonymous functions](http://www.codecommit.com/blog/scala/quick-explanation-of-scalas-syntax). Essentially, the transformation is:
+
+```python
+f[_ + _] -> lambda a, b: a + b
+```
+
+where the underscores get replaced by identifiers, which are then set to be the parameters of the enclosing `lambda`. This works too:
+
+```python
+>>> map(f[_.split(' ')[0]], ["i am cow", "hear me moo"])
+['i', 'hear']
+```
+
+Quick Lambdas can be also used as a concise, lightweight, more-readable substitute for `functools.partial`
+
+```python
+>>> from macropy.quick_lambda import macros, f
+>>> basetwo = f[int(_, base=2)]
+>>> basetwo('10010')
+18
+```
+
+is equivalent to
+
+```python
+>>> import functools
+>>> basetwo = functools.partial(int, base=2)
+>>> basetwo('10010')
+18
+```
+
+Quick Lambdas can also be used entirely without the `_` placeholders, in which case they wrap the target in a no argument `lambda: ...` thunk:
+
+```python
+>>> from random import random
+>>> thunk = f[random()]
+>>> print thunk()
+0.347790429588
+>>> print thunk()
+0.817928092273
+```
+
+This cuts out reduces the number of characters needed to make a thunk from 7 to 2, making it much easier to use thunks to do things like emulating [by name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html). The implementation of quicklambda is about [30 lines of code](macropy/quick_lambda.py), and is worth a look if you want to see how a simple (but extremely useful!) macro can be written.
+
+String Interpolation
+--------------------
+
+```python
+>>> from macropy.string_interp import macros, s
+
+>>> a, b = 1, 2
+>>> s["{a} apple and {b} bananas"]
+'1 apple and 2 bananas'
+```
+
+Unlike the normal string interpolation in Python, MacroPy's string interpolation allows the programmer to specify the variables to be interpolated _inline_ inside the string. The macro `s%` then takes the string literal
+
+```python
+"{a} apple and {b} bananas"
+```
+
+and expands it into the expression
+
+```python
+"%s apple and %s bananas" % (a, b)
+```
+
+Which is evaluated at run-time in the local scope, using whatever the values `a` and `b` happen to hold at the time. The contents of the `%{...}` can be any arbitrary python expression, and is not limited to variable names:
+
+```python
+>>> from macropy.string_interp import macros, s
+>>> A = 10
+>>> B = 5
+>>> s["{A} + {B} = {A + B}"]
+'10 + 5 = 15'
+```
+
+
+Tracing
+-------
+
+```python
+>>> from macropy.tracing import macros, log
+>>> log[1 + 2]
+1 + 2 -> 3
+3
+
+>>> log["omg" * 3]
+('omg' * 3) -> 'omgomgomg'
+'omgomgomg'
+```
+
+Tracing allows you to easily see what is happening inside your code. Many a time programmers have written code like
+
+```python
+print "value", value
+print "sqrt(x)", sqrt(x)
+```
+
+and the `log()` macro (shown above) helps remove this duplication by automatically expanding `log(1 + 2)` into `wrap("(1 + 2)", (1 + 2))`. `wrap` then evaluates the expression, printing out the source code and final value of the computation.
+
+In addition to simple logging, MacroPy provides the `trace()` macro. This macro not only logs the source and result of the given expression, but also the source and result of all sub-expressions nested within it:
+
+```python
+>>> from macropy.tracing import macros, trace
+>>> trace[[len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]]]
+"b" * 2 -> 'bb'
+"b" * 2 + "q" -> 'bbq'
+"lo" * 3 -> 'lololo'
+"lo" * 3 + "l" -> 'lololol'
+["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"] -> ['omg', 'wtf', 'bbq', 'lololol']
+len(x) -> 3
+len(x)*3 -> 9
+len(x) -> 3
+len(x)*3 -> 9
+len(x) -> 3
+len(x)*3 -> 9
+len(x) -> 7
+len(x)*3 -> 21
+len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"] -> [9, 9, 9, 21]
+[9, 9, 9, 21]
+```
+
+As you can see, `trace` logs the source and value of all sub-expressions that get evaluated in the course of evaluating the list comprehension.
+
+Lastly, `trace` can be used as a block macro:
+
+
+```python
+>>> from macropy.tracing import macros, trace
+>>> with trace:
+...     sum = 0
+...     for i in range(0, 5):
+...         sum = sum + 5
+...
+sum = 0
+for i in range(0, 5):
+    sum = sum + 5
+range(0, 5) -> [0, 1, 2, 3, 4]
+sum = sum + 5
+sum + 5 -> 5
+sum = sum + 5
+sum + 5 -> 10
+sum = sum + 5
+sum + 5 -> 15
+sum = sum + 5
+sum + 5 -> 20
+sum = sum + 5
+sum + 5 -> 25
+```
+
+Used this way, `trace` will print out the source code of every _statement_ that gets executed, in addition to tracing the evaluation of any expressions within those statements.
+
+Apart from simply printing out the traces, you can also redirect the traces wherever you want by having a `log()` function in scope:
+
+```python
+result = []
+
+def log(x):
+    result.append(x)
+```
+
+The tracer uses whatever `log()` function it finds, falling back on printing only if none exists. Instead of printing, this `log()` function appends the traces to a list, and is used in our unit tests.
+
+We think that tracing is an extremely useful macro. For debugging what is happening, for teaching newbies how evaluation of expressions works, or for a myriad of other purposes, it is a powerful tool. The fact that it can be written as a [<100 line macro](macropy/tracing.py) is a bonus.
+
+###Smart Asserts
+```python
+>>> from macropy.tracing import macros, require
+>>> require[3**2 + 4**2 != 5**2]
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "macropy.tracing.py", line 67, in handle
+    raise AssertionError("Require Failed\n" + "\n".join(out))
+AssertionError: Require Failed
+3**2 -> 9
+4**2 -> 16
+3**2 + 4**2 -> 25
+5**2 -> 25
+3**2 + 4**2 != 5**2 -> False
+```
+
+MacroPy provides a variant on the `assert` keyword called `require(`. Like `assert`, `require` throws an `AssertionError` if the condition is false.
+
+Unlike `assert`, `require` automatically tells you what code failed the condition, and traces all the sub-expressions within the code so you can more easily see what went wrong. Pretty handy!
+
+`require can also be used in block form:
+
+```python
+>>> from macropy.tracing import macros, require
+>>> with require:
+...     a > 5
+...     a * b == 20
+...     a < 2
+...
+Traceback (most recent call last):
+  File "<console>", line 4, in <module>
+  File "macropy.tracing.py", line 67, in handle
+    raise AssertionError("Require Failed\n" + "\n".join(out))
+AssertionError: Require Failed
+a < 2 -> False
+```
+
+This requires every statement in the block to be a boolean expression. Each expression will then be wrapped in a `require()`, throwing an `AssertionError` with a nice trace when a condition fails.
+
+###`show_expanded`
+
+```python
+from macropy.core.quotes import macros, q
+from macropy.tracing import macros, show_expanded
+
+show_expanded(q[1 + 2])
+# BinOp(left=Num(n=1), op=Add(), right=Num(n=2))
+```
+
+`show_expanded` is a macro which is similar to the simple `log` macro shown above, but prints out what the wrapped code looks like *after all macros have been expanded*. This makes it extremely useful for debugging macros, where you need to figure out exactly what your code is being expanded into. `show_expanded` also works in block form:
+
+```python
+from macropy.core.quotes import macros, q
+from macropy.tracing import macros, show_expanded, trace
+
+with show_expanded:
+    a = 1
+    b = q[1 + 2]
+    with q as code:
+        print a
+
+# a = 1
+# b = BinOp(left=Num(n=1), op=Add(), right=Num(n=2))
+# code = [Print(dest=None, values=[Name(id='a', ctx=Load())], nl=True)]
+```
+
+These examples show how the [quasiquote](#quasiquotes) macro works: it turns an expression or block of code into its AST, assigning the AST to a variable at runtime for other code to use.
+
+Here is a less trivial example: [case classes](#case-classes) are a pretty useful macro, which saves us the hassle of writing a pile of boilerplate ourselves. By using `show_expanded`, we can see what the case class definition expands into:
+
+```python
+from macropy.case_classes import macros, case
+from macropy.tracing import macros, show_expanded
+
+with show_expanded:
+    @case
+    class Point(x, y):
+        pass
+
+# class Point(CaseClass):
+#     def __init__(self, x, y):
+#         self.x = x
+#         self.y = y
+#         pass
+#     _fields = ['x', 'y']
+#     _varargs = None
+#     _kwargs = None
+#     __slots__ = ['x', 'y']
+```
+
+Pretty neat!
+
+---------------------------------
+
+If you want to write your own custom logging, tracing or debugging macros, take a look at the [100 lines of code](macropy/tracing.py) that implements all the functionality shown above.
+
+
+Experimental Macros
+===================
+Below are a selection of macros which demonstrate the cooler aspects of MacroPy, but are not currently stable or tested enough that we would be comfortable using them in production code.
 
 Pattern Matching
 ----------------
@@ -623,258 +903,6 @@ def fact(n, acc):
 ```
 
 
-String Interpolation
---------------------
-
-```python
->>> from macropy.string_interp import macros, s
-
->>> a, b = 1, 2
->>> s["{a} apple and {b} bananas"]
-'1 apple and 2 bananas'
-```
-
-Unlike the normal string interpolation in Python, MacroPy's string interpolation allows the programmer to specify the variables to be interpolated _inline_ inside the string. The macro `s%` then takes the string literal
-
-```python
-"{a} apple and {b} bananas"
-```
-
-and expands it into the expression
-
-```python
-"%s apple and %s bananas" % (a, b)
-```
-
-Which is evaluated at run-time in the local scope, using whatever the values `a` and `b` happen to hold at the time. The contents of the `%{...}` can be any arbitrary python expression, and is not limited to variable names:
-
-```python
->>> from macropy.string_interp import macros, s
->>> A = 10
->>> B = 5
->>> s["{A} + {B} = {A + B}"]
-'10 + 5 = 15'
-```
-
-###Pyxl Integration
-
-```python
-from macropy.experimental.pyxl_strings import macros, p
-
-image_name = "bolton.png"
-image = p['<img src="/static/images/{image_name}" />']
-
-text = "Michael Bolton"
-block = p['<div>{image}{text}</div>']
-
-element_list = [image, text]
-block2 = p['<div>{element_list}</div>']
-
-assert block2.to_string() == '<div><img src="/static/images/bolton.png" />Michael Bolton</div>'
-```
-
-[Pyxl](https://github.com/dropbox/pyxl) is a way of integrating XML markup into your Python code. By default, pyxl hooks into the python UTF-8 decoder in order to transform the source files at load-time. In this, it is similar to how MacroPy transforms source files at import time.
-
-A major difference is that Pyxl by default leaves the HTML fragments directly in the source code:
-
-```python
-image_name = "bolton.png"
-image = <img src="/static/images/{image_name}" />
-
-text = "Michael Bolton"
-block = <div>{image}{text}</div>
-
-element_list = [image, text]
-block2 = <div>{element_list}</div>
-```
-
-While the MacroPy version requires each snippet to be wrapped in a `p%"..."` wrapper. This [three-line-of-code macro](https://github.com/lihaoyi/macropy/blob/master/macropy/experimental/pyxl_strings.py) simply uses pyxl as a macro (operating on string literals), rather than hooking into the UTF-8 decoder. In general, this demonstrates how easy it is to integrate an "external" DSL into your python program: MacroPy handles all the intricacies of hooking into the interpreter and intercepting the import workflow. The programmer simply needs to provide the source-to-source transformation, which in this case was already provided.
-
-Tracing
--------
-
-```python
->>> from macropy.tracing import macros, log
->>> log[1 + 2]
-1 + 2 -> 3
-3
-
->>> log["omg" * 3]
-('omg' * 3) -> 'omgomgomg'
-'omgomgomg'
-```
-
-Tracing allows you to easily see what is happening inside your code. Many a time programmers have written code like
-
-```python
-print "value", value
-print "sqrt(x)", sqrt(x)
-```
-
-and the `log()` macro (shown above) helps remove this duplication by automatically expanding `log(1 + 2)` into `wrap("(1 + 2)", (1 + 2))`. `wrap` then evaluates the expression, printing out the source code and final value of the computation.
-
-In addition to simple logging, MacroPy provides the `trace()` macro. This macro not only logs the source and result of the given expression, but also the source and result of all sub-expressions nested within it:
-
-```python
->>> from macropy.tracing import macros, trace
->>> trace[[len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]]]
-"b" * 2 -> 'bb'
-"b" * 2 + "q" -> 'bbq'
-"lo" * 3 -> 'lololo'
-"lo" * 3 + "l" -> 'lololol'
-["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"] -> ['omg', 'wtf', 'bbq', 'lololol']
-len(x) -> 3
-len(x)*3 -> 9
-len(x) -> 3
-len(x)*3 -> 9
-len(x) -> 3
-len(x)*3 -> 9
-len(x) -> 7
-len(x)*3 -> 21
-len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"] -> [9, 9, 9, 21]
-[9, 9, 9, 21]
-```
-
-As you can see, `trace` logs the source and value of all sub-expressions that get evaluated in the course of evaluating the list comprehension.
-
-Lastly, `trace` can be used as a block macro:
-
-
-```python
->>> from macropy.tracing import macros, trace
->>> with trace:
-...     sum = 0
-...     for i in range(0, 5):
-...         sum = sum + 5
-...
-sum = 0
-for i in range(0, 5):
-    sum = sum + 5
-range(0, 5) -> [0, 1, 2, 3, 4]
-sum = sum + 5
-sum + 5 -> 5
-sum = sum + 5
-sum + 5 -> 10
-sum = sum + 5
-sum + 5 -> 15
-sum = sum + 5
-sum + 5 -> 20
-sum = sum + 5
-sum + 5 -> 25
-```
-
-Used this way, `trace` will print out the source code of every _statement_ that gets executed, in addition to tracing the evaluation of any expressions within those statements.
-
-Apart from simply printing out the traces, you can also redirect the traces wherever you want by having a `log()` function in scope:
-
-```python
-result = []
-
-def log(x):
-    result.append(x)
-```
-
-The tracer uses whatever `log()` function it finds, falling back on printing only if none exists. Instead of printing, this `log()` function appends the traces to a list, and is used in our unit tests.
-
-We think that tracing is an extremely useful macro. For debugging what is happening, for teaching newbies how evaluation of expressions works, or for a myriad of other purposes, it is a powerful tool. The fact that it can be written as a [<100 line macro](macropy/tracing.py) is a bonus.
-
-###Smart Asserts
-```python
->>> from macropy.tracing import macros, require
->>> require[3**2 + 4**2 != 5**2]
-Traceback (most recent call last):
-  File "<console>", line 1, in <module>
-  File "macropy.tracing.py", line 67, in handle
-    raise AssertionError("Require Failed\n" + "\n".join(out))
-AssertionError: Require Failed
-3**2 -> 9
-4**2 -> 16
-3**2 + 4**2 -> 25
-5**2 -> 25
-3**2 + 4**2 != 5**2 -> False
-```
-
-MacroPy provides a variant on the `assert` keyword called `require(`. Like `assert`, `require` throws an `AssertionError` if the condition is false.
-
-Unlike `assert`, `require` automatically tells you what code failed the condition, and traces all the sub-expressions within the code so you can more easily see what went wrong. Pretty handy!
-
-`require can also be used in block form:
-
-```python
->>> from macropy.tracing import macros, require
->>> with require:
-...     a > 5
-...     a * b == 20
-...     a < 2
-...
-Traceback (most recent call last):
-  File "<console>", line 4, in <module>
-  File "macropy.tracing.py", line 67, in handle
-    raise AssertionError("Require Failed\n" + "\n".join(out))
-AssertionError: Require Failed
-a < 2 -> False
-```
-
-This requires every statement in the block to be a boolean expression. Each expression will then be wrapped in a `require()`, throwing an `AssertionError` with a nice trace when a condition fails.
-
-###`show_expanded`
-
-```python
-from macropy.core.quotes import macros, q
-from macropy.tracing import macros, show_expanded
-
-show_expanded(q[1 + 2])
-# BinOp(left=Num(n=1), op=Add(), right=Num(n=2))
-```
-
-`show_expanded` is a macro which is similar to the simple `log` macro shown above, but prints out what the wrapped code looks like *after all macros have been expanded*. This makes it extremely useful for debugging macros, where you need to figure out exactly what your code is being expanded into. `show_expanded` also works in block form:
-
-```python
-from macropy.core.quotes import macros, q
-from macropy.tracing import macros, show_expanded, trace
-
-with show_expanded:
-    a = 1
-    b = q[1 + 2]
-    with q as code:
-        print a
-
-# a = 1
-# b = BinOp(left=Num(n=1), op=Add(), right=Num(n=2))
-# code = [Print(dest=None, values=[Name(id='a', ctx=Load())], nl=True)]
-```
-
-These examples show how the [quasiquote](#quasiquotes) macro works: it turns an expression or block of code into its AST, assigning the AST to a variable at runtime for other code to use.
-
-Here is a less trivial example: [case classes](#case-classes) are a pretty useful macro, which saves us the hassle of writing a pile of boilerplate ourselves. By using `show_expanded`, we can see what the case class definition expands into:
-
-```python
-from macropy.case_classes import macros, case
-from macropy.tracing import macros, show_expanded
-
-with show_expanded:
-    @case
-    class Point(x, y):
-        pass
-
-# class Point(CaseClass):
-#     def __init__(self, x, y):
-#         self.x = x
-#         self.y = y
-#         pass
-#     _fields = ['x', 'y']
-#     _varargs = None
-#     _kwargs = None
-#     __slots__ = ['x', 'y']
-```
-
-Pretty neat!
-
----------------------------------
-
-If you want to write your own custom logging, tracing or debugging macros, take a look at the [100 lines of code](macropy/tracing.py) that implements all the functionality shown above.
-
-
 PINQ to SQLAlchemy
 ------------------
 ```python
@@ -1061,59 +1089,6 @@ In general, apart from the translation of generator expressions (and their guard
 
 PINQ demonstrates how easy it is to use macros to lift python snippets into an AST and cross-compile it into another language, and how nice the syntax and semantics can be for these embedded DSLs. PINQ's entire implementation comprises about [100 lines of code](https://github.com/lihaoyi/macropy/blob/master/macropy/experimental/linq.py), which really isn't much considering how much it does for you!
 
-Quick Lambdas
--------------
-```python
->>> from macropy.quick_lambda import macros, f, _
->>> map(f[_ + 1], [1, 2, 3])
-[2, 3, 4]
->>> reduce(f[_ + _], [1, 2, 3])
-6
-```
-
-Macropy provides a syntax for lambda expressions similar to Scala's [anonymous functions](http://www.codecommit.com/blog/scala/quick-explanation-of-scalas-syntax). Essentially, the transformation is:
-
-```python
-f[_ + _] -> lambda a, b: a + b
-```
-
-where the underscores get replaced by identifiers, which are then set to be the parameters of the enclosing `lambda`. This works too:
-
-```python
->>> map(f[_.split(' ')[0]], ["i am cow", "hear me moo"])
-['i', 'hear']
-```
-
-Quick Lambdas can be also used as a concise, lightweight, more-readable substitute for `functools.partial`
-
-```python
->>> from macropy.quick_lambda import macros, f
->>> basetwo = f[int(_, base=2)]
->>> basetwo('10010')
-18
-```
-
-is equivalent to
-
-```python
->>> import functools
->>> basetwo = functools.partial(int, base=2)
->>> basetwo('10010')
-18
-```
-
-Quick Lambdas can also be used entirely without the `_` placeholders, in which case they wrap the target in a no argument `lambda: ...` thunk:
-
-```python
->>> from random import random
->>> thunk = f[random()]
->>> print thunk()
-0.347790429588
->>> print thunk()
-0.817928092273
-```
-
-This cuts out reduces the number of characters needed to make a thunk from 7 to 2, making it much easier to use thunks to do things like emulating [by name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html). The implementation of quicklambda is about [30 lines of code](macropy/quick_lambda.py), and is worth a look if you want to see how a simple (but extremely useful!) macro can be written.
 
 MacroPEG Parser Combinators
 ------------------
@@ -1531,6 +1506,42 @@ Pretty neat! This full example of a JSON parser demonstrates what MacroPEG provi
 
 Not bad for an implementation that spans [350 lines of code](macropy/experimental/peg.py)!
 
+Pyxl Snippets
+-------------
+
+```python
+from macropy.experimental.pyxl_strings import macros, p
+
+image_name = "bolton.png"
+image = p['<img src="/static/images/{image_name}" />']
+
+text = "Michael Bolton"
+block = p['<div>{image}{text}</div>']
+
+element_list = [image, text]
+block2 = p['<div>{element_list}</div>']
+
+assert block2.to_string() == '<div><img src="/static/images/bolton.png" />Michael Bolton</div>'
+```
+
+[Pyxl](https://github.com/dropbox/pyxl) is a way of integrating XML markup into your Python code. By default, pyxl hooks into the python UTF-8 decoder in order to transform the source files at load-time. In this, it is similar to how MacroPy transforms source files at import time.
+
+A major difference is that Pyxl by default leaves the HTML fragments directly in the source code:
+
+```python
+image_name = "bolton.png"
+image = <img src="/static/images/{image_name}" />
+
+text = "Michael Bolton"
+block = <div>{image}{text}</div>
+
+element_list = [image, text]
+block2 = <div>{element_list}</div>
+```
+
+While the MacroPy version requires each snippet to be wrapped in a `p%"..."` wrapper. This [three-line-of-code macro](https://github.com/lihaoyi/macropy/blob/master/macropy/experimental/pyxl_strings.py) simply uses pyxl as a macro (operating on string literals), rather than hooking into the UTF-8 decoder. In general, this demonstrates how easy it is to integrate an "external" DSL into your python program: MacroPy handles all the intricacies of hooking into the interpreter and intercepting the import workflow. The programmer simply needs to provide the source-to-source transformation, which in this case was already provided.
+
+
 JS Snippets
 ------------
 ```python
@@ -1617,22 +1628,15 @@ Like [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), JS Snippets demonstrates the fea
 
 Nonetheless, JS Snippets demonstrate the promise of being able to cross-compile bits of your program and being able to run parts of it remotely. The code which performs the integration of PJs and MacroPy is a scant [25 lines long](macropy/experimental/js_snippets.py). If a better, more robust Python to Javascript cross-compiler appears some day, we could easily make use of it to provide a stable, seamless developer experience of sharing code between (web) client and server.
 
-Detailed Guide
-==============
 
-As mentioned earlier, MacroPy uses PEP 302 for much of its functionality. It looks out in particular for the syntactic forms (`import macros, ...`, `my_macro(...)`, `my_macro%...`, `with my_macro:`, `@my_macro`) to decide which parts of the AST need to be expanded by which macros. MacroPy uses the inbuilt Python infrastructure for [parsing the source](http://docs.python.org/2/library/ast.html#ast.parse) and [representing it as an AST](http://docs.python.org/2/library/ast.html#abstract-grammar). You should familiarize yourself with the classes which make up the Python AST, since you will be interacting with them a great deal while writing macros.
+Tutorials
+=========
+This section contains step-by-step guides to get started writing macros using MacroPy:
 
-Once you have an AST, there are a few possible forms that code can take:
+- [Writing your First Macro](#writing-your-first-macro)
+- [Making your Macros Hygienic](#making-your-macros-hygienic)
 
-- A **String**
-- An **AST**
-- A computed **Value**
-
-This map maps out how to convert from form to form:
-
-![Transforms](docs/media/Transforms.png)
-
-Except for `eval`, these are all functions defined in the [macropy/core/__init__.py](macropy/core/__init__.py). For instance, in order to convert from a AST back into source code (for example if you want to print out the code which is being run), you would use the `unparse_ast()` method. These transformations will be used throughout this guide, to convert from one form to another or to print out the AST for inspection.
+These tutorials proceed through a serious of examples, many of which are available in the [docs/examples](docs/examples) folder.
 
 Writing Your First Macro
 ------------------------
@@ -1752,8 +1756,8 @@ def expand(tree, **kw):
 
 This will replace the expression `(1 + 2)` with `((1 + 2) * (1 + 2))`; you can similarly print out newtree via `unparse` or `real_repr` to see what's it looks like.
 
-Using Quasiquotes
------------------
+###Using Quasiquotes
+
 Building up the new tree manually, as shown above, works reasonably well. However, it can quickly get unwieldy, particularly for more complex expressions. For example, let's say we wanted to make `expand` wrap the expression `(1 + 2)` in a lambda, like `lambda x: x * (1 + 2) + 10`. Ignore, for the moment, that this transform is not very useful. Doing so manually is quite a pain:
 
 ```python
@@ -1836,8 +1840,8 @@ def expand(tree, **kw):
 
 If you run this, it will also print `25`.
 
-Walking the AST
----------------
+###Walking the AST
+
 Quasiquotes make it much easier for you to manipulate sections of code, allowing you to quickly put together snippets that look however you want. However, they do not provide any support for a very common use case: that of recursively traversing the AST and replacing sections of it at a time.
 
 Now that you know how to make basic macros, I will walk you through the implementation of a less trivial (and extremely useful!) macro: [quicklambda](#quick-lambdas).
@@ -1935,8 +1939,8 @@ NameError: name 'arg0' is not defined
 
 At runtime, because the names we put into the tree (`arg0` and `arg1`) haven't actually been defined in `target.py`! We will see how we can fix that.
 
-More Walking
-------------
+###More Walking
+
 The function being passed to the Walker can return a variety of things. In this case, let's say we want to collect the names we extracted from the `names` generator, so we can use them to populate the arguments of the `lambda`.
 
 The Walker function request the `collect` argument, and call `collect(item)` to have the `Walker` aggregate them all in one large list which you can extract by using `recurse_collect` instead of `recurse`:
@@ -2031,9 +2035,301 @@ print map(f[_  * 10], [1, 2, 3])  # [10, 20, 30]
 
 Mission Accomplished! You can see the completed self-contained example in [docs/examples/full](docs/examples/full). This macro is also defined in our library in [macropy/quick_lambda.py](macropy/quick_lambda.py), along with a suite of [unit tests](macropy/test/quick_lambda.py). It is also used throughout the implementation of the other macros.
 
+Making your Macros Hygienic
+---------------------------
+In [Writing your First Macro](#writing-your-first-macro), we went through how the use basic tools such as quasiquotes and Walkers in order to perform simple AST transforms. In this section, we will go through the shortcomings of doing the naive transforms, and how to use hygiene to make your macros more robust.
+
+[Hygienic](http://en.wikipedia.org/wiki/Hygienic_macro) macros are macros which will not accidentally [shadow](http://en.wikipedia.org/wiki/Variable_shadowing) an identifier, or have the identifiers they introduce shadowed by user code. For example, the [quicklambda](#quick-lambdas) macro takes this:
+
+```python
+func = f[_ + 1]
+print func(1)
+# 2
+```
+
+And turns it into a lambda expression. If we did it naively, like we did in the [tutorials](#tutorials), we may expand it into this:
+
+```python
+func = lambda arg0: arg0 + 1
+print func(1)
+# 2
+```
+
+However, if we introduce a variable called `arg0` in the enclosing scope:
+
+```python
+arg0 = 10
+func = f[_ + arg0]
+print func(1)
+# 2
+# should print 11
+```
+
+It does not behave as we may expect; we probably want it to produce `11`. this is because the `arg0` identifier introduced by the `f` macro shadows the `arg0` in our enclosing scope. These bugs could be hard to find, since renaming variables could make them appear or disappear. Try executing the code in [docs/examples/hygiene/hygiene_failures](docs/examples/hygiene/hygiene_failures) and to see this for your self.
+
+###gen_sym
+
+There is a way out of this: if you create a new variable, but use an identifier that has not been used before, you don't stand the risk of accidentally shadowing something you didn't intend to. To help with this, MacroPy provides the `gen_sym` function, which you can acquire by adding an extra parameter named `gen_sym` to your macro definition:
+
+```python
+@macros.expr
+def f(tree, gen_sym, **kw):
+    ...
+    new_name = gen_sym()
+    ... use new_name ...
+```
+
+`gen_sym` is a function which produce a new identifier (as a string) every time it is called. This is guaranteed to produce a identifier that does not appear anywhere in the origial source code, or have been produced by an earlier call to `gen_sym`. You can thus use these identifiers without worrying about shadowing an identifier someone was using; the full code for this is given in [docs/examples/hygiene/gen_sym](docs/examples/hygiene/gen_sym), so check it out and try executing it to see it working
+
+###Hygienic Quasiquotes
+Let's look at another use case: the implementation of the various [tracing](#tracing) macros. These macros generally can't rely solely on AST transforms, but also require runtime support in order to operate. Consider a simple `log` macro:
+
+```python
+# macro_module.py
+from macropy.core.macros import *
+from macropy.core.quotes import macros, q, u
+
+macros = Macros()
+
+@macros.expr
+def log(tree, exact_src, hygienic_alias, **kw):
+    new_tree = q[wrap(u[exact_src(tree)], ast[tree])]
+    return new_tree
+
+def wrap(txt, x):
+    print txt + " -> " + repr(x)
+    return x
+```
+
+This macro aims to perform a conversion like:
+
+```python
+log[1 + 2 + 3] -> wrap("1 + 2 + 3", 1 + 2 + 3)
+```
+
+Where the `wrap` function then prints out both the source code and the `repr` of the logged expression. This is but a single example of the myriad of things that expanded macros may need at run time.
+
+Naively performing this transform runs into problems:
+
+```python
+from macro_module import macros, log
+
+
+log[1 + 2 + 3]
+# NameError: name 'wrap' is not defined
+```
+
+This is because although `wrap` is available in `macro_module.py`, it is not available in `test.py`. Hence the expanded code fails when it tries to reference `wrap`.There are several ways which this can be accomplished:
+
+###Manual Imports
+
+```python
+# test.py
+from macro_module import macros, log, wrap
+
+log[1 + 2 + 3]
+# 1 + 2 + 3 -> 6
+```
+
+You can simply import `wrap` from `macro_module.py` into `test.py`, along with the `log` macro itself. This way, the expanded code has a `wrap` function that it can call. Although this works in this example, it is somewhat fragile in the general case, as the programmer could easily accidentally create a variable named `wrap`, not knowing that it was being used by `log` (after all, you can't see it used anywhere in the source code!), causing it to fail:
+
+```python
+# test.py
+from macro_module import macros, log, wrap
+
+wrap = "chicken salad"
+
+log[1 + 1]
+# TypeError: 'str' object is not callable
+```
+
+Alternately, the programmer so simply forget to import it, for the same reason:
+
+```python
+# test.py
+from macro_module import macros, log
+
+log[1 + 1]
+# NameError: name 'wrap' is not defined
+```
+
+which gives a rather confusing error message: `wrap` is not defined? From the programmer's perspective, `wrap` isn't used at all! These very common pitfalls mean you should probably avoid this approach in favor of the latter two.
+
+###`hq` and `hygienic_alias`
+
+```python
+# macro_module.py
+from macropy.core.macros import *
+from macropy.core.quotes import macros, hq, u
+
+macros = Macros()
+
+@macros.expr
+def log(tree, exact_src, hygienic_alias, **kw):
+    new_tree = hq[wrap(u[exact_src(tree)], ast[tree])]
+    return new_tree
+
+def wrap(txt, x):
+    print txt + " -> " + repr(x)
+    return x
+
+# test.py
+from macro_module import macros, log
+
+wrap = 3 # try to confuse it
+
+log[1 + 2 + 3]
+# 1 + 2 + 3 -> 6
+# it still works despite trying to confuse it with `wraps`
+```
+
+The important changes in this snippet, as compared to the previous, are:
+
+- The removal of `wrap` from the import statement.
+- Replacement of `q` with `hq`
+- The introduction of `hygienic_alias` in the `log` function
+
+`hq` is the hygienic quasiquote macro. Unlike traditional quasiquotes (`q`), `hq` jumps through some hoops in order to ensure that the `wrap` you are using inside the `hq[...]` expression really-truly refers to the `wrap that is in scope *at the macro definition point*, not at tbe macro expansion point (as would be the case using the normal `q` macro). The end-result is that `wrap` refers to the `wrap` you want in `macro_module.py`, and not whatever `wrap` happened to be defined in `test.py`. See [docs/examples/hygienic_quasiquotes](docs/examples/hygienic_quasiquotes) to see it working.
+
+Note that `hq` requires that the `hygienic_alias` be present in scope; this means that if you want to use `hq` in a separate function, you need to make sure you pass it in, e.g. as follows:
+
+```python
+# macro_module.py
+
+@macros.expr
+def log(tree, exact_src, hygienic_alias, **kw):
+    new_tree = helper_func(tree, exact_src(tree), hygienic_alias)
+    return new_tree
+
+def helper_function(tree, txt, hygienic_alias):
+    return hq[wrap(u[txt], ast[tree])]
+
+def wrap(txt, x):
+    print string = txt + " -> " + repr(x)
+    return x
+```
+
+In general, `hq` allows you to refer to anything that is in scope where `hq` is being used. Apart from module-level global variables and functions, this includes things like locally scoped variables, which will be properly saved so they can be referred to later even when the macro has completed:
+
+```python
+# macro_module.py
+@macros.block
+def expand(tree, hygienic_alias, gen_sym, **kw):
+    v = 5
+    with hq as new_tree:
+        return v
+    return new_tree
+
+# test.py
+
+def run():
+    x = 1
+    with expand:
+        pass
+
+print run() # prints 5
+```
+
+In this case, the value of `v` is captured by the `hq`, such that even when `expand` has returned, it can still be used to return `6` to the caller of the `run()` function.
+
+###Breaking Hygiene
+By default, all top-level names in the `hq[...]` expression (this excludes things like the contents of `u[]` `name[]` `ast[]` unquotes) are hygienic, and are bound to the variable of that name at the macro definition point. This means that if you want a name to bind to some variable *at the macro expansion point*, you can always manually break hygiene by using the `name[]` or `ast[]` unquotes. The `hq` macro also provides an `unhygienic[...]` unquote just to streamline this common requirement:
+
+```python
+@macros.block
+def expand(tree, hygienic_alias, gen_sym, **kw):
+    v = 5
+    with hq as new_tree:
+        # all these do the same thing, and will refer to the variable named
+        # 'v' whereever the macro is expanded
+        return name["v"]
+        return ast[Name(id="v")]
+        return unhygienic[v]
+    return new_tree
+```
+
+Although all these do the same thing, you should prefer to use `unhygienic[...]` as it makes the intention clearer than using `name[...]` or `ast[...]` with hard-coded strings.
+
+###`expose_unhygienic`
+Going back to the `log` example:
+
+```python
+# macro_module.py
+from macropy.core.macros import *
+from macropy.core.quotes import macros, hq, u, unhygienic
+
+macros = Macros()
+
+@macros.expr
+def log(tree, exact_src, hygienic_alias, **kw):
+    new_tree = hq[wrap(unhygienic[log_func], u[exact_src(tree)], ast[tree])]
+    return new_tree
+
+
+def wrap(printer, txt, x):
+    printer(txt + " -> " + repr(x))
+    return x
+
+@macros.expose_unhygienic
+def log_func(txt):
+    print txt
+```
+
+`expose_unhygienic` is a hybrid between manual importing and `hq`. Like manual importing, decorating functions with `expose_unhygienic` causes them to be imported under their un-modified name, meaning they can shadow and be shadowed by other identifiers in the macro-expanded code. Like `expose`, it does not require the source file using the macros to put the identifier in the import list. This helps match what users of the macro expect: since the name doesn't ever appear anywhere in the source, it doesn't make sense for the macro to require the name being imported to work.
+
+In this example, the `log` macro uses `expose_unhygienic` on a `log_func` function. The macro-expanded code by default will capture the `log_func` function imported from `macro_module.py`, which prints the log to the console:
+
+```python
+# test.py
+from macro_module import macros, log
+
+log[1 + 1]
+# 1 + 1 -> 2
+```
+
+But a user can intentionally shadow `log_func` in order to redirect the logging, for example to a list
+
+```python
+# test.py
+from macro_module import macros, log
+
+buffer = []
+def log_func(txt):
+    buffer.append(txt)
+
+log[1 + 2 + 3]
+log[1 + 2]
+# doesn't print anything
+
+print buffer
+# ['1 + 2 + 3 -> 6', '1 + 2 -> 3']
+```
+
+See [docs/examples/hygiene/unhygienic](docs/examples/hygiene/unhygienic) to see this example in action. In general, `expose_unhygienic` is useful when you want the macro to use a name that can be intentionally shadowed by the programmer using the macro, allowing the programmer to implicitly modify the behavior of the macro via this shadowing.
+
+----------------------------------------
+
+This section has covered how to use the various tools available (`gen_sym`, `hq`, `expose_unhygienic`) in order to carefully control the scoping and variable binding in the code generated by macros. See the section on [Hygiene](#hygiene) for a more detailed explanation of what's going on behind the scenes.
+
 Reference
 =========
+This section contains reference documentation on various facets of MacroPy:
 
+Data Model
+----------
+As mentioned earlier, MacroPy uses PEP 302 for much of its functionality. It looks out in particular for the syntactic forms (`import macros, ...`, `my_macro(...)`, `my_macro%...`, `with my_macro:`, `@my_macro`) to decide which parts of the AST need to be expanded by which macros. MacroPy uses the inbuilt Python infrastructure for [parsing the source](http://docs.python.org/2/library/ast.html#ast.parse) and [representing it as an AST](http://docs.python.org/2/library/ast.html#abstract-grammar). You should familiarize yourself with the classes which make up the Python AST, since you will be interacting with them a great deal while writing macros.
+
+Once you have an AST, there are a few possible forms that code can take:
+
+- A **String**
+- An **AST**
+- A computed **Value**
+
+This map maps out how to convert from form to form:
+
+![Transforms](docs/media/Transforms.png)
+
+Except for `eval`, these are all functions defined in the [macropy/core/__init__.py](macropy/core/__init__.py). For instance, in order to convert from a AST back into source code (for example if you want to print out the code which is being run), you would use the `unparse_ast()` method. These transformations will be used throughout this guide, to convert from one form to another or to print out the AST for inspection.
 
 Arguments
 ---------
@@ -2333,258 +2629,11 @@ This provides it a large amount of versatility, and lets you use the `Walker` to
 
 Hygiene
 -------
-[Hygienic](http://en.wikipedia.org/wiki/Hygienic_macro) macros are macros which will not accidentally [shadow](http://en.wikipedia.org/wiki/Variable_shadowing) an identifier, or have the identifiers they introduce shadowed by user code. For example, the [quicklambda](#quick-lambdas) macro takes this:
-
-```python
->>> func = f[_ + 1]
->>> func(1)
-2
-```
-
-And turns it into a lambda expression. If we did it naively, like we did in the [walkthrough](#detailed-guide), we may expand it into this:
-
-```python
->>> func = lambda arg0: arg0 + 1
->>> func(1)
-2
-```
-
-However, if we introduce a variable called `arg0` in the enclosing scope:
-
-```python
->>> arg0 = 10
->>> func = f[_ + arg0]
->>> func(1)
-2
-```
-
-It does not behave as we may expect; we probably want it to produce `11`. this is because the `arg0` identifier introduced by the `f` macro shadows the `arg0` in our enclosing scope. These bugs could be hard to find, since renaming variables could make them appear or disappear.
-
-###gen_sym
-
-There is a way out of this: if you create a new variable, but use an identifier that has not been used before, you don't stand the risk of accidentally shadowing something you didn't intend to. To help with this, MacroPy provides the `gen_sym` function, which you can acquire by adding an extra parameter named `gen_sym` to your macro definition:
-
-```python
-@macros.expr
-def f(tree, gen_sym, **kw):
-    ...
-    new_name = gen_sym()
-    ... use new_name ...
-```
-
-`gen_sym` is a function which produce a new identifier (as a string) every time it is called. This is guaranteed to produce a identifier that does not appear anywhere in the origial source code, or have been produced by an earlier call to `gen_sym`. You can thus use these identifiers without worrying about shadowing an identifier someone was using; see the source for the [quicklambda](macropy/quick_lambda.py) macro to see it in action.
-
-###Hygienic Quasiquotes
-It is very common for macros to require runtime support in order to operate. Consider a simple `log` macro:
-
-```python
-# macro_module.py
-@macros.expr
-def log(tree, exact_src, **kw):
-    new_tree = q[wrap(u[exact_src(tree)], ast[tree])]
-    return new_tree
-
-def wrap(txt, x):
-    print string = txt + " -> " + repr(x)
-    return x
-```
-
-This macro aims to perform a conversion like:
-
-```python
-log[1 + 2] -> wrap("1 + 2", 1 + 2)
-```
-
-Where the `wrap` function then prints out both the source code and the `repr` of the logged expression. This is but a single example of the myriad of things that expanded macros may need at run time.
-
-Naively performing this transform runs into problems:
-
-```python
-# test.py
-from macro_module import macros, log
-
-log[1 + 1]
-# NameError: name 'wrap' is not defined
-```
-
-This is because although `wrap` is available in `macro_module.py`, it is not available in `test.py`. Hence the expanded code fails when it tries to reference `wrap`.There are several ways which this can be accomplished:
-
-###Manual Imports
-
-```python
-# test.py
-from macro_module import macros, log, wrap
-
-log[1 + 1]
-# 1 + 1 -> 2
-```
-
-You can simply import `wrap` from `macro_module.py` into `test.py`, along with the `log` macro itself. This way, the expanded code has a `wrap` function that it can call. Although this works in this example, it is somewhat fragile in the general case, as the programmer could easily accidentally create a variable named `wrap`, not knowing that it was being used by `log` (after all, you can't see it used anywhere in the source code!), causing it to fail:
-
-```python
-# test.py
-from macro_module import macros, log, wrap
-
-wrap = "chicken salad"
-
-log[1 + 1]
-# TypeError: 'str' object is not callable
-```
-
-Alternately, the programmer so simply forget to import it, for the same reason:
-
-```python
-# test.py
-from macro_module import macros, log
-
-log[1 + 1]
-# NameError: name 'wrap' is not defined
-```
-
-which gives a rather unintuitive error message: `wrap` is not defined? From the programmer's perspective, `wrap` isn't used at all! These very common pitfalls mean you should probably avoid this approach in favor of the latter two.
-
-###`hq` and `hygienic_alias`
-
-```python
-# macro_module.py
-@macros.expr
-def log(tree, exact_src, hygienic_alias, **kw):
-    new_tree = hq[wrap(u[exact_src(tree)], ast[tree])]
-    return new_tree
-
-def wrap(txt, x):
-    print string = txt + " -> " + repr(x)
-    return x
-
-# test.py
-from macro_module import macros, log
-
-wrap = "chicken salad"
-
-log[1 + 1]
-# 1 + 1 -> 2
-```
-
-The important changes in this snippet, as compared to the previous, are:
-
-- The removal of `wrap` from the import statement.
-- Replacement of `q` with `hq`
-- The introduction of `hygienic_alias` in the `log` function
-
-`hq` is the hygienic quasiquote macro. Unlike traditional quasiquotes (`q`), `hq` jumps through some hoops in order to ensure that the `wrap` you are using inside the `hq[...]` expression really-truly refers to the `wrap that is in scope *at the macro definition point*, not at tbe macro expansion point (as would be the case using the normal `q` macro).
-
-Note that `hq` requires that the `hygienic_alias` be present in scope; this means that if you want to use `hq` in a separate function, you need to make sure you pass it in, e.g. as follows:
-
-```python
-# macro_module.py
-
-@macros.expr
-def log(tree, exact_src, hygienic_alias, **kw):
-    new_tree = helper_func(tree, exact_src(tree), hygienic_alias)
-    return new_tree
-
-def helper_function(tree, txt, hygienic_alias):
-    return hq[wrap(u[txt], ast[tree])]
-
-def wrap(txt, x):
-    print string = txt + " -> " + repr(x)
-    return x
-```
-
-In general, `hq` allows you to refer to anything that is in scope where `hq` is being used. Apart from module-level global variables and functions, this includes things like locally scoped variables, which will be properly saved so they can be referred to later even when the macro has completed:
-
-```python
-# macro_module.py
-@macros.block
-def expand(tree, hygienic_alias, gen_sym, **kw):
-    v = 5
-    with hq as new_tree:
-        return v
-    return new_tree
-
-# test.py
-
-def run():
-    x = 1
-    with expand:
-        pass
-
-print run() # prints 5
-```
-
-In this case, the value of `v` is captured by the `hq`, such that even when `expand` has returned, it can still be used to return `6` to the caller of the `run()` function.
-
-###Breaking Hygiene
-By default, all top-level names in the `hq[...]` expression (this excludes things like the contents of `u[]` `name[]` `ast[]` unquotes) are hygienic, and are bound to the variable of that name at the macro definition point. This means that if you want a name to bind to some variable *at the macro expansion point*, you can always manually break hygiene by using the `name[]` or `ast[]` unquotes. The `hq` macro also provides an `unhygienic[...]` unquote just to streamline this common requirement:
-
-```python
-@macros.block
-def expand(tree, hygienic_alias, gen_sym, **kw):
-    v = 5
-    with hq as new_tree:
-        # all these do the same thing, and will refer to the variable named
-        # 'v' whereever the macro is expanded
-        return name["v"]
-        return ast[Name(id="v")]
-        return unhygienic[v]
-    return new_tree
-```
-
-Although all these do the same thing, you should prefer to use `unhygienic[...]` as it makes the intention clearer than using `name[...]` or `ast[...]` with hard-coded strings.
-
-###`expose_unhygienic`
-
-```python
-# macro_module.py
-@macros.expose()
-def wrap(printer, txt, x):
-    string = txt + " -> " + repr(x)
-    printer(string)
-    return x
-
-@macros.expr
-def log(tree, exact_src, hygienic_names, **kw):
-    new_tree = q[name[hygienic_names("wrap")](log_func, u[exact_src(tree)], ast[tree])]
-    return new_tree
-
-@macros.expose_unhygienic
-def log_func(x):
-    print(x)
-```
-`expose_unhygienic` is a hybrid between manual importing and `hq`. Like manual importing, decorating functions with `expose_unhygienic` causes them to be imported under their un-modified name, meaning they can shadow and be shadowed by other identifiers in the macro-expanded code. Like `expose`, it does not require the source file using the macros to put the identifier in the import list. This helps match what users of the macro expect: since the name doesn't ever appear anywhere in the source, it doesn't make sense for the macro to require the name being imported to work.
-
-In this example, the `log` macro uses `expose_unhygienic` on a `log_func` function. The macro-expanded code by default will capture the `log_func` function imported from `macro_module.py`, which prints the log to the console:
-
-```python
-# test.py
-from macro_module import macros, log
-
-log[1 + 1]
-# 1 + 1 -> 2
-```
-
-But a user can intentionally shadow `log_func` in order to redirect the logging, for example to a list
-
-```python
-# test.py
-from macro_module import macros, log
-
-output = []
-log_func = output.append
-
-log[1 + 1]
-# nothing gets printed
-print output
-# ['1 + 1']
-```
-
-In general, `expose_unhygienic` is useful when you want the macro to use a name that can be intentionally shadowed by the programmer using the macro, allowing the programmer to implicitly modify the behavior of the macro via this shadowing.
-
-----------------------------------------
 
 In general, MacroPy does not enforce hygiene on the macros you write; it is entirely possible to write macros which require manual importing, or whose identifiers collide with identifiers in the macro-expanded file with unpredictable results. At any time, the entire AST of the Python code fragment is directly available to you, and you can stich together raw quasiquotes any way you like.
 
 Nonetheless, by providing `gen_sym` and the `hq` hygienic quasiquote macro, MacroPy makes it trivially easy to have hygiene. `gen_sym` provides a way of creating temporary names which are guaranteed not to collide with names already in use, and hygienic quasiquotes take it a step further and allow you to directly reference anything in scope at the macro definition point without having to worry about things like name collisions or fiddling with imports. These tools should be sufficient to make your macros hygienic, and are used throughout the suite of macros bundled with MacroPy.
+
 
 Macro Subtleties
 ================

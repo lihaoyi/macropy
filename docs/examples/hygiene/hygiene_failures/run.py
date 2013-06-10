@@ -1,4 +1,3 @@
-
-import macropy.core.macros
+import macropy
 import macro_module
 import target
