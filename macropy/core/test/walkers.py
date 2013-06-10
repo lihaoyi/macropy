@@ -19,7 +19,7 @@ class Tests(unittest.TestCase):
             if type(tree) is BinOp and type(tree.op) is Add:
                 return BinOp(tree.left, Mult(), tree.right)
 
-        assert unparse_ast(transform.recurse(tree)) == unparse_ast(goal)
+        assert unparse(transform.recurse(tree)) == unparse(goal)
 
     def test_collect(self):
 
@@ -50,7 +50,7 @@ class Tests(unittest.TestCase):
 
         new_tree = deepen.recurse(tree, ctx=0)
         goal = parse_expr('(2 + (4 + (6 + (8 + 9))))')
-        assert unparse_ast(new_tree) == unparse_ast(goal)
+        assert unparse(new_tree) == unparse(goal)
 
     def test_stop(self):
         tree = parse_expr('(1 + 2 * 3 + 4 * (5 + 6) + 7)')
@@ -64,4 +64,4 @@ class Tests(unittest.TestCase):
                 stop()
 
         new_tree = stopper.recurse(tree)
-        assert unparse_ast(goal) == unparse_ast(new_tree)
+        assert unparse(goal) == unparse(new_tree)

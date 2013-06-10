@@ -29,7 +29,7 @@ class ast_list():
 
 
 @Walker
-def _unquote_search(tree, **kw):
+def unquote_search(tree, **kw):
 
     res = check_annotated(tree)
     if res:
@@ -47,13 +47,13 @@ def _unquote_search(tree, **kw):
 
 @macros.expr
 def q(tree, **kw):
-    tree = _unquote_search.recurse(tree)
+    tree = unquote_search.recurse(tree)
     tree = ast_repr(tree)
     return tree
 
 @macros.block
 def q(tree, target, **kw):
-    body = _unquote_search.recurse(tree)
+    body = unquote_search.recurse(tree)
     new_body = ast_repr(body)
     return [Assign([target], new_body)]
 

@@ -72,7 +72,7 @@ def linear_index(line_lengths, lineno, col_offset):
 @Walker
 def indexer(tree, collect, **kw):
     try:
-        unparse_ast(tree)
+        unparse(tree)
         collect((tree.lineno, tree.col_offset))
     except Exception, e:
         pass
@@ -84,7 +84,7 @@ _transforms = {
     DictComp: "{%s}"
 }
 
-def src_for(tree, src, indexes, line_lengths):
+def exact_src(tree, src, indexes, line_lengths):
     all_child_pos = sorted(indexer.collect(tree))
     start_index = linear_index(line_lengths(), *all_child_pos[0])
 
@@ -111,10 +111,11 @@ def src_for(tree, src, indexes, line_lengths):
                 x = prelim
             import ast
             parsed = ast.parse(x)
-            if unparse_ast(parsed).strip() == unparse_ast(tree).strip():
+            if unparse(parsed).strip() == unparse(tree).strip():
                 return prelim
 
         except SyntaxError as e:
             pass
-    raise Exception("Can't find working source")
-
+    raise ExactSrcException()
+class ExactSrcException(Exception):
+    pass

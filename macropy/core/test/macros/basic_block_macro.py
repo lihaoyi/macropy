@@ -4,6 +4,6 @@ macros = Macros()
 
 @macros.block
 def my_macro(tree, target, **kw):
-    assert unparse_ast(target) == "y"
-    assert unparse_ast(tree).strip() == "x = (x + 1)", unparse_ast(tree)
+    assert unparse(target) == "y"
+    assert unparse(tree).strip() == "x = (x + 1)", unparse(tree)
     return tree * 3

@@ -123,7 +123,7 @@ def expand_ast(tree, src, bindings, hygienic_aliases):
     positions = Lazy(lambda: indexer.collect(tree))
     line_lengths = Lazy(lambda: map(len, src.split("\n")))
     indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)]))
-    symbols = Lazy(lambda: _gen_syms(tree))
+    symbols = Lazy(lambda: gen_sym(tree))
 
 
     allnames = [(m, name, asname) for m, names in bindings for name, asname in names]
@@ -150,7 +150,7 @@ def expand_ast(tree, src, bindings, hygienic_aliases):
                 args=args,
                 gen_sym=lambda: symbols().next(),
 
-                exact_src=lambda t: src_for(t, src, indexes, line_lengths),
+                exact_src=lambda t: exact_src(t, src, indexes, line_lengths),
                 expand_macros=lambda t: expand_ast(t, src, bindings, hygienic_aliases),
                 hygienic_alias=hygienic_aliases[the_module],
                 **kwargs
@@ -266,7 +266,7 @@ class MacroFinder(object):
         except Exception, e:
             pass
 
-def _gen_syms(tree):
+def gen_sym(tree):
     """Create a generator that creates symbols which are not used in the given
     `tree`. This means they will be hygienic, i.e. it guarantees that they will
     not cause accidental shadowing, as long as the scope of the new symbol is
@@ -293,7 +293,7 @@ def detect_macros(tree):
 
 
     hygienic_aliases = {}
-    symbols = Lazy(lambda: _gen_syms(tree))
+    symbols = Lazy(lambda: gen_sym(tree))
     for stmt in tree.body:
         if isinstance(stmt, ImportFrom) \
                 and stmt.names[0].name == 'macros' \

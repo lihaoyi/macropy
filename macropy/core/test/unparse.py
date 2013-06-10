@@ -4,7 +4,7 @@ from macropy.core.macros import *
 
 def convert(code):
     " string -> ast -> string "
-    return unparse_ast(parse_stmt(code))
+    return unparse(parse_stmt(code))
 
 class Tests(unittest.TestCase):
 

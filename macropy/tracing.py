@@ -28,7 +28,7 @@ def log(tree, exact_src,  hygienic_alias, **kw):
 @macros.expr
 def show_expanded(tree, expand_macros,  hygienic_alias, **kw):
     expanded_tree = expand_macros(tree)
-    new_tree = hq[wrap_simple(unhygienic[log], u[unparse_ast(expanded_tree)], ast[expanded_tree])]
+    new_tree = hq[wrap_simple(unhygienic[log], u[unparse(expanded_tree)], ast[expanded_tree])]
     return new_tree
 
 
@@ -39,7 +39,7 @@ def show_expanded(tree, expand_macros, **kw):
         new_stmt = expand_macros(stmt)
 
         with hq as code:
-            unhygienic[log](u[unparse_ast(new_stmt)])
+            unhygienic[log](u[unparse(new_stmt)])
         new_tree.append(code)
         new_tree.append(new_stmt)
 

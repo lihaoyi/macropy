@@ -2,7 +2,7 @@
 than their expansion scope."""
 from macropy.core.macros import *
 
-from macropy.core.quotes import macros, q, _unquote_search, u, ast, ast_list, name
+from macropy.core.quotes import macros, q, unquote_search, u, ast, ast_list, name
 
 
 macros = Macros()
@@ -14,7 +14,7 @@ class unhygienic():
 
 @macros.block
 def hq(tree, hygienic_alias, target, **kw):
-    tree = _unquote_search.recurse(tree)
+    tree = unquote_search.recurse(tree)
     tree = hygienate(tree, hygienic_alias)
     tree = ast_repr(tree)
 
@@ -23,7 +23,7 @@ def hq(tree, hygienic_alias, target, **kw):
 
 @macros.expr
 def hq(tree, hygienic_alias, **kw):
-    tree = _unquote_search.recurse(tree)
+    tree = unquote_search.recurse(tree)
     tree = hygienate(tree, hygienic_alias)
     tree = ast_repr(tree)
     return tree

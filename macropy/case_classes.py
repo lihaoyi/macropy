@@ -88,7 +88,7 @@ def case(tree, gen_sym, hygienic_alias, **kw):
                 a_old = a[0]
                 a_old.targets[0].attr = statement.name
 
-                a_new = parse_stmt(unparse_ast(a[0]))[0]
+                a_new = parse_stmt(unparse(a[0]))[0]
                 outer.append(a_new)
             elif type(statement) is FunctionDef:
                 new_body.append(statement)

@@ -1718,7 +1718,7 @@ macros = Macros()
 def expand(tree, **kw):
     print tree
     print real_repr(tree)
-    print unparse_ast(tree)
+    print unparse(tree)
     return tree
 ```
 
@@ -1731,7 +1731,7 @@ BinOp(Num(1), Add(), Num(2))
 3
 ```
 
-As you can see, the AST objects don't have a nice `__repr__`, but if you use the MacroPy function `real_repr`, you can see that it's made up of the  `BinOp` `Add`, which adds the two numbers `Num(1)` and `Num(2)`. Unparsing it into source code via `unparse()` gives you `(1 + 2)`, which is what you would expect. In general, unparsing may not give you exactly the source of the original file (it may have more or fewer parentheses or have the indentation changed) but it should be semantically equivalent when executed.
+As you can see, the AST objects don't have a nice `__repr__`, but if you use the MacroPy function `real_repr`, you can see that it's made up of the  `BinOp` `Add`, which adds the two numbers `Num(1)` and `Num(2)`. Unparsing it into source code via `unparse()` gives you `(1 + 2)`, which is what you would expect. In general, unparsing may not give you exactly the original source, but it should be semantically equivalent when executed. Take a look at the [data model](#data-model) to see what other useful conversions are available.
 
 One (trivial) example of modifying the tree is to simply replace it with a new tree, for example:
 
@@ -1918,7 +1918,7 @@ def f(tree, **kw):
             tree.id = names.next()
 
     newtree = underscore_search.recurse(tree)
-    print unparse_ast(newtree) # (arg0 + (1 * arg1))
+    print unparse(newtree) # (arg0 + (1 * arg1))
     return newtree
 ```
 
@@ -2000,7 +2000,7 @@ def f(tree, **kw):
 
     new_tree = q[lambda: ast[tree]]
     new_tree.args.args = [Name(id = x) for x in used_names]
-    print unparse_ast(new_tree) # (lambda arg0, arg1: (arg0 + (1 * arg1)))
+    print unparse(new_tree) # (lambda arg0, arg1: (arg0 + (1 * arg1)))
     return new_tree
 ```
 
@@ -2148,7 +2148,7 @@ log[1 + 1]
 # TypeError: 'str' object is not callable
 ```
 
-Alternately, the programmer so simply forget to import it, for the same reason:
+Alternately, the programmer could simply forget to import it, for the same reason:
 
 ```python
 # test.py
@@ -2334,7 +2334,27 @@ This map maps out how to convert from form to form:
 
 ![Transforms](docs/media/Transforms.png)
 
-Except for `eval`, these are all functions defined in the [macropy/core/__init__.py](macropy/core/__init__.py). For instance, in order to convert from a AST back into source code (for example if you want to print out the code which is being run), you would use the `unparse_ast()` method. These transformations will be used throughout this guide, to convert from one form to another or to print out the AST for inspection.
+Except for `eval`, these are all functions defined in the [macropy/core/__init__.py](macropy/core/__init__.py). For instance, in order to convert from a AST back into source code (for example if you want to print out the code which is being run), you would use the `unparse()` method. These transformations will be used throughout this documentation, to convert from one form to another or to print out the AST for inspection.
+
+###`parse_stmt(src)` & `parse_expr(src)`
+Thin wrappers around [ast.parse](...), these functions simplify the common case where you want to convert a code snippet into a list of `stmt`s or a single `expr`.
+
+###`unparse(tree)`
+This function performs the conversion of the Python AST back into semantically equivalent source code; using `parse_stmt` or `parse_expr` on the generated should return the original AST.
+
+Although the generated code preserves semantic equivalence, this function does not preserve `lineno`s, `col_offset`s or syntactic equivalence in general. Hence your indentation may change, there may be extra parentheses added, etc.. The code is not obfuscated (It's typically straightforward to see what its doing, even with the syntactic changes) but you will not get back the exact original source.
+
+###`exact_src(tree)`
+This function differs from `unparse` in that instead of generating source code from the AST, it searches the original source of the file being macro-expanded for the exact original source code which generated this AST, using the `lineno` and `col_offset` as a guide. This means that it will generally fail on synthetic ASTs (which will not have a matching snippet in the source code) and raise an `ExactSrcException`. Unlike the rest of these functions, which are global, `exact_src` is provided to your macro as an [argument](#argument) as the `exact_src` for the same AST could vary between macro expansions.
+
+###`real_repr`
+A combination of `repr` and `ast.dump`, this function generally does the right thing in converting arbitrary values into Python source code which can be evaluated to re-create those values.
+
+###`ast_repr`
+Similar to `real_repr`, `ast_repr` directly generates a Python AST instead of generating strings. This AST can be unparsed and `eval`ed, or just directly `eval`ed, to re-create the original value
+
+###`eval`
+Unlike the rest of the functions listed here, `eval` is the standard Python function provided as a builtin. It evaluates either source code or an AST to produce a value.
 
 Arguments
 ---------
@@ -2428,7 +2448,7 @@ with my_macro as blah:
 
 ###`exact_src`
 
-This is a function that attempts to retrieve the source code of the target AST, exactly as written in the source code. This is in contrast to `unparse_ast`, which produces semantically correct code that may differ in syntax from what was originally parsed, for example it may have extra parentheses, be missing comments, and have the whitespace and layout modified, and a variety of other syntactic changes:
+This is a function that attempts to retrieve the source code of the target AST, exactly as written in the source code. This is in contrast to `unparse`, which produces semantically correct code that may differ in syntax from what was originally parsed, for example it may have extra parentheses, be missing comments, and have the whitespace and layout modified, and a variety of other syntactic changes:
 
 ```python
 (1 + 2 + 3 + 4) -> (((1 + 2) + 3) + 4)
@@ -2451,7 +2471,7 @@ It does this by analyzing the `lineno` and `col_offset` values on the AST it is 
 @macros.expr
 def show_expanded(tree, expand_macros, **kw):
     expanded_tree = expand_macros(tree)
-    new_tree = q[wrap_simple(log, u[unparse_ast(expanded_tree)], ast[expanded_tree])]
+    new_tree = q[wrap_simple(log, u[unparse(expanded_tree)], ast[expanded_tree])]
     return new_tree
 ```
 
@@ -2599,7 +2619,9 @@ def transform(tree, collect, **kw):
     ...
     collect(value)
     return new_tree
+
 new_tree, collected = transform.recurse_collect(old_tree)
+collected = transform.collect(old_tree)
 ```
 
 Using the `recurse_collect` instead of the `recurse` method to return both the new `tree` as well as the collected data, as a list. This is a simple way of aggregating values as you traverse the AST.
@@ -2639,7 +2661,6 @@ Hygiene
 -------
 
 MacroPy provides a number of tools for writing Hygienic macros:
-
 
 ###`gen_sym`
 `gen_sym` is a function MacroPy provides to your macro as an [argument](#arguments) that generates a new, un-used name every time it is called:
@@ -2789,7 +2810,7 @@ If your macro needs to perform an operation *after* all macros in its sub-tree h
 @macros.expr
 def show_expanded(tree, expand_macros,  hygienic_alias, **kw):
     expanded_tree = expand_macros(tree)
-    new_tree = hq[wrap_simple(unhygienic[log], u[unparse_ast(expanded_tree)], ast[expanded_tree])]
+    new_tree = hq[wrap_simple(unhygienic[log], u[unparse(expanded_tree)], ast[expanded_tree])]
     return new_tree
 ```
 

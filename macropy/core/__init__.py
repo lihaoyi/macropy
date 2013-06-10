@@ -15,7 +15,7 @@ This map maps out how to convert from form to form:
       |            |----------->|            |
       |   Source   |            |    AST     |
       |____________|<-----------|____________|
-          ^     |   unparse_ast   |        ^
+          ^     |   unparse   |        ^
           |     |                 | eval   | ast_repr
           |     |                 |        |
 real_repr |     |    eval        _v________|_
@@ -26,7 +26,7 @@ real_repr |     |    eval        _v________|_
 import ast
 import sys
 
-__all__ = ['Literal', 'ast_repr', 'parse_expr', 'parse_stmt', 'real_repr', 'unparse_ast']
+__all__ = ['Literal', 'ast_repr', 'parse_expr', 'parse_stmt', 'real_repr', 'unparse']
 
 class Literal(object):
     """Used to wrap sections of an AST which must remain intact when
@@ -35,7 +35,7 @@ class Literal(object):
         self.body = body
 
     def __repr__(self):
-        return unparse_ast(self.body)
+        return unparse(self.body)
 
 
 
@@ -247,7 +247,7 @@ def jmap(s, f, *l):
 def tabs(i): 
     return "\n" + "    "*i
 
-def unparse_ast(tree):
+def unparse(tree):
     """Converts an AST back into the source code from whence it came!"""
     return trec[tree.__class__](tree, 0)
 

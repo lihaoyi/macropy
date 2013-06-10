@@ -33,7 +33,9 @@ def peg(tree, gen_sym, hygienic_alias, **kw):
     for statement in tree:
         if type(statement) is Assign:
             new_tree = process(statement.value, potential_targets, gen_sym, hygienic_alias)
-            statement.value = hq[Parser.Named(lambda: ast[new_tree], [u[statement.targets[0].id]])]
+            statement.value = hq[
+                Parser.Named(lambda: ast[new_tree], [u[statement.targets[0].id]])
+            ]
 
     return tree
 
