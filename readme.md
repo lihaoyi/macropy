@@ -474,7 +474,6 @@ Which is evaluated at run-time in the local scope, using whatever the values `a`
 
 Tracing
 -------
-
 ```python
 >>> from macropy.tracing import macros, log
 >>> log[1 + 2]

@@ -5,8 +5,9 @@ from ast import *
 
 from macropy.core import util
 from macropy.core.macros import *
-from macropy.core.quotes import macros, q, hq
 
+from macropy.core.quotes import macros, q
+from macropy.core.hquotes import macros, hq
 macros = Macros()
 
 

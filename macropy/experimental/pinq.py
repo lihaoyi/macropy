@@ -1,7 +1,7 @@
 from ast import Call
 
 from macropy.core.macros import *
-from macropy.core.quotes import macros, hq, ast, name
+from macropy.core.hquotes import macros, hq, ast, name
 from macropy.quick_lambda import macros, f
 import sqlalchemy
 

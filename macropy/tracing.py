@@ -1,6 +1,6 @@
 
 from macropy.core.macros import *
-from macropy.core.quotes import macros, u, hq, unhygienic
+from macropy.core.hquotes import macros, u, hq, unhygienic
 import ast
 import copy
 

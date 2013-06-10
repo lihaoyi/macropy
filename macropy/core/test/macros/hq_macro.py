@@ -1,5 +1,5 @@
 from macropy.core.macros import *
-from macropy.core.quotes import macros, hq, q
+from macropy.core.hquotes import macros, hq, unhygienic
 
 macros = Macros()
 

@@ -1,7 +1,7 @@
 from macropy.core.macros import *
 from macropy.experimental.pattern import macros, switch, _matching, ClassMatcher, NameMatcher
 
-from macropy.core.quotes import macros, hq
+from macropy.core.hquotes import macros, hq
 
 __all__ = ['tco']
 

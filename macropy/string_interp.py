@@ -1,7 +1,7 @@
 import re
 
 from macropy.core.macros import *
-from macropy.core.quotes import macros, hq, u, ast_list
+from macropy.core.hquotes import macros, hq, u, ast_list
 
 macros = Macros()
 
