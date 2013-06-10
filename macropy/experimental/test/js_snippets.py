@@ -1,8 +1,8 @@
 import unittest
-import ast
+
 from macropy.experimental.js_snippets import macros, pyjs, js, std_lib_script
 from macropy.tracing import macros, require
-import pjs
+
 
 from selenium import webdriver
 

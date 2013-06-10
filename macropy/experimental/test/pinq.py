@@ -1,7 +1,7 @@
 import unittest
 import ast
 
-from sqlalchemy import *
+from sqlalchemy import create_engine, func
 from macropy.experimental.pinq import macros, sql, query, generate_schema
 from macropy.core.quotes import macros, q
 from macropy.tracing import macros, show_expanded

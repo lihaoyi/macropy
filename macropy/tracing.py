@@ -1,7 +1,7 @@
 
 from macropy.core.macros import *
 from macropy.core.hquotes import macros, u, hq, unhygienic
-import ast
+
 import copy
 
 macros = Macros()

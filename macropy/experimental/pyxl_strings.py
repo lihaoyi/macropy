@@ -1,10 +1,10 @@
 
 from macropy.core.macros import *
 
-import sys
+
 import tokenize
 from pyxl.codec.tokenizer import pyxl_tokenize
-from pyxl.html import *
+
 
 
 macros = Macros()

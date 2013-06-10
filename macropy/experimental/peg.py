@@ -4,7 +4,7 @@ from macropy.core.macros import *
 from macropy.core.hquotes import macros, hq, u
 from macropy.quick_lambda import macros, f
 from macropy.case_classes import macros, case
-from macropy.string_interp import  macros, s
+
 from collections import defaultdict
 
 """
@@ -47,14 +47,14 @@ def peg(tree, gen_sym, hygienic_alias, **kw):
 
 def process(tree, potential_targets, gen_sym, hygienic_alias):
     @Walker
-    def _PegWalker(tree, stop, collect, **kw):
+    def PegWalker(tree, stop, collect, **kw):
         if type(tree) is Str:
             stop()
             return hq[Parser.Raw(ast[tree])]
         if type(tree) is Name and tree.id in potential_targets:
             collect(tree.id)
         if type(tree) is BinOp and type(tree.op) is RShift:
-            tree.left, b_left = _PegWalker.recurse_collect(tree.left)
+            tree.left, b_left = PegWalker.recurse_collect(tree.left)
             tree.right = hq[lambda bindings: ast[tree.right]]
             names = distinct(flatten(b_left))
             tree.right.args.args = map(f[Name(id = _)], names)
@@ -65,7 +65,7 @@ def process(tree, potential_targets, gen_sym, hygienic_alias):
             return tree
 
         if type(tree) is BinOp and type(tree.op) is FloorDiv:
-            tree.left, b_left = _PegWalker.recurse_collect(tree.left)
+            tree.left, b_left = PegWalker.recurse_collect(tree.left)
             stop()
             collect(b_left)
             return tree
@@ -76,19 +76,20 @@ def process(tree, potential_targets, gen_sym, hygienic_alias):
             result.args[0].elts = tree.elts
             all_bindings = []
             for i, elt in enumerate(tree.elts):
-                result.args[0].elts[i], bindings = _PegWalker.recurse_collect(tree.elts[i])
+                result.args[0].elts[i], bindings = PegWalker.recurse_collect(tree.elts[i])
                 all_bindings.append(bindings)
             stop()
             collect(all_bindings)
             return result
 
         if type(tree) is Compare and type(tree.ops[0]) is Is:
-            left_tree, bindings = _PegWalker.recurse_collect(tree.left)
+            left_tree, bindings = PegWalker.recurse_collect(tree.left)
             new_tree = hq[ast[left_tree].bind_to(u[tree.comparators[0].id])]
             stop()
             collect(bindings + [tree.comparators[0].id])
             return new_tree
-    new_tree, bindings = _PegWalker.recurse_collect(tree)
+
+    new_tree = PegWalker.recurse(tree)
     return new_tree
 
 
