@@ -28,22 +28,29 @@ MacroPy has been used to implement features such as:
 
 As well as a number of more experimental macros such as:
 
-- [MacroPEG](#macropeg-parser-combinators), Parser combinators inspired by Scala's
+- [MacroPEG](#macropeg-parser-combinators), Parser Combinators inspired by Scala's
 - [Pattern Matching](#pattern-matching) from the Functional Programming world
 - [Tail-call Optimization](#tail-call-optimization), preventing unnecessary stack overflows
 - [PINQ to SQLAlchemy](#pinq-to-sqlalchemy), a shameless clone of LINQ to SQL from C#
 - [Pyxl Snippets](#pyxl-snippets), XML interpolation within your Python code
 - [JS Snippets](#js-snippets), cross compiling snippets of Python into equivalent Javascript
 
-The [Rough Overview](#rough-overview) will give a birds eye view of how it works, and the [Tutorials](#tutorials) will go into greater detail and walk you through [writing your first macro](#writing-your-first-macro), and [making your macros hygienic](#making-your-macros-hygienic). The [Reference Documentation](#reference) contains information about:
+Browse [how it works](#how-macropy-works), or look at the [Tutorials](#tutorials) will go into greater detail and walk you through
+
+- [Writing your first macro](#writing-your-first-macro)
+- [Making your macros hygienic](#making-your-macros-hygienic)
+
+The [Reference Documentation](#reference) contains information about:
 
 - [Data Model](#data-model), what MacroPy gives you to work with
 - [Arguments](#arguments), what a macro is given to do its work
 - [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
 - [Walkers](#walkers), a flexible tool to traverse and transform ASTs
 - [Hygiene](#hygiene), how to avoid weird bugs related to name collisions and shadowing
+- [Expansion Order](#expansion-order) of nested macros with a file
+- [Line Numbers](#line-numbers), or what errors you get when something goes wrong.
 
-Or just skip ahead to the [Subtleties](#macro-subtleties), [Lessons](#lessons), [Conclusion](#macropy-the-last-refuge-of-the-competent) and [Future Plans](#future). We're open to contributions, so send us your ideas/questions/issues/pull-requests and we'll do our best to accomodate you! If you need ideas on how to contribute, check out our [issues](issues) page.
+Or just skip ahead to the [Discussion](#discussion) and [Conclusion](#macropy-bringing-macros-to-python). We're open to contributions, so send us your ideas/questions/issues/pull-requests and we'll do our best to accommodate you! If you need ideas on how to contribute, check out our [issues](issues) page.
 
 MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy), using a standard [setup.py](setup.py) to manage dependencies, installation and other things. Check out [this gist](https://gist.github.com/lihaoyi/5577609) for an example of setting it up on a clean system.
 
@@ -2451,6 +2458,9 @@ def show_expanded(tree, expand_macros, **kw):
 ```
 
 Note that macro expansion *mutates the tree being expanded*. In the case of the `show_expanded` macro, it doesn't really macro (since the tree was going to get expanded anyway). However, if you want to preserve the original AST for any reason, you should [deepcopy](http://docs.python.org/2/library/copy.html#copy.deepcopy) the original AST and do your expansion on the copy.
+
+###`hygienic_alias`
+`hygienic_alias` is a name which refers to the current macro module from the module being expanded. This varies from module to module, even if the current module changes, as the modules being expanded may contain different identifiers and necessitate different names to preserve hygiene. This is mainly used for [hygienic quasiquotes](#hygienic-quasiquotes).
 
 Quasiquotes
 -----------

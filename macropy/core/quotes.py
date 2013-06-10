@@ -85,6 +85,6 @@ def hygienate(tree, hygienic_alias):
             id, subtree = res
             if 'unhygienic' == id:
                 stop()
-                del tree.slice.value.ctx
+                tree.slice.value.ctx = None
                 return tree.slice.value
     return hygienator.recurse(tree)
