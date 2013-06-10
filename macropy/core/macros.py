@@ -11,7 +11,7 @@ from misc import *
 
 
 @singleton
-class module_self_ref:
+class hygienic_self_ref:
     pass
 
 class MacroFunction(object):
@@ -121,7 +121,7 @@ class _MacroLoader(object):
 def fill_hygienes(tree, hygienic_alias):
     @Walker
     def hygienator(tree, stop, **kw):
-        if type(tree) is Name and tree.id == module_self_ref:
+        if type(tree) is Name and tree.id == hygienic_self_ref:
             tree.id = hygienic_alias
 
     return hygienator.recurse(tree)

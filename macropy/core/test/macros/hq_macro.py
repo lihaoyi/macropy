@@ -26,6 +26,5 @@ def expand_unhygienic(tree, gen_sym, **kw):
     v = 5
     with hq as new_tree:
         unhygienic[x] = unhygienic[x] + v
-    print real_repr(new_tree)
-    print unparse(new_tree)
+
     return new_tree

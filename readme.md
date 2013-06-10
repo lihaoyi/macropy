@@ -2732,12 +2732,12 @@ This is accomplished by having the `hq[...]` macro expand each identifier, rough
 
 ```python
 hq[wrap]
-q[name[module_self_ref].macros.registered[u[macros.register(%s)]]]
+q[name[hygienic_self_ref].macros.registered[u[macros.register(%s)]]]
 ```
 
-Where `module_self_ref` is a special identifier (found in [macropy/core/macros.py](macropy/core/macros.py) which tells MacroPy to insert an identifier referring back to the module of the currently-executing macro.
+Where `hygienic_self_ref` is a special identifier (found in [macropy/core/macros.py](macropy/core/macros.py) which tells MacroPy to insert an identifier referring back to the module of the currently-executing macro.
 
-Using `wrap` as an example, `hq` uses `macros.register` to save the current value of `wrap`. `macros.register` returns an index, which can be used to retrieve it later. `hq` then, using the identifier which takes the place of `module_self_ref`, returns a code snippet that will look up the correct `macros.registered` at run-time and retrieve the value. This effectively saves every identifier seen by the `hq` macro and provides it to the macro-expanded code.
+Using `wrap` as an example, `hq` uses `macros.register` to save the current value of `wrap`. `macros.register` returns an index, which can be used to retrieve it later. `hq` then, using the identifier which takes the place of `hygienic_self_ref`, returns a code snippet that will look up the correct `macros.registered` at run-time and retrieve the value. This effectively saves every identifier seen by the `hq` macro and provides it to the macro-expanded code.
 
 One thing to note is that `hq` saves each value *forever*. Once a value has been captured inside `hq` and saved using `macros.register`, it will remain indefinitely without being garbage-collected or discarded. Although there may be ways around this, in practice it should not be too great of a problem: the total number of `hq`s is generally bounded to a relatively small number, proportional to the total amount of code using macros, and thus is unlikely to significantly increase memory usage.
 

@@ -36,7 +36,7 @@ def hygienator(tree, stop, **kw):
         stop()
 
         return q[
-            ast[name.wrap(q[module_self_ref])]
+            ast[name.wrap(q[hygienic_self_ref])]
             .macros
             .load(
                 ast[u.wrap(q[macros.save(name[tree.id])])]
