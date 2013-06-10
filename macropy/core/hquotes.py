@@ -13,8 +13,7 @@ class unhygienic(): pass
 def hq(tree, hygienic_alias, target, **kw):
     tree = _unquote_search.recurse(tree)
     tree = hygienate(tree, hygienic_alias)
-    body = _unquote_search.recurse(tree)
-    new_body = ast_repr(body)
+    new_body = ast_repr(tree)
     return [Assign([Name(id=target.id)], new_body)]
 
 
@@ -23,7 +22,6 @@ def hq(tree, hygienic_alias, **kw):
 
     tree = _unquote_search.recurse(tree)
     tree = hygienate(tree, hygienic_alias)
-    tree = _unquote_search.recurse(tree)
     tree = ast_repr(tree)
     return tree
 
@@ -33,11 +31,17 @@ def hygienate(tree, hygienic_alias):
     def hygienator(tree, stop, **kw):
         if type(tree) is Name and type(tree.ctx) is Load:
             stop()
-            return q[name["name"][hygienic_alias].macros.registered[name["u"][macros.register(name[tree.id])]]]
+            return q[
+                ast[name.wrap(q[hygienic_alias])]
+                .macros
+                .registered[
+                    ast[u.wrap(q[macros.register(name[tree.id])])]
+                ]
+            ]
 
         if type(tree) is Literal:
             stop()
-            return Subscript(Name(id="ast"), Index(tree.body), Load())
+            return ast.wrap(tree.body)
 
         res = check_annotated(tree)
         if res:

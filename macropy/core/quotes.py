@@ -3,17 +3,22 @@ from macropy.core import *
 macros = Macros()
 
 @singleton
-class u(): pass
+class u():
+    def wrap(self, tree):
+        return Literal(Call(Name(id="ast_repr"), [tree], [], None, None))
 
 @singleton
-class name(): pass
-
+class name():
+    def wrap(self, tree):
+        return Literal(Call(Name(id="Name"), [], [keyword("id", tree)], None, None))
 @singleton
-class ast(): pass
-
+class ast():
+    def wrap(self, tree):
+        return Literal(tree)
 @singleton
-class ast_list(): pass
-
+class ast_list():
+    def wrap(self, tree):
+        return Literal(Call(Name(id="List"), [], [keyword("elts", tree)], None, None))
 
 
 @Walker
@@ -24,13 +29,13 @@ def _unquote_search(tree, **kw):
         func, right = res
 
         if 'u' == func:
-            return Literal(Call(Name(id="ast_repr"), [right], [], None, None))
+            return u.wrap(right)
         elif 'name' == func:
-            return Literal(Call(Name(id="Name"), [], [keyword("id", right)], None, None))
+            return name.wrap(right)
         elif 'ast' == func:
-            return Literal(right)
+            return ast.wrap(right)
         elif 'ast_list' == func:
-            return Literal(Call(Name(id="List"), [], [keyword("elts", right)], None, None))
+            return ast_list.wrap(right)
 
 
 @macros.expr
