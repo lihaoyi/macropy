@@ -48,6 +48,7 @@ class Lazy:
         return self.val[0]
 
 def distinct(l):
+    """Builds a new list with all duplicates removed"""
     s = []
     for i in l:
        if i not in s:
