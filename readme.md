@@ -2630,6 +2630,127 @@ This provides it a large amount of versatility, and lets you use the `Walker` to
 Hygiene
 -------
 
+MacroPy provides a number of tools for writing Hygienic macros:
+
+
+###`gen_sym`
+`gen_sym` is a function MacroPy provides to your macro as an [argument](#arguments) that generates a new, un-used name every time it is called:
+
+```python
+from macropy.core.macros import *
+
+macros = Macros()
+
+@macros.expr
+def f(tree, gen_sym, **kw):
+    print gen_sym() # sym0
+    print gen_sym() # sym1
+    print gen_sym() # sym2
+    print gen_sym() # sym3
+    # skipping sym4 because it's already used in the target file
+    print gen_sym() # sym5
+
+```
+
+This works by first scanning the entire macro-using file to see which names are currently in use, and thereafter providing names which do not appear on that list. This should generally work, for a name that is neither defined nor referenced in a file is almost certainly not used. However, due to Python's dynamic nature, this cannot be guaranteed, and there are cases where `gen_sym` will fail:
+
+```python
+# module_a.py
+from macro_module import macros, my_macro
+
+with my_macro: # a macro which uses gen_sym()
+    ...
+
+# module_b.py
+import module_a
+module_a.sym0 = 10
+...
+do_stuff_with(module_a.sym0)
+```
+
+In this case, a separate file `module_b` is using `module_a` as a convenient namespace to store the value 10. `module_a` has no way of knowing this, and `gen_sym` does not see `sym0` used anywhere in that file, and so assumes `sym0` is safe to use. If `my_macro` ends up writing to and reading from `sym0` in module-scope, this could cause `my_macro`'s and `module_b`'s read/writes to conflict, resulting in the weird bugs that `gen_sym` is meant to avoid. Another unfortunate scenario is:
+
+```python
+# module_a.py
+sym0 = 10
+
+# module_b.py
+from module_a import *
+from macro_module import macros, my_macro
+
+with my_macro: # a macro which uses gen_sym()
+    ...
+
+# module_c.py
+from module_b import sym0
+do_stuff_with(sym0)
+```
+
+Again, due to the nature of `import *`, `module_c` can rely on `sym0` being present in `module_b` while `module_b` itself is completely unaware.
+
+These edge cases are unavoidable, but luckily this sort of code is frowned upon in general (not just in Python!). Although Python's philosophy of "We're all adults" means that it's always possible to go out of your way and cause `gen_sym` to fail, this is the case for other code too, and in practice this should not be a problem.
+
+###Hygienic Quasiquotes
+Hygienic quasiquotes, created using the `hq[...]` macro, are quasiquotes who automatically bind identifiers from the lexical scope of the macro definition, rather than from that of the macro expansion point. Thus, in the following `log` macro:
+
+```python
+# macro_module.py
+from macropy.core.macros import *
+from macropy.core.quotes import macros, hq, u
+
+macros = Macros()
+
+@macros.expr
+def log(tree, exact_src, hygienic_alias, **kw):
+    new_tree = hq[wrap(u[exact_src(tree)], ast[tree])]
+    return new_tree
+
+def wrap(txt, x):
+    print txt + " -> " + repr(x)
+    return x
+
+# test.py
+from macro_module import macros, log
+
+wrap = 3 # try to confuse it
+
+log[1 + 2 + 3]
+# 1 + 2 + 3 -> 6
+# it still works despite trying to confuse it with `wraps`
+```
+
+We can be sure that the `wrap` we referred to inside the `hq[...]` macro is guaranteed to be the `wrap` you see in `macro_module.py`, and not some other `wrap` that a user may have created in `test.py`. This requires `hygienic_alias` to be in scope.
+
+This is accomplished by having the `hq[...]` macro expand each identifier, roughly, via:
+
+```python
+hq[wrap]
+q[name[hygienic_alias].macros.registered[u[macros.register(%s)]]]
+```
+
+`hygienic_alias` is a name MacroPy provides to each macro for the *name of the current macro module in the module being expanded*. Different names may be picked as the macro is expanded in different files in order to keep things hygienic and avoid name collisions.
+
+Using `wrap` as an example, `hq` uses `macros.register` to save the current value of `wrap`. `macros.register` returns an index, which can be used to retrieve it later. `hq` then, using the `hygienic_alias` of the current module in order to refer back to it, returns a code snippet that will look up the correct `macros.registered` at run-time and retrieve the value. This effectively saves every identifier seen by the `hq` macro and provides it to the macro-expanded code, using `hygienic_alias` to avoid name collisions.
+
+One thing to note is that `hq` saves each value *forever*. Once a value has been captured inside `hq` and saved using `macros.register`, it will remain indefinitely without being garbage-collected or discarded. Although there may be ways around this, in practice it should not be too great of a problem: the total number of `hq`s is generally bounded to a relatively small number, proportional to the total amount of code using macros, and thus is unlikely to significantly increase memory usage.
+
+###`expose_unhygienic`
+Annotating something with `@expose_unhygienic` simply synthesizes an import in the macro-expanded module to pull in the name from the macro's own module. E.g. in the case of the `log` macro, it converts
+
+```python
+from macro_module import macros, log
+```
+
+into
+
+```python
+from macro_module import macros, log, log_func
+```
+
+Thus, the imported name (`log_func`) is subject to shadowing and name collisions just like any other import, with the caveat that unlike other imports, `log_func` doesn't appear anywhere in the source code of the macro-expanded module! This adds a certain amount of potential implicitness, and thus confusion to the system. On the other hand, the implicitness is a boon in cases like the `log` macro, where forcing the user to explicitly pass in the `log_func` into every invocation of `log[...]` gets tiring extremely quickly. `@expose_unhygienic` is therefore best use sparingly, and only after thinking carefully about whether the convenience is worth the added confusion.
+
+-------------------------------------------------------------------------------
+
 In general, MacroPy does not enforce hygiene on the macros you write; it is entirely possible to write macros which require manual importing, or whose identifiers collide with identifiers in the macro-expanded file with unpredictable results. At any time, the entire AST of the Python code fragment is directly available to you, and you can stich together raw quasiquotes any way you like.
 
 Nonetheless, by providing `gen_sym` and the `hq` hygienic quasiquote macro, MacroPy makes it trivially easy to have hygiene. `gen_sym` provides a way of creating temporary names which are guaranteed not to collide with names already in use, and hygienic quasiquotes take it a step further and allow you to directly reference anything in scope at the macro definition point without having to worry about things like name collisions or fiddling with imports. These tools should be sufficient to make your macros hygienic, and are used throughout the suite of macros bundled with MacroPy.
