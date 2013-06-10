@@ -9,23 +9,23 @@ def double(x):
     return x * value
 
 @macros.expr
-def expand(tree, hygienic_alias, gen_sym, **kw):
+def expand(tree, gen_sym, **kw):
     tree = hq[str(value) + "x: " + double(ast[tree])]
     return tree
 
 @macros.block
-def expand(tree, hygienic_alias, gen_sym, **kw):
+def expand(tree, gen_sym, **kw):
     v = 5
     with hq as new_tree:
         return v
     return new_tree
 
 @macros.block
-def expand_unhygienic(tree, hygienic_alias, gen_sym, **kw):
+def expand_unhygienic(tree, gen_sym, **kw):
 
     v = 5
     with hq as new_tree:
         unhygienic[x] = unhygienic[x] + v
-
-
+    print real_repr(new_tree)
+    print unparse(new_tree)
     return new_tree

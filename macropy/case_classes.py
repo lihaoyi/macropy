@@ -75,7 +75,7 @@ def find_member_assignments(tree, collect, stop, **kw):
         map(collect, self_assigns)
 
 @macros.decorator
-def case(tree, gen_sym, hygienic_alias, **kw):
+def case(tree, gen_sym, **kw):
     def split_body(tree):
         new_body = []
         outer = []

@@ -178,7 +178,7 @@ trec = {
                                 #Expressions
                                 #Str doesn't properly handle from __future__ import unicode_literals
     Str:        lambda tree, i: repr(tree.s),
-    Name:       lambda tree, i: tree.id,
+    Name:       lambda tree, i: str(tree.id),
     Repr:       lambda tree, i: "`" + rec(tree.value) + "`",
     Num:        lambda tree, i: (lambda repr_n:
                                     "(" + repr_n.replace("inf", INFSTR) + ")"

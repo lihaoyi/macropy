@@ -2097,7 +2097,7 @@ from macropy.core.quotes import macros, q, u
 macros = Macros()
 
 @macros.expr
-def log(tree, exact_src, hygienic_alias, **kw):
+def log(tree, exact_src, **kw):
     new_tree = q[wrap(u[exact_src(tree)], ast[tree])]
     return new_tree
 
@@ -2160,7 +2160,7 @@ log[1 + 1]
 
 which gives a rather confusing error message: `wrap` is not defined? From the programmer's perspective, `wrap` isn't used at all! These very common pitfalls mean you should probably avoid this approach in favor of the latter two.
 
-###`hq` and `hygienic_alias`
+###`hq`
 
 ```python
 # macro_module.py
@@ -2170,7 +2170,7 @@ from macropy.core.quotes import macros, hq, u
 macros = Macros()
 
 @macros.expr
-def log(tree, exact_src, hygienic_alias, **kw):
+def log(tree, exact_src, **kw):
     new_tree = hq[wrap(u[exact_src(tree)], ast[tree])]
     return new_tree
 
@@ -2192,34 +2192,15 @@ The important changes in this snippet, as compared to the previous, are:
 
 - The removal of `wrap` from the import statement.
 - Replacement of `q` with `hq`
-- The introduction of `hygienic_alias` in the `log` function
 
 `hq` is the hygienic quasiquote macro. Unlike traditional quasiquotes (`q`), `hq` jumps through some hoops in order to ensure that the `wrap` you are using inside the `hq[...]` expression really-truly refers to the `wrap that is in scope *at the macro definition point*, not at tbe macro expansion point (as would be the case using the normal `q` macro). The end-result is that `wrap` refers to the `wrap` you want in `macro_module.py`, and not whatever `wrap` happened to be defined in `test.py`. See [docs/examples/hygienic_quasiquotes](docs/examples/hygienic_quasiquotes) to see it working.
-
-Note that `hq` requires that the `hygienic_alias` be present in scope; this means that if you want to use `hq` in a separate function, you need to make sure you pass it in, e.g. as follows:
-
-```python
-# macro_module.py
-
-@macros.expr
-def log(tree, exact_src, hygienic_alias, **kw):
-    new_tree = helper_func(tree, exact_src(tree), hygienic_alias)
-    return new_tree
-
-def helper_function(tree, txt, hygienic_alias):
-    return hq[wrap(u[txt], ast[tree])]
-
-def wrap(txt, x):
-    print string = txt + " -> " + repr(x)
-    return x
-```
 
 In general, `hq` allows you to refer to anything that is in scope where `hq` is being used. Apart from module-level global variables and functions, this includes things like locally scoped variables, which will be properly saved so they can be referred to later even when the macro has completed:
 
 ```python
 # macro_module.py
 @macros.block
-def expand(tree, hygienic_alias, gen_sym, **kw):
+def expand(tree, gen_sym, **kw):
     v = 5
     with hq as new_tree:
         return v
@@ -2242,7 +2223,7 @@ By default, all top-level names in the `hq[...]` expression (this excludes thing
 
 ```python
 @macros.block
-def expand(tree, hygienic_alias, gen_sym, **kw):
+def expand(tree, gen_sym, **kw):
     v = 5
     with hq as new_tree:
         # all these do the same thing, and will refer to the variable named
@@ -2266,7 +2247,7 @@ from macropy.core.quotes import macros, hq, u, unhygienic
 macros = Macros()
 
 @macros.expr
-def log(tree, exact_src, hygienic_alias, **kw):
+def log(tree, exact_src, **kw):
     new_tree = hq[wrap(unhygienic[log_func], u[exact_src(tree)], ast[tree])]
     return new_tree
 
@@ -2476,9 +2457,6 @@ def show_expanded(tree, expand_macros, **kw):
 ```
 
 Note that macro expansion *mutates the tree being expanded*. In the case of the `show_expanded` macro, it doesn't really macro (since the tree was going to get expanded anyway). However, if you want to preserve the original AST for any reason, you should [deepcopy](http://docs.python.org/2/library/copy.html#copy.deepcopy) the original AST and do your expansion on the copy.
-
-###`hygienic_alias`
-`hygienic_alias` is a name which refers to the current macro module from the module being expanded. This varies from module to module, even if the current module changes, as the modules being expanded may contain different identifiers and necessitate different names to preserve hygiene. This is mainly used for [hygienic quasiquotes](#hygienic-quasiquotes).
 
 Quasiquotes
 -----------
@@ -2730,7 +2708,7 @@ from macropy.core.quotes import macros, hq, u
 macros = Macros()
 
 @macros.expr
-def log(tree, exact_src, hygienic_alias, **kw):
+def log(tree, exact_src, **kw):
     new_tree = hq[wrap(u[exact_src(tree)], ast[tree])]
     return new_tree
 
@@ -2748,18 +2726,18 @@ log[1 + 2 + 3]
 # it still works despite trying to confuse it with `wraps`
 ```
 
-We can be sure that the `wrap` we referred to inside the `hq[...]` macro is guaranteed to be the `wrap` you see in `macro_module.py`, and not some other `wrap` that a user may have created in `test.py`. This requires `hygienic_alias` to be in scope.
+We can be sure that the `wrap` we referred to inside the `hq[...]` macro is guaranteed to be the `wrap` you see in `macro_module.py`, and not some other `wrap` that a user may have created in `test.py`.
 
 This is accomplished by having the `hq[...]` macro expand each identifier, roughly, via:
 
 ```python
 hq[wrap]
-q[name[hygienic_alias].macros.registered[u[macros.register(%s)]]]
+q[name[module_self_ref].macros.registered[u[macros.register(%s)]]]
 ```
 
-`hygienic_alias` is a name MacroPy provides to each macro for the *name of the current macro module in the module being expanded*. Different names may be picked as the macro is expanded in different files in order to keep things hygienic and avoid name collisions.
+Where `module_self_ref` is a special identifier (found in [macropy/core/macros.py](macropy/core/macros.py) which tells MacroPy to insert an identifier referring back to the module of the currently-executing macro.
 
-Using `wrap` as an example, `hq` uses `macros.register` to save the current value of `wrap`. `macros.register` returns an index, which can be used to retrieve it later. `hq` then, using the `hygienic_alias` of the current module in order to refer back to it, returns a code snippet that will look up the correct `macros.registered` at run-time and retrieve the value. This effectively saves every identifier seen by the `hq` macro and provides it to the macro-expanded code, using `hygienic_alias` to avoid name collisions.
+Using `wrap` as an example, `hq` uses `macros.register` to save the current value of `wrap`. `macros.register` returns an index, which can be used to retrieve it later. `hq` then, using the identifier which takes the place of `module_self_ref`, returns a code snippet that will look up the correct `macros.registered` at run-time and retrieve the value. This effectively saves every identifier seen by the `hq` macro and provides it to the macro-expanded code.
 
 One thing to note is that `hq` saves each value *forever*. Once a value has been captured inside `hq` and saved using `macros.register`, it will remain indefinitely without being garbage-collected or discarded. Although there may be ways around this, in practice it should not be too great of a problem: the total number of `hq`s is generally bounded to a relatively small number, proportional to the total amount of code using macros, and thus is unlikely to significantly increase memory usage.
 
@@ -2808,7 +2786,7 @@ If your macro needs to perform an operation *after* all macros in its sub-tree h
 
 ```python
 @macros.expr
-def show_expanded(tree, expand_macros,  hygienic_alias, **kw):
+def show_expanded(tree, expand_macros,  **kw):
     expanded_tree = expand_macros(tree)
     new_tree = hq[wrap_simple(unhygienic[log], u[unparse(expanded_tree)], ast[expanded_tree])]
     return new_tree

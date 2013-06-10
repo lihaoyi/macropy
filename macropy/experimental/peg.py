@@ -5,6 +5,7 @@ from macropy.core.hquotes import macros, hq, u
 from macropy.quick_lambda import macros, f
 from macropy.case_classes import macros, case
 
+
 from collections import defaultdict
 
 """
@@ -23,7 +24,7 @@ macros = Macros()
 
 
 @macros.block
-def peg(tree, gen_sym, hygienic_alias, **kw):
+def peg(tree, gen_sym, **kw):
     potential_targets = [
         target.id for stmt in tree
         if type(stmt) is Assign
@@ -32,7 +33,7 @@ def peg(tree, gen_sym, hygienic_alias, **kw):
 
     for statement in tree:
         if type(statement) is Assign:
-            new_tree = process(statement.value, potential_targets, gen_sym, hygienic_alias)
+            new_tree = process(statement.value, potential_targets, gen_sym)
             statement.value = hq[
                 Parser.Named(lambda: ast[new_tree], [u[statement.targets[0].id]])
             ]
@@ -41,11 +42,11 @@ def peg(tree, gen_sym, hygienic_alias, **kw):
 
 
 @macros.expr
-def peg(tree, gen_sym, hygienic_alias, **kw):
-    return process(tree, [], gen_sym, hygienic_alias)
+def peg(tree, gen_sym, **kw):
+    return process(tree, [], gen_sym)
 
 
-def process(tree, potential_targets, gen_sym, hygienic_alias):
+def process(tree, potential_targets, gen_sym):
     @Walker
     def PegWalker(tree, stop, collect, **kw):
         if type(tree) is Str:

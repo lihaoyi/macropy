@@ -20,13 +20,13 @@ def wrap_simple(printer, txt, x):
 
 
 @macros.expr
-def log(tree, exact_src,  hygienic_alias, **kw):
+def log(tree, exact_src, **kw):
     new_tree = hq[wrap(unhygienic[log], u[exact_src(tree)], ast[tree])]
     return new_tree
 
 
 @macros.expr
-def show_expanded(tree, expand_macros,  hygienic_alias, **kw):
+def show_expanded(tree, expand_macros,  **kw):
     expanded_tree = expand_macros(tree)
     new_tree = hq[wrap_simple(unhygienic[log], u[unparse(expanded_tree)], ast[expanded_tree])]
     return new_tree
@@ -46,7 +46,7 @@ def show_expanded(tree, expand_macros, **kw):
     return new_tree
 
 
-def trace_walk_func(tree, exact_src, hygienic_alias):
+def trace_walk_func(tree, exact_src):
     @Walker
     def trace_walk(tree, stop, **kw):
 
@@ -78,21 +78,21 @@ def trace_walk_func(tree, exact_src, hygienic_alias):
 
 
 @macros.expr
-def trace(tree, exact_src, hygienic_alias, **kw):
-    ret = trace_walk_func(tree, exact_src, hygienic_alias)
+def trace(tree, exact_src, **kw):
+    ret = trace_walk_func(tree, exact_src)
     return ret
 
 
 @macros.block
-def trace(tree, exact_src, hygienic_alias, **kw):
-    ret = trace_walk_func(tree, exact_src, hygienic_alias)
+def trace(tree, exact_src, **kw):
+    ret = trace_walk_func(tree, exact_src)
 
     return ret
 
 
-def require_transform(tree, exact_src, hygienic_alias):
-    ret = trace_walk_func(copy.deepcopy(tree), exact_src, hygienic_alias)
-    trace_walk_func(copy.deepcopy(tree), exact_src, hygienic_alias)
+def require_transform(tree, exact_src):
+    ret = trace_walk_func(copy.deepcopy(tree), exact_src)
+    trace_walk_func(copy.deepcopy(tree), exact_src)
     new = hq[ast[tree] or wrap_require(lambda log: ast[ret])]
     return new
 
@@ -104,14 +104,14 @@ def wrap_require(thunk):
 
 
 @macros.expr
-def require(tree, exact_src, hygienic_alias, **kw):
-    return require_transform(tree, exact_src, hygienic_alias)
+def require(tree, exact_src, **kw):
+    return require_transform(tree, exact_src)
 
 
 @macros.block
-def require(tree, exact_src, hygienic_alias, **kw):
+def require(tree, exact_src, **kw):
     for expr in tree:
-        expr.value = require_transform(expr.value, exact_src, hygienic_alias)
+        expr.value = require_transform(expr.value, exact_src)
 
     return tree
 

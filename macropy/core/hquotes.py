@@ -34,8 +34,9 @@ def hq(tree, **kw):
 def hygienator(tree, stop, **kw):
     if type(tree) is Name and type(tree.ctx) is Load:
         stop()
+
         return q[
-            ast[name.wrap(q[hygienic_alias])]
+            ast[name.wrap(q[module_self_ref])]
             .macros
             .load(
                 ast[u.wrap(q[macros.save(name[tree.id])])]

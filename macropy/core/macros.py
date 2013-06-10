@@ -10,6 +10,10 @@ from walkers import *
 from misc import *
 
 
+@singleton
+class module_self_ref:
+    pass
+
 class MacroFunction(object):
     """Wraps a macro-function, to provide nicer error-messages in the common
     case where the macro is imported but macro-expansion isn't triggered"""
@@ -114,6 +118,13 @@ class _MacroLoader(object):
         return mod
 
 
+def fill_hygienes(tree, hygienic_alias):
+    @Walker
+    def hygienator(tree, stop, **kw):
+        if type(tree) is Name and tree.id == module_self_ref:
+            tree.id = hygienic_alias
+
+    return hygienator.recurse(tree)
 
 def expand_ast(tree, src, bindings, hygienic_aliases):
     """Go through an AST, hunting for macro invocations and expanding any that
@@ -152,10 +163,9 @@ def expand_ast(tree, src, bindings, hygienic_aliases):
 
                 exact_src=lambda t: exact_src(t, src, indexes, line_lengths),
                 expand_macros=lambda t: expand_ast(t, src, bindings, hygienic_aliases),
-                hygienic_alias=hygienic_aliases[the_module],
                 **kwargs
             )
-
+            fill_hygienes(new_tree, hygienic_aliases[the_module])
             new_tree = ast_ctx_fixer.recurse(new_tree, Load())
             fill_line_numbers(new_tree, tree.lineno, tree.col_offset)
             return new_tree

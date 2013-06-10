@@ -66,7 +66,7 @@ def trampoline_decorator(func):
 
 
 @macros.decorator
-def tco(tree, hygienic_alias, **kw):
+def tco(tree, **kw):
 
     @Walker
     # Replace returns of calls

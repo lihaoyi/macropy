@@ -6,7 +6,7 @@ from macropy.core.hquotes import macros, hq, u, ast_list
 macros = Macros()
 
 @macros.expr
-def s(tree, hygienic_alias, **kw):
+def s(tree, **kw):
     captured = []
     new_string = ""
     chunks = re.split("{(.*?)}", tree.s)

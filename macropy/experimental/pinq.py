@@ -8,14 +8,14 @@ import sqlalchemy
 macros = Macros()
 
 @macros.expr
-def sql(tree, hygienic_alias, **kw):
-    x = process(tree, hygienic_alias)
+def sql(tree, **kw):
+    x = process(tree)
     x = expand_let_bindings.recurse(x)
     return x
 
 @macros.expr
-def query(tree, gen_sym, hygienic_alias, **kw):
-    x = process(tree, hygienic_alias)
+def query(tree, gen_sym, **kw):
+    x = process(tree)
     x = expand_let_bindings.recurse(x)
     sym = gen_sym()
     # return q[(lambda query: query.bind.execute(query).fetchall())(ast[x])]
@@ -23,7 +23,7 @@ def query(tree, gen_sym, hygienic_alias, **kw):
     new_tree.func.args = arguments([Name(id=sym)], None, None, [])
     return new_tree
 
-def process(tree, hygienic_alias):
+def process(tree):
     @Walker
     def recurse(tree, **kw):
         if type(tree) is Compare and type(tree.ops[0]) is In:
