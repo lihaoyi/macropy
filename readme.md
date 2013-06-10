@@ -2756,10 +2756,6 @@ In general, MacroPy does not enforce hygiene on the macros you write; it is enti
 Nonetheless, by providing `gen_sym` and the `hq` hygienic quasiquote macro, MacroPy makes it trivially easy to have hygiene. `gen_sym` provides a way of creating temporary names which are guaranteed not to collide with names already in use, and hygienic quasiquotes take it a step further and allow you to directly reference anything in scope at the macro definition point without having to worry about things like name collisions or fiddling with imports. These tools should be sufficient to make your macros hygienic, and are used throughout the suite of macros bundled with MacroPy.
 
 
-Macro Subtleties
-================
-When writing AST-transforming macros, there are some edge cases and subtleties which you don't notice at first, but eventually you will have to come around to. Things such as the [macro expansion order](#expansion-order) and [line numbers in error messages](#line-numbers):
-
 Expansion Order
 ---------------
 Macros are expanded in an outside-in order, with macros higher up in the AST being expanded before their children. Hence, if we have two macros inside each other, such as:
@@ -2779,8 +2775,15 @@ map(f[_ + 1], [1, 2, 3]) -> [2, 3, 4]
 
 As you can see, the `trace` macro is expanded first, and hence the when it prints out the expressions being executed, we see the un-expanded `f[_ + 1]` rather than the expanded `(lammbda arg0: arg0 + 1)`. After the tracing is inserted, the `f` is finally expanded into a `lambda` and the final output of this expression is `[2, 3, 4]`.
 
-If your macro needs to perform an operation *after* all macros in its sub-tree have been expanded, simply use the [expand_macros](#expand_macros) function on the sub-tree. This recursively expands all the macros in that sub-tree before returning, after which your macro can then do what it needs to do
+If your macro needs to perform an operation *after* all macros in its sub-tree have been expanded, simply use the [expand_macros](#expand_macros) function on the sub-tree. This recursively expands all the macros in that sub-tree before returning, after which your macro can then do what it needs to do. The implementation of the `show_expanded` macro illustrates this:
 
+```python
+@macros.expr
+def show_expanded(tree, expand_macros,  hygienic_alias, **kw):
+    expanded_tree = expand_macros(tree)
+    new_tree = hq[wrap_simple(unhygienic[log], u[unparse_ast(expanded_tree)], ast[expanded_tree])]
+    return new_tree
+```
 
 Line Numbers
 ------------
@@ -2838,8 +2841,8 @@ ZeroDivisionError: integer division or modulo by zero
 
 Line 2311! In a 7 line file! This may improve in the future, but that's the current state of error reporting in MacroPy.
 
-Lessons
-=======
+Discussion
+==========
 Writing macros is not easy, to say the least. Thus, although you could theoretically "do whatever the hell you want" when writing macros, you probably don't want to. Instead, you should [minimize](#minimize-macro-magic) what the macros do, [avoid them](#no-macros-necessary) entirely when not necessary, be concious of the amount of [magic](#levels-of-magic) you introduce and think hard about [what, exactly](#whither-macropy) you want to do with them.
 
 Minimize Macro Magic
@@ -2907,7 +2910,7 @@ my_func(arg0, arg1):
 
 Similar things could be done for the other use cases mentioned. This is not a complete example (it would need a `functools.wraps` or similar to preserve the `argspec` etc.) but the point is that writing such a decorator really is not very difficult. No macros necessary!
 
-###Auto-Forking
+###Auto-Parallelization
 Another suggestion was to make a decorator macro that ships the code within the function into a separate process to execute. While this sounds pretty extreme, it really is not that difficult, for in Python you can easily introspect a function object and retrieve it's `code` attribute. This can pretty easily [be pickled and sent to a child process](http://stackoverflow.com/questions/1253528/is-there-an-easy-way-to-pickle-a-python-function-or-otherwise-serialize-its-cod) to be executed there. Perhaps you may want some sort of Future container to hold the result, or some nice helpers for fork-join style code, but these are all just normal python functions: no macros necessary!
 
 --------------------------------------
@@ -2972,34 +2975,25 @@ For example, with [Case Classes](#case-classes), the case class definition may c
 
 Note how none of these macros are simple things like do-while loops or alternate syntaxes for if-else statements; these categories of macros perform useful functions, often completely impossible without macros, and have to be carefully crafted so as to minimize the confusion caused by the macro transformation.
 
-MacroPy: The Last Refuge of the Competent
-=========================================
-Macros are always a contentious issue. On one hand, we have the [LISP](https://en.wikipedia.org/wiki/LISP) community, which seems to using macros for everything. On the other hand, most mainstream programmers shy away from them, believing them to be extremely powerful and potentially confusing, not to mention extremely difficult to execute.
+MacroPy: Bringing Macros to Python
+==================================
+Macros are always a contentious issue. On one hand, we have the [Lisp](https://en.wikipedia.org/wiki/LISP) community, which seems to using macros for everything. On the other hand, most mainstream programmers shy away from them, believing them to be extremely powerful and potentially confusing, not to mention extremely difficult to execute.
 
 With MacroPy, we believe that we have a powerful, flexible tool that makes it trivially easy to write AST-transforming macros with any level of complexity. We have a [compelling suite of use cases](#examples) demonstrating the utility of such transforms, and all of it runs perfectly fine on alternative implementations of Python such as PyPy.
 
 We have a few major takeaways:
 
-- Being a non-LISP does not make macros any harder; having an AST made of objects isn't any harder than an AST made of lists. With an inbuilt parser and unparser, the human-friendly computer-unfriendly syntax of Python (whitespace, etc.) is not an issue at all.
-- Python in particular, and other languages in general, do not need macros for many of the use cases the LISPs do. Thanks to inbuilt support for first class functions, dynamism and mutability, simple things like [looping](http://www.gigamonkeys.com/book/loop-for-black-belts.html) can be done pretty easily without resorting to AST rewrites. Macros [should only be used if all these tools have proven inadequete](https://github.com/lihaoyi/macropy#no-macros-necessary), and even then [used as little as possible](https://github.com/lihaoyi/macropy#minimize-macro-magic).
+- Being a non-Lisp does not make macros any harder; working with an AST made of objects isn't any harder than an AST made of lists. With an inbuilt parser and unparser, the human-friendly computer-unfriendly syntax of Python (whitespace, etc.) is not an issue at all.
+- Python in particular, and other languages in general, do not need macros for many of the use cases the LISPs do. Thanks to inbuilt support for first class functions, dynamism and mutability, simple things like [looping](http://www.gigamonkeys.com/book/loop-for-black-belts.html) can be done easily without resorting to AST rewrites. Macros [should only be used if all these tools have proven inadequete](https://github.com/lihaoyi/macropy#no-macros-necessary), and even then [used as little as possible](https://github.com/lihaoyi/macropy#minimize-macro-magic).
 - In Python, there are use cases which require macros, which are not only completely impossible without macros, but also extremely compelling. Not "here's [another syntax for an if-statement](http://stackoverflow.com/a/16174524/871202)" but "here's [cross-compiling list-comprehensions into SQL queries to be executed on a remote database](#pinq-to-sqlalchemy)". These should be the use cases that macros target.
 - Macros stand to *reduce* the amount of [magic](#levels-of-magic) in a code base, not increase it. The use cases we propose for macros are at present not satisfied by boring, normal code which macros serve to complicate. They are satisfied by [code being generated by stitching together strings and `exec`ed at runtime](#skeletons-in-the-closet). They are served by special build stages which generate whole blobs of code at build-time to be used later. Replacing these with macros will reduce the total amount of complexity and magic.
 
 Macros may be difficult to write, difficult to compose, difficult to reason about, especially compared to "plain old" Python code. But macros are not meant to replace "plain old" Python! They're aimed at replacing piles of manual duplication or swaths of textual code-generation. Compared to the difficulty of writing, composing and reasoning about the alternatives, MacroPy may well be the lesser evil.
 
-Future
-------
-MacroPy is essentially complete in its current state as a proof concept. The next steps, to turn it from a flashy demo into a production-ready package, will involve:
-
-- Separating out the various implementations of macros into separate projects, leaving only the core macro infrastructure in the macropy repository. This will allow people to better use them independently (e.g. you won't need to pull in [Pyxl](#pyxl-integration) in order to use [Case Classes](#case-classes)), as well as to allow them to be developed independently.
-- Solidify the core macropy infrastructure. This means properly specifying it and [writing tests](issues/29), so we do not need to rely on the various macros themselves to act as unit tests when things change. This will also provide other developers with a stable interface to build on top of.
-
-As mentioned, MacroPy as a proof of concept is done. We have demonstrated beyond doubt that syntactic macros in Python are an novel concept that enables a [range of compelling use cases](#macropy). Now the work will shift towards refactoring, documenting, testing and generally turning MacroPy into a solid foundation for others to build on top of.
-
 Credits
 =======
 
-MacroPy, in its initial state, is basically complete, as a final project for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/), taught by [Gerald Jay Sussman](http://groups.csail.mit.edu/mac/users/gjs/) and [Pavel Panchekha](http://pavpanchekha.com/). Inspiration was taken from project such as [Scala Macros](http://scalamacros.org/), [Karnickel](https://pypi.python.org/pypi/karnickel) and [Pyxl](https://github.com/dropbox/pyxl).
+MacroPy was initially created as a final project for the [MIT](http://web.mit.edu/) class [6.945: Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/), taught by [Gerald Jay Sussman](http://groups.csail.mit.edu/mac/users/gjs/) and [Pavel Panchekha](http://pavpanchekha.com/). Inspiration was taken from project such as [Scala Macros](http://scalamacros.org/), [Karnickel](https://pypi.python.org/pypi/karnickel) and [Pyxl](https://github.com/dropbox/pyxl).
 
 The MIT License (MIT)
 

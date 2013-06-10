@@ -48,11 +48,15 @@ Reference
         gen_sym
         hygienic quasiquotes
         expose_unhygienic
+    Expansion Order
+    Line Numbers
 
 Discussion
+    Minimize Macro Magic
     No Macros Necessary
         AOP/Function Advice
         Auto-Parallelization
+    Levels of Magic
     Why MacroPy
 
         Source-reflection & Cross Compilation
