@@ -11,8 +11,10 @@ import weakref
 class MacroFunction(object):
     def __init__(self, func):
         self.func = func
+
     def __call__(self, *args, **kwargs):
         return self.func(*args, **kwargs)
+
     def __getitem__(self, i):
         raise TypeError(
             "Macro `%s` illegally invoked at runtime; did you import it "

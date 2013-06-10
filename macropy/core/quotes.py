@@ -11,10 +11,12 @@ class u():
 class name():
     def wrap(self, tree):
         return Literal(Call(Name(id="Name"), [], [keyword("id", tree)], None, None))
+
 @singleton
 class ast():
     def wrap(self, tree):
         return Literal(tree)
+
 @singleton
 class ast_list():
     def wrap(self, tree):
@@ -48,5 +50,5 @@ def q(tree, **kw):
 def q(tree, target, **kw):
     body = _unquote_search.recurse(tree)
     new_body = ast_repr(body)
-    return [Assign([Name(id=target.id)], new_body)]
+    return [Assign([target], new_body)]
 

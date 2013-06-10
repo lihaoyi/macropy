@@ -1,5 +1,5 @@
 from macropy.core.macros import *
-from macropy.core import *
+
 from macropy.core.quotes import macros, q, _unquote_search, u, ast, ast_list, name
 
 
@@ -13,13 +13,13 @@ class unhygienic(): pass
 def hq(tree, hygienic_alias, target, **kw):
     tree = _unquote_search.recurse(tree)
     tree = hygienate(tree, hygienic_alias)
-    new_body = ast_repr(tree)
-    return [Assign([Name(id=target.id)], new_body)]
+    tree = ast_repr(tree)
+
+    return [Assign([target], tree)]
 
 
 @macros.expr
 def hq(tree, hygienic_alias, **kw):
-
     tree = _unquote_search.recurse(tree)
     tree = hygienate(tree, hygienic_alias)
     tree = ast_repr(tree)
@@ -41,7 +41,7 @@ def hygienate(tree, hygienic_alias):
 
         if type(tree) is Literal:
             stop()
-            return ast.wrap(tree.body)
+            return tree
 
         res = check_annotated(tree)
         if res:
@@ -50,4 +50,5 @@ def hygienate(tree, hygienic_alias):
                 stop()
                 tree.slice.value.ctx = None
                 return tree.slice.value
+
     return hygienator.recurse(tree)
