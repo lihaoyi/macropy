@@ -1,12 +1,12 @@
 import re
 
 from macropy.core.macros import *
-from macropy.core.quotes import macros, q, u, ast_list
+from macropy.core.quotes import macros, hq, u, ast_list
 
 macros = Macros()
 
 @macros.expr
-def s(tree, **kw):
+def s(tree, hygienic_alias, **kw):
     captured = []
     new_string = ""
     chunks = re.split("{(.*?)}", tree.s)
@@ -17,6 +17,6 @@ def s(tree, **kw):
             new_string += "%s"
             captured += [chunks[i]]
 
-    result = q[u[new_string] % tuple(ast_list[map(parse_expr, captured)])]
+    result = hq[u[new_string] % tuple(ast_list[map(parse_expr, captured)])]
 
     return result

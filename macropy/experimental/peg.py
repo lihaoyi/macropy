@@ -1,7 +1,7 @@
 import re
 
 from macropy.core.macros import *
-from macropy.core.quotes import macros, q, hq, u
+from macropy.core.quotes import macros, hq, u
 from macropy.quick_lambda import macros, f
 from macropy.case_classes import macros, case
 from macropy.string_interp import  macros, s

@@ -8,7 +8,7 @@ MacroPy
 >>> from macropy.case_classes import macros, case
 
 >>> @case
-... class Point(x, y): pass
+class Point(x, y): pass
 
 >>> p = Point(1, 2)
 >>> print p.x
@@ -89,7 +89,6 @@ These three types of macros are called via:
 from my_macro_module import macros, my_expr_macro, my_block_macro, my_decorator_macro
 
 val = my_expr_macro[...]
-
 
 with my_block_macro:
     ...

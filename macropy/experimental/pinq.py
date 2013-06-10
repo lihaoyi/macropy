@@ -1,55 +1,59 @@
 from ast import Call
 
 from macropy.core.macros import *
-from macropy.core.quotes import macros, q, ast
+from macropy.core.quotes import macros, hq, ast, name
 from macropy.quick_lambda import macros, f
 import sqlalchemy
 
 macros = Macros()
 
 @macros.expr
-def sql(tree, **kw):
-    x = recurse.recurse(tree)
+def sql(tree, hygienic_alias, **kw):
+    x = process(tree, hygienic_alias)
     x = expand_let_bindings.recurse(x)
     return x
 
 @macros.expr
-def query(tree, **kw):
-    x = recurse.recurse(tree)
+def query(tree, gen_sym, hygienic_alias, **kw):
+    x = process(tree, hygienic_alias)
     x = expand_let_bindings.recurse(x)
-    return q[(lambda query: query.bind.execute(query).fetchall())(ast[x])]
+    sym = gen_sym()
+    # return q[(lambda query: query.bind.execute(query).fetchall())(ast[x])]
+    new_tree = hq[(lambda query: name[sym].bind.execute(name[sym]).fetchall())(ast[x])]
+    new_tree.func.args = arguments([Name(id=sym)], None, None, [])
+    return new_tree
+
+def process(tree, hygienic_alias):
+    @Walker
+    def recurse(tree, **kw):
+        if type(tree) is Compare and type(tree.ops[0]) is In:
+            return hq[(ast[tree.left]).in_(ast[tree.comparators[0]])]
+
+        elif type(tree) is GeneratorExp:
+
+            aliases = map(f[_.target], tree.generators)
+            tables = map(f[_.iter], tree.generators)
+
+            aliased_tables = map(lambda x: hq[(ast[x]).alias().c], tables)
+
+            elt = tree.elt
+            if type(elt) is Tuple:
+                sel = hq[ast_list[elt.elts]]
+            else:
+                sel = hq[[ast[elt]]]
+
+            out = hq[sqlalchemy.select(ast[sel])]
+
+            for gen in tree.generators:
+                for cond in gen.ifs:
+                    out = hq[ast[out].where(ast[cond])]
 
 
-@Walker
-def recurse(tree, **kw):
-    if type(tree) is Compare and type(tree.ops[0]) is In:
-        return q[(ast[tree.left]).in_(ast[tree.comparators[0]])]
-
-    elif type(tree) is GeneratorExp:
-
-        aliases = map(f[_.target], tree.generators)
-        tables = map(f[_.iter], tree.generators)
-
-        aliased_tables = map(lambda x: q[(ast[x]).alias().c], tables)
-
-        elt = tree.elt
-        if type(elt) is Tuple:
-            sel = q[ast_list[elt.elts]]
-        else:
-            sel = q[[ast[elt]]]
-
-        out = q[select(ast[sel])]
-
-        for gen in tree.generators:
-            for cond in gen.ifs:
-                out = q[ast[out].where(ast[cond])]
-
-
-        out = q[(lambda x: ast[out])()]
-        out.func.args.args = aliases
-        out.args = aliased_tables
-        return out
-
+            out = hq[(lambda x: ast[out])()]
+            out.func.args.args = aliases
+            out.args = aliased_tables
+            return out
+    return recurse.recurse(tree)
 
 def generate_schema(engine):
     metadata = sqlalchemy.MetaData(engine)

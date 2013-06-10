@@ -1,6 +1,6 @@
 
 from macropy.core.macros import *
-from macropy.core.quotes import macros, q, u, hq, unhygienic
+from macropy.core.quotes import macros, u, hq, unhygienic
 import ast
 import copy
 
@@ -38,8 +38,8 @@ def show_expanded(tree, expand_macros, **kw):
     for stmt in tree:
         new_stmt = expand_macros(stmt)
 
-        with q as code:
-            log(u[unparse_ast(new_stmt)])
+        with hq as code:
+            unhygienic[log](u[unparse_ast(new_stmt)])
         new_tree.append(code)
         new_tree.append(new_stmt)
 
@@ -69,8 +69,8 @@ def trace_walk_func(tree, exact_src, hygienic_alias):
         elif isinstance(tree, stmt):
             txt = exact_src(tree)
             trace_walk.walk_children(tree)
-            with q as code:
-                log(u[txt])
+            with hq as code:
+                unhygienic[log](u[txt])
             stop()
             return [code, tree]
 

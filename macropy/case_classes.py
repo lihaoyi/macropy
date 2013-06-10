@@ -1,5 +1,5 @@
 from macropy.core.macros import *
-from macropy.core.quotes import macros, q, u, hq
+from macropy.core.quotes import macros, u, hq
 
 macros = Macros()
 
@@ -83,7 +83,7 @@ def case(tree, gen_sym, hygienic_alias, **kw):
         for statement in tree.body:
             if type(statement) is ClassDef:
                 outer.append(case_transform(statement, [Name(id=tree.name, ctx=Load())]))
-                with q as a:
+                with hq as a:
                     name[tree.name].b = name[statement.name]
                 a_old = a[0]
                 a_old.targets[0].attr = statement.name
@@ -107,8 +107,8 @@ def case(tree, gen_sym, hygienic_alias, **kw):
 
 
         for x in all_args:
-            with q as a:
-                self.x = name[x]
+            with hq as a:
+                unhygienic[self.x] = name[x]
 
             a[0].targets[0].attr = x
 
@@ -116,7 +116,7 @@ def case(tree, gen_sym, hygienic_alias, **kw):
 
     def case_transform(tree, parents):
 
-        with q as methods:
+        with hq as methods:
             def __init__(self, *args, **kwargs):
                 pass
 

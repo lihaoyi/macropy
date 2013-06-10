@@ -47,5 +47,5 @@ from macropy.experimental.test import pinq
 run(pinq.Tests)
 
 # this one needs chromedriver in order to run the javascript using Selenium
-from macropy.experimental.test import js_snippets
-run(js_snippets.Tests)
+# from macropy.experimental.test import js_snippets
+# run(js_snippets.Tests)

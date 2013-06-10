@@ -278,7 +278,7 @@ def _matching(tree, hygienic_alias, gen_sym, **kw):
             matcher = build_matcher(tree.value.left, modified, hygienic_alias)
             temp = gen_sym()
             # lol random names for hax
-            with q as assignment:
+            with hq as assignment:
                 name[temp] = ast[matcher]
 
             statements = [assignment, Expr(hq[name[temp]._match_value(ast[tree.value.right])])]
