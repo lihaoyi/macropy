@@ -1,6 +1,7 @@
 from macropy.core.macros import *
 from macropy.core import *
-from macropy.core.quotes import _unquote_search, u, ast, ast_list, name
+from macropy.core.quotes import macros, q, _unquote_search, u, ast, ast_list, name
+
 
 macros = Macros()
 
@@ -32,10 +33,8 @@ def hygienate(tree, hygienic_alias):
     def hygienator(tree, stop, **kw):
         if type(tree) is Name and type(tree.ctx) is Load:
             stop()
-            return parse_expr(
-                "name[hygienic_alias].macros.registered[u[macros.register(%s)]]"
-                % tree.id
-            )
+            return q[name["name"][hygienic_alias].macros.registered[name["u"][macros.register(name[tree.id])]]]
+
         if type(tree) is Literal:
             stop()
             return Subscript(Name(id="ast"), Index(tree.body), Load())
