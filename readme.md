@@ -2177,7 +2177,8 @@ def log(tree, exact_src, **kw):
 def wrap(txt, x):
     print txt + " -> " + repr(x)
     return x
-
+```
+```
 # test.py
 from macro_module import macros, log
 
@@ -2205,9 +2206,9 @@ def expand(tree, gen_sym, **kw):
     with hq as new_tree:
         return v
     return new_tree
-
+```
+```
 # test.py
-
 def run():
     x = 1
     with expand:
@@ -2715,7 +2716,8 @@ def log(tree, exact_src, **kw):
 def wrap(txt, x):
     print txt + " -> " + repr(x)
     return x
-
+```
+```
 # test.py
 from macro_module import macros, log
 
