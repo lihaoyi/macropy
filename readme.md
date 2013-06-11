@@ -2185,7 +2185,7 @@ wrap = 3 # try to confuse it
 
 log[1 + 2 + 3]
 # 1 + 2 + 3 -> 6
-# it still works despite trying to confuse it with `wraps`
+# it still works despite trying to confuse it with `wrap`
 ```
 
 The important changes in this snippet, as compared to the previous, are:
@@ -2193,7 +2193,7 @@ The important changes in this snippet, as compared to the previous, are:
 - The removal of `wrap` from the import statement.
 - Replacement of `q` with `hq`
 
-`hq` is the hygienic quasiquote macro. Unlike traditional quasiquotes (`q`), `hq` jumps through some hoops in order to ensure that the `wrap` you are using inside the `hq[...]` expression really-truly refers to the `wrap that is in scope *at the macro definition point*, not at tbe macro expansion point (as would be the case using the normal `q` macro). The end-result is that `wrap` refers to the `wrap` you want in `macro_module.py`, and not whatever `wrap` happened to be defined in `test.py`. See [docs/examples/hygienic_quasiquotes](docs/examples/hygienic_quasiquotes) to see it working.
+`hq` is the hygienic quasiquote macro. Unlike traditional quasiquotes (`q`), `hq` jumps through some hoops in order to ensure that the `wrap` you are using inside the `hq[...]` expression really-truly refers to the `wrap` that is in scope *at the macro definition point*, not at tbe macro expansion point (as would be the case using the normal `q` macro). The end-result is that `wrap` refers to the `wrap` you want in `macro_module.py`, and not whatever `wrap` happened to be defined in `test.py`. See [docs/examples/hygienic_quasiquotes](docs/examples/hygienic_quasiquotes) to see it working.
 
 In general, `hq` allows you to refer to anything that is in scope where `hq` is being used. Apart from module-level global variables and functions, this includes things like locally scoped variables, which will be properly saved so they can be referred to later even when the macro has completed:
 
