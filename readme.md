@@ -2668,7 +2668,8 @@ from macro_module import macros, my_macro
 
 with my_macro: # a macro which uses gen_sym()
     ...
-
+```
+```python
 # module_b.py
 import module_a
 module_a.sym0 = 10
@@ -2681,14 +2682,16 @@ In this case, a separate file `module_b` is using `module_a` as a convenient nam
 ```python
 # module_a.py
 sym0 = 10
-
+```
+```python
 # module_b.py
 from module_a import *
 from macro_module import macros, my_macro
 
 with my_macro: # a macro which uses gen_sym()
     ...
-
+```
+```python
 # module_c.py
 from module_b import sym0
 do_stuff_with(sym0)
