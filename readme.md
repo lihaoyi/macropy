@@ -2216,7 +2216,7 @@ def run():
 print run() # prints 5
 ```
 
-In this case, the value of `v` is captured by the `hq`, such that even when `expand` has returned, it can still be used to return `6` to the caller of the `run()` function.
+In this case, the value of `v` is captured by the `hq`, such that even when `expand` has returned, it can still be used to return `5` to the caller of the `run()` function.
 
 ###Breaking Hygiene
 By default, all top-level names in the `hq[...]` expression (this excludes things like the contents of `u[]` `name[]` `ast[]` unquotes) are hygienic, and are bound to the variable of that name at the macro definition point. This means that if you want a name to bind to some variable *at the macro expansion point*, you can always manually break hygiene by using the `name[]` or `ast[]` unquotes. The `hq` macro also provides an `unhygienic[...]` unquote just to streamline this common requirement:
