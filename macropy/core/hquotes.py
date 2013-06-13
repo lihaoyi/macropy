@@ -37,10 +37,9 @@ def hygienator(tree, stop, **kw):
 
         return q[
             ast[name.wrap(q[hygienic_self_ref])]
-            .macros
-            .load(
+            [
                 ast[u.wrap(q[macros.save(name[tree.id])])]
-            )
+            ]
         ]
 
     if type(tree) is Literal:

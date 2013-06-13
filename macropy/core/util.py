@@ -18,7 +18,7 @@ def singleton(cls):
     """Decorates a class to turn it into a singleton."""
     obj = cls()
     obj.__name__ = cls.__name__
-    obj.__str__ = lambda: cls.__name__
+
     return obj
 
 

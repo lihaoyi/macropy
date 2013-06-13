@@ -82,13 +82,13 @@ class Macros(object):
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
-    def __init__(self, module_name, tree, source, file_name, bindings, hygienic_aliases):
+    def __init__(self, module_name, tree, source, file_name, bindings):
         self.module_name = module_name
         self.tree = tree
         self.source = source
         self.file_name = file_name
         self.bindings = bindings
-        self.hygienic_aliases = hygienic_aliases
+
 
     def load_module(self, fullname):
 
@@ -96,9 +96,32 @@ class _MacroLoader(object):
             __import__(p)
 
         modules = [(sys.modules[p], bindings) for (p, bindings) in self.bindings]
+        symbols = Lazy(lambda: gen_sym(self.tree))
+        hygienic_aliases = {mod: symbols().next() for mod, bindings in modules}
 
-        tree = expand_ast(self.tree, self.source, modules, self.hygienic_aliases)
+        tree = expand_ast(self.tree, self.source, modules, hygienic_aliases, symbols)
+        pickle_import = [
+            ImportFrom(module='pickle', names=[alias(name='loads', asname='unpix')], level=0)
+        ]
+        try:
+            import pickle
+            stored = [
+                Assign(
+                    [Name(id=name, ctx=Store())],
+                    Call(
+                        Name(id="unpix", ctx=Load()),
+                        [Str(pickle.dumps(mod.macros.saved))], [], None, None
+                    )
+                )
 
+                for (mod, name) in hygienic_aliases.items()
+            ]
+            tree.body = map(fix_missing_locations, pickle_import + stored) + tree.body
+        except Exception, e:
+            import traceback
+            traceback.print_exc()
+            raise e
+        print unparse(tree)
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
         mod.__loader__ = self
@@ -126,7 +149,7 @@ def fill_hygienes(tree, hygienic_alias):
 
     return hygienator.recurse(tree)
 
-def expand_ast(tree, src, bindings, hygienic_aliases):
+def expand_ast(tree, src, bindings, hygienic_aliases, symbols):
     """Go through an AST, hunting for macro invocations and expanding any that
     are found"""
 
@@ -134,8 +157,6 @@ def expand_ast(tree, src, bindings, hygienic_aliases):
     positions = Lazy(lambda: indexer.collect(tree))
     line_lengths = Lazy(lambda: map(len, src.split("\n")))
     indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)]))
-    symbols = Lazy(lambda: gen_sym(tree))
-
 
     allnames = [(m, name, asname) for m, names in bindings for name, asname in names]
 
@@ -162,7 +183,7 @@ def expand_ast(tree, src, bindings, hygienic_aliases):
                 gen_sym=lambda: symbols().next(),
 
                 exact_src=lambda t: exact_src(t, src, indexes, line_lengths),
-                expand_macros=lambda t: expand_ast(t, src, bindings, hygienic_aliases),
+                expand_macros=lambda t: expand_ast(t, src, bindings, hygienic_aliases, symbols),
                 **kwargs
             )
             fill_hygienes(new_tree, hygienic_aliases[the_module])
@@ -267,12 +288,12 @@ class MacroFinder(object):
             # check properly the AST if the macro import really exists
             tree = ast.parse(txt)
 
-            bindings, hygienic_aliases = detect_macros(tree)
+            bindings = detect_macros(tree)
 
             if bindings == []:
                 return # no macros found, carry on
             else:
-                return _MacroLoader(module_name, tree, txt, file.name, bindings,  hygienic_aliases)
+                return _MacroLoader(module_name, tree, txt, file.name, bindings)
         except Exception, e:
             pass
 
@@ -302,8 +323,6 @@ def detect_macros(tree):
     bindings = []
 
 
-    hygienic_aliases = {}
-    symbols = Lazy(lambda: gen_sym(tree))
     for stmt in tree.body:
         if isinstance(stmt, ImportFrom) \
                 and stmt.names[0].name == 'macros' \
@@ -323,22 +342,12 @@ def detect_macros(tree):
                 if name.name not in mod.macros.decorator.registry
             ]
 
-            hygienic_aliases[mod] = symbols().next()
             stmt.names.extend(
                 [alias(x, x) for x in
                  mod.macros.expose_unhygienic.registry.keys()]
             )
-    try:
-        tree.body = [
-            Import([alias(mod.__name__, name)], lineno = 1, col_offset = 0)
-            for (mod, name) in hygienic_aliases.items()
-        ] + tree.body
-    except Exception, e:
-        import traceback
-        traceback.print_exc()
-        raise e
 
-    return bindings, hygienic_aliases
+    return bindings
 
 def check_annotated(tree):
     """Shorthand for checking if an AST is of the form something[...]"""
