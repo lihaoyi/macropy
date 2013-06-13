@@ -14,6 +14,7 @@ from misc import *
 class hygienic_self_ref:
     pass
 
+
 class MacroFunction(object):
     """Wraps a macro-function, to provide nicer error-messages in the common
     case where the macro is imported but macro-expansion isn't triggered"""
@@ -62,24 +63,13 @@ class Macros(object):
 
             return self.wrap(f)
 
-
     def __init__(self):
-
         # Different kinds of macros
         self.expr = Macros.Registry(MacroFunction)
         self.block = Macros.Registry(MacroFunction)
         self.decorator = Macros.Registry(MacroFunction)
 
-
         self.expose_unhygienic = Macros.Registry()
-
-        self.saved = []
-    def save(self, thing):
-        self.saved.append(thing)
-        return len(self.saved)-1
-    def load(self, id):
-        return self.saved[id]
-
 
 
 def fill_hygienes(tree, captured_registry, registry_alias):
@@ -93,8 +83,9 @@ def fill_hygienes(tree, captured_registry, registry_alias):
                 Load()
             )
 
-
     return hygienator.recurse(tree)
+
+
 def expand_entire_ast(tree, src, bindings):
     symbols = Lazy(lambda: gen_sym(tree))
     captured_registry = []
@@ -216,8 +207,9 @@ def expand_entire_ast(tree, src, bindings):
 
         return tree
     tree = expand_ast(tree)
+    unpickle_name = symbols().next()
     pickle_import = [
-        ImportFrom(module='pickle', names=[alias(name='loads', asname='unpix')], level=0)
+        ImportFrom(module='pickle', names=[alias(name='loads', asname=unpickle_name)], level=0)
     ]
     try:
         import pickle
@@ -225,7 +217,7 @@ def expand_entire_ast(tree, src, bindings):
             Assign(
                 [Name(id=registry_alias, ctx=Store())],
                 Call(
-                    Name(id="unpix", ctx=Load()),
+                    Name(id=unpickle_name, ctx=Load()),
                     [Str(pickle.dumps(captured_registry))], [], None, None
                 )
             )
@@ -237,7 +229,6 @@ def expand_entire_ast(tree, src, bindings):
         traceback.print_exc()
         raise e
     return tree
-
 
 
 def gen_sym(tree):
@@ -259,6 +250,7 @@ def gen_sym(tree):
     found_names = name_finder.collect(tree)
     names = ("sym" + str(i) for i in itertools.count())
     return itertools.ifilter(lambda x: x not in found_names, names)
+
 
 def detect_macros(tree):
     """Look for macros imports within an AST, transforming them and extracting
@@ -285,10 +277,10 @@ def detect_macros(tree):
                 if name.name not in mod.macros.decorator.registry
             ]
 
-            stmt.names.extend(
-                [alias(x, x) for x in
-                 mod.macros.expose_unhygienic.registry.keys()]
-            )
+            stmt.names.extend([
+                alias(x, x) for x in
+                mod.macros.expose_unhygienic.registry.keys()
+            ])
 
     return bindings
 

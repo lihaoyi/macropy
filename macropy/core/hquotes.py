@@ -29,8 +29,6 @@ def hq(tree, **kw):
     return tree
 
 
-
-
 @Walker
 def hygienator(tree, stop, **kw):
     if type(tree) is Name and type(tree.ctx) is Load:

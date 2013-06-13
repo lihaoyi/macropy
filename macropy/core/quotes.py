@@ -7,20 +7,24 @@ from macropy.core.macros import *
 
 macros = Macros()
 
+
 @singleton
 class u():
     def wrap(self, tree):
         return Literal(Call(Name(id="ast_repr"), [tree], [], None, None))
+
 
 @singleton
 class name():
     def wrap(self, tree):
         return Literal(Call(Name(id="Name"), [], [keyword("id", tree)], None, None))
 
+
 @singleton
 class ast():
     def wrap(self, tree):
         return Literal(tree)
+
 
 @singleton
 class ast_list():
@@ -50,6 +54,7 @@ def q(tree, **kw):
     tree = unquote_search.recurse(tree)
     tree = ast_repr(tree)
     return tree
+
 
 @macros.block
 def q(tree, target, **kw):

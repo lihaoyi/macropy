@@ -45,6 +45,7 @@ class _MacroLoader(object):
 
         return mod
 
+
 @singleton
 class MacroFinder(object):
     """Loads a module and looks for macros inside, only providing a loader if
