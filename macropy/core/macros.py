@@ -80,65 +80,6 @@ class Macros(object):
     def load(self, id):
         return self.saved[id]
 
-class _MacroLoader(object):
-    """Performs the loading of a module with macro expansion."""
-    def __init__(self, module_name, tree, source, file_name, bindings):
-        self.module_name = module_name
-        self.tree = tree
-        self.source = source
-        self.file_name = file_name
-        self.bindings = bindings
-
-
-    def load_module(self, fullname):
-
-        for (p, _) in self.bindings:
-            __import__(p)
-
-        modules = [(sys.modules[p], bindings) for (p, bindings) in self.bindings]
-        symbols = Lazy(lambda: gen_sym(self.tree))
-        registry = []
-        registry_alias = symbols().next()
-
-        tree = expand_ast(self.tree, self.source, modules, registry, registry_alias, symbols)
-        pickle_import = [
-            ImportFrom(module='pickle', names=[alias(name='loads', asname='unpix')], level=0)
-        ]
-        try:
-            import pickle
-            stored = [
-                Assign(
-                    [Name(id=registry_alias, ctx=Store())],
-                    Call(
-                        Name(id="unpix", ctx=Load()),
-                        [Str(pickle.dumps(registry))], [], None, None
-                    )
-                )
-
-            ]
-            tree.body = map(fix_missing_locations, pickle_import + stored) + tree.body
-        except Exception, e:
-            import traceback
-            traceback.print_exc()
-            raise e
-
-        ispkg = False
-        mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
-        mod.__loader__ = self
-        if ispkg:
-            mod.__path__ = []
-            mod.__package__ = fullname
-        else:
-            mod.__package__ = fullname.rpartition('.')[0]
-        mod.__file__ = self.file_name
-
-        try:
-            exec compile(tree, self.file_name, "exec") in mod.__dict__
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-
-        return mod
 
 
 def fill_hygienes(tree, captured_registry, registry_alias):
@@ -154,10 +95,10 @@ def fill_hygienes(tree, captured_registry, registry_alias):
 
 
     return hygienator.recurse(tree)
-
-def expand_ast(tree, src, bindings, captured_registry, registry_alias, symbols):
-    """Go through an AST, hunting for macro invocations and expanding any that
-    are found"""
+def expand_entire_ast(tree, src, bindings):
+    symbols = Lazy(lambda: gen_sym(tree))
+    captured_registry = []
+    registry_alias = symbols().next()
 
     # you don't pay for what you don't use
     positions = Lazy(lambda: indexer.collect(tree))
@@ -177,131 +118,127 @@ def expand_ast(tree, src, bindings, captured_registry, registry_alias, symbols):
     expr_registry = extract_macros(lambda x: x.expr)
     decorator_registry = extract_macros(lambda x: x.decorator)
 
+    def expand_ast(tree):
+        """Go through an AST, hunting for macro invocations and expanding any that
+        are found"""
 
-    def expand_if_in_registry(tree, body, args, registry, **kwargs):
-        """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
-        if isinstance(tree, Name) and tree.id in registry:
+        def expand_if_in_registry(macro_tree, body_tree, args, registry, **kwargs):
+            """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
+            if isinstance(macro_tree, Name) and macro_tree.id in registry:
 
-            (the_macro, the_module) = registry[tree.id]
-            new_tree = the_macro(
-                tree=body,
-                args=args,
-                gen_sym=lambda: symbols().next(),
+                (the_macro, the_module) = registry[macro_tree.id]
+                new_tree = the_macro(
+                    tree=body_tree,
+                    args=args,
+                    gen_sym=lambda: symbols().next(),
 
-                exact_src=lambda t: exact_src(t, src, indexes, line_lengths),
-                expand_macros=lambda t: expand_ast(t, src, bindings, captured_registry, registry_alias, symbols),
-                **kwargs
-            )
-            fill_hygienes(new_tree, captured_registry, registry_alias)
-            new_tree = ast_ctx_fixer.recurse(new_tree, Load())
-            fill_line_numbers(new_tree, tree.lineno, tree.col_offset)
-            return new_tree
-        elif isinstance(tree, Call):
-            args.extend(tree.args)
-            return expand_if_in_registry(tree.func, body, args, registry)
+                    exact_src=lambda t: exact_src(t, src, indexes, line_lengths),
+                    expand_macros=lambda t: expand_ast(t),
+                    **kwargs
+                )
+                fill_hygienes(new_tree, captured_registry, registry_alias)
+                new_tree = ast_ctx_fixer.recurse(new_tree, Load())
+                fill_line_numbers(new_tree, macro_tree.lineno, macro_tree.col_offset)
+                return new_tree
+            elif isinstance(macro_tree, Call):
+                args.extend(macro_tree.args)
+                return expand_if_in_registry(macro_tree.func, body_tree, args, registry)
 
-    def preserve_line_numbers(func):
-        """Decorates a tree-transformer function to stick the original line
-        numbers onto the transformed tree"""
-        def run(tree):
-            pos = (tree.lineno, tree.col_offset) if hasattr(tree, "lineno") and hasattr(tree, "col_offset") else None
-            new_tree = func(tree)
+        def preserve_line_numbers(func):
+            """Decorates a tree-transformer function to stick the original line
+            numbers onto the transformed tree"""
+            def run(tree):
+                pos = (tree.lineno, tree.col_offset) if hasattr(tree, "lineno") and hasattr(tree, "col_offset") else None
+                new_tree = func(tree)
 
-            if pos:
-                t = new_tree
-                while type(t) is list:
-                    t = t[0]
-
-
-                (t.lineno, t.col_offset) = pos
-            return new_tree
-        return run
-
-    @preserve_line_numbers
-    def macro_expand(tree):
-        """Tail Recursively expands all macros in a single AST node"""
-        if isinstance(tree, With):
-            assert isinstance(tree.body, list), real_repr(tree.body)
-            new_tree = expand_if_in_registry(tree.context_expr, tree.body, [], block_registry, target=tree.optional_vars)
-
-            if new_tree:
-                assert isinstance(new_tree, list), type(new_tree)
-                return macro_expand(new_tree)
-
-        if isinstance(tree, Subscript) and type(tree.slice) is Index:
-
-            new_tree = expand_if_in_registry(tree.value, tree.slice.value, [], expr_registry)
-
-            if new_tree:
-                assert isinstance(new_tree, expr), type(new_tree)
-                return macro_expand(new_tree)
+                if pos:
+                    t = new_tree
+                    while type(t) is list:
+                        t = t[0]
 
 
-        if isinstance(tree, ClassDef) or isinstance(tree, FunctionDef):
-            seen_decs = []
-            additions = []
-            while tree.decorator_list != []:
-                dec = tree.decorator_list[0]
-                tree.decorator_list = tree.decorator_list[1:]
+                    (t.lineno, t.col_offset) = pos
+                return new_tree
+            return run
 
-                new_tree = expand_if_in_registry(dec, tree, [], decorator_registry)
+        @preserve_line_numbers
+        def macro_expand(tree):
+            """Tail Recursively expands all macros in a single AST node"""
+            if isinstance(tree, With):
+                assert isinstance(tree.body, list), real_repr(tree.body)
+                new_tree = expand_if_in_registry(tree.context_expr, tree.body, [], block_registry, target=tree.optional_vars)
 
-                if new_tree is None:
-                    seen_decs.append(dec)
+                if new_tree:
+                    assert isinstance(new_tree, list), type(new_tree)
+                    return macro_expand(new_tree)
+
+            if isinstance(tree, Subscript) and type(tree.slice) is Index:
+
+                new_tree = expand_if_in_registry(tree.value, tree.slice.value, [], expr_registry)
+
+                if new_tree:
+                    assert isinstance(new_tree, expr), type(new_tree)
+                    return macro_expand(new_tree)
+
+
+            if isinstance(tree, ClassDef) or isinstance(tree, FunctionDef):
+                seen_decs = []
+                additions = []
+                while tree.decorator_list != []:
+                    dec = tree.decorator_list[0]
+                    tree.decorator_list = tree.decorator_list[1:]
+
+                    new_tree = expand_if_in_registry(dec, tree, [], decorator_registry)
+
+                    if new_tree is None:
+                        seen_decs.append(dec)
+                    else:
+                        tree = new_tree
+                        tree = macro_expand(tree)
+                        if type(tree) is list:
+                            additions = tree[1:]
+                            tree = tree[0]
+
+                tree.decorator_list = seen_decs
+                if len(additions) == 0:
+                    return tree
                 else:
-                    tree = new_tree
-                    tree = macro_expand(tree)
-                    if type(tree) is list:
-                        additions = tree[1:]
-                        tree = tree[0]
+                    return [tree] + additions
 
-            tree.decorator_list = seen_decs
-            if len(additions) == 0:
-                return tree
-            else:
-                return [tree] + additions
+            return tree
+
+        @Walker
+        def macro_searcher(tree, **kw):
+            x = macro_expand(tree)
+            return x
+
+        tree = macro_searcher.recurse(tree)
 
         return tree
+    tree = expand_ast(tree)
+    pickle_import = [
+        ImportFrom(module='pickle', names=[alias(name='loads', asname='unpix')], level=0)
+    ]
+    try:
+        import pickle
+        stored = [
+            Assign(
+                [Name(id=registry_alias, ctx=Store())],
+                Call(
+                    Name(id="unpix", ctx=Load()),
+                    [Str(pickle.dumps(captured_registry))], [], None, None
+                )
+            )
 
-    @Walker
-    def macro_searcher(tree, **kw):
-        x = macro_expand(tree)
-        return x
-
-    tree = macro_searcher.recurse(tree)
-
+        ]
+        tree.body = map(fix_missing_locations, pickle_import + stored) + tree.body
+    except Exception, e:
+        import traceback
+        traceback.print_exc()
+        raise e
     return tree
 
 
-
-@singleton
-class MacroFinder(object):
-    """Loads a module and looks for macros inside, only providing a loader if
-    it finds some."""
-    def find_module(self, module_name, package_path):
-        try:
-            (file, pathname, description) = imp.find_module(
-                module_name.split('.')[-1],
-                package_path
-            )
-            txt = file.read()
-
-            # short circuit heuristic to fail fast if the source code can't
-            # possible contain the macro import at all
-            if " import macros" not in txt:
-                return
-
-            # check properly the AST if the macro import really exists
-            tree = ast.parse(txt)
-
-            bindings = detect_macros(tree)
-
-            if bindings == []:
-                return # no macros found, carry on
-            else:
-                return _MacroLoader(module_name, tree, txt, file.name, bindings)
-        except Exception, e:
-            pass
 
 def gen_sym(tree):
     """Create a generator that creates symbols which are not used in the given
