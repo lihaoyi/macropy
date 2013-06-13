@@ -30,17 +30,17 @@ def hq(tree, **kw):
 
 
 
+
 @Walker
 def hygienator(tree, stop, **kw):
     if type(tree) is Name and type(tree.ctx) is Load:
         stop()
 
-        return q[
-            ast[name.wrap(q[hygienic_self_ref])]
-            [
-                ast[u.wrap(q[macros.save(name[tree.id])])]
-            ]
-        ]
+        return Captured(
+            tree,
+            tree.id
+        )
+
 
     if type(tree) is Literal:
         stop()

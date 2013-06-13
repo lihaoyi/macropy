@@ -97,9 +97,10 @@ class _MacroLoader(object):
 
         modules = [(sys.modules[p], bindings) for (p, bindings) in self.bindings]
         symbols = Lazy(lambda: gen_sym(self.tree))
-        hygienic_aliases = {mod: symbols().next() for mod, bindings in modules}
+        registry = []
+        registry_alias = symbols().next()
 
-        tree = expand_ast(self.tree, self.source, modules, hygienic_aliases, symbols)
+        tree = expand_ast(self.tree, self.source, modules, registry, registry_alias, symbols)
         pickle_import = [
             ImportFrom(module='pickle', names=[alias(name='loads', asname='unpix')], level=0)
         ]
@@ -107,21 +108,20 @@ class _MacroLoader(object):
             import pickle
             stored = [
                 Assign(
-                    [Name(id=name, ctx=Store())],
+                    [Name(id=registry_alias, ctx=Store())],
                     Call(
                         Name(id="unpix", ctx=Load()),
-                        [Str(pickle.dumps(mod.macros.saved))], [], None, None
+                        [Str(pickle.dumps(registry))], [], None, None
                     )
                 )
 
-                for (mod, name) in hygienic_aliases.items()
             ]
             tree.body = map(fix_missing_locations, pickle_import + stored) + tree.body
         except Exception, e:
             import traceback
             traceback.print_exc()
             raise e
-        print unparse(tree)
+
         ispkg = False
         mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
         mod.__loader__ = self
@@ -141,15 +141,21 @@ class _MacroLoader(object):
         return mod
 
 
-def fill_hygienes(tree, hygienic_alias):
+def fill_hygienes(tree, captured_registry, registry_alias):
     @Walker
     def hygienator(tree, stop, **kw):
-        if type(tree) is Name and tree.id == hygienic_self_ref:
-            tree.id = hygienic_alias
+        if type(tree) is Captured:
+            captured_registry.append(tree.val)
+            return Subscript(
+                Name(registry_alias, Load()),
+                Index(Num(len(captured_registry)-1)),
+                Load()
+            )
+
 
     return hygienator.recurse(tree)
 
-def expand_ast(tree, src, bindings, hygienic_aliases, symbols):
+def expand_ast(tree, src, bindings, captured_registry, registry_alias, symbols):
     """Go through an AST, hunting for macro invocations and expanding any that
     are found"""
 
@@ -183,10 +189,10 @@ def expand_ast(tree, src, bindings, hygienic_aliases, symbols):
                 gen_sym=lambda: symbols().next(),
 
                 exact_src=lambda t: exact_src(t, src, indexes, line_lengths),
-                expand_macros=lambda t: expand_ast(t, src, bindings, hygienic_aliases, symbols),
+                expand_macros=lambda t: expand_ast(t, src, bindings, captured_registry, registry_alias, symbols),
                 **kwargs
             )
-            fill_hygienes(new_tree, hygienic_aliases[the_module])
+            fill_hygienes(new_tree, captured_registry, registry_alias)
             new_tree = ast_ctx_fixer.recurse(new_tree, Load())
             fill_line_numbers(new_tree, tree.lineno, tree.col_offset)
             return new_tree
@@ -355,3 +361,5 @@ def check_annotated(tree):
                     type(tree.slice) is Index and \
                     type(tree.value) is Name:
         return tree.value.id, tree.slice.value
+
+

@@ -26,7 +26,7 @@ real_repr |     |    eval        _v________|_
 import ast
 import sys
 
-__all__ = ['Literal', 'ast_repr', 'parse_expr', 'parse_stmt', 'real_repr', 'unparse']
+__all__ = ['Literal', 'Captured', 'ast_repr', 'parse_expr', 'parse_stmt', 'real_repr', 'unparse']
 
 class Literal(object):
     """Used to wrap sections of an AST which must remain intact when
@@ -38,6 +38,11 @@ class Literal(object):
         return unparse(self.body)
 
 
+class Captured(object):
+    def __init__(self, val, name):
+        self.val = val
+        self.name = name
+
 
 def ast_repr(x):
     """Similar to repr(), but returns an AST instead of a String, which when
@@ -48,17 +53,19 @@ def ast_repr(x):
     elif type(x) is dict:           return ast.Dict(keys=map(ast_repr, x.keys()), values=map(ast_repr, x.values()))
     elif type(x) is set:            return ast.Set(elts=map(ast_repr, x))
     elif type(x) is Literal:        return x.body
+    elif type(x) is Captured:
+        return ast.Call(
+            ast.Name(id="Captured"),
+            [x.val, ast_repr(x.name)], [], None, None
+        )
     elif x is None:                 return ast.Name(id="None")
     elif x is True:                 return ast.Name(id="True")
     elif x is False:                 return ast.Name(id="False")
     elif isinstance(x, ast.AST):
         fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
         return ast.Call(
-            func = ast.Name(id=x.__class__.__name__),
-            args = [],
-            keywords = fields,
-            starargs = None,
-            kwargs = None
+            ast.Name(id=x.__class__.__name__),
+            [], fields, None, None
         )
     raise Exception("Don't know how to ast_repr this: ", x)
 
@@ -118,7 +125,8 @@ def else_rec(tree, i):
 trec = {
     #Misc
     type(None): lambda tree, i: "",
-    Literal:    lambda tree, i: "Literal(%s)" % rec(tree.body, i),
+    Literal:    lambda tree, i: "$Literal(%s)" % rec(tree.body, i),
+    Captured:    lambda tree, i: "$Captured(%s)" % tree.name,
     list:       lambda tree, i: jmap("", lambda t: rec(t, i), tree),
 
     Module:     lambda tree, i: jmap("", lambda t: rec(t, i), tree.body),
