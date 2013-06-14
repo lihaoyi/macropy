@@ -7,4 +7,4 @@ import core.exporters
 import os
 sys.meta_path.append(core.import_hooks.MacroFinder)
 __version__ = "0.2.0"
-exporter = core.exporters.NullExporter()
+exporter = core.exporters.PycExporter()

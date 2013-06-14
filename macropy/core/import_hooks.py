@@ -29,6 +29,8 @@ class MacroFinder(object):
                 module_name.split('.')[-1],
                 package_path
             )
+
+
             txt = file.read()
 
             # short circuit heuristic to fail fast if the source code can't
@@ -43,32 +45,42 @@ class MacroFinder(object):
 
             if bindings == []:
                 return # no macros found, carry on
-            else:
-                for (p, _) in bindings:
-                    __import__(p)
 
-                modules = [(sys.modules[p], bindings) for (p, bindings) in bindings]
+            mod = macropy.exporter.find(file, pathname, description, module_name, package_path)
+            print mod
 
-
-                tree = expand_entire_ast(tree, txt, modules)
-
-                ispkg = False
-                mod = sys.modules.setdefault(module_name, imp.new_module(module_name))
-
-                if ispkg:
-                    mod.__path__ = []
-                    mod.__package__ = module_name
-                else:
-                    mod.__package__ = module_name.rpartition('.')[0]
-                mod.__file__ = file.name
-                macropy.exporter.export_transformed(tree, module_name, file.name)
-                try:
-                    exec compile(tree, file.name, "exec") in mod.__dict__
-                except Exception as e:
-                    import traceback
-                    traceback.print_exc()
-
+            if mod:
                 return _MacroLoader(mod)
 
+            for (p, _) in bindings:
+                __import__(p)
+
+            modules = [(sys.modules[p], bindings) for (p, bindings) in bindings]
+
+
+            tree = expand_entire_ast(tree, txt, modules)
+
+            ispkg = False
+            mod = sys.modules.setdefault(module_name, imp.new_module(module_name))
+
+            if ispkg:
+                mod.__path__ = []
+                mod.__package__ = module_name
+            else:
+                mod.__package__ = module_name.rpartition('.')[0]
+            mod.__file__ = file.name
+            code = compile(tree, file.name, "exec")
+
+
+            try:
+                exec code in mod.__dict__
+                macropy.exporter.export_transformed(code, tree, module_name, file.name)
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+
+            return _MacroLoader(mod)
+
         except Exception, e:
+
             pass
