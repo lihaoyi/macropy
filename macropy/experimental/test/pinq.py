@@ -1,17 +1,14 @@
 import unittest
-import ast
 
 from sqlalchemy import create_engine, func
 from macropy.experimental.pinq import macros, sql, query, generate_schema
-from macropy.core.quotes import macros, q
-from macropy.tracing import macros, show_expanded
+import os
 
 
 engine = create_engine("sqlite://")
 
-for line in open("macropy/experimental/test/world.sql").read().split(";"):
+for line in open(__file__ + "/../world.sql").read().split(";"):
     engine.execute(line.strip())
-
 db = generate_schema(engine)
 
 def compare_queries(query1, query2, post_process=lambda x: x):
