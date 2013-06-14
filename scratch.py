@@ -1,3 +1,0 @@
-from pickle import loads as unpix
-sym0 = unpix("(lp0\nc_ast\nName\np1\n(tRp2\n(dp3\nS'ctx'\np4\nc_ast\nLoad\np5\n(tRp6\n(dp7\nbsS'id'\np8\nS'str'\np9\nsbag1\n(tRp10\n(dp11\ng4\ng5\n(tRp12\n(dp13\nbsg8\nS'value'\np14\nsbag1\n(tRp15\n(dp16\ng4\ng5\n(tRp17\n(dp18\nbsg8\nS'double'\np19\nsbag1\n(tRp20\n(dp21\ng4\ng5\n(tRp22\n(dp23\nbsg8\nS'v'\np24\nsbag1\n(tRp25\n(dp26\ng4\ng5\n(tRp27\n(dp28\nbsg8\ng24\nsba.")
-print sym0

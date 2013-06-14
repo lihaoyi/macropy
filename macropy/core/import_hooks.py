@@ -3,14 +3,15 @@
 import sys
 import imp
 import ast
+import macropy
 from macros import *
 from util import *
 
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
-    def __init__(self, module_name, tree, source, file_name, bindings):
-        self.module_name = module_name
+    def __init__(self, package_path, tree, source, file_name, bindings):
+        self.package_path = package_path
         self.tree = tree
         self.source = source
         self.file_name = file_name
@@ -36,7 +37,7 @@ class _MacroLoader(object):
         else:
             mod.__package__ = fullname.rpartition('.')[0]
         mod.__file__ = self.file_name
-
+        macropy.exporter.export_transformed(tree, fullname)
         try:
             exec compile(tree, self.file_name, "exec") in mod.__dict__
         except Exception as e:
@@ -60,7 +61,7 @@ class MacroFinder(object):
 
             # short circuit heuristic to fail fast if the source code can't
             # possible contain the macro import at all
-            if " import macros" not in txt:
+            if "macros" not in txt:
                 return
 
             # check properly the AST if the macro import really exists
