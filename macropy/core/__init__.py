@@ -119,7 +119,7 @@ def else_rec(tree, i):
     if isinstance(tree[0], If):
         return tabs(i) + "elif " + rec(tree[0].test, i) + ":" + \
                 rec(tree[0].body, i+1) + else_rec(tree[0].orelse, i)
-    return tabs(i) + "else:" + rec(tree[0], i+1)
+    return tabs(i) + "else:" + rec(tree, i+1)
     
 
 trec = {

@@ -6,18 +6,16 @@ class NullExporter(object):
     def __init__(self, root = os.getcwd()):
         pass
 
-    def export_transformed(self, tree, module_name):
+    def export_transformed(self, tree, module_name, file_name):
         print module_name
         pass
 
 
 class SaveExporter(object):
-    def __init__(self, directory="exporter", root = os.getcwd()):
-
+    def __init__(self, directory="exported", root = os.getcwd()):
         self.root = root
         self.directory = directory
         shutil.copytree(".", directory)
-
 
     def export_transformed(self, tree, module_name, file_name):
 

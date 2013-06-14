@@ -72,16 +72,19 @@ class Macros(object):
         self.expose_unhygienic = Macros.Registry()
 
 
-def fill_hygienes(tree, captured_registry, registry_alias):
+def fill_hygienes(tree, captured_registry, gen_sym):
     @Walker
     def hygienator(tree, stop, **kw):
         if type(tree) is Captured:
-            captured_registry.append(tree.val)
-            return Subscript(
-                Name(registry_alias, Load()),
-                Index(Num(len(captured_registry)-1)),
-                Load()
-            )
+            new_sym = [sym for val, sym in captured_registry if val is tree.val]
+            if not new_sym:
+                new_sym = gen_sym()
+
+                captured_registry.append((tree.val, new_sym))
+            else:
+                new_sym = new_sym[0]
+            return Name(new_sym, Load())
+
 
     return hygienator.recurse(tree)
 
@@ -127,7 +130,7 @@ def expand_entire_ast(tree, src, bindings):
                     expand_macros=lambda t: expand_ast(t),
                     **kwargs
                 )
-                fill_hygienes(new_tree, captured_registry, registry_alias)
+                fill_hygienes(new_tree, captured_registry, lambda: symbols().next())
                 new_tree = ast_ctx_fixer.recurse(new_tree, Load())
                 fill_line_numbers(new_tree, macro_tree.lineno, macro_tree.col_offset)
                 return new_tree
@@ -215,15 +218,16 @@ def expand_entire_ast(tree, src, bindings):
         import pickle
         stored = [
             Assign(
-                [Name(id=registry_alias, ctx=Store())],
+                [Tuple([Name(id=sym, ctx=Store()) for val, sym in captured_registry], Store())],
                 Call(
                     Name(id=unpickle_name, ctx=Load()),
-                    [Str(pickle.dumps(captured_registry))], [], None, None
+                    [Str(pickle.dumps([val for val, sym in captured_registry]))], [], None, None
                 )
             )
 
-        ]
+        ] if captured_registry else []
         tree.body = map(fix_missing_locations, pickle_import + stored) + tree.body
+
     except Exception, e:
         import traceback
         traceback.print_exc()

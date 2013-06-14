@@ -39,7 +39,6 @@ def hygienator(tree, stop, **kw):
             tree.id
         )
 
-
     if type(tree) is Literal:
         stop()
         return tree
