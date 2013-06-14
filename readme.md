@@ -2084,7 +2084,7 @@ def f(tree, gen_sym, **kw):
     ... use new_name ...
 ```
 
-`gen_sym` is a function which produce a new identifier (as a string) every time it is called. This is guaranteed to produce a identifier that does not appear anywhere in the origial source code, or have been produced by an earlier call to `gen_sym`. You can thus use these identifiers without worrying about shadowing an identifier someone was using; the full code for this is given in [docs/examples/hygiene/gen_sym](docs/examples/hygiene/gen_sym), so check it out and try executing it to see it working
+`gen_sym` is a function which produce a new identifier (as a string) every time it is called. This is guaranteed to produce a identifier that does not appear anywhere in the original source code, or have been produced by an earlier call to `gen_sym`. You can thus use these identifiers without worrying about shadowing an identifier someone was using; the full code for this is given in [docs/examples/hygiene/gen_sym](docs/examples/hygiene/gen_sym), so check it out and try executing it to see it working
 
 ###Hygienic Quasiquotes
 Let's look at another use case: the implementation of the various [tracing](#tracing) macros. These macros generally can't rely solely on AST transforms, but also require runtime support in order to operate. Consider a simple `log` macro:
