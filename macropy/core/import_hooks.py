@@ -10,41 +10,13 @@ from util import *
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
-    def __init__(self, package_path, tree, source, file_name, bindings):
-        self.package_path = package_path
-        self.tree = tree
-        self.source = source
-        self.file_name = file_name
-        self.bindings = bindings
+    def __init__(self, mod):
+        self.mod = mod
 
 
     def load_module(self, fullname):
-
-        for (p, _) in self.bindings:
-            __import__(p)
-
-        modules = [(sys.modules[p], bindings) for (p, bindings) in self.bindings]
-
-
-        tree = expand_entire_ast(self.tree, self.source, modules)
-
-        ispkg = False
-        mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
-        mod.__loader__ = self
-        if ispkg:
-            mod.__path__ = []
-            mod.__package__ = fullname
-        else:
-            mod.__package__ = fullname.rpartition('.')[0]
-        mod.__file__ = self.file_name
-        macropy.exporter.export_transformed(tree, fullname, self.file_name)
-        try:
-            exec compile(tree, self.file_name, "exec") in mod.__dict__
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-
-        return mod
+        self.mod.__loader__ = self
+        return self.mod
 
 
 @singleton
@@ -72,6 +44,31 @@ class MacroFinder(object):
             if bindings == []:
                 return # no macros found, carry on
             else:
-                return _MacroLoader(module_name, tree, txt, file.name, bindings)
+                for (p, _) in bindings:
+                    __import__(p)
+
+                modules = [(sys.modules[p], bindings) for (p, bindings) in bindings]
+
+
+                tree = expand_entire_ast(tree, txt, modules)
+
+                ispkg = False
+                mod = sys.modules.setdefault(module_name, imp.new_module(module_name))
+
+                if ispkg:
+                    mod.__path__ = []
+                    mod.__package__ = module_name
+                else:
+                    mod.__package__ = module_name.rpartition('.')[0]
+                mod.__file__ = file.name
+                macropy.exporter.export_transformed(tree, module_name, file.name)
+                try:
+                    exec compile(tree, file.name, "exec") in mod.__dict__
+                except Exception as e:
+                    import traceback
+                    traceback.print_exc()
+
+                return _MacroLoader(mod)
+
         except Exception, e:
             pass
