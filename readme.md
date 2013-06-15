@@ -2311,7 +2311,7 @@ Although MacroPy is designed to work seamlessly on-line, seamlessly translating 
 MacroPy allows you to hook into the macro-expansion process via the `macropy.exporter` variable, which comes with three bundled values which can satisfy these constraints:
 
 - [NullExporter()](#nullexporter): this is the default exporter, which does nothing
-- [SaveExporter(target, root)](#saveexportertarget-root)): this saves a copy of your code tree (rooted at `root`), with macros expanded, in the `target` directory. This is a convenient way of exporting the entire source tree with macros expanded
+- [SaveExporter(target, root)](#saveexportertarget-root): this saves a copy of your code tree (rooted at `root`), with macros expanded, in the `target` directory. This is a convenient way of exporting the entire source tree with macros expanded
 - [PycExporter()](#PycExporter): this emulates the normal `.pyc` compilation and caching based on file `mtime`s. This is a convenient transparent-ish cache to avoid needlessly performing macro-expansion repeatedly.
 
 ###NullExporter()
