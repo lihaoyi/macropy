@@ -1,4 +1,4 @@
-from macropy.core.test.macros.hq_macro import macros, expand, expand_unhygienic, Captured
+from macropy.core.test.hquotes.hq_macro import macros, expand, expand_unhygienic
 
 double = "double"
 value = 1

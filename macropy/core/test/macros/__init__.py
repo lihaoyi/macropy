@@ -3,6 +3,7 @@ import unittest
 import sys
 
 
+
 class Tests(unittest.TestCase):
     def test_basic_identification_and_expansion(self):
         import basic_expr
@@ -91,11 +92,3 @@ else:
             aliases.run_ignored()
 
 
-    def test_hq(self):
-        import hq_macro
-        import hq
-        assert hq.run1() == "2x: 1 double 1 double "
-
-        assert hq.run2() == 5
-
-        assert hq.run3() == 6
