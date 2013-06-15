@@ -3,7 +3,7 @@
 import sys
 import imp
 import ast
-import macropy
+import macropy.activate
 from macros import *
 
 

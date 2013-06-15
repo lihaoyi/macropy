@@ -1,5 +1,5 @@
 import unittest
-import macropy
+import macropy.activate
 
 import macropy.test
 

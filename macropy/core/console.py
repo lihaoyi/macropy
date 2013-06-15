@@ -50,4 +50,3 @@ class MacroConsole(code.InteractiveConsole):
         # any runtime failures
         return False
 
-MacroConsole().interact("0=[]=====> MacroPy Enabled <=====[]=0")

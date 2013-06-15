@@ -1,4 +1,4 @@
-import macropy
+import macropy.activate
 import unittest
 
 

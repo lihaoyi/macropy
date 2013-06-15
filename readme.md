@@ -1659,7 +1659,7 @@ As mentioned earlier, you cannot use macros in the `__main__` module (the file t
 
 ```python
 # run.py
-import macropy
+import macropy.activate
 import target
 
 # target.py
@@ -1670,7 +1670,7 @@ Now, let us define a simple macro, in `macro_module.py`
 
 ```python
 # run.py
-import macropy
+import macropy.activate
 import target
 
 # target.py
@@ -2338,7 +2338,7 @@ The arguments to these methods are relatively self explanatory, but feel free to
 This exporter is activated immediately after the initial `import macropy` statement, via:
 
 ```python
-import macropy
+import macropy.activate
 macropy.exporter = SaveExporter("exported", ".")
 ```
 
@@ -2382,7 +2382,7 @@ The following example can be used to expand-and-save MacroPy's own test suite, s
 ```python
 # run_tests.py
 import unittest
-import macropy
+import macropy.activate
 from macropy.core.exporters import SaveExporter
 macropy.exporter = SaveExporter("exported", ".")
 import macropy.test
@@ -2448,7 +2448,7 @@ By using the `SaveExporter`, the macro-using code is expanded into plain Python,
 The PycExporter makes MacroPy perform the same `*.pc -> *.pyc` caching that the normal Python import process does. This can be activated via:
 
 ```python
-import macropy
+import macropy.activate
 macropy.exporter = PycExporter()
 ```
 
