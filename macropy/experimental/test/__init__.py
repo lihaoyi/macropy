@@ -11,7 +11,7 @@ Tests = test_suite(cases = [
     #js_snippets,
     #pattern,
     peg,
-    pinq,
+    #pinq,
     pyxl_snippets,
     #tco_test
 ])

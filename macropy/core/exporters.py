@@ -20,7 +20,7 @@ class SaveExporter(object):
         self.root = root
         self.directory = directory
         shutil.rmtree(directory, ignore_errors=True)
-        shutil.copytree(".", directory)
+        shutil.copytree(root, directory)
 
     def export_transformed(self, code, tree, module_name, file_name):
 
@@ -55,6 +55,11 @@ class PycExporter(object):
 
         try:
             f = open(file.name + suffix, 'rb')
+            py_time = os.fstat(file.fileno()).st_mtime
+            pyc_time = os.fstat(f.fileno()).st_mtime
+
+            if py_time > pyc_time:
+                return None
             x = imp.load_compiled(module_name, pathname + suffix, f)
             return x
         except Exception, e:

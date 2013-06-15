@@ -5,9 +5,11 @@ import quotes
 import unparse
 import walkers
 import macros
+import exporters
 Tests = test_suite(cases = [
     quotes,
     unparse,
     walkers,
-    macros
+    macros,
+    exporters
 ])

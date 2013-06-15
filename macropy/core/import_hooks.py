@@ -5,7 +5,6 @@ import imp
 import ast
 import macropy
 from macros import *
-from util import *
 
 
 class _MacroLoader(object):
@@ -30,7 +29,6 @@ class MacroFinder(object):
                 package_path
             )
 
-
             txt = file.read()
 
             # short circuit heuristic to fail fast if the source code can't
@@ -47,7 +45,6 @@ class MacroFinder(object):
                 return # no macros found, carry on
 
             mod = macropy.exporter.find(file, pathname, description, module_name, package_path)
-            print mod
 
             if mod:
                 return _MacroLoader(mod)
@@ -56,7 +53,6 @@ class MacroFinder(object):
                 __import__(p)
 
             modules = [(sys.modules[p], bindings) for (p, bindings) in bindings]
-
 
             tree = expand_entire_ast(tree, txt, modules)
 
