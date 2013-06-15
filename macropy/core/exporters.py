@@ -6,9 +6,6 @@ from py_compile import wr_long
 import marshal
 import imp
 class NullExporter(object):
-    def __init__(self, root=os.getcwd()):
-        pass
-
     def export_transformed(self, code, tree, module_name, file_name):
         pass
 
