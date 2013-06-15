@@ -2310,9 +2310,9 @@ Although MacroPy is designed to work seamlessly on-line, seamlessly translating 
 
 MacroPy allows you to hook into the macro-expansion process via the `macropy.exporter` variable, which comes with three bundled values which can satisfy these constraints:
 
-- [NullExporter()](#NullExporter()): this is the default exporter, which does nothing
-- [SaveExporter(target, root)](#SaveExporter(target, root)): this saves a copy of your code tree (rooted at `root`), with macros expanded, in the `target` directory. This is a convenient way of exporting the entire source tree with macros expanded
-- [PycExporter()](#PycExporter()): this emulates the normal `.pyc` compilation and caching based on file `mtime`s. This is a convenient transparent-ish cache to avoid needlessly performing macro-expansion repeatedly.
+- [NullExporter()](#nullexporter): this is the default exporter, which does nothing
+- [SaveExporter(target, root)](#saveexportertarget-root)): this saves a copy of your code tree (rooted at `root`), with macros expanded, in the `target` directory. This is a convenient way of exporting the entire source tree with macros expanded
+- [PycExporter()](#PycExporter): this emulates the normal `.pyc` compilation and caching based on file `mtime`s. This is a convenient transparent-ish cache to avoid needlessly performing macro-expansion repeatedly.
 
 ###NullExporter()
 This is the default Exporter, and although it does not do anything, it illustrates the general contract of what an Exporter must look like:
@@ -2430,19 +2430,19 @@ exporter = core.exporters.NullExporter()
 And when we run the saved, macro-expanded, macro-less version via `cd exported; python run_tests.py`:
 
 ```
-# ----------------------------------------------------------------------
-# Ran 76 tests in 0.150s
+----------------------------------------------------------------------
+Ran 76 tests in 0.150s
 
-# FAILED (failures=4, errors=1)
+FAILED (failures=4, errors=1)
 ```
 
 A few minor failures, mainly in the error-message/line-numbers tests, as the pre-expanded code will have different line numbers than the just-in-time-expanded ASTs. Nonetheless, on the whole it works.
 
 ------------------------------------------------
 
-The SaveExporter should be of great help to any library-author who wants to use Macros internally (e.g. he wants to use [case classes](#case-classes) to simplify class declarations, or [MacroPeg](#macropeg-parser-combinators) to write a parser) but does not want to saddle users of the library with having to activate import hooks, or wants to run the code in an environment where such functionality is not supported (e.g. Jython).
+The SaveExporter should be of great help to any library-author who wants to use Macros internally (e.g. [case classes](#case-classes) to simplify class declarations, or [MacroPeg](#macropeg-parser-combinators) to write a parser) but does not want to saddle users of the library with having to activate import hooks, or wants to run the code in an environment where such functionality is not supported (e.g. Jython).
 
-By using the `SaveExporter`, the macro-using code is expanded into plain Python, and although it may rely on MacroPy as a library (e.g. the `CaseClass` class in [macropy/exprimental/peg.py](macropy/exprimental/peg.py)) it won't need any of MacroPy's import-code-intercepting AST-transforming capabilities at run-time.
+By using the `SaveExporter`, the macro-using code is expanded into plain Python, and although it may rely on MacroPy as a library (e.g. the `CaseClass` class in [macropy/experimental/peg.py](macropy/experimental/peg.py)) it won't need any of MacroPy's import-code-intercepting AST-transforming capabilities at run-time.
 
 ###PycExporter()
 The PycExporter makes MacroPy perform the same `*.pc -> *.pyc` caching that the normal Python import process does. This can be activated via:
@@ -2452,7 +2452,9 @@ import macropy
 macropy.exporter = PycExporter()
 ```
 
-The macro-expansion process takes significantly longer than normal imports, and this may be helpful if you have a large number of large files using macros and you want to save having to re-expand them every execution. Although `PycExporter` automatically does the recompilation of the macro-expanded files when they are modified, it notably *does not* do recompilation of the macro-expanded files when *the macros* are modified. This means that `PycExporter` is not useful when doing development on the macros themselves.
+The macro-expansion process takes significantly longer than normal imports, and this may be helpful if you have a large number of large files using macros and you want to save having to re-expand them every execution.
+
+Although `PycExporter` automatically does the recompilation of the macro-expanded files when they are modified, it notably *does not* do recompilation of the macro-expanded files when *the macros* are modified. This means that `PycExporter` is not useful when doing development on the macros themselves, since the output files will not get properly recompiled when the macros change. For now it is best to simply use the [NullExporter](#nullexporter) when messing with your macros, and only using the [PycExporter](#pycexporter) when your macros are stable and you are working on the target code.
 
 Reference
 =========
