@@ -2440,21 +2440,41 @@ A few minor failures, mainly in the error-message/line-numbers tests, as the pre
 
 ------------------------------------------------
 
-The SaveExporter should be of great help to any library-author who wants to use Macros internally (e.g. [case classes](#case-classes) to simplify class declarations, or [MacroPeg](#macropeg-parser-combinators) to write a parser) but does not want to saddle users of the library with having to activate import hooks, or wants to run the code in an environment where such functionality is not supported (e.g. Jython).
+The SaveExporter should be of great help to any library-author who wants to use
+Macros internally (e.g. [case classes](#case-classes) to simplify class
+declarations, or [MacroPeg](#macropeg-parser-combinators) to write a parser)
+but does not want to saddle users of the library with having to activate import
+hooks, or wants to run the code in an environment where such functionality is
+not supported (e.g. Jython).
 
-By using the `SaveExporter`, the macro-using code is expanded into plain Python, and although it may rely on MacroPy as a library (e.g. the `CaseClass` class in [macropy/experimental/peg.py](macropy/experimental/peg.py)) it won't need any of MacroPy's import-code-intercepting AST-transforming capabilities at run-time.
+By using the `SaveExporter`, the macro-using code is expanded into plain
+Python, and although it may rely on MacroPy as a library (e.g. the `CaseClass`
+class in [macropy/experimental/peg.py](macropy/experimental/peg.py)) it won't
+need any of MacroPy's import-code-intercepting AST-transforming capabilities at
+run-time.
 
 ###PycExporter()
-The PycExporter makes MacroPy perform the same `*.pc -> *.pyc` caching that the normal Python import process does. This can be activated via:
+The PycExporter makes MacroPy perform the same `*.pc -> *.pyc` caching that the
+normal Python import process does. This can be activated via:
 
 ```python
 import macropy.activate
 macropy.exporter = PycExporter()
 ```
 
-The macro-expansion process takes significantly longer than normal imports, and this may be helpful if you have a large number of large files using macros and you want to save having to re-expand them every execution.
+The macro-expansion process takes significantly longer than normal imports, and
+this may be helpful if you have a large number of large files using macros and
+you want to save having to re-expand them every execution.
 
-Although `PycExporter` automatically does the recompilation of the macro-expanded files when they are modified, it notably *does not* do recompilation of the macro-expanded files when *the macros* are modified. This means that `PycExporter` is not useful when doing development on the macros themselves, since the output files will not get properly recompiled when the macros change. For now it is best to simply use the [NullExporter](#nullexporter) when messing with your macros, and only using the [PycExporter](#pycexporter) when your macros are stable and you are working on the target code.
+Although `PycExporter` automatically does the recompilation of the
+macro-expanded files when they are modified, it notably *does not* do
+recompilation of the macro-expanded files when *the macros* are modified. This
+means that `PycExporter` is not useful when doing development on the macros
+themselves, since the output files will not get properly recompiled when the
+macros change. For now it is best to simply use the
+[NullExporter](#nullexporter) when messing with your macros, and only using the
+[PycExporter](#pycexporter) when your macros are stable and you are working on
+the target code.
 
 Reference
 =========
@@ -2462,7 +2482,15 @@ This section contains reference documentation on various facets of MacroPy:
 
 Data Model
 ----------
-As mentioned earlier, MacroPy uses PEP 302 for much of its functionality. It looks out in particular for the syntactic forms (`import macros, ...`, `my_macro(...)`, `my_macro%...`, `with my_macro:`, `@my_macro`) to decide which parts of the AST need to be expanded by which macros. MacroPy uses the inbuilt Python infrastructure for [parsing the source](http://docs.python.org/2/library/ast.html#ast.parse) and [representing it as an AST](http://docs.python.org/2/library/ast.html#abstract-grammar). You should familiarize yourself with the classes which make up the Python AST, since you will be interacting with them a great deal while writing macros.
+As mentioned earlier, MacroPy uses PEP 302 for much of its functionality. It
+looks out in particular for the syntactic forms (`import macros, ...`,
+`my_macro(...)`, `my_macro%...`, `with my_macro:`, `@my_macro`) to decide which
+parts of the AST need to be expanded by which macros. MacroPy uses the inbuilt
+Python infrastructure for [parsing the
+source](http://docs.python.org/2/library/ast.html#ast.parse) and [representing
+it as an AST](http://docs.python.org/2/library/ast.html#abstract-grammar). You
+should familiarize yourself with the classes which make up the Python AST,
+since you will be interacting with them a great deal while writing macros.
 
 Once you have an AST, there are a few possible forms that code can take:
 
@@ -2474,18 +2502,39 @@ This map maps out how to convert from form to form:
 
 ![Transforms](docs/media/Transforms.png)
 
-Except for `eval`, these are all functions defined in the [macropy/core/__init__.py](macropy/core/__init__.py). For instance, in order to convert from a AST back into source code (for example if you want to print out the code which is being run), you would use the `unparse()` method. These transformations will be used throughout this documentation, to convert from one form to another or to print out the AST for inspection.
+Except for `eval`, these are all functions defined in the
+[macropy/core/__init__.py](macropy/core/__init__.py). For instance, in order to
+convert from a AST back into source code (for example if you want to print out
+the code which is being run), you would use the `unparse()` method. These
+transformations will be used throughout this documentation, to convert from one
+form to another or to print out the AST for inspection.
 
 ###`parse_stmt(src)` & `parse_expr(src)`
-Thin wrappers around [ast.parse](...), these functions simplify the common case where you want to convert a code snippet into a list of `stmt`s or a single `expr`.
+Thin wrappers around [ast.parse](...), these functions simplify the common case
+where you want to convert a code snippet into a list of `stmt`s or a single
+`expr`.
 
 ###`unparse(tree)`
-This function performs the conversion of the Python AST back into semantically equivalent source code; using `parse_stmt` or `parse_expr` on the generated should return the original AST.
+This function performs the conversion of the Python AST back into semantically
+equivalent source code; using `parse_stmt` or `parse_expr` on the generated
+should return the original AST.
 
-Although the generated code preserves semantic equivalence, this function does not preserve `lineno`s, `col_offset`s or syntactic equivalence in general. Hence your indentation may change, there may be extra parentheses added, etc.. The code is not obfuscated (It's typically straightforward to see what its doing, even with the syntactic changes) but you will not get back the exact original source.
+Although the generated code preserves semantic equivalence, this function does
+not preserve `lineno`s, `col_offset`s or syntactic equivalence in general.
+Hence your indentation may change, there may be extra parentheses added, etc..
+The code is not obfuscated (It's typically straightforward to see what its
+doing, even with the syntactic changes) but you will not get back the exact
+original source.
 
 ###`exact_src(tree)`
-This function differs from `unparse` in that instead of generating source code from the AST, it searches the original source of the file being macro-expanded for the exact original source code which generated this AST, using the `lineno` and `col_offset` as a guide. This means that it will generally fail on synthetic ASTs (which will not have a matching snippet in the source code) and raise an `ExactSrcException`. Unlike the rest of these functions, which are global, `exact_src` is provided to your macro as an [argument](#argument) as the `exact_src` for the same AST could vary between macro expansions.
+This function differs from `unparse` in that instead of generating source code
+from the AST, it searches the original source of the file being macro-expanded
+for the exact original source code which generated this AST, using the `lineno`
+  and `col_offset` as a guide. This means that it will generally fail on
+  synthetic ASTs (which will not have a matching snippet in the source code)
+  and raise an `ExactSrcException`. Unlike the rest of these functions, which
+  are global, `exact_src` is provided to your macro as an [argument](#argument)
+  as the `exact_src` for the same AST could vary between macro expansions.
 
 ###`real_repr`
 A combination of `repr` and `ast.dump`, this function generally does the right thing in converting arbitrary values into Python source code which can be evaluated to re-create those values.
@@ -2514,7 +2563,11 @@ def my_complex_macro(tree, args, gen_sym, target, **kw):
     ...
 ```
 
-These additional arguments given to the macro as keyword arguments. The macro can declare the arguments as part of its parameter list in order to use it directly, otherwise it gets chucked into the `**kw` dict at the end of the macro's parameter list. This section details what each argument means and why it is useful.
+These additional arguments given to the macro as keyword arguments. The macro
+can declare the arguments as part of its parameter list in order to use it
+directly, otherwise it gets chucked into the `**kw` dict at the end of the
+macro's parameter list. This section details what each argument means and why
+it is useful.
 
 ###`tree`
 This is, the AST provided to the macro, which it can transform/replace. It contains the code captured by the macro, which varies depending on the macro used:
@@ -2528,9 +2581,11 @@ with my_macro:
     return blah
 ```
 
-will capture the statements in the body of the `with`: in this case a list containing the AST for `do_stuff()` and `return blah`.
+will capture the statements in the body of the `with`: in this case a list
+containing the AST for `do_stuff()` and `return blah`.
 
-- The entire class or function definition for a **decorator macro**, including *any decorators below the macro itself*:
+- The entire class or function definition for a **decorator macro**, including
+  *any decorators below the macro itself*:
 
 ```python
 @dec
@@ -2550,7 +2605,8 @@ class Cls():
 
 ###`args`
 
-Macros can take addition arguments when invoked, apart from the primary tree that it receives. For example a macro can be invoked as follows:
+Macros can take addition arguments when invoked, apart from the primary tree
+that it receives. For example a macro can be invoked as follows:
 
 ```python
 my_macro(a)[...]
@@ -2563,49 +2619,71 @@ def func():
     ...
 ```
 
-In these cases, `args` contains a list of additional arguments, a length-1 list containing the AST for `a`. Multiple arguments works as you would expect, although named arguments, `*args* and `**kwargs` are not supported. This is used in [pattern matching](#pattern-matching)'s switch macro to indicate what value to switch on.
+In these cases, `args` contains a list of additional arguments, a length-1 list
+containing the AST for `a`. Multiple arguments works as you would expect,
+although named arguments, `*args* and `**kwargs` are not supported. This is
+used in [pattern matching](#pattern-matching)'s switch macro to indicate what
+value to switch on.
 
 ###`gen_sym`
 
-As [described below](#hygiene), `gen_sym` provides a mechanism for creating identifiers that are guaranteed not to clash with any other identifier in the same source file. `gen_sym` is a 0-argument function, which when called via:
+As [described below](#hygiene), `gen_sym` provides a mechanism for creating
+identifiers that are guaranteed not to clash with any other identifier in the
+same source file. `gen_sym` is a 0-argument function, which when called via:
 
 ```python
 gen_sym()
 ```
 
-Will produce a new identifier (as a string) which does not exist in the source code, and has not been provided before. This is used in the (quick lambda macro)[#quick-lambda) to ensure that the new arguments do not collide.
+Will produce a new identifier (as a string) which does not exist in the source
+code, and has not been provided before. This is used in the (quick lambda
+macro)[#quick-lambda) to ensure that the new arguments do not collide.
 
 ###`target`
 
-This argument is only provided for **block macros**. It provides a way to capture the bound name in the `with` statement:
+This argument is only provided for **block macros**. It provides a way to
+capture the bound name in the `with` statement:
 
 ```python
 with my_macro as blah:
     ...
 ```
 
-`target` will contain the AST for `blah`. This is used in the [quasiquotes](#quasiquotes) macro.
+`target` will contain the AST for `blah`. This is used in the
+[quasiquotes](#quasiquotes) macro.
 
 ###`exact_src`
 
-This is a function that attempts to retrieve the source code of the target AST, exactly as written in the source code. This is in contrast to `unparse`, which produces semantically correct code that may differ in syntax from what was originally parsed, for example it may have extra parentheses, be missing comments, and have the whitespace and layout modified, and a variety of other syntactic changes:
+This is a function that attempts to retrieve the source code of the target AST,
+exactly as written in the source code. This is in contrast to `unparse`, which
+produces semantically correct code that may differ in syntax from what was
+originally parsed, for example it may have extra parentheses, be missing
+comments, and have the whitespace and layout modified, and a variety of other
+syntactic changes:
 
 ```python
 (1 + 2 + 3 + 4) -> (((1 + 2) + 3) + 4)
 "lol", 'rofl' -> ('lol', 'rofl')
 ```
 
-In contrast `exact_src(tree)` promises that you get exactly what was written in the source code, down to the choice of single quotes vs double quotes:
+In contrast `exact_src(tree)` promises that you get exactly what was written in
+the source code, down to the choice of single quotes vs double quotes:
 
 ```python
 "lol", 'rofl' -> "lol", 'rofl'
 ```
 
-It does this by analyzing the `lineno` and `col_offset` values on the AST it is passed, comparing those against the known values within the source file the AST originates from and making a best-effort attempt to extract the corresponding snippet of code. This obviously only really works on ASTs that originated directly from the source code, and will fail on ASTs you synthesized manually.
+It does this by analyzing the `lineno` and `col_offset` values on the AST it is
+passed, comparing those against the known values within the source file the AST
+originates from and making a best-effort attempt to extract the corresponding
+snippet of code. This obviously only really works on ASTs that originated
+directly from the source code, and will fail on ASTs you synthesized manually.
 
 ###`expand_macros`
 
-`expand_macros` is a function that can be called by a macro to expand any macros in the target AST. For example, the `tracing` module's `show_expanded` macro uses it to print out what the captured AST looks like after expansion:
+`expand_macros` is a function that can be called by a macro to expand any
+macros in the target AST. For example, the `tracing` module's `show_expanded`
+macro uses it to print out what the captured AST looks like after expansion:
 
 ```python
 @macros.expr
@@ -2615,7 +2693,12 @@ def show_expanded(tree, expand_macros, **kw):
     return new_tree
 ```
 
-Note that macro expansion *mutates the tree being expanded*. In the case of the `show_expanded` macro, it doesn't really macro (since the tree was going to get expanded anyway). However, if you want to preserve the original AST for any reason, you should [deepcopy](http://docs.python.org/2/library/copy.html#copy.deepcopy) the original AST and do your expansion on the copy.
+Note that macro expansion *mutates the tree being expanded*. In the case of the
+`show_expanded` macro, it doesn't really matter (since the tree was going to
+get expanded anyway). However, if you want to preserve the original AST for any
+reason, you should
+[deepcopy](http://docs.python.org/2/library/copy.html#copy.deepcopy) the
+original AST and do your expansion on the copy.
 
 Quasiquotes
 -----------
