@@ -1,26 +1,62 @@
-from macropy.core.macros import *
+from macropy.core import unparse
+from ast import *
+from walkers import Walker
 
-from macropy.core.quotes import macros, q, unquote_search, u, ast, ast_list, name
 
-@injected_vars.append
-def exact_src(tree, **kw):
-    """Create a generator that creates symbols which are not used in the given
-    `tree`. This means they will be hygienic, i.e. it guarantees that they will
-    not cause accidental shadowing, as long as the scope of the new symbol is
-    limited to `tree` e.g. by a lambda expression or a function body"""
-    @Walker
-    def name_finder(tree, collect, **kw):
-        if type(tree) is Name:
-            collect(tree.id)
-        if type(tree) is Import:
-            names = [x.asname or x.name for x in tree.names]
-            map(collect, names)
-        if type(tree) is ImportFrom:
-            names = [x.asname or x.name for x in tree.names]
-            map(collect, names)
+def linear_index(line_lengths, lineno, col_offset):
+    prev_length = sum(line_lengths[:lineno-1]) + lineno-2
+    out = prev_length + col_offset + 1
+    return out
 
-    found_names = name_finder.collect(tree)
-    names = ("sym" + str(i) for i in itertools.count())
-    x = itertools.ifilter(lambda x: x not in found_names, names)
-    return lambda: x.next()
+@Walker
+def indexer(tree, collect, **kw):
+    try:
+        unparse(tree)
+        collect((tree.lineno, tree.col_offset))
+    except Exception, e:
+        pass
 
+_transforms = {
+    GeneratorExp: "(%s)",
+    ListComp: "[%s]",
+    SetComp: "{%s}",
+    DictComp: "{%s}"
+}
+
+
+
+def exact_src(tree, src, indexes, line_lengths):
+    all_child_pos = sorted(indexer.collect(tree))
+    start_index = linear_index(line_lengths(), *all_child_pos[0])
+
+    last_child_index = linear_index(line_lengths(), *all_child_pos[-1])
+
+    first_successor_index = indexes()[min(indexes().index(last_child_index)+1, len(indexes())-1)]
+
+    for end_index in range(last_child_index, first_successor_index+1):
+
+        prelim = src[start_index:end_index]
+        prelim = _transforms.get(type(tree), "%s") % prelim
+
+
+        if isinstance(tree, stmt):
+            prelim = prelim.replace("\n" + " " * tree.col_offset, "\n")
+
+        if isinstance(tree, list):
+            prelim = prelim.replace("\n" + " " * tree[0].col_offset, "\n")
+
+        try:
+            if isinstance(tree, expr):
+                x = "(" + prelim + ")"
+            else:
+                x = prelim
+            import ast
+            parsed = ast.parse(x)
+            if unparse(parsed).strip() == unparse(tree).strip():
+                return prelim
+
+        except SyntaxError as e:
+            pass
+    raise ExactSrcException()
+class ExactSrcException(Exception):
+    pass
