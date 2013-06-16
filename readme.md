@@ -2902,7 +2902,12 @@ Where `hygienic_self_ref` is a special identifier (found in [macropy/core/macros
 
 Using `wrap` as an example, `hq` uses `macros.register` to save the current value of `wrap`. `macros.register` returns an index, which can be used to retrieve it later. `hq` then, using the identifier which takes the place of `hygienic_self_ref`, returns a code snippet that will look up the correct `macros.registered` at run-time and retrieve the value. This effectively saves every identifier seen by the `hq` macro and provides it to the macro-expanded code.
 
-One thing to note is that `hq` saves each value *forever*. Once a value has been captured inside `hq` and saved using `macros.register`, it will remain indefinitely without being garbage-collected or discarded. Although there may be ways around this, in practice it should not be too great of a problem: the total number of `hq`s is generally bounded to a relatively small number, proportional to the total amount of code using macros, and thus is unlikely to significantly increase memory usage.
+One thing to note is that `hq` pickles all captured names and saves them in the expanded module, which unpickles them for usage. This is done in order to ensure consistency of behavior with [exported](#exporting-your-expanded-code) code, but it comes with a small number of caveats:
+
+- Unpickleable values (e.g. module objects, nested functions, lambdas) can't be captured in a `hq`
+- Values get copied in the pickling/unpickling process. If a macro's `hq`s capture the same mutable object when the macro is used to expand different modules, each module gets its own version of that mutable object.
+
+Although this behavior is slightly unintuitive, in general they should only affect you in the edge cases. In the vast majority of use cases, you will not bump into these issues at all, and when you do, they are easy enough to work around.
 
 ###`expose_unhygienic`
 Annotating something with `@expose_unhygienic` simply synthesizes an import in the macro-expanded module to pull in the name from the macro's own module. E.g. in the case of the `log` macro, it converts
