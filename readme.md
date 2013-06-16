@@ -116,8 +116,8 @@ Note that this means **you cannot use macros in a file that is run directly**, a
 
 ```python
 # run.py
-import macropy      # sets up macro import hooks
-import other        # imports other.py and passes it through import hooks
+import macropy.activate     # sets up macro import hooks
+import other                # imports other.py and passes it through import hooks
 
 
 # my_macro_module.py
