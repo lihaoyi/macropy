@@ -70,7 +70,7 @@ class Macros(object):
         self.decorator = Macros.Registry(MacroFunction)
 
         self.expose_unhygienic = Macros.Registry()
-
+        self.filter = Macros.Registry()
 
 def fill_hygienes(tree, captured_registry, gen_sym):
     @Walker
@@ -88,6 +88,10 @@ def fill_hygienes(tree, captured_registry, gen_sym):
 
     return hygienator.recurse(tree)
 
+
+filters = []
+post_processing = []
+vars = {}
 
 def expand_entire_ast(tree, src, bindings):
     symbols = Lazy(lambda: gen_sym(tree))
@@ -130,7 +134,17 @@ def expand_entire_ast(tree, src, bindings):
                     expand_macros=lambda t: expand_ast(t),
                     **kwargs
                 )
-                fill_hygienes(new_tree, captured_registry, lambda: symbols().next())
+                for filter in filters:
+                    new_tree = filter(
+                        tree=new_tree,
+                        args=args,
+                        gen_sym=lambda: symbols().next(),
+                        exact_src=lambda t: exact_src(t, src, indexes, line_lengths),
+                        expand_macros=lambda t: expand_ast(t),
+                        captured_registry = captured_registry,
+                        **kwargs
+                    )
+
                 new_tree = ast_ctx_fixer.recurse(new_tree, Load())
                 fill_line_numbers(new_tree, macro_tree.lineno, macro_tree.col_offset)
                 return new_tree
@@ -210,28 +224,16 @@ def expand_entire_ast(tree, src, bindings):
 
         return tree
     tree = expand_ast(tree)
-    unpickle_name = symbols().next()
-    pickle_import = [
-        ImportFrom(module='pickle', names=[alias(name='loads', asname=unpickle_name)], level=0)
-    ]
-    try:
-        import pickle
-        stored = [
-            Assign(
-                [Tuple([Name(id=sym, ctx=Store()) for val, sym in captured_registry], Store())],
-                Call(
-                    Name(id=unpickle_name, ctx=Load()),
-                    [Str(pickle.dumps([val for val, sym in captured_registry]))], [], None, None
-                )
-            )
+    for post in post_processing:
+        tree = post(
+            tree=tree,
+            gen_sym=lambda: symbols().next(),
+            exact_src=lambda t: exact_src(t, src, indexes, line_lengths),
+            expand_macros=lambda t: expand_ast(t),
+            captured_registry = captured_registry
+        )
 
-        ] if captured_registry else []
-        tree.body = map(fix_missing_locations, pickle_import + stored) + tree.body
 
-    except Exception, e:
-        import traceback
-        traceback.print_exc()
-        raise e
     return tree
 
 
