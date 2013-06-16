@@ -4,14 +4,14 @@ import ast
 
 import sys
 
-from macropy.core.macros import expand_ast, detect_macros
+from macropy.core.macros import expand_entire_ast, detect_macros
 
 
 class MacroConsole(code.InteractiveConsole):
     def __init__(self, locals=None, filename="<console>"):
         code.InteractiveConsole.__init__(self, locals, filename)
         self.bindings = []
-        self.hygienic_aliases = {}
+
 
     def runsource(self, source, filename="<input>", symbol="single"):
         try:
@@ -26,15 +26,14 @@ class MacroConsole(code.InteractiveConsole):
 
         try:
             tree = ast.parse(source)
-            bindings, hygienic_aliases = detect_macros(tree)
-            self.hygienic_aliases.update(hygienic_aliases)
+            bindings = detect_macros(tree)
 
             for p, names in bindings:
                 __import__(p)
 
             self.bindings.extend([(sys.modules[p], bindings) for (p, bindings) in bindings])
 
-            tree = expand_ast(tree, source, self.bindings, self.hygienic_aliases)
+            tree = expand_entire_ast(tree, source, self.bindings)
 
             tree = ast.Interactive(tree.body)
             code = compile(tree, filename, symbol, self.compile.compiler.flags, 1)
@@ -43,7 +42,6 @@ class MacroConsole(code.InteractiveConsole):
             self.showsyntaxerror(filename)
             # This means there's a syntax error
             return False
-
 
         self.runcode(code)
         # This means it was successfully compiled; `runcode` takes care of
