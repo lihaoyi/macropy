@@ -1,5 +1,7 @@
 from macropy.core import unparse
+from macropy.core.macros import injected_vars
 from ast import *
+from macropy.core.util import Lazy, distinct
 from walkers import Walker
 
 
@@ -24,39 +26,46 @@ _transforms = {
 }
 
 
+@injected_vars.append
+def exact_src(tree, src, **kw):
 
-def exact_src(tree, src, indexes, line_lengths):
-    all_child_pos = sorted(indexer.collect(tree))
-    start_index = linear_index(line_lengths(), *all_child_pos[0])
+    def exact_src_imp(tree, src, indexes, line_lengths):
+        all_child_pos = sorted(indexer.collect(tree))
+        start_index = linear_index(line_lengths(), *all_child_pos[0])
 
-    last_child_index = linear_index(line_lengths(), *all_child_pos[-1])
+        last_child_index = linear_index(line_lengths(), *all_child_pos[-1])
 
-    first_successor_index = indexes()[min(indexes().index(last_child_index)+1, len(indexes())-1)]
+        first_successor_index = indexes()[min(indexes().index(last_child_index)+1, len(indexes())-1)]
 
-    for end_index in range(last_child_index, first_successor_index+1):
+        for end_index in range(last_child_index, first_successor_index+1):
 
-        prelim = src[start_index:end_index]
-        prelim = _transforms.get(type(tree), "%s") % prelim
+            prelim = src[start_index:end_index]
+            prelim = _transforms.get(type(tree), "%s") % prelim
 
 
-        if isinstance(tree, stmt):
-            prelim = prelim.replace("\n" + " " * tree.col_offset, "\n")
+            if isinstance(tree, stmt):
+                prelim = prelim.replace("\n" + " " * tree.col_offset, "\n")
 
-        if isinstance(tree, list):
-            prelim = prelim.replace("\n" + " " * tree[0].col_offset, "\n")
+            if isinstance(tree, list):
+                prelim = prelim.replace("\n" + " " * tree[0].col_offset, "\n")
 
-        try:
-            if isinstance(tree, expr):
-                x = "(" + prelim + ")"
-            else:
-                x = prelim
-            import ast
-            parsed = ast.parse(x)
-            if unparse(parsed).strip() == unparse(tree).strip():
-                return prelim
+            try:
+                if isinstance(tree, expr):
+                    x = "(" + prelim + ")"
+                else:
+                    x = prelim
+                import ast
+                parsed = ast.parse(x)
+                if unparse(parsed).strip() == unparse(tree).strip():
+                    return prelim
 
-        except SyntaxError as e:
-            pass
-    raise ExactSrcException()
+            except SyntaxError as e:
+                pass
+        raise ExactSrcException()
+
+    positions = Lazy(lambda: indexer.collect(tree))
+    line_lengths = Lazy(lambda: map(len, src.split("\n")))
+    indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)]))
+    return lambda t: exact_src_imp(t, src, indexes, line_lengths)
 class ExactSrcException(Exception):
     pass

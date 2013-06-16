@@ -8,7 +8,7 @@ from ast import *
 from util import *
 from walkers import *
 from misc import *
-from exact_src import *
+
 
 @singleton
 class hygienic_self_ref:
@@ -79,11 +79,13 @@ filters = []            # functions to call on every macro-expanded snippet
 post_processing = []    # functions to call on every macro-expanded file
 
 import gen_sym as x
+import exact_src as x
 def expand_entire_ast(tree, src, bindings):
+
 
     def call(thing, **kw):
         return thing(
-            exact_src=lambda t: exact_src(t, src, indexes, line_lengths),
+            src=src,
             expand_macros=lambda t: expand_ast(t),
             **kw
         )
@@ -91,9 +93,6 @@ def expand_entire_ast(tree, src, bindings):
     file_vars = {v.func_name: call(v, tree=tree) for v in injected_vars}
 
     # you don't pay for what you don't use
-    positions = Lazy(lambda: indexer.collect(tree))
-    line_lengths = Lazy(lambda: map(len, src.split("\n")))
-    indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)]))
 
     allnames = [(m, name, asname) for m, names in bindings for name, asname in names]
 
