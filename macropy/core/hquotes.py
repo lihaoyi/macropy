@@ -10,9 +10,11 @@ macros = Macros()
 @singleton
 class unhygienic():
     """Used to delimit a section of a hq[...] that should not be hygienified"""
-from macros import filters, vars, post_processing
+from macros import filters, injected_vars, post_processing
 
-vars["captured_registry"] = {}
+@injected_vars.append
+def captured_registry(**kw):
+    return []
 
 @post_processing.append
 def post_proc(tree, captured_registry, gen_sym, **kw):

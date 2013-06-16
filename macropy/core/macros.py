@@ -91,12 +91,22 @@ def fill_hygienes(tree, captured_registry, gen_sym):
 
 filters = []
 post_processing = []
-vars = {}
+injected_vars = []
 
 def expand_entire_ast(tree, src, bindings):
+    def call(thing, **kw):
+        return thing(
+            gen_sym=lambda: symbols().next(),
+            exact_src=lambda t: exact_src(t, src, indexes, line_lengths),
+            expand_macros=lambda t: expand_ast(t),
+            **kw
+        )
+
     symbols = Lazy(lambda: gen_sym(tree))
     captured_registry = []
-    registry_alias = symbols().next()
+    symbols().next()
+
+    file_vars = {v.func_name: v() for v in injected_vars}
 
     # you don't pay for what you don't use
     positions = Lazy(lambda: indexer.collect(tree))
@@ -116,6 +126,7 @@ def expand_entire_ast(tree, src, bindings):
     expr_registry = extract_macros(lambda x: x.expr)
     decorator_registry = extract_macros(lambda x: x.decorator)
 
+
     def expand_ast(tree):
         """Go through an AST, hunting for macro invocations and expanding any that
         are found"""
@@ -125,24 +136,17 @@ def expand_entire_ast(tree, src, bindings):
             if isinstance(macro_tree, Name) and macro_tree.id in registry:
 
                 (the_macro, the_module) = registry[macro_tree.id]
-                new_tree = the_macro(
+                new_tree = call(the_macro,
                     tree=body_tree,
                     args=args,
-                    gen_sym=lambda: symbols().next(),
-
-                    exact_src=lambda t: exact_src(t, src, indexes, line_lengths),
-                    expand_macros=lambda t: expand_ast(t),
-                    **kwargs
+                    **dict(kwargs.items() + file_vars.items())
                 )
                 for filter in filters:
-                    new_tree = filter(
+
+                    new_tree = call(filter,
                         tree=new_tree,
                         args=args,
-                        gen_sym=lambda: symbols().next(),
-                        exact_src=lambda t: exact_src(t, src, indexes, line_lengths),
-                        expand_macros=lambda t: expand_ast(t),
-                        captured_registry = captured_registry,
-                        **kwargs
+                        **dict(kwargs.items() + file_vars.items())
                     )
 
                 new_tree = ast_ctx_fixer.recurse(new_tree, Load())
@@ -225,12 +229,9 @@ def expand_entire_ast(tree, src, bindings):
         return tree
     tree = expand_ast(tree)
     for post in post_processing:
-        tree = post(
+        tree = call(post,
             tree=tree,
-            gen_sym=lambda: symbols().next(),
-            exact_src=lambda t: exact_src(t, src, indexes, line_lengths),
-            expand_macros=lambda t: expand_ast(t),
-            captured_registry = captured_registry
+            **file_vars
         )
 
 
