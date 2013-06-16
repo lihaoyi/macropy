@@ -2333,7 +2333,7 @@ The arguments to these methods are relatively self explanatory, but feel free to
 
 ###SaveExporter(target, root)
 
-This exporter is activated immediately after the initial `import macropy` statement, via:
+This exporter is activated immediately after the initial `import macropy.activate` statement, via:
 
 ```python
 import macropy.activate
@@ -2350,7 +2350,7 @@ stuff/
     thing.py
 ```
 
-Assuming `run.py` is the entry point containing the `import macropy` statement, we need to:
+Assuming `run.py` is the entry point containing the `import macropy.activate` statement, we need to:
 
 - Modify it, as shown above, to contain the `macropy.exporter = SaveExporter(..., ...)` line
 - Run it, via `python run.py` or similar
@@ -2369,9 +2369,11 @@ saved/
         thing.py
 ```
 
-Where all macros within the files in the `saved/` subdirectory which were executed in the course of execution have been expanded. You can verify this by removing the `import macropy` and `macropy.exporter = ...` lines from `saved/run.py` (Thereby disabling MacroPy) and executing `saved/run.py` directly. Everything should run as normal, demonstrating that all macros have been expanded the dependencies on MacroPy's import hooks and AST transformations have been removed.
+Where all macros within the files in the `saved/` subdirectory which were executed in the course of execution have been expanded. You can verify this by removing the `import macropy.activate` and `macropy.exporter = ...` lines from `saved/run.py` (Thereby disabling MacroPy) and executing `saved/run.py` directly. Everything should run as normal, demonstrating that all macros have been expanded the dependencies on MacroPy's import hooks and AST transformations have been removed.
 
-Note that *only macros in files which get expanded in the execution of the program will have their expanded versions saved*. This allows you to control which files you want to perform the macro-expansion-and-save on: in most cases, activating the `SaveExporter` and executing your test suite should cause all files necessary to be imported, expanded and saved. If you need more customization, you could easily create a script that performs exactly the imports you need, or [imports all modules in a folder](http://stackoverflow.com/questions/1057431/loading-all-modules-in-a-folder-in-python), or any other behavior your want.
+Note that *only macros in files which get expanded in the execution of the program will have their expanded versions saved*. This allows you to control which files you want to perform the macro-expansion-and-save on: for example, most projects have utility scripts which cannot be imported from the root, or example files which are similarly not directly importable.
+
+In most cases, activating the `SaveExporter` and executing your test suite should cause all files necessary to be imported, expanded and saved. If you need more customization, you could easily create a script that performs exactly the imports you need, or [imports all modules in a folder](http://stackoverflow.com/questions/1057431/loading-all-modules-in-a-folder-in-python), or any other behavior your want.
 
 ###Pre-expanding the MacroPy Test Suite
 
