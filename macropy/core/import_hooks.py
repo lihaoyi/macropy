@@ -5,7 +5,7 @@ import imp
 import ast
 import macropy.activate
 from macros import *
-
+import traceback
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
@@ -24,12 +24,15 @@ class MacroFinder(object):
     it finds some."""
     def find_module(self, module_name, package_path):
         try:
-            (file, pathname, description) = imp.find_module(
-                module_name.split('.')[-1],
-                package_path
-            )
+            try:
+                (file, pathname, description) = imp.find_module(
+                    module_name.split('.')[-1],
+                    package_path
+                )
 
-            txt = file.read()
+                txt = file.read()
+            except:
+                return
 
             # short circuit heuristic to fail fast if the source code can't
             # possible contain the macro import at all
@@ -72,11 +75,13 @@ class MacroFinder(object):
                 exec code in mod.__dict__
                 macropy.exporter.export_transformed(code, tree, module_name, file.name)
             except Exception as e:
-                import traceback
+
                 traceback.print_exc()
 
             return _MacroLoader(mod)
 
         except Exception, e:
+            print e
 
+            traceback.print_exc()
             pass

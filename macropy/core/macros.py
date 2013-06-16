@@ -70,43 +70,25 @@ class Macros(object):
         self.decorator = Macros.Registry(MacroFunction)
 
         self.expose_unhygienic = Macros.Registry()
-        self.filter = Macros.Registry()
-
-def fill_hygienes(tree, captured_registry, gen_sym):
-    @Walker
-    def hygienator(tree, stop, **kw):
-        if type(tree) is Captured:
-            new_sym = [sym for val, sym in captured_registry if val is tree.val]
-            if not new_sym:
-                new_sym = gen_sym()
-
-                captured_registry.append((tree.val, new_sym))
-            else:
-                new_sym = new_sym[0]
-            return Name(new_sym, Load())
 
 
-    return hygienator.recurse(tree)
+# Global filters, for other modules to hook into MacroPy's workflow while
+# keeping this module itself unaware of their presence.
+injected_vars = []      # functions to inject values throughout each files macros
+filters = []            # functions to call on every macro-expanded snippet
+post_processing = []    # functions to call on every macro-expanded file
 
-
-filters = []
-post_processing = []
-injected_vars = []
-
+import gen_sym as x
 def expand_entire_ast(tree, src, bindings):
+
     def call(thing, **kw):
         return thing(
-            gen_sym=lambda: symbols().next(),
             exact_src=lambda t: exact_src(t, src, indexes, line_lengths),
             expand_macros=lambda t: expand_ast(t),
             **kw
         )
 
-    symbols = Lazy(lambda: gen_sym(tree))
-    captured_registry = []
-    symbols().next()
-
-    file_vars = {v.func_name: v() for v in injected_vars}
+    file_vars = {v.func_name: call(v, tree=tree) for v in injected_vars}
 
     # you don't pay for what you don't use
     positions = Lazy(lambda: indexer.collect(tree))
@@ -236,27 +218,6 @@ def expand_entire_ast(tree, src, bindings):
 
 
     return tree
-
-
-def gen_sym(tree):
-    """Create a generator that creates symbols which are not used in the given
-    `tree`. This means they will be hygienic, i.e. it guarantees that they will
-    not cause accidental shadowing, as long as the scope of the new symbol is
-    limited to `tree` e.g. by a lambda expression or a function body"""
-    @Walker
-    def name_finder(tree, collect, **kw):
-        if type(tree) is Name:
-            collect(tree.id)
-        if type(tree) is Import:
-            names = [x.asname or x.name for x in tree.names]
-            map(collect, names)
-        if type(tree) is ImportFrom:
-            names = [x.asname or x.name for x in tree.names]
-            map(collect, names)
-
-    found_names = name_finder.collect(tree)
-    names = ("sym" + str(i) for i in itertools.count())
-    return itertools.ifilter(lambda x: x not in found_names, names)
 
 
 def detect_macros(tree):

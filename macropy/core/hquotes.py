@@ -3,7 +3,7 @@ than their expansion scope."""
 from macropy.core.macros import *
 
 from macropy.core.quotes import macros, q, unquote_search, u, ast, ast_list, name
-from macros import fill_hygienes
+
 
 macros = Macros()
 
@@ -43,8 +43,20 @@ def post_proc(tree, captured_registry, gen_sym, **kw):
 
 @filters.append
 def filter(tree, captured_registry, gen_sym, **kw):
+    @Walker
+    def hygienator(tree, stop, **kw):
+        if type(tree) is Captured:
+            new_sym = [sym for val, sym in captured_registry if val is tree.val]
+            if not new_sym:
+                new_sym = gen_sym()
 
-    return fill_hygienes(tree, captured_registry, gen_sym)
+                captured_registry.append((tree.val, new_sym))
+            else:
+                new_sym = new_sym[0]
+            return Name(new_sym, Load())
+
+
+    return hygienator.recurse(tree)
 
 
 @macros.block
