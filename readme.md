@@ -2530,7 +2530,7 @@ with my_macro:
 
 will capture the statements in the body of the `with`: in this case a list containing the AST for `do_stuff()` and `return blah`.
 
-- The entire class or function definition for a **decorator macro*, including *any decorators below the macro itself*:
+- The entire class or function definition for a **decorator macro**, including *any decorators below the macro itself*:
 
 ```python
 @dec
