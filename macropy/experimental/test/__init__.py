@@ -1,8 +1,6 @@
-from macropy.test import test_suite
-import unittest
+from macropy.test import test_suite, peg
 #import js_snippets
 #import pattern
-import peg
 import pinq
 import pyxl_snippets
 #import tco_test
