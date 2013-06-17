@@ -44,7 +44,6 @@ from macropy.core import *
 from ast import *
 
 
-
 class Walker(object):
 
     def __init__(self, func):

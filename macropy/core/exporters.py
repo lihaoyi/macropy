@@ -1,4 +1,4 @@
-"""Functions that are nice to have but really should be in the python library"""
+"""Ways of dealing with macro-expanded code, e.g. caching or re-serializing it."""
 import os
 import shutil
 from macropy.core import unparse

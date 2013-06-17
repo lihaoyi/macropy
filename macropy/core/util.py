@@ -1,4 +1,4 @@
-"""Functions that are nice to have but really should be in the python library"""
+"""Functions that are nice to have but really should be in the python std lib"""
 
 def flatten(xs):
     """Recursively flattens a list of lists of lists (arbitrarily, non-uniformly

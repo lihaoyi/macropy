@@ -1,3 +1,8 @@
+"""Logic related to generated a stream of unique symbols for macros to use.
+
+Exposes this functionality as the `gen_sym` function.
+"""
+
 from macropy.core.macros import *
 
 @register(injected_vars)

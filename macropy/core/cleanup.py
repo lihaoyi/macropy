@@ -1,4 +1,5 @@
-"""Non-trivial AST operations used in macros.py"""
+"""Filters used to touch up the not-quite-perfect ASTs that we allow macros
+to return."""
 
 
 from ast import *

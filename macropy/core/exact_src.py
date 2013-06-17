@@ -1,7 +1,12 @@
+"""Logic related to lazily performing the computation necessary to finding
+the source extent of an AST.
+
+Exposed to each macro as an `exact_src` funciton."""
+
 from macropy.core import unparse
 from macropy.core.macros import injected_vars
 from ast import *
-from macropy.core.util import Lazy, distinct
+from macropy.core.util import Lazy, distinct, register
 from walkers import Walker
 
 
@@ -26,7 +31,7 @@ _transforms = {
 }
 
 
-@injected_vars.append
+@register(injected_vars)
 def exact_src(tree, src, **kw):
 
     def exact_src_imp(tree, src, indexes, line_lengths):
