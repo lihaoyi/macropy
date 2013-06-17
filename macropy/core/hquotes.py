@@ -3,7 +3,6 @@ than their expansion scope."""
 from macropy.core.macros import *
 
 from macropy.core.quotes import macros, q, unquote_search, u, ast, ast_list, name
-print "Loading hquotes"
 
 macros = Macros()
 

@@ -1,4 +1,4 @@
-from macropy.core.test.macros.exact_src_macro import macros, f
+from macropy.core.test.exact_src_macro import macros, f
 
 
 def run0():

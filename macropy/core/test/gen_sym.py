@@ -1,5 +1,4 @@
-from macropy.core.test.macros.gen_sym_macro import macros, f
-
+from macropy.core.test.gen_sym_macro import macros, f
 sym1 = 10
 def run():
     arg1 = 3

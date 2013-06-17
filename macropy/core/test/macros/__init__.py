@@ -3,7 +3,6 @@ import unittest
 import sys
 
 
-
 class Tests(unittest.TestCase):
     def test_basic_identification_and_expansion(self):
         import basic_expr
@@ -18,10 +17,6 @@ class Tests(unittest.TestCase):
     def test_arguments(self):
         import argument
         argument.run() == 31
-
-    def test_gen_sym(self):
-        import gen_sym
-        gen_sym.run() == 10
 
     def test_ignore_macros_not_explicitly_imported(self):
         import not_imported
@@ -70,19 +65,7 @@ class Tests(unittest.TestCase):
             exc_type, exc_value, exc_traceback = sys.exc_info()
             assert exc_traceback.tb_next.tb_lineno == 6
 
-    def test_exact_src(self):
-        import exact_src
-        assert exact_src.run0() == "1 * max(1, 2, 3)"
-        assert exact_src.run1() == """1 * max((1,'2',"3"))"""
-        assert exact_src.run_block() == """
-print "omg"
-print "wtf"
-if 1:
-    print 'omg'
-else:
-    import math
-    math.acos(0.123)
-        """.strip()
+
 
     def test_aliases(self):
         import aliases
