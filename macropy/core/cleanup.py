@@ -1,32 +1,19 @@
 """Non-trivial AST operations used in macros.py"""
 
-from macropy.core import *
+
 from ast import *
+from macropy.core.util import register
+from macros import filters
 from walkers import Walker
 
 
-def fill_line_numbers(tree, lineno, col_offset):
-    """Fill in line numbers somewhat more cleverly than the
-    ast.fix_missing_locations method, which doesn't take into account the
-    fact that line numbers are monotonically increasing down lists of AST
-    nodes."""
-    if type(tree) is list:
-        for sub in tree:
-            if isinstance(sub, AST) \
-                    and hasattr(sub, "lineno") \
-                    and hasattr(sub, "col_offset") \
-                    and (sub.lineno, sub.col_offset) > (lineno, col_offset):
 
-                lineno = sub.lineno
-                col_offset = sub.col_offset
 
-            fill_line_numbers(sub, lineno, col_offset)
-    elif isinstance(tree, AST):
-        if not (hasattr(tree, "lineno") and hasattr(tree, "col_offset")):
-            tree.lineno = lineno
-            tree.col_offset = col_offset
-        for name, sub in iter_fields(tree):
-            fill_line_numbers(sub, tree.lineno, tree.col_offset)
+@register(filters)
+def fix_ctx(tree, **kw):
+    return ast_ctx_fixer.recurse(tree, Load())
+
+
 
 @Walker
 def ast_ctx_fixer(tree, ctx, stop, **kw):
@@ -63,3 +50,31 @@ def ast_ctx_fixer(tree, ctx, stop, **kw):
             ast_ctx_fixer.recurse(target, Del())
         stop()
         return tree
+
+
+@register(filters)
+def fill_line_numbers(tree, lineno, col_offset, **kw):
+    """Fill in line numbers somewhat more cleverly than the
+    ast.fix_missing_locations method, which doesn't take into account the
+    fact that line numbers are monotonically increasing down lists of AST
+    nodes."""
+    if type(tree) is list:
+        for sub in tree:
+            if isinstance(sub, AST) \
+                    and hasattr(sub, "lineno") \
+                    and hasattr(sub, "col_offset") \
+                    and (sub.lineno, sub.col_offset) > (lineno, col_offset):
+
+                lineno = sub.lineno
+                col_offset = sub.col_offset
+
+            fill_line_numbers(sub, lineno, col_offset)
+    elif isinstance(tree, AST):
+        if not (hasattr(tree, "lineno") and hasattr(tree, "col_offset")):
+            tree.lineno = lineno
+            tree.col_offset = col_offset
+        for name, sub in iter_fields(tree):
+            fill_line_numbers(sub, tree.lineno, tree.col_offset)
+
+    return tree
+

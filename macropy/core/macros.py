@@ -7,7 +7,7 @@ import itertools
 from ast import *
 from util import *
 from walkers import *
-from misc import *
+
 
 
 @singleton
@@ -78,8 +78,6 @@ injected_vars = []      # functions to inject values throughout each files macro
 filters = []            # functions to call on every macro-expanded snippet
 post_processing = []    # functions to call on every macro-expanded file
 
-import gen_sym as x
-import exact_src as x
 def expand_entire_ast(tree, src, bindings):
 
 
@@ -122,16 +120,17 @@ def expand_entire_ast(tree, src, bindings):
                     args=args,
                     **dict(kwargs.items() + file_vars.items())
                 )
-                for filter in filters:
 
+                for filter in reversed(filters):
                     new_tree = call(filter,
                         tree=new_tree,
                         args=args,
+                        lineno=macro_tree.lineno,
+                        col_offset=macro_tree.col_offset,
                         **dict(kwargs.items() + file_vars.items())
                     )
 
-                new_tree = ast_ctx_fixer.recurse(new_tree, Load())
-                fill_line_numbers(new_tree, macro_tree.lineno, macro_tree.col_offset)
+
                 return new_tree
             elif isinstance(macro_tree, Call):
                 args.extend(macro_tree.args)
@@ -257,5 +256,10 @@ def check_annotated(tree):
                     type(tree.slice) is Index and \
                     type(tree.value) is Name:
         return tree.value.id, tree.slice.value
+
+
+import gen_sym
+import exact_src
+import cleanup
 
 

@@ -1,8 +1,6 @@
 from macropy.core.macros import *
 
-from macropy.core.quotes import macros, q, unquote_search, u, ast, ast_list, name
-
-@injected_vars.append
+@register(injected_vars)
 def gen_sym(tree, **kw):
     """Create a generator that creates symbols which are not used in the given
     `tree`. This means they will be hygienic, i.e. it guarantees that they will

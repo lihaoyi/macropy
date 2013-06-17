@@ -55,3 +55,9 @@ def distinct(l):
        if i not in s:
           s.append(i)
     return s
+
+def register(array):
+    def x(val):
+        array.append(val)
+        return val
+    return x

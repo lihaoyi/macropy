@@ -4,13 +4,6 @@
 interpolate things into a quoted section.
 """
 from macropy.core.macros import *
-def check_annotated(tree):
-    """Shorthand for checking if an AST is of the form something[...]"""
-    if isinstance(tree, Subscript) and \
-                    type(tree.slice) is Index and \
-                    type(tree.value) is Name:
-        return tree.value.id, tree.slice.value
-
 
 
 macros = Macros()

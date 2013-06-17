@@ -3,7 +3,7 @@ than their expansion scope."""
 from macropy.core.macros import *
 
 from macropy.core.quotes import macros, q, unquote_search, u, ast, ast_list, name
-
+print "Loading hquotes"
 
 macros = Macros()
 
@@ -12,11 +12,11 @@ class unhygienic():
     """Used to delimit a section of a hq[...] that should not be hygienified"""
 from macros import filters, injected_vars, post_processing
 
-@injected_vars.append
+@register(injected_vars)
 def captured_registry(**kw):
     return []
 
-@post_processing.append
+@register(post_processing)
 def post_proc(tree, captured_registry, gen_sym, **kw):
     if captured_registry == []:
         return tree
@@ -34,15 +34,15 @@ def post_proc(tree, captured_registry, gen_sym, **kw):
     with q as stored:
         ast_list[syms] = name[unpickle_name](u[pickle.dumps(vals)])
 
-    from misc import ast_ctx_fixer
+    from cleanup import ast_ctx_fixer
     stored = ast_ctx_fixer.recurse(stored)
 
     tree.body = map(fix_missing_locations, pickle_import + stored) + tree.body
 
     return tree
 
-@filters.append
-def filter(tree, captured_registry, gen_sym, **kw):
+@register(filters)
+def hygienate(tree, captured_registry, gen_sym, **kw):
     @Walker
     def hygienator(tree, stop, **kw):
         if type(tree) is Captured:

@@ -41,7 +41,6 @@ def transform(tree, ctx, set_ctx, **kw):
 for ease of use.
 """
 from macropy.core import *
-from macropy.core.util import *
 from ast import *
 
 
