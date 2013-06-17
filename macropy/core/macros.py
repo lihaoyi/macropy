@@ -66,7 +66,7 @@ class Macros(object):
         self.expose_unhygienic = Macros.Registry()
 
 
-# Global filters, for other modules to hook into MacroPy's workflow while
+# For other modules to hook into MacroPy's workflow while
 # keeping this module itself unaware of their presence.
 injected_vars = []      # functions to inject values throughout each files macros
 filters = []            # functions to call on every macro-expanded snippet
@@ -257,6 +257,7 @@ def check_annotated(tree):
         return tree.value.id, tree.slice.value
 
 
-import gen_sym
-import exact_src
+# import other modules in order to register their hooks
 import cleanup
+import exact_src
+import gen_sym

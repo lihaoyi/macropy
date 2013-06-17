@@ -24,7 +24,11 @@ def post_proc(tree, captured_registry, gen_sym, **kw):
 
     unpickle_name = gen_sym()
     pickle_import = [
-        ImportFrom(module='pickle', names=[alias(name='loads', asname=unpickle_name)], level=0)
+        ImportFrom(
+            module='pickle',
+            names=[alias(name='loads', asname=unpickle_name)],
+            level=0
+        )
     ]
 
     import pickle

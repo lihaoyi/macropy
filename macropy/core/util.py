@@ -22,18 +22,6 @@ def singleton(cls):
     return obj
 
 
-def safe_splat(func, **kwargs):
-    """Applies the function to the given kwargs, while taking special
-    care not to give it too many arguments to cause TypeErrors. Extra arguments
-    just get ignored."""
-    import inspect
-    fargs, fvarargs, fkwargs, fdefault = inspect.getargspec(func)
-
-
-    cutkwargs = {k: w for k, w in kwargs.items() if k in fargs}
-
-    return func(**cutkwargs)
-
 def merge_dicts(my_dicts):
     """Combines a bunch of dictionaries together, later dictionaries taking
     precedence if there is a key conflict"""
