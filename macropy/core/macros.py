@@ -9,12 +9,6 @@ from util import *
 from walkers import *
 
 
-
-@singleton
-class hygienic_self_ref:
-    pass
-
-
 class MacroFunction(object):
     """Wraps a macro-function, to provide nicer error-messages in the common
     case where the macro is imported but macro-expansion isn't triggered"""
@@ -80,33 +74,7 @@ post_processing = []    # functions to call on every macro-expanded file
 
 def expand_entire_ast(tree, src, bindings):
 
-
-    def call(thing, **kw):
-        return thing(
-            src=src,
-            expand_macros=lambda t: expand_ast(t),
-            **kw
-        )
-
-    file_vars = {v.func_name: call(v, tree=tree) for v in injected_vars}
-
-    # you don't pay for what you don't use
-
-    allnames = [(m, name, asname) for m, names in bindings for name, asname in names]
-
-    def extract_macros(pick_registry):
-        return {
-            asname: (registry[name], ma)
-            for ma, name, asname in allnames
-            for registry in [pick_registry(ma.macros).registry]
-            if name in registry.keys()
-        }
-    block_registry = extract_macros(lambda x: x.block)
-    expr_registry = extract_macros(lambda x: x.expr)
-    decorator_registry = extract_macros(lambda x: x.decorator)
-
-
-    def expand_ast(tree):
+    def expand_macros(tree):
         """Go through an AST, hunting for macro invocations and expanding any that
         are found"""
 
@@ -115,16 +83,20 @@ def expand_entire_ast(tree, src, bindings):
             if isinstance(macro_tree, Name) and macro_tree.id in registry:
 
                 (the_macro, the_module) = registry[macro_tree.id]
-                new_tree = call(the_macro,
+                new_tree = the_macro(
                     tree=body_tree,
                     args=args,
+                    src=src,
+                    expand_macros=expand_macros,
                     **dict(kwargs.items() + file_vars.items())
                 )
 
                 for filter in reversed(filters):
-                    new_tree = call(filter,
+                    new_tree = filter(
                         tree=new_tree,
                         args=args,
+                        src=src,
+                        expand_macros=expand_macros,
                         lineno=macro_tree.lineno,
                         col_offset=macro_tree.col_offset,
                         **dict(kwargs.items() + file_vars.items())
@@ -172,7 +144,6 @@ def expand_entire_ast(tree, src, bindings):
                     assert isinstance(new_tree, expr), type(new_tree)
                     return macro_expand(new_tree)
 
-
             if isinstance(tree, ClassDef) or isinstance(tree, FunctionDef):
                 seen_decs = []
                 additions = []
@@ -207,13 +178,35 @@ def expand_entire_ast(tree, src, bindings):
         tree = macro_searcher.recurse(tree)
 
         return tree
-    tree = expand_ast(tree)
+
+
+    file_vars = {v.func_name: v(tree=tree, src=src, expand_macros=expand_macros) for v in injected_vars}
+
+    # you don't pay for what you don't use
+
+    allnames = [(m, name, asname) for m, names in bindings for name, asname in names]
+
+    def extract_macros(pick_registry):
+        return {
+            asname: (registry[name], ma)
+            for ma, name, asname in allnames
+            for registry in [pick_registry(ma.macros).registry]
+            if name in registry.keys()
+        }
+
+    block_registry = extract_macros(lambda x: x.block)
+    expr_registry = extract_macros(lambda x: x.expr)
+    decorator_registry = extract_macros(lambda x: x.decorator)
+
+    tree = expand_macros(tree)
+
     for post in post_processing:
-        tree = call(post,
+        tree = post(
             tree=tree,
+            src=src,
+            expand_macros=expand_macros,
             **file_vars
         )
-
 
     return tree
 
@@ -222,7 +215,6 @@ def detect_macros(tree):
     """Look for macros imports within an AST, transforming them and extracting
     the list of macro modules."""
     bindings = []
-
 
     for stmt in tree.body:
         if isinstance(stmt, ImportFrom) \
