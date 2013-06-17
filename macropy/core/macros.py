@@ -180,11 +180,18 @@ def expand_entire_ast(tree, src, bindings):
         return tree
 
 
-    file_vars = {v.func_name: v(tree=tree, src=src, expand_macros=expand_macros) for v in injected_vars}
+    file_vars = {
+        v.func_name: v(tree=tree, src=src, expand_macros=expand_macros)
+        for v in injected_vars
+    }
 
     # you don't pay for what you don't use
 
-    allnames = [(m, name, asname) for m, names in bindings for name, asname in names]
+    allnames = [
+        (m, name, asname)
+        for m, names in bindings
+        for name, asname in names
+    ]
 
     def extract_macros(pick_registry):
         return {

@@ -2,10 +2,12 @@
 stable, useful and well-tested macros. It also sets up the import hooks that are
 required for macros to run properly"""
 
+
 def activate():
     import core.import_hooks
     import sys
     sys.meta_path.append(core.import_hooks.MacroFinder)
+
 
 def console():
     from macropy.core.console import MacroConsole

@@ -2,7 +2,9 @@ from macropy.core.macros import *
 from macropy.core.quotes import macros, q
 
 macros = Macros()
-_ = object()
+
+def _():
+    """Placeholder for a function argument in the `f` macro."""
 
 
 @macros.expr

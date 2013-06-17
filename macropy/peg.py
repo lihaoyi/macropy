@@ -97,7 +97,13 @@ def process(tree, potential_targets, gen_sym):
     return new_tree
 
 
-cut = object()
+def cut():
+    """Used within a Seq parser (p1, p2, p3,...) to commit the Seq to that
+    alternative.
+
+    After the Seq passes the `cut`, any failure becomes fatal, and backtracking
+    is not performed. This improves performance and improves the quality
+    of the error messages."""
 
 
 @case
