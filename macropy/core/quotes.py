@@ -11,24 +11,29 @@ macros = Macros()
 
 @singleton
 class u():
+    """Splices a value into the quoted code snippet, converting it into an AST
+    via ast_repr"""
     def wrap(self, tree):
         return Literal(Call(Name(id="ast_repr"), [tree], [], None, None))
 
 
 @singleton
 class name():
+    "Splices a string value into the quoted code snippet as a Name"
     def wrap(self, tree):
         return Literal(Call(Name(id="Name"), [], [keyword("id", tree)], None, None))
 
 
 @singleton
 class ast():
+    "Splices an AST into the quoted code snippet"
     def wrap(self, tree):
         return Literal(tree)
 
 
 @singleton
 class ast_list():
+    """Splices a list of ASTs into the quoted code snippet as a List node"""
     def wrap(self, tree):
         return Literal(Call(Name(id="List"), [], [keyword("elts", tree)], None, None))
 
@@ -59,6 +64,9 @@ def q(tree, **kw):
 
 @macros.block
 def q(tree, target, **kw):
+    """Quasiquote macro, used to lift sections of code into their AST
+    representation which can be manipulated at runtime. Used together with
+    the `u`, `name`, `ast`, `ast_list` unquotes."""
     body = unquote_search.recurse(tree)
     new_body = ast_repr(body)
     return [Assign([target], new_body)]

@@ -7,6 +7,7 @@ macros = Macros()
 
 @macros.expr
 def s(tree, **kw):
+    """Macro to easily interpolate values into string literals."""
     captured = []
     new_string = ""
     chunks = re.split("{(.*?)}", tree.s)

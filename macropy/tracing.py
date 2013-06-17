@@ -21,12 +21,16 @@ def wrap_simple(printer, txt, x):
 
 @macros.expr
 def log(tree, exact_src, **kw):
+    """Prints out source code of the wrapped expression and the value it
+    evaluates to"""
     new_tree = hq[wrap(unhygienic[log], u[exact_src(tree)], ast[tree])]
     return new_tree
 
 
 @macros.expr
 def show_expanded(tree, expand_macros,  **kw):
+    """Prints out the expanded version of the wrapped source code, after all
+    macros inside it have been expanded"""
     expanded_tree = expand_macros(tree)
     new_tree = hq[wrap_simple(unhygienic[log], u[unparse(expanded_tree)], ast[expanded_tree])]
     return new_tree
@@ -34,6 +38,8 @@ def show_expanded(tree, expand_macros,  **kw):
 
 @macros.block
 def show_expanded(tree, expand_macros, **kw):
+    """Prints out the expanded version of the wrapped source code, after all
+    macros inside it have been expanded"""
     new_tree = []
     for stmt in tree:
         new_stmt = expand_macros(stmt)
@@ -79,12 +85,16 @@ def trace_walk_func(tree, exact_src):
 
 @macros.expr
 def trace(tree, exact_src, **kw):
+    """Traces the wrapped code, printing out the source code and evaluated
+    result of every statement and expression contained within it"""
     ret = trace_walk_func(tree, exact_src)
     return ret
 
 
 @macros.block
 def trace(tree, exact_src, **kw):
+    """Traces the wrapped code, printing out the source code and evaluated
+    result of every statement and expression contained within it"""
     ret = trace_walk_func(tree, exact_src)
 
     return ret
@@ -105,11 +115,17 @@ def wrap_require(thunk):
 
 @macros.expr
 def require(tree, exact_src, **kw):
+    """A version of assert that traces the expression's evaluation in the
+    case of failure. If used as a block, performs this on every expression
+    within the block"""
     return require_transform(tree, exact_src)
 
 
 @macros.block
 def require(tree, exact_src, **kw):
+    """A version of assert that traces the expression's evaluation in the
+    case of failure. If used as a block, performs this on every expression
+    within the block"""
     for expr in tree:
         expr.value = require_transform(expr.value, exact_src)
 

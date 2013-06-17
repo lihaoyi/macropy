@@ -253,5 +253,3 @@ def check_annotated(tree):
 import gen_sym
 import exact_src
 import cleanup
-
-

@@ -57,6 +57,7 @@ def distinct(l):
     return s
 
 def register(array):
+    """A decorator to add things to lists without stomping over its value"""
     def x(val):
         array.append(val)
         return val

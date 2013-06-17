@@ -8,12 +8,9 @@ from macros import filters
 from walkers import Walker
 
 
-
-
 @register(filters)
 def fix_ctx(tree, **kw):
     return ast_ctx_fixer.recurse(tree, Load())
-
 
 
 @Walker

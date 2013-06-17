@@ -1,3 +1,4 @@
+"""Macro to easily define recursive-descent PEG parsers"""
 import re
 
 from macropy.core.macros import *
@@ -25,6 +26,7 @@ macros = Macros()
 
 @macros.block
 def peg(tree, gen_sym, **kw):
+    """Macro to easily define recursive-descent PEG parsers"""
     potential_targets = [
         target.id for stmt in tree
         if type(stmt) is Assign
@@ -43,6 +45,7 @@ def peg(tree, gen_sym, **kw):
 
 @macros.expr
 def peg(tree, gen_sym, **kw):
+    """Macro to easily define recursive-descent PEG parsers"""
     return process(tree, [], gen_sym)
 
 

@@ -1,5 +1,6 @@
+"""Macro providing an extremely concise way of declaring classes"""
 from macropy.core.macros import *
-from macropy.core.hquotes import macros, u, hq
+from macropy.core.hquotes import macros, hq, name, unhygienic
 
 macros = Macros()
 
@@ -76,6 +77,7 @@ def find_member_assignments(tree, collect, stop, **kw):
 
 @macros.decorator
 def case(tree, gen_sym, **kw):
+    """Macro providing an extremely concise way of declaring classes"""
     def split_body(tree):
         new_body = []
         outer = []

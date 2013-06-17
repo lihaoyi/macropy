@@ -7,7 +7,8 @@ _ = object()
 
 @macros.expr
 def f(tree, gen_sym, **kw):
-
+    """Macro to concisely create function literals; any `_`s within the
+    wrapped expression becomes an argument to the generated function."""
     @Walker
     def underscore_search(tree, collect, **kw):
         if isinstance(tree, Name) and tree.id == "_":

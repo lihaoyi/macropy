@@ -1,3 +1,3 @@
-"""Shorthand to import macropy.core.console"""
+"""Shorthand import to initialize the MacroPy console"""
 import macropy.activate
 macropy.console()
