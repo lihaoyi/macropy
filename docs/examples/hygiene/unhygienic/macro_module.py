@@ -1,11 +1,11 @@
 # macro_module.py
 from macropy.core.macros import *
-from macropy.core.quotes import macros, hq, u, unhygienic
+from macropy.core.hquotes import macros, hq, u, unhygienic
 
 macros = Macros()
 
 @macros.expr
-def log(tree, exact_src, hygienic_alias, **kw):
+def log(tree, exact_src, **kw):
     new_tree = hq[wrap(unhygienic[log_func], u[exact_src(tree)], ast[tree])]
     return new_tree
 

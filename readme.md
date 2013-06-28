@@ -35,7 +35,7 @@ As well as a number of more experimental macros such as:
 - [Pyxl Snippets](#pyxl-snippets), XML interpolation within your Python code
 - [JS Snippets](#js-snippets), cross compiling snippets of Python into equivalent Javascript
 
-Browse [how it works](#how-macropy-works), or look at the [Tutorials](#tutorials) will go into greater detail and walk you through
+Browse the [high-level overview](#30,000ft-overview), or look at the [Tutorials](#tutorials) will go into greater detail and walk you through
 
 - [Writing your first macro](#writing-your-first-macro)
 - [Making your macros hygienic](#making-your-macros-hygienic)
@@ -51,11 +51,11 @@ The [Reference Documentation](#reference) contains information about:
 - [Expansion Order](#expansion-order) of nested macros with a file
 - [Line Numbers](#line-numbers), or what errors you get when something goes wrong.
 
-Or just skip ahead to the [Discussion](#discussion) and [Conclusion](#macropy-bringing-macros-to-python). We're open to contributions, so send us your ideas/questions/issues/pull-requests and we'll do our best to accommodate you! If you need ideas on how to contribute, check out our [issues](issues) page.
+Or just skip ahead to the [Discussion](#discussion) and [Conclusion](#macropy-bringing-macros-to-python). We're open to contributions, so send us your ideas/questions/issues/pull-requests and we'll do our best to accommodate you! You can ask questions on the [Google Group](https://groups.google.com/forum/#!forum/macropy) or file bugs on thee [issues](issues) page.
 
-MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but does not yet work on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy), using a standard [setup.py](setup.py) to manage dependencies, installation and other things. Check out [this gist](https://gist.github.com/lihaoyi/5577609) for an example of setting it up on a clean system.
+MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but not on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy), using a standard [setup.py](setup.py) to manage dependencies, installation and other things. Check out [this gist](https://gist.github.com/lihaoyi/5577609) for an example of setting it up on a clean system.
 
-How Macropy Works
+30,000ft Overview
 =================
 Macro functions are defined in three ways:
 
@@ -99,7 +99,7 @@ class X():
     ...
 ```
 
-Where the line `from my_macro_module import macros, ...` is necessary to tell MacroPy which macros these module relies on. Multiple things can be imported from each module, but `macros` must come first for macros from that module to be used. Note that expression macros can be invoked via two alternate syntaxes.
+Where the line `from my_macro_module import macros, ...` is necessary to tell MacroPy which macros these module relies on. Multiple things can be imported from each module, but `macros` must come first for macros from that module to be used.
 
 Any time any of these syntactic forms is seen, if a matching macro exists in any of the packages from which `macros` has been imported from, the abstract syntax tree captured by these forms (the `...` in the code above) is given to the respective macro to handle. The tree (new, modified, or even unchanged) which the macro returns is substituted into the original code in-place.
 
@@ -154,7 +154,7 @@ x*2 for x in range(3) -> [0, 2, 4]
 [0, 2, 4]
 ```
 
-This example demonstrates the usage of the [Tracing](#tracing) macro, which helps trace the evaluation of a Python expression. Although support for the REPL is still experimental, many examples on this page will work when copied and pasted into the REPL verbatim, except those with multi-line class and function definitions (those seem to confuse it). MacroPy also works in the PyPy and [IPython](http://ipython.org/) REPLs.
+This example demonstrates the usage of the [Tracing](#tracing) macro, which helps trace the evaluation of a Python expression. Although support for the REPL is still experimental, most examples on this page will work when copied and pasted into the REPL verbatim. MacroPy also works in the PyPy and [IPython](http://ipython.org/) REPLs.
 
 Demo Macros
 ===========
@@ -172,17 +172,12 @@ class Point(x, y): pass
 
 p = Point(1, 2)
 
-print str(p)
-# Point(1, 2)
-print p.x
-# 1
-print p.y
-# 2
-print Point(1, 2) == Point(1, 2)
-# True
+print str(p) # Point(1, 2)
+print p.x    # 1
+print p.y    # 2
+print Point(1, 2) == Point(1, 2) # True
 x, y = p
-print x, y
-# (1, 2)
+print x, y   # 1 2
 ```
 
 [Case classes](http://www.codecommit.com/blog/scala/case-classes-are-cool) are classes with extra goodies:
@@ -246,7 +241,7 @@ class Point(x, y):
     def length(self):
         return (self.x ** 2 + self.y ** 2) ** 0.5
 
-print Point(3, 4).length() #5
+print Point(3, 4).length() # 5.0
 ```
 
 or class variables. The only restrictions are that only the `__init__`, `__repr__`, `___str__`, `__eq__` methods will be set for you, and the initializer/class body and inheritance are treated specially.
@@ -257,7 +252,7 @@ or class variables. The only restrictions are that only the `__init__`, `__repr_
 class Point(x, y):
     self.length = (self.x**2 + self.y**2) ** 0.5
 
-assert Point(3, 4).length == 5
+print Point(3, 4).length # 5
 ```
 
 Case classes allow you to add initialization logic by simply placing the initialization statements in the class body: any statements within the class body which are not class or function definitions are taken to be part of the initializer, and so you can use e.g. the `self` variable to set instance members just like in a normal `__init__` method.
@@ -275,7 +270,7 @@ Case classes also provide a syntax for default values:
 class Point(x | 0, y | 0):
     pass
 
-assert str(Point(y = 5)) == "Point(0, 5)"
+print str(Point(y = 5)) # Point(0, 5)
 ```
 
 For `*args`:
@@ -285,16 +280,17 @@ For `*args`:
 class PointArgs(x, y, [rest]):
     pass
 
-assert PointArgs(3, 4, 5, 6, 7).rest == (5, 6, 7)
+print PointArgs(3, 4, 5, 6, 7).rest # (5, 6, 7)
 ```
 
 and `**kwargs`:
 
 ```python
+@case
 class PointKwargs(x, y, {rest}):
     pass
 
-assert PointKwargs(1, 2, a=1, b=2).rest == {"a": 1, "b": 2}
+print PointKwargs(1, 2, a=1, b=2).rest # {'a': 1, 'b': 2}
 ```
 
 All these behave as you would expect, and can be combined in all the normal ways. The strange syntax (rather than the normal `x=0`, `*args` or `**kwargs`) is due to limitations in the Python 2.7 grammar, which are removed in Python 3.3.
@@ -347,13 +343,14 @@ As the classes `Nil` are `Cons` are nested within `List`, both of them get trans
 Except for the `__init__` method, all the methods provided by case classes are inherited from `macropy.case_classes.CaseClass`, and can thus be overriden, with the overriden method still accessible via the normal mechanisms:
 
 ```python
+from macropy.case_classes import CaseClass
+
 @case
 class Point(x, y):
     def __str__(self):
         return "mooo " + CaseClass.__str__(self)
 
-print Point(1, 2)
-# mooo Point(1, 2)
+print Point(1, 2) # mooo Point(1, 2)
 ```
 
 The `__init__` method is generated, not inherited. For the common case of adding additional initialization steps after the assignment of arguments to members, you can use the [body initializer](#body-initializer) described above. However, if you want a different modification (e.g. changing the number of arguments) you can achieve this by manually defining your own `__init__` method:
@@ -366,8 +363,7 @@ class Point(x, y):
         self.y = value
 
 
-print Point(1)
-# mooo Point(1, 1)
+print Point(1) # mooo Point(1, 1)
 ```
 
 You cannot access the replaced `__init__` method, due to fact that it's generated, not inherited. Nevertheless, this provides additional flexibility in the case where you really need it.
@@ -388,69 +384,63 @@ In the cases where you desperately need additional flexibility [not afforded](#l
 Quick Lambdas
 -------------
 ```python
->>> from macropy.quick_lambda import macros, f, _
->>> map(f[_ + 1], [1, 2, 3])
-[2, 3, 4]
->>> reduce(f[_ + _], [1, 2, 3])
-6
+from macropy.quick_lambda import macros, f, _
+
+print map(f[_ + 1], [1, 2, 3])    # [2, 3, 4]
+print reduce(f[_ * _], [1, 2, 3]) # 6
 ```
 
 Macropy provides a syntax for lambda expressions similar to Scala's [anonymous functions](http://www.codecommit.com/blog/scala/quick-explanation-of-scalas-syntax). Essentially, the transformation is:
 
 ```python
-f[_ + _] -> lambda a, b: a + b
+f[_ * _] -> lambda a, b: a * b
 ```
 
 where the underscores get replaced by identifiers, which are then set to be the parameters of the enclosing `lambda`. This works too:
 
 ```python
->>> map(f[_.split(' ')[0]], ["i am cow", "hear me moo"])
-['i', 'hear']
+print map(f[_.split(' ')[0]], ["i am cow", "hear me moo"])
+# ['i', 'hear']
 ```
 
 Quick Lambdas can be also used as a concise, lightweight, more-readable substitute for `functools.partial`
 
 ```python
->>> from macropy.quick_lambda import macros, f
->>> basetwo = f[int(_, base=2)]
->>> basetwo('10010')
-18
+from macropy.quick_lambda import macros, f
+basetwo = f[int(_, base=2)]
+print basetwo('10010') # 18
 ```
 
 is equivalent to
 
 ```python
->>> import functools
->>> basetwo = functools.partial(int, base=2)
->>> basetwo('10010')
-18
+import functools
+basetwo = functools.partial(int, base=2)
+print basetwo('10010') # 18
 ```
 
 Quick Lambdas can also be used entirely without the `_` placeholders, in which case they wrap the target in a no argument `lambda: ...` thunk:
 
 ```python
->>> from random import random
->>> thunk = f[random()]
->>> print thunk()
-0.347790429588
->>> print thunk()
-0.817928092273
+from random import random
+thunk = f[random() * 2 + 3]
+print thunk() # 4.522011062548173
+print thunk() # 4.894243231792029
 ```
 
-This cuts out reduces the number of characters needed to make a thunk from 7 to 2, making it much easier to use thunks to do things like emulating [by name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html). The implementation of quicklambda is about [30 lines of code](macropy/quick_lambda.py), and is worth a look if you want to see how a simple (but extremely useful!) macro can be written.
+This cuts out reduces the number of characters needed to make a thunk from 7 (using `lambda`) to 2, making it much easier to use thunks to do things like emulating [by name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html). The implementation of quicklambda is about [30 lines of code](macropy/quick_lambda.py), and is worth a look if you want to see how a simple (but extremely useful!) macro can be written.
 
 String Interpolation
 --------------------
-
 ```python
->>> from macropy.string_interp import macros, s
+from macropy.string_interp import macros, s
 
->>> a, b = 1, 2
->>> s["{a} apple and {b} bananas"]
-'1 apple and 2 bananas'
+a, b = 1, 2
+print s["{a} apple and {b} bananas"]
+# 1 apple and 2 bananas
 ```
 
-Unlike the normal string interpolation in Python, MacroPy's string interpolation allows the programmer to specify the variables to be interpolated _inline_ inside the string. The macro `s%` then takes the string literal
+Unlike the normal string interpolation in Python, MacroPy's string interpolation allows the programmer to specify the variables to be interpolated _inline_ inside the string. The macro `s` then takes the string literal
 
 ```python
 "{a} apple and {b} bananas"
@@ -462,28 +452,27 @@ and expands it into the expression
 "%s apple and %s bananas" % (a, b)
 ```
 
-Which is evaluated at run-time in the local scope, using whatever the values `a` and `b` happen to hold at the time. The contents of the `%{...}` can be any arbitrary python expression, and is not limited to variable names:
+Which is evaluated at run-time in the local scope, using whatever the values `a` and `b` happen to hold at the time. The contents of the `{...}` can be any arbitrary python expression, and is not limited to variable names:
 
 ```python
->>> from macropy.string_interp import macros, s
->>> A = 10
->>> B = 5
->>> s["{A} + {B} = {A + B}"]
-'10 + 5 = 15'
+from macropy.string_interp import macros, s
+A = 10
+B = 5
+print s["{A} + {B} = {A + B}"]
+# 10 + 5 = 15
 ```
-
 
 Tracing
 -------
 ```python
->>> from macropy.tracing import macros, log
->>> log[1 + 2]
-1 + 2 -> 3
-3
+from macropy.tracing import macros, log
+log[1 + 2]
+# 1 + 2 -> 3
+# 3
 
->>> log["omg" * 3]
-('omg' * 3) -> 'omgomgomg'
-'omgomgomg'
+log["omg" * 3]
+# ('omg' * 3) -> 'omgomgomg'
+# 'omgomgomg'
 ```
 
 Tracing allows you to easily see what is happening inside your code. Many a time programmers have written code like
@@ -498,23 +487,23 @@ and the `log()` macro (shown above) helps remove this duplication by automatical
 In addition to simple logging, MacroPy provides the `trace()` macro. This macro not only logs the source and result of the given expression, but also the source and result of all sub-expressions nested within it:
 
 ```python
->>> from macropy.tracing import macros, trace
->>> trace[[len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]]]
-"b" * 2 -> 'bb'
-"b" * 2 + "q" -> 'bbq'
-"lo" * 3 -> 'lololo'
-"lo" * 3 + "l" -> 'lololol'
-["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"] -> ['omg', 'wtf', 'bbq', 'lololol']
-len(x) -> 3
-len(x)*3 -> 9
-len(x) -> 3
-len(x)*3 -> 9
-len(x) -> 3
-len(x)*3 -> 9
-len(x) -> 7
-len(x)*3 -> 21
-len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"] -> [9, 9, 9, 21]
-[9, 9, 9, 21]
+from macropy.tracing import macros, trace
+trace[[len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]]]
+# "b" * 2 -> 'bb'
+# "b" * 2 + "q" -> 'bbq'
+# "lo" * 3 -> 'lololo'
+# "lo" * 3 + "l" -> 'lololol'
+# ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"] -> ['omg', 'wtf', 'bbq', 'lololol']
+# len(x) -> 3
+# len(x)*3 -> 9
+# len(x) -> 3
+# len(x)*3 -> 9
+# len(x) -> 3
+# len(x)*3 -> 9
+# len(x) -> 7
+# len(x)*3 -> 21
+# [len(x)*3 for x in ["omg", "wtf", "b" * 2 + "q", "lo" * 3 + "l"]] -> [9, 9, 9, 21]
+# [9, 9, 9, 21]
 ```
 
 As you can see, `trace` logs the source and value of all sub-expressions that get evaluated in the course of evaluating the list comprehension.
@@ -523,26 +512,26 @@ Lastly, `trace` can be used as a block macro:
 
 
 ```python
->>> from macropy.tracing import macros, trace
->>> with trace:
-...     sum = 0
-...     for i in range(0, 5):
-...         sum = sum + 5
-...
-sum = 0
-for i in range(0, 5):
-    sum = sum + 5
-range(0, 5) -> [0, 1, 2, 3, 4]
-sum = sum + 5
-sum + 5 -> 5
-sum = sum + 5
-sum + 5 -> 10
-sum = sum + 5
-sum + 5 -> 15
-sum = sum + 5
-sum + 5 -> 20
-sum = sum + 5
-sum + 5 -> 25
+from macropy.tracing import macros, trace
+with trace:
+    sum = 0
+    for i in range(0, 5):
+        sum = sum + 5
+
+# sum = 0
+# for i in range(0, 5):
+#     sum = sum + 5
+# range(0, 5) -> [0, 1, 2, 3, 4]
+# sum = sum + 5
+# sum + 5 -> 5
+# sum = sum + 5
+# sum + 5 -> 10
+# sum = sum + 5
+# sum + 5 -> 15
+# sum = sum + 5
+# sum + 5 -> 20
+# sum = sum + 5
+# sum + 5 -> 25
 ```
 
 Used this way, `trace` will print out the source code of every _statement_ that gets executed, in addition to tracing the evaluation of any expressions within those statements.
@@ -562,18 +551,18 @@ We think that tracing is an extremely useful macro. For debugging what is happen
 
 ###Smart Asserts
 ```python
->>> from macropy.tracing import macros, require
->>> require[3**2 + 4**2 != 5**2]
-Traceback (most recent call last):
-  File "<console>", line 1, in <module>
-  File "macropy.tracing.py", line 67, in handle
-    raise AssertionError("Require Failed\n" + "\n".join(out))
-AssertionError: Require Failed
-3**2 -> 9
-4**2 -> 16
-3**2 + 4**2 -> 25
-5**2 -> 25
-3**2 + 4**2 != 5**2 -> False
+from macropy.tracing import macros, require
+require[3**2 + 4**2 != 5**2]
+# Traceback (most recent call last):
+#   File "<console>", line 1, in <module>
+#   File "macropy.tracing.py", line 67, in handle
+#     raise AssertionError("Require Failed\n" + "\n".join(out))
+# AssertionError: Require Failed
+# 3**2 -> 9
+# 4**2 -> 16
+# 3**2 + 4**2 -> 25
+# 5**2 -> 25
+# 3**2 + 4**2 != 5**2 -> False
 ```
 
 MacroPy provides a variant on the `assert` keyword called `require(`. Like `assert`, `require` throws an `AssertionError` if the condition is false.
@@ -583,18 +572,18 @@ Unlike `assert`, `require` automatically tells you what code failed the conditio
 `require can also be used in block form:
 
 ```python
->>> from macropy.tracing import macros, require
->>> with require:
-...     a > 5
-...     a * b == 20
-...     a < 2
-...
-Traceback (most recent call last):
-  File "<console>", line 4, in <module>
-  File "macropy.tracing.py", line 67, in handle
-    raise AssertionError("Require Failed\n" + "\n".join(out))
-AssertionError: Require Failed
-a < 2 -> False
+from macropy.tracing import macros, require
+with require:
+    a > 5
+    a * b == 20
+    a < 2
+
+# Traceback (most recent call last):
+#   File "<console>", line 4, in <module>
+#   File "macropy.tracing.py", line 67, in handle
+#     raise AssertionError("Require Failed\n" + "\n".join(out))
+# AssertionError: Require Failed
+# a < 2 -> False
 ```
 
 This requires every statement in the block to be a boolean expression. Each expression will then be wrapped in a `require()`, throwing an `AssertionError` with a nice trace when a condition fails.
@@ -602,10 +591,11 @@ This requires every statement in the block to be a boolean expression. Each expr
 ###`show_expanded`
 
 ```python
+from ast import *
 from macropy.core.quotes import macros, q
 from macropy.tracing import macros, show_expanded
 
-show_expanded(q[1 + 2])
+print show_expanded[q[1 + 2]]
 # BinOp(left=Num(n=1), op=Add(), right=Num(n=2))
 ```
 
@@ -659,7 +649,7 @@ If you want to write your own custom logging, tracing or debugging macros, take 
 MacroPEG Parser Combinators
 ------------------
 ```python
-from macropy.experimental.peg import macros, peg
+from macropy.peg import macros, peg
 from macropy.quick_lambda import macros, f
 
 """
@@ -741,22 +731,21 @@ Apart from the fundamental atoms, MacroPeg also provides combinators which are n
 So far, these building blocks all return the raw parse tree: all the things like whitespace, curly-braces, etc. will still be there. Often, you want to take a parser e.g.
 
 ```python
->>> from macropy.experimental.peg import macros, peg
->>> with peg:
-...     num = '[0-9]+'.r
+from macropy.peg import macros, peg
+with peg:
+    num = '[0-9]+'.r
 
->>> num.parse("123")
-'123'
+print repr(num.parse("123")) # '123'
 ```
 
 which returns a string of digits, and convert it into a parser which returns an `int` with the value of that string. This can be done with the `//` operator:
 
 ```python
->>> with peg:
-...     num = '[0-9]+'.r // int
+from macropy.peg import macros, peg
+with peg:
+    num = '[0-9]+'.r // int
 
->>> num.parse("123")
-123
+print repr(num.parse("123")) # 123
 ```
 
 The `//` operator takes a function which will be used to transform the result of the parser: in this case, it is the function `int`, which transforms the returned string into an integer.
@@ -769,8 +758,8 @@ with peg:
     laughs1 = 'lol'.rep1
     laughs2 = laughs1 // "".join
 
-print laughs1.parse("lollollol") # [['lol', 'lol', 'lol]]
-print laughs2.parse("lollollol") # ['lollollol]
+print laughs1.parse("lollollol") # ['lol', 'lol', 'lol]
+print laughs2.parse("lollollol") # lollollol
 ```
 
 Where the function `"".join"` is used to join together the list of results from `laughs1` into a single string. As mentioned earlier, `laughs2` can also be written as `laughs2 = laughs1.join`.
@@ -830,6 +819,7 @@ Which arguably looks the cleanest of all!
 ###Cut
 
 ```python
+from macropy.peg import macros, peg, cut
 with peg:
     expr1 = ("1", "2", "3") | ("1", "b", "c")
     expr2 = ("1", cut, "2", "3") | ("1", "b", "c")
@@ -903,6 +893,9 @@ Once the first `{` is parsed, the parser is committed to that alternative. Thus,
 MacroPEG is not limited to toy problems, like the arithmetic expression parser above. Below is the full source of a JSON parser, provided in the [unit tests](macropy/experimental/test/peg.py):
 
 ```python
+from macropy.peg import macros, peg, cut
+from macropy.quick_lambda import macros, f
+
 def decode(x):
     x = x.decode('unicode-escape')
     try:
@@ -1015,7 +1008,7 @@ print json_exp.parse(test_string) == json.loads(test_string)
 
 import pprint
 pp = pprint.PrettyPrinter(4)
-pp.pprint(parser.parse(string))
+pp.pprint(json_exp.parse(test_string))
 #{   'address': {   'city': 'New York',
 #                   'postalCode': 10021.0,
 #                   'state': 'NY',
@@ -1543,7 +1536,7 @@ element_list = [image, text]
 block2 = <div>{element_list}</div>
 ```
 
-While the MacroPy version requires each snippet to be wrapped in a `p%"..."` wrapper. This [three-line-of-code macro](https://github.com/lihaoyi/macropy/blob/master/macropy/experimental/pyxl_strings.py) simply uses pyxl as a macro (operating on string literals), rather than hooking into the UTF-8 decoder. In general, this demonstrates how easy it is to integrate an "external" DSL into your python program: MacroPy handles all the intricacies of hooking into the interpreter and intercepting the import workflow. The programmer simply needs to provide the source-to-source transformation, which in this case was already provided.
+While the MacroPy version requires each snippet to be wrapped in a `p["..."]` wrapper. This [three-line-of-code macro](https://github.com/lihaoyi/macropy/blob/master/macropy/experimental/pyxl_strings.py) simply uses pyxl as a macro (operating on string literals), rather than hooking into the UTF-8 decoder. In general, this demonstrates how easy it is to integrate an "external" DSL into your python program: MacroPy handles all the intricacies of hooking into the interpreter and intercepting the import workflow. The programmer simply needs to provide the source-to-source transformation, which in this case was already provided.
 
 
 JS Snippets
@@ -2165,7 +2158,7 @@ which gives a rather confusing error message: `wrap` is not defined? From the pr
 ```python
 # macro_module.py
 from macropy.core.macros import *
-from macropy.core.quotes import macros, hq, u
+from macropy.core.hquotes import macros, hq, u
 
 macros = Macros()
 
@@ -2243,7 +2236,7 @@ Going back to the `log` example:
 ```python
 # macro_module.py
 from macropy.core.macros import *
-from macropy.core.quotes import macros, hq, u, unhygienic
+from macropy.core.hquotes import macros, hq, u, unhygienic
 
 macros = Macros()
 
@@ -2484,7 +2477,7 @@ Data Model
 ----------
 As mentioned earlier, MacroPy uses PEP 302 for much of its functionality. It
 looks out in particular for the syntactic forms (`import macros, ...`,
-`my_macro(...)`, `my_macro%...`, `with my_macro:`, `@my_macro`) to decide which
+`my_macro[...]`, `with my_macro:`, `@my_macro`) to decide which
 parts of the AST need to be expanded by which macros. MacroPy uses the inbuilt
 Python infrastructure for [parsing the
 source](http://docs.python.org/2/library/ast.html#ast.parse) and [representing
@@ -2948,7 +2941,7 @@ Hygienic quasiquotes, created using the `hq[...]` macro, are quasiquotes who aut
 ```python
 # macro_module.py
 from macropy.core.macros import *
-from macropy.core.quotes import macros, hq, u
+from macropy.core.hquotes import macros, hq, u
 
 macros = Macros()
 
@@ -3019,15 +3012,15 @@ Expansion Order
 Macros are expanded in an outside-in order, with macros higher up in the AST being expanded before their children. Hence, if we have two macros inside each other, such as:
 
 ```python
->>> from macropy.quick_lambda import macros, f
->>> from macropy.tracing import macros, trace
->>> trace[map(f[_ + 1], [1, 2, 3])]
-f[_ + 1] -> <function <lambda> at 0x00000000021F9128>
-_ + 1 -> 2
-_ + 1 -> 3
-_ + 1 -> 4
-map(f[_ + 1], [1, 2, 3]) -> [2, 3, 4]
-[2, 3, 4]
+from macropy.quick_lambda import macros, f
+from macropy.tracing import macros, trace
+trace[map(f[_ + 1], [1, 2, 3])]
+# f[_ + 1] -> <function <lambda> at 0x00000000021F9128>
+# _ + 1 -> 2
+# _ + 1 -> 3
+# _ + 1 -> 4
+print map(f[_ + 1], [1, 2, 3]) -> [2, 3, 4]
+# [2, 3, 4]
 >>>
 ```
 

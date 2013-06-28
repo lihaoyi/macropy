@@ -18,23 +18,23 @@ Tracing
     with trace:
         sum([x + 5 for x in range(3)])
 
-    # sum([(x + 5) for x in range(3)])
+    # sum([x + 5 for x in range(3)])
     # range(3) -> [0, 1, 2]
-    # (x + 5) -> 5
-    # (x + 5) -> 6
-    # (x + 5) -> 7
-    # [(x + 5) for x in range(3)] -> [5, 6, 7]
-    # sum([(x + 5) for x in range(3)]) -> 18
+    # x + 5 -> 5
+    # x + 5 -> 6
+    # x + 5 -> 7
+    # [x + 5 for x in range(3)] -> [5, 6, 7]
+    # sum([x + 5 for x in range(3)]) -> 18
 
 Quick Lambdas
 `````````````
 
 .. code:: python
 
-    print map(f%_[0], ['omg', 'wtf', 'bbq'])
+    print map(f[_[0]], ['omg', 'wtf', 'bbq'])
     # ['o', 'w', 'b']
 
-    print reduce(f%(_ + _), ['omg', 'wtf', 'bbq'])
+    print reduce(f%[_ + _], ['omg', 'wtf', 'bbq'])
     # 'omgwtfbbq
 
 Case Classes
