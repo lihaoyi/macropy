@@ -54,7 +54,7 @@ Case Classes
 
 And more! All this runs perfectly on vanilla Python 2.7 or PyPy 2.0. For more
 details, see the `GitHub page <https://github.com/lihaoyi/macropy#macropy>`_.
-or ask in the `Google Group <https://groups.google.com/forum/#!forum/macropy>`.
+or ask in the `Google Group <https://groups.google.com/forum/#!forum/macropy>`_.
 """
 
 
