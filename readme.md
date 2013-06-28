@@ -3199,28 +3199,56 @@ Beyond Python, you have the widely used [.NET](http://en.wikipedia.org/wiki/.NET
 
 Whither MacroPy
 ---------------
-When, then, do you need macros? We believe that the macros shown above are a compelling set of functionality that would be impossible without macros. These macros fall broadly into a few categories:
+When, then, do you need macros? We believe that the macros shown above are a compelling set of functionality that would be impossible without macros. The things that macros do roughly falls into the following categories:
 
-- [Mobile Code](#mobile-code)
 - [Boilerplate Shaving](#boilerplate-shaving)
-- [Heavy AST Manipulation](#heavy-ast-manipulation)
+- [Source Reflection](#source-reflection)
+- [Mobile Code](#mobile-code)
+
+###Boilerplate Shaving
+[Parser Combinators](#parser-combinators), [Quick Lambdas](#quick-lambdas) and [Case Classes](#case-classes) are examples _of boilerplate shaving_, where macros are used to reduce the amount of boilerplate necessary to perform some logic below the level that can be achieved by traditional means of abstraction (methods, operator overloading, etc.). With the Parser Combinators, for example, the macro transform that is performed is [extremely simple and superficial](#minimize-macro-magic). This is also the case with the other boilerplate shaving macros.
+
+In these macros, the boilerplate that the macro removes is trivial but extremely important. Looking again at the [Parser Combinator](#minimize-macro-magic) transformation, it is clear that removing the boilerplate is a huge improvement: rather than having to dig through the code to figure out what happens, the PEG-like structure of the code jumps right out at you making it far easier to see, at a glance, what is going on.
+
+###Source Reflection
+Source reflection is the use of macros to take the source code of the program and making it available for inspection at run-time. For example, if we re-examine the error-reporting example from [MacroPEG](macropeg-parser-combinators):
+
+```python
+json_exp.parse('{"omg": "123", "wtf": , "bbq": "789"}')
+# ParseError: index: 22, line: 1, col: 23
+# json_exp / obj / pair / json_exp
+# {"omg": "123", "wtf": , "bbq": "789"}
+#                       ^
+# expected: (obj | array | string | true | false | null | number)
+```
+
+We can see that MacroPEG is able to place the names of each parser in the `ParseError`'s error message. This of course is very handy when debugging your parsers, as well as being useful in debugging malformed input.
+
+One question that you may ask is, how is MacroPEG able to access the names of each parser, given that the name of each parser is only provided in its variable name? Recall that MacroPEG parsers are defined as follows:
+
+```python
+with peg:
+    json_exp = (space, (obj | array | string | true | false | null | number), space) // f[_[1]]
+    obj = ...
+    array = ...
+    string = ...
+    ...
+```
+
+The answer is that MacroPEG captures the variable-name of each parser and passes it to the parser's constructor, performing a transform similar to:
+
+```python
+obj = ... -> obj = Named(..., "obj")
+```
+
+By doing this, now you are able to get sensible error messages when using your parsers, without having to manually label each parser with a name in addition to the variable to which it's assigned.
+
+Apart from MacroPEG, the [Tracing](#tracing) macros also operates on the same principle, capturing the source code of each snippet as a string that is passed to the code at run-time for printing. This is something which is impossible to do using normal Python code, and the only answer is the repetitive definition of each variable, statement or expression together with its string representation, a task which is extremely tedious to perform by hand.
 
 ###Mobile Code
 Macros such as [PINQ](#pinq-to-sqlalchemy), [JS Snippets](#js-snippets), [Tracing](#tracing) and potential extensions such as the [Fork-Join](issues/25) macros are all about using macros to shuttle code between domains, while still allowing it to be written together in a single code base. PINQ and JS Snippets are all about taking sections of a Python program and executing it either on a remote database or in a browser, while the Tracing macro ships sections of code into the console for debugging purposes and the Fork-Join macro would shuttle sections of code between Python processes in order to run them in parallel.
 
 This idea of _mobile code_ is not commonly seen in most domains; more often, code written in a single file is run in a single place, and if you want to write a distributed system, you'll need to manually break up your code even though conceptually it all belongs together. Allowing you to have a single code-base and semi-transparently (translucently?) ship the code to somewhere else to run would be a big step forward.
-
-###Boilerplate Shaving
-[Parser Combinators](#parser-combinators) and [Quick Lambdas](#quick-lambdas) are examples _of boilerplate shaving_, where macros are used to reduce the amount of boilerplate necessary to perform some logic below the level that can be achieved by traditional means (methods, operator overloading, etc.). With the Parser Combinators, for example, the macro transform that is performed is [extremely simple and superficial](#minimize-macro-magic). This is also the case with the other boilerplate shaving macros.
-
-In these macros, the boilerplate that the macro removes is trivial but extremely important. Looking again at the [Parser Combinator](#minimize-macro-magic) transformation, it is clear that removing the boilerplate is a huge improvement: rather than having to dig through the code to figure out what happens, the PEG-like structure of the code jumps right out at you making it far easier to see, at a glance, what is going on.
-
-###Heavy AST Manipulation
-The last category that macros fall into are those such as [Case Classes](#case-classes), [Pattern Matching](#pattern-matching) and [Tail Call Optimization](#tail-call-optimization). These are macros that do massive transformations to large sections of a Python program, completely changing the semantics from what they were before.
-
-Of all the macros shown, these are probably the most risky. In the [mobile code](#mobile-code) macros, the code being transformed is usually clearly delimited and separate from the rest of the program. In the [boilerplate shaving](#boilerplate-shaving) macros, the transformation is simple to the point of being superficial. In these AST Manipulation macros, not only is the transformation being performed extremely complex, it also affects a large section of your program and is interleaved with lots of "untransformed" Python code.
-
-For example, with [Case Classes](#case-classes), the case class definition may contain method definitions, which you would hope can continue to function perfectly and not get messed up by the case class transform. Nonetheless, the benefits of these transforms are also deep and far reaching, and the trade of may well be worth the macro complexity.
 
 ------------------------------
 
@@ -3231,15 +3259,6 @@ MacroPy: Bringing Macros to Python
 Macros are always a contentious issue. On one hand, we have the [Lisp](https://en.wikipedia.org/wiki/LISP) community, which seems to using macros for everything. On the other hand, most mainstream programmers shy away from them, believing them to be extremely powerful and potentially confusing, not to mention extremely difficult to execute.
 
 With MacroPy, we believe that we have a powerful, flexible tool that makes it trivially easy to write AST-transforming macros with any level of complexity. We have a [compelling suite of use cases](#examples) demonstrating the utility of such transforms, and all of it runs perfectly fine on alternative implementations of Python such as PyPy.
-
-We have a few major takeaways:
-
-- Being a non-Lisp does not make macros any harder; working with an AST made of objects isn't any harder than an AST made of lists. With an inbuilt parser and unparser, the human-friendly computer-unfriendly syntax of Python (whitespace, etc.) is not an issue at all.
-- Python in particular, and other languages in general, do not need macros for many of the use cases the LISPs do. Thanks to inbuilt support for first class functions, dynamism and mutability, simple things like [looping](http://www.gigamonkeys.com/book/loop-for-black-belts.html) can be done easily without resorting to AST rewrites. Macros [should only be used if all these tools have proven inadequete](https://github.com/lihaoyi/macropy#no-macros-necessary), and even then [used as little as possible](https://github.com/lihaoyi/macropy#minimize-macro-magic).
-- In Python, there are use cases which require macros, which are not only completely impossible without macros, but also extremely compelling. Not "here's [another syntax for an if-statement](http://stackoverflow.com/a/16174524/871202)" but "here's [cross-compiling list-comprehensions into SQL queries to be executed on a remote database](#pinq-to-sqlalchemy)". These should be the use cases that macros target.
-- Macros stand to *reduce* the amount of [magic](#levels-of-magic) in a code base, not increase it. The use cases we propose for macros are at present not satisfied by boring, normal code which macros serve to complicate. They are satisfied by [code being generated by stitching together strings and `exec`ed at runtime](#skeletons-in-the-closet). They are served by special build stages which generate whole blobs of code at build-time to be used later. Replacing these with macros will reduce the total amount of complexity and magic.
-
-Macros may be difficult to write, difficult to compose, difficult to reason about, especially compared to "plain old" Python code. But macros are not meant to replace "plain old" Python! They're aimed at replacing piles of manual duplication or swaths of textual code-generation. Compared to the difficulty of writing, composing and reasoning about the alternatives, MacroPy may well be the lesser evil.
 
 Credits
 =======
