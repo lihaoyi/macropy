@@ -1063,7 +1063,7 @@ Pretty neat! This full example of a JSON parser demonstrates what MacroPEG provi
 - An extremely clear PEG-like syntax
 - Extremely concise parser definitions
 
-Not bad for an implementation that spans [350 lines of code](macropy/experimental/peg.py)!
+Not bad for an implementation that spans [350 lines of code](macropy/peg.py)!
 
 Experimental Macros
 ===================
@@ -2442,7 +2442,7 @@ not supported (e.g. Jython).
 
 By using the `SaveExporter`, the macro-using code is expanded into plain
 Python, and although it may rely on MacroPy as a library (e.g. the `CaseClass`
-class in [macropy/experimental/peg.py](macropy/experimental/peg.py)) it won't
+class in [macropy/peg.py](macropy/peg.py)) it won't
 need any of MacroPy's import-code-intercepting AST-transforming capabilities at
 run-time.
 

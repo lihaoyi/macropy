@@ -74,6 +74,7 @@ setup(
         'pyxl':  ["pyxl"],
         'pinq': ["SQLAlchemy"],
         'js_snippets': ["selenium", "pjs"],
+
     },
     classifiers=['Programming Language :: Python :: 2.7']
 )
