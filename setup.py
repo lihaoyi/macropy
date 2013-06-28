@@ -34,7 +34,7 @@ Quick Lambdas
     print map(f[_[0]], ['omg', 'wtf', 'bbq'])
     # ['o', 'w', 'b']
 
-    print reduce(f%[_ + _], ['omg', 'wtf', 'bbq'])
+    print reduce(f[_ + _], ['omg', 'wtf', 'bbq'])
     # 'omgwtfbbq
 
 Case Classes
