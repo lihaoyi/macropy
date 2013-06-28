@@ -75,16 +75,16 @@ def find_member_assignments(tree, collect, stop, **kw):
         ]
         map(collect, self_assigns)
 
-@macros.decorator
-def case(tree, gen_sym, **kw):
-    """Macro providing an extremely concise way of declaring classes"""
-    def split_body(tree):
+
+
+
+def split_body(tree, gen_sym):
         new_body = []
         outer = []
         init_body = []
         for statement in tree.body:
             if type(statement) is ClassDef:
-                outer.append(case_transform(statement, [Name(id=tree.name, ctx=Load())]))
+                outer.append(case_transform(statement, gen_sym, [Name(id=tree.name, ctx=Load())]))
                 with hq as a:
                     name[tree.name].b = name[statement.name]
                 a_old = a[0]
@@ -98,67 +98,98 @@ def case(tree, gen_sym, **kw):
                 init_body.append(statement)
         return new_body, outer, init_body
 
-    def prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args):
+def prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args):
 
-        init_fun.args = arguments(
-            args = [Name(id="self")] + [Name(id = id) for id in args],
-            vararg = vararg,
-            kwarg = kwarg,
-            defaults = defaults
-        )
+    init_fun.args = arguments(
+        args = [Name(id="self")] + [Name(id = id) for id in args],
+        vararg = vararg,
+        kwarg = kwarg,
+        defaults = defaults
+    )
 
 
-        for x in all_args:
-            with hq as a:
-                unhygienic[self.x] = name[x]
+    for x in all_args:
+        with hq as a:
+            unhygienic[self.x] = name[x]
 
-            a[0].targets[0].attr = x
+        a[0].targets[0].attr = x
 
-            init_fun.body.append(a[0])
+        init_fun.body.append(a[0])
 
-    def case_transform(tree, parents):
 
-        with hq as methods:
-            def __init__(self, *args, **kwargs):
-                pass
+def shared_transform(tree, gen_sym, additional_args=[]):
+    with hq as methods:
+        def __init__(self, *args, **kwargs):
+            pass
 
-            _fields = []
-            _varargs = None
-            _kwargs = None
-            __slots__ = []
+        _fields = []
+        _varargs = None
+        _kwargs = None
+        __slots__ = []
+    init_fun, set_fields, set_varargs, set_kwargs, set_slots, = methods
+    args, vararg, kwarg, defaults, all_args = extract_args(init_fun, tree.bases)
+    args = args + additional_args
+    if vararg:
+        set_varargs.value = Str(vararg)
+    if kwarg:
+        set_kwargs.value = Str(kwarg)
+    additional_members = find_member_assignments.collect(tree.body)
+    prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args)
+    set_fields.value.elts = map(Str, args)
+    set_slots.value.elts = map(Str, all_args + additional_members)
+    new_body, outer, init_body = split_body(tree, gen_sym)
+    init_fun.body.extend(init_body)
+    tree.body = new_body
+    tree.body = methods + tree.body
+    return outer
 
-        init_fun, set_fields, set_varargs, set_kwargs, set_slots, = methods
 
-        args, vararg, kwarg, defaults, all_args = extract_args(init_fun, tree.bases)
+def case_transform(tree, gen_sym, parents):
 
-        if vararg:
-            set_varargs.value = Str(vararg)
-        if kwarg:
-            set_kwargs.value = Str(kwarg)
+    outer = shared_transform(tree, gen_sym)
 
-        additional_members = find_member_assignments.collect(tree.body)
+    tree.bases = parents
+    assign = FunctionDef(
+        gen_sym(),
+        arguments([], None, None, []),
+        outer,
+        [hq[apply]]
+    )
+    return [tree] + ([assign] if len(outer) > 0 else [])
 
-        prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args)
-        set_fields.value.elts = map(Str, args)
-        set_slots.value.elts = map(Str, all_args + additional_members)
-
-        new_body, outer, init_body = split_body(tree)
-        init_fun.body.extend(init_body)
-
-        assign = FunctionDef(
-            gen_sym(),
-            arguments([], None, None, []),
-            outer,
-            [hq[apply]]
-        )
-
-        tree.body = new_body
-        tree.bases = parents
-
-        tree.body = methods + tree.body
-
-        return [tree] + ([assign] if len(outer) > 0 else [])
-
-    x = case_transform(tree, [hq[CaseClass]])
+@macros.decorator
+def case(tree, gen_sym, **kw):
+    """Macro providing an extremely concise way of declaring classes"""
+    x = case_transform(tree, gen_sym, [hq[CaseClass]])
 
     return x
+
+@macros.decorator
+def enum(tree, gen_sym, **kw):
+    outer = shared_transform(tree, gen_sym, additional_args=["id", "name"])
+    tree.bases = [hq[CaseClass]]
+    assign = FunctionDef(
+        gen_sym(),
+        arguments([], None, None, []),
+        [Pass()],
+        [hq[apply]]
+    )
+    
+    def try_handle_thing(thing):
+        if type(thing) is Expr:
+            thing.value = try_handle_thing(thing.value)
+            return thing
+        if type(thing) is Tuple:
+            thing.elts = map(try_handle_thing, thing.elts)
+            return thing
+        if type(thing) is Call:
+            pass
+            return thing
+        if type(thing) is Name:
+            pass
+            return thing
+        return thing
+
+    tree.body = map(try_handle_thing, tree.body)
+
+    return [tree, assign]

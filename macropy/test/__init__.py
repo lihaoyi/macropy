@@ -16,11 +16,11 @@ import macropy.experimental.test
 import macropy.core.test
 Tests = test_suite(cases=[
     case_classes,
-    quick_lambda,
-    string_interp,
-    tracing
+#    quick_lambda,
+ #   string_interp,
+  #  tracing
 ], suites=[
-    macropy.experimental.test,
-    macropy.core.test
+   # macropy.experimental.test,
+    #macropy.core.test
 ])
 
