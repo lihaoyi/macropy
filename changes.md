@@ -3,7 +3,7 @@ Changelog
 
 1.0.2
 -----
-Removed unit test from PyPI distribution
+- Removed unit test from PyPI distribution
 
 1.0.1
 -----
