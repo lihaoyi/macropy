@@ -21,9 +21,21 @@ def gen_sym(tree, **kw):
         if type(tree) is ImportFrom:
             names = [x.asname or x.name for x in tree.names]
             map(collect, names)
+        if type(tree) in (FunctionDef, ClassDef):
+            collect(tree.name)
 
-    found_names = name_finder.collect(tree)
-    names = ("sym" + str(i) for i in itertools.count())
-    x = itertools.ifilter(lambda x: x not in found_names, names)
-    return lambda: x.next()
+    found_names = set(name_finder.collect(tree))
+
+    def name_for(name="sym"):
+
+        if name not in found_names:
+            found_names.add(name)
+            return name
+        offset = 1
+        while name + str(offset) in found_names:
+
+            offset += 1
+        found_names.add(name + str(offset))
+        return name + str(offset)
+    return name_for
 

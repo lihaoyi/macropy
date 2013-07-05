@@ -15,7 +15,7 @@ def f(tree, gen_sym, **kw):
     @Walker
     def underscore_search(tree, collect, **kw):
         if isinstance(tree, Name) and tree.id == "_":
-            name = gen_sym()
+            name = gen_sym("_")
             tree.id = name
             collect(name)
             return tree

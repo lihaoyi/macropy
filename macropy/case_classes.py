@@ -191,7 +191,7 @@ def case_transform(tree, gen_sym, parents):
 
     tree.bases = parents
     assign = FunctionDef(
-        gen_sym(),
+        gen_sym("prepare_"+tree.name),
         arguments([], None, None, []),
         outer,
         [hq[apply]]
