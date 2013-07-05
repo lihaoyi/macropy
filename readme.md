@@ -22,7 +22,7 @@ Try it out in the REPL, it should just work! You can also see the [docs/examples
 MacroPy has been used to implement features such as:
 
 - [Case Classes](#case-classes), easy Algebraic Data Types from Scala, and [Enums](#enums)
-- [Quick Lambdas](#quick-lambdas) from Scala and Groovy
+- [Quick Lambdas](#quick-lambdas) from Scala and Groovy, and the [Lazy](#lazy) and [Interned](#interned) utility macros
 - [String Interpolation](#string-interpolation), a common feature in many programming languages
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts), and [show_expanded](#show_expanded), to help in the debugging effort
 - [MacroPEG](#macropeg-parser-combinators), Parser Combinators inspired by Scala's
@@ -515,6 +515,62 @@ print thunk() # 4.894243231792029
 ```
 
 This cuts out reduces the number of characters needed to make a thunk from 7 (using `lambda`) to 2, making it much easier to use thunks to do things like emulating [by name parameters](http://locrianmode.blogspot.com/2011/07/scala-by-name-parameter.html). The implementation of quicklambda is about [30 lines of code](macropy/quick_lambda.py), and is worth a look if you want to see how a simple (but extremely useful!) macro can be written.
+
+Lazy
+----
+```python
+wrapped = [0]
+def expensive_func():
+    wrapped[0] += 1
+
+thunk = lazy[expensive_func()]
+
+assert wrapped[0] == 0
+
+thunk()
+assert wrapped[0] == 1
+thunk()
+assert wrapped[0] == 1
+```
+
+The `lazy` macro is used to create a memoizing thunk. Wrapping an expression with `lazy` creates a thunk which needs to be applied (e.g. `thunk()`) in order to get the value of the expression out. This macro then memoizes the result of that expression, such that subsequent calls to `thunk()` will not cause re-computation.
+
+This macro is a tradeoff between declaring the value as a variable:
+
+```python
+var = expensive_func()
+```
+
+Which evaluates exactly once, even when not used, and declaring it as a function
+
+```python
+thunk = lambda: expensive_func()
+```
+
+Which no longer evaluates when not used, but now re-evaluates every single time. With `lazy`, you get an expression that evaluates 0 or 1 times. This way, you don't have to pay the cost of computation if it is not used at all (the problems with variables) or the cost of needlessly evaluating it more than once (the problem with lambdas).
+
+This is handy to have if you know how to compute an expression in a local scope that may be used repeatedly later. It may depend on many local variables, for example, which would be inconvenient to pass along to the point at which you know whether the computation is necessary. This way, you can simply "compute" the lazy value and pass it along, just as you would compute the value normally, but with the benefit of only-if-necessary evaluation.
+
+Interned
+--------
+```python
+wrapped = [0]
+def expensive_func():
+    wrapped[0] += 1
+
+def wrapper_func():
+    return interned[expensive_func()]
+
+assert wrapped[0] == 0
+wrapper_func()
+assert wrapped[0] == 1
+wrapper_func()
+assert wrapped[0] == 1
+```
+
+The `interned` macro is similar to the [Lazy](#lazy) macro in that the code within the `interned[...]` block is wrapped in a thunk and evaluated at most once. Unlike the `lazy` macro, however, `interned` does not created a memoizing thunk that you can pass around your program; instead, the memoization is done on a *per-use-site* basis.
+
+As you can see in the example above, although `wrapper_func` is called repeatedly, the `func()` call within the `interned` block is only ever evaluated once. This is handy in that it gives you a mechanism for memoizing a particular computation without worrying about finding a place to store the memoized values. It's just memoized globally (often what you want) while being scoped locally, which avoids polluting the global namespace with names only relevant to a single function (also often what you want).
 
 String Interpolation
 --------------------

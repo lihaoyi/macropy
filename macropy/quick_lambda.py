@@ -39,9 +39,9 @@ def lazy(tree, **kw):
 def get_interned(store, index, thunk):
 
     if store[index] is None:
-        store[index] = thunk()
+        store[index] = [thunk()]
 
-    return store[index]
+    return store[index][0]
 
 
 @register(injected_vars)
