@@ -65,7 +65,7 @@ setup(
     version=__version__,
     description='Macros for Python: Quasiquotes, Case Classes, LINQ and more!',
     long_description=__doc__,
-    license='BSD',
+    license='MIT',
     author='Li Haoyi, Justin Holmgren',
     author_email='haoyi.sg@gmail.com, justin.holmgren@gmail.com',
     url='https://github.com/lihaoyi/macropy',
