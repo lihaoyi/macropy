@@ -519,18 +519,21 @@ This cuts out reduces the number of characters needed to make a thunk from 7 (us
 Lazy
 ----
 ```python
-wrapped = [0]
+from macropy.quick_lambda import macros, lazy
+
+# count how many times expensive_func runs
+count = [0]
 def expensive_func():
-    wrapped[0] += 1
+    count[0] += 1
 
 thunk = lazy[expensive_func()]
 
-assert wrapped[0] == 0
+assert count[0] == 0
 
 thunk()
-assert wrapped[0] == 1
+assert count[0] == 1
 thunk()
-assert wrapped[0] == 1
+assert count[0] == 1
 ```
 
 The `lazy` macro is used to create a memoizing thunk. Wrapping an expression with `lazy` creates a thunk which needs to be applied (e.g. `thunk()`) in order to get the value of the expression out. This macro then memoizes the result of that expression, such that subsequent calls to `thunk()` will not cause re-computation.
@@ -554,18 +557,20 @@ This is handy to have if you know how to compute an expression in a local scope 
 Interned
 --------
 ```python
-wrapped = [0]
-def expensive_func():
-    wrapped[0] += 1
+from macropy.quick_lambda import macros, lazy
 
-def wrapper_func():
+# count how many times expensive_func runs
+def expensive_func():
+    count[0] += 1
+
+def func():
     return interned[expensive_func()]
 
-assert wrapped[0] == 0
-wrapper_func()
-assert wrapped[0] == 1
-wrapper_func()
-assert wrapped[0] == 1
+assert count[0] == 0
+func()
+assert count[0] == 1
+func()
+assert count[0] == 1
 ```
 
 The `interned` macro is similar to the [Lazy](#lazy) macro in that the code within the `interned[...]` block is wrapped in a thunk and evaluated at most once. Unlike the `lazy` macro, however, `interned` does not created a memoizing thunk that you can pass around your program; instead, the memoization is done on a *per-use-site* basis.
