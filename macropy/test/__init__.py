@@ -12,13 +12,15 @@ import case_classes
 import quick_lambda
 import string_interp
 import tracing
+import peg
 import macropy.experimental.test
 import macropy.core.test
 Tests = test_suite(cases=[
     case_classes,
     quick_lambda,
     string_interp,
-    tracing
+    tracing,
+    peg
 ], suites=[
     macropy.experimental.test,
     macropy.core.test

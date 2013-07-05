@@ -1,4 +1,4 @@
-from macropy.test import test_suite, peg
+from macropy.test import test_suite
 #import js_snippets
 #import pattern
 import pinq
@@ -8,7 +8,6 @@ import pyxl_snippets
 Tests = test_suite(cases = [
     #js_snippets,
     #pattern,
-    peg,
     #pinq,
     pyxl_snippets,
     #tco_test

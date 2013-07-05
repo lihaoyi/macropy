@@ -1,4 +1,4 @@
-MacroPy 1.0.0
+MacroPy 1.0.2
 =============
 **MacroPy** is an implementation of [Syntactic Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (macros) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree) (AST) of a Python program at _import time_. This is an easy way to enhance the semantics of a Python program in ways which are otherwise impossible, for example providing an extremely concise way of declaring classes:
 
@@ -51,7 +51,7 @@ The [Reference Documentation](#reference) contains information about:
 - [Expansion Order](#expansion-order) of nested macros with a file
 - [Line Numbers](#line-numbers), or what errors you get when something goes wrong.
 
-Or just skip ahead to the [Discussion](#discussion) and [Conclusion](#macropy-bringing-macros-to-python). We're open to contributions, so send us your ideas/questions/issues/pull-requests and we'll do our best to accommodate you! You can ask questions on the [Google Group](https://groups.google.com/forum/#!forum/macropy) or file bugs on the [issues](issues) page.
+Or just skip ahead to the [Discussion](#discussion) and [Conclusion](#macropy-bringing-macros-to-python). We're open to contributions, so send us your ideas/questions/issues/pull-requests and we'll do our best to accommodate you! You can ask questions on the [Google Group](https://groups.google.com/forum/#!forum/macropy) or file bugs on thee [issues](issues) page.
 
 MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but not on [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy), using a standard [setup.py](setup.py) to manage dependencies, installation and other things. Check out [this gist](https://gist.github.com/lihaoyi/5577609) for an example of setting it up on a clean system.
 
@@ -1063,7 +1063,7 @@ Pretty neat! This full example of a JSON parser demonstrates what MacroPEG provi
 - An extremely clear PEG-like syntax
 - Extremely concise parser definitions
 
-Not bad for an implementation that spans [350 lines of code](macropy/peg.py)!
+Not bad for an implementation that spans [350 lines of code](macropy/experimental/peg.py)!
 
 Experimental Macros
 ===================
@@ -2442,7 +2442,7 @@ not supported (e.g. Jython).
 
 By using the `SaveExporter`, the macro-using code is expanded into plain
 Python, and although it may rely on MacroPy as a library (e.g. the `CaseClass`
-class in [macropy/peg.py](macropy/peg.py)) it won't
+class in [macropy/experimental/peg.py](macropy/experimental/peg.py)) it won't
 need any of MacroPy's import-code-intercepting AST-transforming capabilities at
 run-time.
 

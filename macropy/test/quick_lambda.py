@@ -1,7 +1,7 @@
 import unittest
 
-from macropy.quick_lambda import macros, f, _
-
+from macropy.quick_lambda import macros, f, _, lazy, interned
+from macropy.tracing import macros, show_expanded
 class Tests(unittest.TestCase):
     def test_basic(self):
         assert map(f[_ - 1], [1, 2, 3]) == [0, 1, 2]
@@ -26,3 +26,32 @@ class Tests(unittest.TestCase):
         assert func1(10) == 11
         func2 = f[_ + sym0 + _ + sym1]
         assert func2(10, 10) == 23
+
+    def test_lazy(self):
+        wrapped = [0]
+        def func():
+            wrapped[0] += 1
+
+        thunk = lazy[func()]
+
+        assert wrapped[0] == 0
+
+        thunk()
+        assert wrapped[0] == 1
+        thunk()
+        assert wrapped[0] == 1
+
+    def test_interned(self):
+
+        wrapped = [0]
+        def func():
+            wrapped[0] += 1
+
+        def wrapped_func():
+            return interned[func()]
+
+        assert wrapped[0] == 0
+        wrapped_func()
+        assert wrapped[0] == 1
+        wrapped_func()
+        assert wrapped[0] == 1

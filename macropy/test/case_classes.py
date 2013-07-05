@@ -1,5 +1,5 @@
-from macropy.case_classes import macros, case
-
+from macropy.case_classes import macros, case, enum, enum_new
+from macropy.tracing import macros, show_expanded
 import unittest
 
 class Tests(unittest.TestCase):
@@ -140,3 +140,79 @@ class Tests(unittest.TestCase):
 
         p = Point(1, 2)
         x, y = p
+
+
+    def test_enum(self):
+
+        @enum
+        class Direction:
+            North, South, East, West
+
+        assert Direction(name="North") is Direction.North
+
+        assert repr(Direction.North) == str(Direction.North) == "Direction.North"
+
+        # getting name
+        assert Direction.South.name == "South"
+
+
+        # selecting by id
+        assert Direction(id=2) is Direction.East
+
+        # getting id
+        assert Direction.West.id == 3
+
+
+        # `next` and `prev` properties
+        assert Direction.North.next is Direction.South
+        assert Direction.West.prev is Direction.East
+
+        # `next` and `prev` wrap-around
+        assert Direction.West.next is Direction.North
+        assert Direction.North.prev is Direction.West
+
+        # `all`
+        assert Direction.all == [
+            Direction.North,
+            Direction.South,
+            Direction.East,
+            Direction.West
+        ]
+
+
+
+    def test_multiline_enum(self):
+        @enum
+        class Direction:
+            North
+            South
+            East
+            West
+
+        assert Direction(name="North") is Direction.North
+        assert Direction(name="West") is Direction.West
+
+    def test_complex_enum(self):
+        @enum
+        class Direction(alignment):
+            North("Vertical")
+            East("Horizontal")
+            South("Vertical")
+            West("Horizontal")
+
+            @property
+            def opposite(self):
+                return Direction(id=(self.id + 2) % 4)
+
+            def padded_name(self, n):
+                return (" " * n) + self.name + (" " * n)
+
+        # members
+        assert Direction.North.alignment == "Vertical"
+        assert Direction.East.alignment == "Horizontal"
+
+        # properties
+        assert Direction.North.opposite is Direction.South
+
+        # methods
+        assert Direction.South.padded_name(2) == "  South  "

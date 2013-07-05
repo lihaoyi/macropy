@@ -63,7 +63,7 @@ def process(tree, potential_targets, gen_sym):
             names = distinct(flatten(b_left))
             tree.right.args.args = map(f[Name(id = _)], names)
             tree.right.args.defaults = [hq[[]]] * len(names)
-            tree.right.args.kwarg = gen_sym()
+            tree.right.args.kwarg = gen_sym("kw")
             stop()
 
             return tree

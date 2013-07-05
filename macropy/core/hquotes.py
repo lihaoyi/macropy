@@ -22,7 +22,7 @@ def post_proc(tree, captured_registry, gen_sym, **kw):
     if captured_registry == []:
         return tree
 
-    unpickle_name = gen_sym()
+    unpickle_name = gen_sym("unpickled")
     pickle_import = [
         ImportFrom(
             module='pickle',
@@ -53,7 +53,7 @@ def hygienate(tree, captured_registry, gen_sym, **kw):
         if type(tree) is Captured:
             new_sym = [sym for val, sym in captured_registry if val is tree.val]
             if not new_sym:
-                new_sym = gen_sym()
+                new_sym = gen_sym(tree.name)
 
                 captured_registry.append((tree.val, new_sym))
             else:
