@@ -560,6 +560,7 @@ Interned
 from macropy.quick_lambda import macros, interned
 
 # count how many times expensive_func runs
+count = [0]
 def expensive_func():
     count[0] += 1
 
