@@ -113,7 +113,7 @@ def split_body(tree, gen_sym):
         init_body = []
         for statement in tree.body:
             if type(statement) is ClassDef:
-                outer.append(case_transform(statement, gen_sym, [Name(id=tree.name, ctx=Load())]))
+                outer.append(case_transform(statement, gen_sym, [Name(id=tree.name)]))
                 with hq as a:
                     name[tree.name].b = name[statement.name]
                 a_old = a[0]
@@ -205,7 +205,7 @@ def enum(tree, gen_sym, **kw):
         assert type(expr) in (Name, Call), stmt.value
         if type(expr) is Name:
             expr.ctx = Store()
-            self_ref = Attribute(value=Name(id=tree.name, ctx=Load()), attr=expr.id, ctx=Store())
+            self_ref = Attribute(value=Name(id=tree.name), attr=expr.id)
             with hq as code:
                 ast[self_ref] = name[tree.name](u[count[0]], u[expr.id])
             new_assigns.extend(code)
@@ -213,7 +213,7 @@ def enum(tree, gen_sym, **kw):
 
         elif type(expr) is Call:
             assert type(expr.func) is Name
-            self_ref = Attribute(value=Name(id=tree.name, ctx=Load()), attr=expr.func.id, ctx=Store())
+            self_ref = Attribute(value=Name(id=tree.name), attr=expr.func.id)
             id = expr.func.id
             expr.func = Name(id=tree.name)
 
@@ -241,8 +241,6 @@ def enum(tree, gen_sym, **kw):
         name[tree.name].__new__ = staticmethod(enum_new)
         name[tree.name].__init__ = noop_init
 
-    code[0].targets[0].value.ctx = Load()
-    code[1].targets[0].value.ctx = Load()
 
     tree.bases = [hq[Enum]]
 

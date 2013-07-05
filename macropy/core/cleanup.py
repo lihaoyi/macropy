@@ -14,7 +14,7 @@ def fix_ctx(tree, **kw):
 
 
 @Walker
-def ast_ctx_fixer(tree, ctx, stop, **kw):
+def ast_ctx_fixer(tree, ctx, stop, set_ctx, **kw):
     """Fix any missing `ctx` attributes within an AST; allows you to build
     your ASTs without caring about that stuff and just filling it in later."""
     if "ctx" in type(tree)._fields and (not hasattr(tree, "ctx") or tree.ctx is None):
@@ -33,6 +33,10 @@ def ast_ctx_fixer(tree, ctx, stop, **kw):
         ast_ctx_fixer.recurse(tree.target, AugStore())
         ast_ctx_fixer.recurse(tree.value, AugLoad())
         stop()
+        return tree
+
+    if type(tree) is Attribute:
+        set_ctx(Load())
         return tree
 
     if type(tree) is Assign:
