@@ -69,7 +69,7 @@ setup(
     author='Li Haoyi, Justin Holmgren',
     author_email='haoyi.sg@gmail.com, justin.holmgren@gmail.com',
     url='https://github.com/lihaoyi/macropy',
-    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
+    packages=find_packages(exclude=["*.test", "*.test.*"]),
     extras_require = {
         'pyxl':  ["pyxl"],
         'pinq': ["SQLAlchemy"],
