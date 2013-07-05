@@ -21,7 +21,7 @@ Try it out in the REPL, it should just work! You can also see the [docs/examples
 
 MacroPy has been used to implement features such as:
 
-- [Case Classes](#case-classes), easy Algebraic Data Types from Scala
+- [Case Classes](#case-classes), easy Algebraic Data Types from Scala, and [Enums](#enums)
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy
 - [String Interpolation](#string-interpolation), a common feature in many programming languages
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts), and [show_expanded](#show_expanded), to help in the debugging effort
@@ -375,11 +375,97 @@ Case classes provide a lot of functionality to the user, but come with their own
 - **Restricted inheritance**: A case class only inherits from `macropy.case_classes.CaseClass`, as well as any case classes it is lexically scoped within. There is no way to express any other form of inheritance
 - **__slots__**: case classes get `__slots__` declarations by default. Thus you cannot assign ad-hoc members which are not defined in the class signature (the `class Point(x, y)` line).
 
+
 -------------------------------------------------------------------------------
 
 Overall, case classes are similar to Python's [`namedtuple`](http://docs.python.org/2/library/collections.html#collections.namedtuple), but far more flexible (methods, inheritance, etc.), and provides the programmer with a much better experience (e.g. no arguments-as-space-separated-string definition). Unlike `namedtuple`s, they are flexible enough that they can be used to replace a large fraction of user defined classes, rather than being relegated to niche uses.
 
 In the cases where you desperately need additional flexibility [not afforded](#limitations) by case classes, you can always fall back on normal Python classes and do without the case class functionality.
+
+Enums
+-----
+```python
+from macropy.case_classes import macros, enum
+
+@enum
+class Direction:
+    North, South, East, West
+
+print Direction(name="North") # Direction.North
+
+print Direction.South.name    # South
+
+print Direction(id=2)         # Direction.East
+
+print Direction.West.id       # 3
+
+print Direction.North.next    # Direction.South
+print Direction.West.prev     # Direction.East
+
+print Direction.all
+# [Direction.North, Direction.East, Direction.South, Direction.West]
+```
+
+MacroPy also provides an implementation of [Enumerations](http://en.wikipedia.org/wiki/Enumerated_type), heavily inspired by the [Java implementation](http://docs.oracle.com/javase/tutorial/java/javaOO/enum.html) and built upon [Case Classes](#case-classes). These are effectively case classes with
+
+- A fixed set of instances
+- Auto-generated `name`, `id`, `next` and `prev` fields
+- Auto-generated `all` list, which enumerates all instances.
+- A `__new__` method that retrieves an existing instance, rather than creating new ones
+
+Note that instances of an Enum cannot be created manually: calls such as `Direction(name="North")` or `Direction(id=2)` attempt to retrieve an existing Enum with that property, throwing an exception if there is none. This means that reference equality is always used to compare instances of Enums for equality, allowing for much faster equality checks than if you had used [Case Classes](#case-classes).
+
+###Definition of Instances
+The instances of an Enum can be declared on a single line, as in the example above, or they can be declared on subsequent lines:
+
+```python
+@enum
+class Direction:
+    North
+    South
+    East
+    West
+```
+
+or in a mix of the two styles:
+
+```python
+@enum
+class Direction:
+    North, South
+    East, West
+```
+
+The basic rule here is that the body of an Enum can only contain bare names, function calls (show below), tuples of these, or function defs: no other statements are allowed. In turn the bare names and function calls are turned into instances of the Enum, while function defs (shown later) are turned into their methods. This also means that unlike [Case Classes](#case-classes), Enums cannot have [body initializers](#body-initializer).
+
+###Complex Enums
+```python
+@enum
+class Direction(alignment):
+    North("Vertical")
+    East("Horizontal")
+    South("Vertical")
+    West("Horizontal")
+
+    @property
+    def opposite(self):
+        return Direction(id=(self.id + 2) % 4)
+
+    def padded_name(self, n):
+        return ("<" * n) + self.name + (">" * n)
+
+# members
+print Direction.North.alignment # Vertical
+print Direction.East.alignment  # Horizontal
+
+# properties
+print Direction.North.opposite  # Direction.South
+
+# methods
+print Direction.South.padded_name(2) # <<South>>
+```
+
+Enums are not limited to the auto-generated members shown above. Apart from the fact that Enums have no constructor, and no body initializer, they can contain fields, methods and properties just like [Case Classes](#case-classes) do. This allows you to associate arbitrary data with each instance of the Enum, and have them perform as full-fledged objects rather than fancy integers.
 
 Quick Lambdas
 -------------

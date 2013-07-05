@@ -147,20 +147,21 @@ class Tests(unittest.TestCase):
         @enum
         class Direction:
             North, South, East, West
-        #Direction.__new__ = enum_new
-        #Direction.__init__ = lambda *args, **kw: None
-        # selecting by-name
 
         assert Direction(name="North") is Direction.North
 
+        assert repr(Direction.North) == str(Direction.North) == "Direction.North"
+
         # getting name
         assert Direction.South.name == "South"
+
 
         # selecting by id
         assert Direction(id=2) is Direction.East
 
         # getting id
         assert Direction.West.id == 3
+
 
         # `next` and `prev` properties
         assert Direction.North.next is Direction.South

@@ -37,7 +37,7 @@ class CaseClass(object):
             yield getattr(self, x)
 
 
-class Enum(CaseClass):
+class Enum(object):
     def __new__(cls, *args, **kw):
         if not hasattr(cls, "all"):
             cls.all = []
@@ -51,6 +51,17 @@ class Enum(CaseClass):
     @property
     def prev(self):
         return self.__class__.all[(self.id - 1) % len(self.__class__.all)]
+
+    def __str__(self):
+        return self.__class__.__name__ + "." + self.name
+
+    def __repr__(self):
+        return self.__str__()
+
+
+    def __iter__(self):
+        for x in self.__class__._fields:
+            yield getattr(self, x)
 
 def enum_new(cls, **kw):
     if len(kw) != 1:
