@@ -575,7 +575,7 @@ print count[0] # 1
 
 The `interned` macro is similar to the [Lazy](#lazy) macro in that the code within the `interned[...]` block is wrapped in a thunk and evaluated at most once. Unlike the `lazy` macro, however, `interned` does not created a memoizing thunk that you can pass around your program; instead, the memoization is done on a *per-use-site* basis.
 
-As you can see in the example above, although `wrapper_func` is called repeatedly, the `func()` call within the `interned` block is only ever evaluated once. This is handy in that it gives you a mechanism for memoizing a particular computation without worrying about finding a place to store the memoized values. It's just memoized globally (often what you want) while being scoped locally, which avoids polluting the global namespace with names only relevant to a single function (also often what you want).
+As you can see in the example above, although `func` is called repeatedly, the `expensive_func()` call within the `interned` block is only ever evaluated once. This is handy in that it gives you a mechanism for memoizing a particular computation without worrying about finding a place to store the memoized values. It's just memoized globally (often what you want) while being scoped locally, which avoids polluting the global namespace with names only relevant to a single function (also often what you want).
 
 String Interpolation
 --------------------
