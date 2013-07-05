@@ -1,4 +1,4 @@
-from macropy.case_classes import macros, case, enum
+from macropy.case_classes import macros, case, enum, enum_new
 from macropy.tracing import macros, show_expanded
 import unittest
 
@@ -141,13 +141,16 @@ class Tests(unittest.TestCase):
         p = Point(1, 2)
         x, y = p
 
+
     def test_enum(self):
-        with show_expanded:
-            @enum
-            class Direction:
-                North, South, East, West
-        """
+
+        @enum
+        class Direction:
+            North, South, East, West
+        #Direction.__new__ = enum_new
+        #Direction.__init__ = lambda *args, **kw: None
         # selecting by-name
+
         assert Direction(name="North") is Direction.North
 
         # getting name
@@ -174,8 +177,9 @@ class Tests(unittest.TestCase):
             Direction.East,
             Direction.West
         ]
-        """
-    """
+
+
+
     def test_multiline_enum(self):
         @enum
         class Direction:
@@ -191,8 +195,8 @@ class Tests(unittest.TestCase):
         @enum
         class Direction(alignment):
             North("Vertical")
-            South("Vertical")
             East("Horizontal")
+            South("Vertical")
             West("Horizontal")
 
             @property
@@ -211,4 +215,3 @@ class Tests(unittest.TestCase):
 
         # methods
         assert Direction.South.padded_name(2) == "  South  "
-    """
