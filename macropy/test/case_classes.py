@@ -194,11 +194,11 @@ class Tests(unittest.TestCase):
 
     def test_complex_enum(self):
         @enum
-        class Direction(alignment):
-            North("Vertical")
-            East("Horizontal")
-            South("Vertical")
-            West("Horizontal")
+        class Direction(alignment, continents):
+            North("Vertical", ["Northrend"])
+            East("Horizontal", ["Azeroth", "Khaz Modan", "Lordaeron"])
+            South("Vertical", ["Pandaria"])
+            West("Horizontal", ["Kalimdor"])
 
             @property
             def opposite(self):
@@ -209,7 +209,7 @@ class Tests(unittest.TestCase):
 
         # members
         assert Direction.North.alignment == "Vertical"
-        assert Direction.East.alignment == "Horizontal"
+        assert Direction.East.continents == ["Azeroth", "Khaz Modan", "Lordaeron"]
 
         # properties
         assert Direction.North.opposite is Direction.South
