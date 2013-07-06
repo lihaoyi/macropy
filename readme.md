@@ -440,11 +440,11 @@ The basic rule here is that the body of an Enum can only contain bare names, fun
 ###Complex Enums
 ```python
 @enum
-class Direction(alignment, continent):
-    North("Vertical", "Northrend")
-    East("Horizontal", "Azeroth")
-    South("Vertical", "Pandaria")
-    West("Horizontal", "Kalimdor")
+class Direction(alignment, continents):
+    North("Vertical", ["Northrend"])
+    East("Horizontal", ["Azeroth", "Khaz Modan", "Lordaeron"])
+    South("Vertical", ["Pandaria"])
+    West("Horizontal", ["Kalimdor"])
 
     @property
     def opposite(self):
@@ -455,7 +455,7 @@ class Direction(alignment, continent):
 
 # members
 print Direction.North.alignment # Vertical
-print Direction.East.continent  # Azeroth
+print Direction.East.continent  # ["Azeroth", "Khaz Modan", "Lordaeron"]
 
 # properties
 print Direction.North.opposite  # Direction.South
