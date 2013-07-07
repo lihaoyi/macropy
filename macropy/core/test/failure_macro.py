@@ -9,7 +9,7 @@ def f(tree, gen_sym, **kw):
 
 @macros.expr
 def g(tree, gen_sym, **kw):
-    raise MacroExpansionError("i am a cow")
+    assert False, "i am a cow"
 
 @macros.block
 def h(tree, gen_sym, **kw):

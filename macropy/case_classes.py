@@ -207,7 +207,7 @@ def case(tree, gen_sym, **kw):
 
 
 @macros.decorator
-def enum(tree, gen_sym, **kw):
+def enum(tree, gen_sym, exact_src, **kw):
 
     count = [0]
     new_assigns = []
@@ -235,14 +235,17 @@ def enum(tree, gen_sym, **kw):
     assert all(type(x) in (Expr, FunctionDef) for x in tree.body)
 
     for stmt in tree.body:
-        if type(stmt) is Expr:
-            assert type(stmt.value) in (Tuple, Name, Call)
-            if type(stmt.value) is Tuple:
-                map(handle, stmt.value.elts)
+        try:
+            if type(stmt) is Expr:
+                assert type(stmt.value) in (Tuple, Name, Call)
+                if type(stmt.value) is Tuple:
+                    map(handle, stmt.value.elts)
+                else:
+                    handle(stmt.value)
             else:
-                handle(stmt.value)
-        else:
-            new_body.append(stmt)
+                new_body.append(stmt)
+        except AssertionError as e:
+            assert False, "Can't have %s in body of enum" % unparse(stmt).strip("\n")
 
     tree.body = new_body + [Pass()]
 

@@ -216,3 +216,16 @@ class Tests(unittest.TestCase):
 
         # methods
         assert Direction.South.padded_name(2) == "  South  "
+
+    def test_enum_error(self):
+        with self.assertRaises(AssertionError) as e:
+            @enum
+            class Direction:
+                2
+        assert e.exception.message == "Can't have 2 in body of enum"
+
+        with self.assertRaises(AssertionError) as e:
+            @enum
+            class Direction:
+                a()(b)
+        assert e.exception.message == "Can't have a()(b) in body of enum"
