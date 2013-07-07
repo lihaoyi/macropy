@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.0.3
+-----
+- Error messages are now raised at run-time rather than at import time, with other improvements.
+- `@enum` macro now has much better error messages
+
 1.0.2
 -----
 - Removed unit test from PyPI distribution
