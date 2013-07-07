@@ -1,4 +1,5 @@
 from macropy.case_classes import macros, case, enum, enum_new
+from macropy.core.failure import MacroExpansionError
 from macropy.tracing import macros, show_expanded
 import unittest
 
@@ -218,13 +219,13 @@ class Tests(unittest.TestCase):
         assert Direction.South.padded_name(2) == "  South  "
 
     def test_enum_error(self):
-        with self.assertRaises(AssertionError) as e:
+        with self.assertRaises(MacroExpansionError) as e:
             @enum
             class Direction:
                 2
         assert e.exception.message == "Can't have 2 in body of enum"
 
-        with self.assertRaises(AssertionError) as e:
+        with self.assertRaises(MacroExpansionError) as e:
             @enum
             class Direction:
                 a()(b)
