@@ -232,8 +232,6 @@ def enum(tree, gen_sym, exact_src, **kw):
             new_assigns.append(Assign([self_ref], expr))
             count[0] += 1
 
-    assert all(type(x) in (Expr, FunctionDef) for x in tree.body)
-
     for stmt in tree.body:
         try:
             if type(stmt) is Expr:
@@ -242,10 +240,13 @@ def enum(tree, gen_sym, exact_src, **kw):
                     map(handle, stmt.value.elts)
                 else:
                     handle(stmt.value)
-            else:
+            elif type(stmt) is FunctionDef:
                 new_body.append(stmt)
+            else:
+                assert False
+
         except AssertionError as e:
-            assert False, "Can't have %s in body of enum" % unparse(stmt).strip("\n")
+            assert False, "Can't have `%s` in body of enum" % unparse(stmt).strip("\n")
 
     tree.body = new_body + [Pass()]
 

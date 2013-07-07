@@ -8,6 +8,7 @@ def activate():
     import core.cleanup
     import core.exact_src
     import core.gen_sym
+
     import core.import_hooks
     import sys
     sys.meta_path.append(core.import_hooks.MacroFinder)
@@ -15,17 +16,11 @@ def activate():
     import core.failure
 
 def console():
-    import core.macros
-    import core.cleanup
-    import core.exact_src
-    import core.gen_sym
-
     from macropy.core.console import MacroConsole
-
     MacroConsole().interact("0=[]=====> MacroPy Enabled <=====[]=0")
 
 
 import core.exporters
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 exporter = core.exporters.NullExporter()

@@ -223,10 +223,10 @@ class Tests(unittest.TestCase):
             @enum
             class Direction:
                 2
-        assert e.exception.message == "Can't have 2 in body of enum"
+        assert e.exception.message == "Can't have `2` in body of enum"
 
         with self.assertRaises(MacroExpansionError) as e:
             @enum
             class Direction:
                 a()(b)
-        assert e.exception.message == "Can't have a()(b) in body of enum"
+        assert e.exception.message == "Can't have `a()(b)` in body of enum"

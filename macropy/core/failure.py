@@ -15,7 +15,6 @@ def raise_error(ex):
 @register(filters)
 def clear_errors(tree, **kw):
     if isinstance(tree, Exception):
-
         tb = traceback.format_exc()
         msg = tree.message
         if type(tree) is not AssertionError or tree.args == ():
