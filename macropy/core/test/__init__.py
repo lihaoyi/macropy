@@ -44,6 +44,13 @@ else:
                 failure.run2()
             assert ce.exception.message == "i am a cow"
 
+            #with self.assertRaises(Exception) as ce:
+            with self.assertRaises(Exception):
+                failure.run3()
+
+            #with self.assertRaises(Exception) as ce:
+            with self.assertRaises(Exception):
+                failure.run4()
 Tests = test_suite(cases = [
     quotes,
     unparse,

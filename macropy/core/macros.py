@@ -105,7 +105,6 @@ def expand_entire_ast(tree, src, bindings):
                         **dict(kwargs.items() + file_vars.items())
                     )
 
-
                 return new_tree
             elif isinstance(macro_tree, Call):
                 args.extend(macro_tree.args)
@@ -123,7 +122,6 @@ def expand_entire_ast(tree, src, bindings):
                     while type(t) is list:
                         t = t[0]
 
-
                     (t.lineno, t.col_offset) = pos
                 return new_tree
             return run
@@ -135,7 +133,10 @@ def expand_entire_ast(tree, src, bindings):
                 assert isinstance(tree.body, list), real_repr(tree.body)
                 new_tree = expand_if_in_registry(tree.context_expr, tree.body, [], block_registry, target=tree.optional_vars)
 
+
                 if new_tree:
+                    if isinstance(new_tree, expr):
+                        new_tree = [Expr(new_tree)]
                     assert isinstance(new_tree, list), type(new_tree)
                     return macro_expand(new_tree)
 
@@ -164,8 +165,11 @@ def expand_entire_ast(tree, src, bindings):
                         if type(tree) is list:
                             additions = tree[1:]
                             tree = tree[0]
-
-                tree.decorator_list = seen_decs
+                        elif isinstance(tree, expr):
+                            tree = [Expr(tree)]
+                            break
+                if type(tree) is ClassDef or type(tree) is FunctionDef:
+                    tree.decorator_list = seen_decs
                 if len(additions) == 0:
                     return tree
                 else:
