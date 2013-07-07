@@ -83,13 +83,16 @@ def expand_entire_ast(tree, src, bindings):
             if isinstance(macro_tree, Name) and macro_tree.id in registry:
 
                 (the_macro, the_module) = registry[macro_tree.id]
-                new_tree = the_macro(
-                    tree=body_tree,
-                    args=args,
-                    src=src,
-                    expand_macros=expand_macros,
-                    **dict(kwargs.items() + file_vars.items())
-                )
+                try:
+                    new_tree = the_macro(
+                        tree=body_tree,
+                        args=args,
+                        src=src,
+                        expand_macros=expand_macros,
+                        **dict(kwargs.items() + file_vars.items())
+                    )
+                except Exception as e:
+                    new_tree = e
 
                 for filter in reversed(filters):
                     new_tree = filter(
@@ -258,6 +261,4 @@ def check_annotated(tree):
 
 
 # import other modules in order to register their hooks
-import cleanup
-import exact_src
-import gen_sym
+

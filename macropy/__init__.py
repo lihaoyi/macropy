@@ -4,13 +4,24 @@ required for macros to run properly"""
 
 
 def activate():
+    import core.macros
+    import core.cleanup
+    import core.exact_src
+    import core.gen_sym
     import core.import_hooks
     import sys
     sys.meta_path.append(core.import_hooks.MacroFinder)
-
+    import core.hquotes
+    import core.failure
 
 def console():
+    import core.macros
+    import core.cleanup
+    import core.exact_src
+    import core.gen_sym
+
     from macropy.core.console import MacroConsole
+
     MacroConsole().interact("0=[]=====> MacroPy Enabled <=====[]=0")
 
 
