@@ -8,22 +8,41 @@ from ast import *
 from util import *
 from walkers import *
 
+class WrappedFunction(object):
+    """Wraps a function which is meant to be handled (and removed) by macro
+    expansion, and never called directly with square brackets."""
 
-class MacroFunction(object):
-    """Wraps a macro-function, to provide nicer error-messages in the common
-    case where the macro is imported but macro-expansion isn't triggered"""
-    def __init__(self, func):
+    def __init__(self, func, msg):
         self.func = func
+        self.msg = msg
+        import functools
+        functools.update_wrapper(self, func)
 
     def __call__(self, *args, **kwargs):
         return self.func(*args, **kwargs)
 
     def __getitem__(self, i):
-        raise TypeError(
-            "Macro `%s` illegally invoked at runtime; did you import it "
-            "properly using `from ... import macros, %s`?"
-            % (self.func.func_name, self.func.func_name)
-        )
+        raise TypeError(self.msg.replace("%s", self.func.__name__))
+
+
+def macro_function(func):
+    """Wraps a function, to provide nicer error-messages in the common
+    case where the macro is imported but macro-expansion isn't triggered"""
+    return WrappedFunction(
+        func,
+        "Macro `%s` illegally invoked at runtime; did you import it "
+        "properly using `from ... import macros, %s`?"
+    )
+
+
+def macro_stub(func):
+    """Wraps a function that is a stub meant to be used by macros but never
+    called directly."""
+    return WrappedFunction(
+        func,
+        "Stub `%s` illegally invoked at runtime; is it used "
+        "properly within a macro?"
+    )
 
 
 class Macros(object):
@@ -59,9 +78,9 @@ class Macros(object):
 
     def __init__(self):
         # Different kinds of macros
-        self.expr = Macros.Registry(MacroFunction)
-        self.block = Macros.Registry(MacroFunction)
-        self.decorator = Macros.Registry(MacroFunction)
+        self.expr = Macros.Registry(macro_function)
+        self.block = Macros.Registry(macro_function)
+        self.decorator = Macros.Registry(macro_function)
 
         self.expose_unhygienic = Macros.Registry()
 
@@ -137,6 +156,7 @@ def expand_entire_ast(tree, src, bindings):
                 if new_tree:
                     if isinstance(new_tree, expr):
                         new_tree = [Expr(new_tree)]
+                    if isinstance(new_tree, Exception): raise new_tree
                     assert isinstance(new_tree, list), type(new_tree)
                     return macro_expand(new_tree)
 

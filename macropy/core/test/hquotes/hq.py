@@ -1,4 +1,4 @@
-from macropy.core.test.hquotes.hq_macro import macros, expand, expand_unhygienic
+from macropy.core.test.hquotes.hq_macro import macros, expand, expand_unhygienic, unhygienic
 
 double = "double"
 value = 1
@@ -16,3 +16,6 @@ def run3():
     with expand_unhygienic:
         x = x + 1
     return x
+
+def run_error():
+    unhygienic[10]

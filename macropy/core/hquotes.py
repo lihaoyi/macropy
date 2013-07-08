@@ -7,8 +7,8 @@ from macropy.core.quotes import macros, q, unquote_search, u, ast, ast_list, nam
 
 macros = Macros()
 
-@singleton
-class unhygienic():
+@macro_stub
+def unhygienic():
     """Used to delimit a section of a hq[...] that should not be hygienified"""
 
 from macros import filters, injected_vars, post_processing
@@ -59,7 +59,6 @@ def hygienate(tree, captured_registry, gen_sym, **kw):
             else:
                 new_sym = new_sym[0]
             return Name(new_sym, Load())
-
 
     return hygienator.recurse(tree)
 

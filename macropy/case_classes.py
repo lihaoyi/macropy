@@ -78,7 +78,7 @@ def enum_new(cls, **kw):
 def noop_init(*args, **kw):
     pass
 
-def extract_args(init_fun, bases):
+def extract_args(bases):
     args = []
     vararg = None
     kwarg = None
@@ -86,14 +86,18 @@ def extract_args(init_fun, bases):
     for base in bases:
         if type(base) is Name:
             args.append(base.id)
-        if type(base) is List:
+
+        elif type(base) is List:
             vararg = base.elts[0].id
 
-        if type(base) is Set:
+        elif type(base) is Set:
             kwarg = base.elts[0].id
-        if type(base) is BinOp and type(base.op) is BitOr:
+
+        elif type(base) is BinOp and type(base.op) is BitOr:
             args.append(base.left.id)
             defaults.append(base.right)
+        else:
+            assert False, "Illegal expression in case class signature: " + unparse(base)
 
     all_args = args[:]
     if vararg:
@@ -169,11 +173,15 @@ def shared_transform(tree, gen_sym, additional_args=[]):
 
     init_fun, set_fields, set_varargs, set_kwargs, set_slots, = methods
 
-    args, vararg, kwarg, defaults, all_args = extract_args(init_fun, [Name(id=x) for x in additional_args] + tree.bases)
+    args, vararg, kwarg, defaults, all_args = extract_args(
+        [Name(id=x) for x in additional_args] + tree.bases
+    )
+
     if vararg:
         set_varargs.value = Str(vararg)
     if kwarg:
         set_kwargs.value = Str(kwarg)
+
     additional_members = find_member_assignments.collect(tree.body)
     prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args)
     set_fields.value.elts = map(Str, args)
@@ -182,6 +190,7 @@ def shared_transform(tree, gen_sym, additional_args=[]):
     init_fun.body.extend(init_body)
     tree.body = new_body
     tree.body = methods + tree.body
+
     return outer
 
 

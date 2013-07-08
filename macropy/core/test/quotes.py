@@ -75,3 +75,12 @@ class Tests(unittest.TestCase):
         a, b = None, None
         exec(unparse(code))
         assert(c == [None, 10, 'a', 'b', 'c'])
+
+    def test_bad_unquote_error(self):
+        with self.assertRaises(TypeError) as ce:
+            x = u[10]
+
+        assert ce.exception.message == (
+            "Stub `u` illegally invoked at runtime; "
+            "is it used properly within a macro?"
+        )

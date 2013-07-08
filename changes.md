@@ -3,8 +3,10 @@ Changelog
 
 1.0.3
 -----
-- Error messages are now raised at run-time rather than at import time, with other improvements.
+- Error messages are now raised at run-time rather than at import time, with other improvements (double stack traces, catchability).
 - `@enum` macro now has much better error messages
+- Improved error messages for mis-use of stub functions outside their related macro
+- Improved error messages for invalid case class signatures
 
 1.0.2
 -----

@@ -143,6 +143,15 @@ class Tests(unittest.TestCase):
         x, y = p
 
 
+    def test_definition_error(self):
+        with self.assertRaises(MacroExpansionError) as ce:
+            @case
+            class Point(1 + 2):
+                pass
+        assert ce.exception.message == (
+            "Illegal expression in case class signature: (1 + 2)"
+        )
+
     def test_enum(self):
 
         @enum
