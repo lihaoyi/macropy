@@ -1,4 +1,4 @@
-MacroPy 1.0.2
+MacroPy 1.0.3
 =============
 **MacroPy** is an implementation of [Syntactic Macros](http://tinyurl.com/cmlls8v) in the [Python Programming Language](http://python.org/). MacroPy provides a mechanism for user-defined functions (macros) to perform transformations on the [abstract syntax tree](http://en.wikipedia.org/wiki/Abstract_syntax_tree) (AST) of a Python program at _import time_. This is an easy way to enhance the semantics of a Python program in ways which are otherwise impossible, for example providing an extremely concise way of declaring classes:
 
