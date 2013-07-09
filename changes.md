@@ -5,8 +5,9 @@ Changelog
 -----
 - Error messages are now raised at run-time rather than at import time, with other improvements (double stack traces, catchability).
 - `@enum` macro now has much better error messages
-- Improved error messages for mis-use of stub functions outside their related macro
+- Improved error messages for mis-use of stub functions outside their related macro (e.g. the `u`, `name`, `ast` stubs for the `q`/`hq` macros)
 - Improved error messages for invalid case class signatures
+- Hygienic Quasiquotes now allow lexical capture of module objects
 
 1.0.2
 -----

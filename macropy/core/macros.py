@@ -8,6 +8,12 @@ from ast import *
 from util import *
 from walkers import *
 
+
+# Monkey Patching pickle to pickle module objects properly
+import pickle
+pickle.Pickler.dispatch[type(pickle)] = pickle.Pickler.save_global
+
+
 class WrappedFunction(object):
     """Wraps a function which is meant to be handled (and removed) by macro
     expansion, and never called directly with square brackets."""

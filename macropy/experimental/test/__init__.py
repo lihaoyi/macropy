@@ -8,7 +8,7 @@ import pyxl_snippets
 Tests = test_suite(cases = [
     #js_snippets,
     #pattern,
-    #pinq,
+    pinq,
     pyxl_snippets,
     #tco_test
 ])

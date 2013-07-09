@@ -2,13 +2,13 @@ from ast import Call
 
 from macropy.core.macros import *
 from macropy.core.hquotes import macros, hq, ast, name, ast_list
-from macropy.quick_lambda import macros, f
+from macropy.quick_lambda import macros, f, _
 import sqlalchemy
 
 macros = Macros()
 
 # workaround for inability to pickle modules
-select = sqlalchemy.select
+
 
 
 @macros.expr
@@ -48,7 +48,7 @@ def process(tree):
             else:
                 sel = hq[[ast[elt]]]
 
-            out = hq[select(ast[sel])]
+            out = hq[sqlalchemy.select(ast[sel])]
 
             for gen in tree.generators:
                 for cond in gen.ifs:
