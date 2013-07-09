@@ -48,6 +48,7 @@ The [Reference Documentation](#reference) contains information about:
 - [Quasiquotes](#quasiquotes), a quick way to manipulate AST fragments
 - [Walkers](#walkers), a flexible tool to traverse and transform ASTs
 - [Hygiene](#hygiene), how to avoid weird bugs related to name collisions and shadowing
+- [Expansion Failures](#expansion-failures), what happens when a macro doesn't work.
 - [Expansion Order](#expansion-order) of nested macros with a file
 - [Line Numbers](#line-numbers), or what errors you get when something goes wrong.
 
@@ -3153,6 +3154,90 @@ In general, MacroPy does not enforce hygiene on the macros you write; it is enti
 
 Nonetheless, by providing `gen_sym` and the `hq` hygienic quasiquote macro, MacroPy makes it trivially easy to have hygiene. `gen_sym` provides a way of creating temporary names which are guaranteed not to collide with names already in use, and hygienic quasiquotes take it a step further and allow you to directly reference anything in scope at the macro definition point without having to worry about things like name collisions or fiddling with imports. These tools should be sufficient to make your macros hygienic, and are used throughout the suite of macros bundled with MacroPy.
 
+
+Expansion Failures
+------------------
+```python
+>>> import macropy.console
+0=[]=====> MacroPy Enabled <=====[]=0
+>>> from macropy.case_classes import macros, enum
+>>> @enum
+... class X:
+...     1 + 2
+...
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "macropy\core\failure.py", line 13, in raise_error
+    raise ex
+MacroExpansionError: Can't have `(1 + 2)` in body of enum
+```
+Macros can fail for a variety of reasons. Chief among them is that the macro contains a bug, which causes an uncaught exception to occur at run-time, but there are other scenarios, for example the user of the macro violating the contract of that macro. In the above example, the `enum` macro only allows instance definitions and method definitions in the body of the enumeration, and the macro therefore fails with a helpful error message to allow the user to rectify the problem.
+
+The errors thrown by failed macros are just normal exceptions, and can be caught just like any others:
+
+```python
+>>> try:
+...     @enum
+...     class X:
+...         1 + 2
+... except:
+...     print "caught!"
+...
+caught!
+```
+
+Macros that fail "naturally", e.g. because of an uncaught exception, have an added benefit: their error message will contain the stack trace of both the original error (deep within the code of the macro) and the point where the macro was used, to help in the debugging effort:
+
+```python
+# macropy/core/test/failure_macro.py
+from macropy.core.failure import MacroExpansionError
+from macropy.core.macros import *
+
+macros = Macros()
+
+@macros.expr
+def f(tree, gen_sym, **kw):
+    raise Exception("i am a cow")
+```
+```python
+>>> from macropy.core.test.failure_macro import macros, f
+>>> def failing_func():
+...     return f[10]
+...
+>>> failing_func()
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "<console>", line 2, in failing_func
+  File "macropy\core\failure.py", line 13, in raise_error
+    raise ex
+MacroExpansionError: i am a cow
+Caused by Macro-Expansion Error:
+Traceback (most recent call last):
+  File "macropy\core\macros.py", line 117, in expand_if_in_registry
+    **dict(kwargs.items() + file_vars.items())
+  File "macropy\core\macros.py", line 28, in __call__
+    return self.func(*args, **kwargs)
+  File "macropy\core\test\failure_macro.py", line 8, in f
+    raise Exception("i am a cow")
+Exception: i am a cow
+```
+
+###Implementation of Failures
+MacroPy accomplishes this by performing a wrapping a catch-all block around every macro invocation. This block intercepts the exception, and rather than allowing it to terminate the import process, serializes and returns a snippet in place of the expanded AST (the expansion failed afterall) that will re-raise the exception at run-time. This is what allows the magical transfer of exceptions from expansion-time to run-time, so they can be dealt with by normal means at the macro call-site instead of bubbling up from the import-site of the error-inducing file.
+
+MacroPy also appends the expansion-time stack-trace of the exception onto the exception's `message`, providing much more information to help the programmer debug the problem. In order to avoid swamping the programmer with irrelevant details when the macro's failure is expected, MacroPy special cases macros of the form:
+
+```python
+AssertionError("...")
+```
+
+That is, `AssertionError`s with a non-empty `message`, to ignore the expansion-time stack trace and only provide the run-time stack trace when the exception is finally thrown. This means that the macro-writer can use statements like:
+
+```python
+assert False, "Can't have `%s` in body of enum" % unparse(stmt).strip("\n")
+```
+
+To provide friendly, custom error messages to the macro-user in the cases where the failure of the macro was anticipated.
 
 Expansion Order
 ---------------
