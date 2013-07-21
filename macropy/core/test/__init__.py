@@ -3,13 +3,7 @@ from macropy.test import test_suite
 
 
 
-import quotes
-import unparse
-import walkers
-import macros
-import hquotes
-import exporters
-import analysis
+
 class Cases:
     class Tests(unittest.TestCase):
         def test_exact_src(self):
@@ -51,6 +45,14 @@ else:
             #with self.assertRaises(Exception) as ce:
             with self.assertRaises(Exception):
                 failure.run4()
+
+import quotes
+import unparse
+import walkers
+import macros
+import hquotes
+import exporters
+import analysis
 Tests = test_suite(cases = [
     quotes,
     unparse,

@@ -1,55 +1,56 @@
-"""Implementation of Walkers, a nice way of transforming and traversing ASTs.
+"""Implementation of Walkers, a nice way of transforming and traversing ASTs."""
 
-@Walker decorates a function of the form:
-
-@Walker
-def transform(tree, **kw):
-    ...
-    return new_tree
-
-
-Which is used via:
-
-new_tree = transform.recurse(old_tree, initial_ctx)
-new_tree = transform.recurse(old_tree)
-new_tree, collected = transform.recurse_collect(old_tree, initial_ctx)
-new_tree, collected = transform.recurse_collect(old_tree)
-collected = transform.collect(old_tree, initial_ctx)
-collected = transform.collect(old_tree)
-
-The `transform` function takes the tree to be transformed, in addition to
-a set of `**kw` which provides additional functionality:
-
-- `ctx`: this is the value that is (optionally) passed in to the `recurse`
-  and `recurse_collect` methods.
-- `set_ctx`: this is a function, used via `set_ctx(new_ctx)` anywhere in
-  `transform`, which will cause any children of `tree` to receive `new_ctx`
-  as their `ctx` variable.
-- `collect`: this is a function used via `collect(thing)`, which adds
-  `thing` to the `collected` list returned by `recurse_collect`.
-- `stop`: when called via `stop()`, this prevents recursion on children
-  of the current tree.
-
-These additional arguments can be declared in the signature, e.g.:
-
-@Walker
-def transform(tree, ctx, set_ctx, **kw):
-    ... do stuff with ctx ...
-    set_ctx(...)
-    return new_tree
-
-for ease of use.
-"""
 from macropy.core import *
 from ast import *
 
 
 class Walker(object):
+    """
+    @Walker decorates a function of the form:
 
+    @Walker
+    def transform(tree, **kw):
+        ...
+        return new_tree
+
+
+    Which is used via:
+
+    new_tree = transform.recurse(old_tree, initial_ctx)
+    new_tree = transform.recurse(old_tree)
+    new_tree, collected = transform.recurse_collect(old_tree, initial_ctx)
+    new_tree, collected = transform.recurse_collect(old_tree)
+    collected = transform.collect(old_tree, initial_ctx)
+    collected = transform.collect(old_tree)
+
+    The `transform` function takes the tree to be transformed, in addition to
+    a set of `**kw` which provides additional functionality:
+
+
+    - `set_ctx`: this is a function, used via `set_ctx(name=value)` anywhere in
+      `transform`, which will cause any children of `tree` to receive `name` as
+      an argument with a value `value.
+    - `set_ctx_for`: this is similar to `set_ctx`, but takes an additional
+      parameter `tree` (i.e. `set_ctx_for(tree, name=value)`) and `name` is
+      only injected into the parameter list of `transform` when `tree` is the
+      AST snippet being transformed.
+    - `collect`: this is a function used via `collect(thing)`, which adds
+      `thing` to the `collected` list returned by `recurse_collect`.
+    - `stop`: when called via `stop()`, this prevents recursion on children
+      of the current tree.
+
+    These additional arguments can be declared in the signature, e.g.:
+
+    @Walker
+    def transform(tree, ctx, set_ctx, **kw):
+        ... do stuff with ctx ...
+        set_ctx(...)
+        return new_tree
+
+    for ease of use.
+    """
     def __init__(self, func):
         self.func = func
-
-        self.prep = lambda tree: {}
 
     def walk_children(self, tree, sub_kw=[], **kw):
         if isinstance(tree, AST):
@@ -64,7 +65,7 @@ class Walker(object):
                     if item is old_value
                     for k, v in kws.items()
                 ]
-                new_value, new_aggregate = self.recurse_collect(old_value, sub_kw, external=False, **dict(kw.items() + specific_sub_kw))
+                new_value, new_aggregate = self.recurse_collect(old_value, sub_kw, **dict(kw.items() + specific_sub_kw))
                 aggregates.extend(new_aggregate)
                 setattr(tree, field, new_value)
 
@@ -75,7 +76,7 @@ class Walker(object):
             new_tree = []
 
             for t in tree:
-                new_t, new_a = self.recurse_collect(t, sub_kw, external=False, **kw)
+                new_t, new_a = self.recurse_collect(t, sub_kw, **kw)
                 if type(new_t) is list:
                     new_tree.extend(new_t)
                 else:
@@ -90,17 +91,16 @@ class Walker(object):
 
     def recurse(self, tree, **kw):
         """Traverse the given AST and return the transformed tree."""
-        return self.recurse_collect(tree, external=True, **kw)[0]
+        return self.recurse_collect(tree, **kw)[0]
 
     def collect(self, tree, **kw):
         """Traverse the given AST and return the transformed tree."""
-        return self.recurse_collect(tree, external=True, **kw)[1]
+        return self.recurse_collect(tree, **kw)[1]
 
-    def recurse_collect(self, tree, sub_kw=[], external=True, **kw):
+    def recurse_collect(self, tree, sub_kw=[], **kw):
         """Traverse the given AST and return the transformed tree together
         with any values which were collected along with way."""
-        if external:
-            kw.update(self.prep(tree))
+
         if isinstance(tree, AST) or type(tree) is Literal or type(tree) is Captured:
             aggregates = []
             stop_now = [False]
@@ -110,7 +110,6 @@ class Walker(object):
 
 
             new_ctx = dict(**kw)
-            new_ctx
             new_ctx_for = sub_kw[:]
 
             def set_ctx(**new_kw):

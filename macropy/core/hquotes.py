@@ -3,7 +3,7 @@ than their expansion scope."""
 from macropy.core.macros import *
 
 from macropy.core.quotes import macros, q, unquote_search, u, ast, ast_list, name
-from macropy.core.analysis import with_scope
+from macropy.core.analysis import Scoped
 
 macros = Macros()
 
@@ -81,7 +81,7 @@ def hq(tree, **kw):
     return tree
 
 
-@with_scope
+@Scoped
 @Walker
 def hygienator(tree, stop, scope, **kw):
     if type(tree) is Name and \

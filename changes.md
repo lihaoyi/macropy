@@ -3,7 +3,7 @@ Changelog
 
 1.0.X
 -----
-- Basic scope analysis now available in the form of the `@with_scope` decorator, to be used in conjunction with `@Walker`.
+- Basic scope analysis now available in the form of the `@Scoped` decorator, to be used in conjunction with `@Walker`.
 
 1.0.3
 -----

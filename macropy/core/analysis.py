@@ -1,6 +1,7 @@
 from walkers import *
 from macropy.core import merge_dicts
 
+__all__ = ['Scoped']
 @Walker
 def find_names(tree, collect, stop, **kw):
     if type(tree) in [Attribute, Subscript]:
@@ -25,14 +26,34 @@ def extract_arg_names(args):
         [pair for x in args.args for pair in find_names.collect(x)]
     )
 
+class Scoped(Walker):
+    """
+    Used in conjunction with `@Walker`, via
 
-def with_scope(walker):
+    @Scoped
+    @Walker
+    def my_func(tree, scope, **kw):
+        ...
 
-    walker.prep = lambda tree: dict(scope=dict(find_assignments.collect(tree)))
-    old_func = walker.func
+    This decorator wraps the `Walker` and injects in a `scope` argument into
+    the function. This argument is a dictionary of names which are in-scope
+    in the present `tree`s environment, starting from the `tree` on which the
+    recursion was start.
 
-    def new_func(tree, set_ctx_for, scope, **kw):
+    This can be used to track the usage of a name binding through the AST
+    snippet, and detecting when the name gets shadowed by a more tightly scoped
+    name binding.
+    """
 
+    def __init__(self, walker):
+        self.walker = walker
+
+    def recurse_collect(self, tree, sub_kw=[], **kw):
+
+        kw['scope'] = kw.get('scope', dict(find_assignments.collect(tree)))
+        return Walker.recurse_collect(self, tree, sub_kw, **kw)
+
+    def func(self, tree, set_ctx_for, scope, **kw):
         def extend_scope(tree, *dicts, **kw):
             new_scope = merge_dicts(*([scope] + list(dicts)))
             if "remove" in kw:
@@ -77,7 +98,9 @@ def with_scope(walker):
         if type(tree) is For:
             extend_scope(tree.body, dict(find_names.collect(tree.target)))
 
-        return old_func(tree, set_ctx_for=set_ctx_for, scope=scope, **kw)
-
-    walker.func = new_func
-    return walker
+        return self.walker.func(
+            tree,
+            set_ctx_for=set_ctx_for,
+            scope=scope,
+            **kw
+        )

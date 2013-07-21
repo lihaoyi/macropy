@@ -1,7 +1,7 @@
 """Macro providing an extremely concise way of declaring classes"""
 from macropy.core.macros import *
 from macropy.core.hquotes import macros, hq, name, unhygienic, u
-from macropy.core.analysis import with_scope
+from macropy.core.analysis import Scoped
 macros = Macros()
 
 def apply(f):
@@ -109,7 +109,7 @@ def extract_args(bases):
 
 
 def find_members(tree, name):
-    @with_scope
+    @Scoped
     @Walker
     def find_member_assignments(tree, collect, stop, scope, **kw):
         if name in scope.keys():

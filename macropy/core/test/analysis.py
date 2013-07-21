@@ -1,10 +1,10 @@
 import unittest
 from walkers import Walker
-from macropy.core.analysis import with_scope
+from macropy.core.analysis import Scoped
 from macropy.core import *
 import ast
 
-@with_scope
+@Scoped
 @Walker
 def scoped(tree, scope, collect, **kw):
     try:
