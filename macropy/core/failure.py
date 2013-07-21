@@ -1,3 +1,6 @@
+"""Transform macro expansion errors into runtime errors with nice stack traces.
+T"""
+
 from macropy.core.macros import *
 
 from macropy.core.hquotes import macros, hq

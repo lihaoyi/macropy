@@ -289,6 +289,3 @@ def check_annotated(tree):
                     type(tree.value) is Name:
         return tree.value.id, tree.slice.value
 
-
-# import other modules in order to register their hooks
-
