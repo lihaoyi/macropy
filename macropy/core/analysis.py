@@ -20,15 +20,15 @@ def find_assignments(tree, collect, stop, **kw):
 
 def extract_arg_names(args):
     return dict(
-        ([(args.vararg.id, args.vararg)] if args.vararg else []) +
-        ([(args.kwarg.id, args.kwarg)] if args.kwarg else []) +
+        ([(args.vararg, args.vararg)] if args.vararg else []) +
+        ([(args.kwarg, args.kwarg)] if args.kwarg else []) +
         [pair for x in args.args for pair in find_names.collect(x)]
     )
 
 
 def with_scope(func):
-    def new_func(tree, set_ctx_for, scope={}, **kw):
 
+    def new_func(tree, set_ctx, set_ctx_for, scope={}, **kw):
         if type(tree) is Lambda:
             set_ctx_for(tree.body, scope=merge_dicts(scope, extract_arg_names(tree.args)))
 

@@ -97,7 +97,8 @@ class Walker(object):
     def recurse_collect(self, tree, sub_kw=[], **kw):
         """Traverse the given AST and return the transformed tree together
         with any values which were collected along with way."""
-
+        if hasattr(self.func, "start"):
+            print "LOLOL"
         if isinstance(tree, AST) or type(tree) is Literal or type(tree) is Captured:
             aggregates = []
             stop_now = [False]
