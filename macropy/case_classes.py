@@ -1,7 +1,7 @@
 """Macro providing an extremely concise way of declaring classes"""
 from macropy.core.macros import *
 from macropy.core.hquotes import macros, hq, name, unhygienic, u
-
+from macropy.core.analysis import with_scope
 macros = Macros()
 
 def apply(f):
@@ -108,19 +108,21 @@ def extract_args(bases):
     return args, vararg, kwarg, defaults, all_args
 
 
-@Walker
-def find_member_assignments(tree, collect, stop, **kw):
-    if type(tree) in [GeneratorExp, Lambda, ListComp, DictComp, SetComp, FunctionDef, ClassDef]:
-        stop()
-    if type(tree) is Assign:
-        self_assigns = [
-            t.attr for t in tree.targets
-            if type(t) is Attribute
-            and type(t.value) is Name
-            and t.value.id == "self"
-        ]
-        map(collect, self_assigns)
-
+def find_members(tree, name):
+    @Walker
+    @with_scope
+    def find_member_assignments(tree, collect, stop, scope, **kw):
+        if name in scope.keys():
+            stop()
+        elif type(tree) is Assign:
+            self_assigns = [
+                t.attr for t in tree.targets
+                if type(t) is Attribute
+                and type(t.value) is Name
+                and t.value.id == name
+            ]
+            map(collect, self_assigns)
+    return find_member_assignments.collect(tree)
 
 def split_body(tree, gen_sym):
         new_body = []
@@ -179,10 +181,20 @@ def shared_transform(tree, gen_sym, additional_args=[]):
 
     if vararg:
         set_varargs.value = Str(vararg)
+
     if kwarg:
         set_kwargs.value = Str(kwarg)
 
-    additional_members = find_member_assignments.collect(tree.body)
+    nested = [
+        n
+        for f in tree.body
+        if type(f) is FunctionDef
+        if len(f.args.args) > 0
+        for n in find_members(f.body, f.args.args[0].id)
+    ]
+
+    additional_members = find_members(tree.body, "self") + nested
+
     prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args)
     set_fields.value.elts = map(Str, args)
     set_slots.value.elts = map(Str, all_args + additional_members)

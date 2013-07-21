@@ -2,7 +2,9 @@ from walkers import *
 from macropy.core import merge_dicts
 
 @Walker
-def find_names(tree, collect, **kw):
+def find_names(tree, collect, stop, **kw):
+    if type(tree) in [Attribute, Subscript]:
+        stop()
     if isinstance(tree, Name):
         collect((tree.id, tree))
 

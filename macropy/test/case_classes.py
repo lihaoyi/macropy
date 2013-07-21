@@ -152,6 +152,48 @@ class Tests(unittest.TestCase):
             "Illegal expression in case class signature: (1 + 2)"
         )
 
+    def test_cannot_detect_self(self):
+        @case
+        class Point(x, y):
+            self.w = 10
+            def f(self):
+                self.z = 1
+                def fail(self):
+                    self.k = 1
+                def fail2(selfz):
+                    self[0] = 1
+                    self.j = 1
+                    self.m = 10
+
+            def g(this):
+                this.cow = 10
+        p = Point(1, 2)
+
+        # these should raise an error if they're uninitialized
+        with self.assertRaises(AttributeError):
+            p.z
+        with self.assertRaises(AttributeError):
+            p.cow
+
+        p.f()
+        p.g()
+        assert p.x == 1
+        assert p.y == 2
+        assert p.w == 10
+        assert p.z == 1
+        assert p.cow == 10
+        with self.assertRaises(AttributeError):
+            Point.k
+
+        p.j = 1
+        p.m = 12
+        assert p.j == 1
+        assert p.m == 12
+        assert Point._fields == ['x', 'y']
+
+
+
+
     def test_enum(self):
 
         @enum
@@ -239,3 +281,4 @@ class Tests(unittest.TestCase):
             class Direction:
                 a()(b)
         assert e.exception.message == "Can't have `a()(b)` in body of enum"
+
