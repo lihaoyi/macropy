@@ -124,3 +124,11 @@ except Exception as e:
         assert scoped.collect(tree) == [
             ('\npass', {'e': ast.Name})
         ]
+
+        tree = parse_stmt("""
+C = 1
+class C:
+    C
+C
+        """)
+        print scoped.collect(tree)

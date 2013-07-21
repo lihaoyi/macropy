@@ -34,26 +34,30 @@ def with_scope(walker):
     old_func = walker.func
 
     def new_func(tree, set_ctx, set_ctx_for, scope={}, **kw):
+
+        def extend_scope(tree, *dicts):
+            set_ctx_for(tree, scope=merge_dicts(*([scope] + list(dicts))))
+
         if type(tree) is Lambda:
-            set_ctx_for(tree.body, scope=merge_dicts(scope, extract_arg_names(tree.args)))
+            extend_scope(tree.body, extract_arg_names(tree.args))
 
         if type(tree) in (GeneratorExp, ListComp, SetComp, DictComp):
             iterator_vars = {}
             for gen in tree.generators:
-                set_ctx_for(gen.target, scope=merge_dicts(scope, iterator_vars))
-                set_ctx_for(gen.iter, scope=merge_dicts(scope, iterator_vars))
+                extend_scope(gen.target, iterator_vars)
+                extend_scope(gen.iter, iterator_vars)
                 iterator_vars.update(dict(find_names.collect(gen.target)))
-                set_ctx_for(gen.ifs, scope=merge_dicts(scope, iterator_vars))
+                extend_scope(gen.ifs, iterator_vars)
 
             if type(tree) is DictComp:
-                set_ctx_for(tree.key, scope=merge_dicts(scope, iterator_vars))
-                set_ctx_for(tree.value, scope=merge_dicts(scope, iterator_vars))
+                extend_scope(tree.key, iterator_vars)
+                extend_scope(tree.value, iterator_vars)
             else:
-                set_ctx_for(tree.elt, scope=merge_dicts(scope, iterator_vars))
+                extend_scope(tree.elt, iterator_vars)
 
         if type(tree) is FunctionDef:
 
-            set_ctx_for(tree.args, scope=merge_dicts(scope, {tree.name: tree}))
+            extend_scope(tree.args, {tree.name: tree})
             new_scope = merge_dicts(
                 scope,
                 {tree.name: tree},
@@ -64,10 +68,13 @@ def with_scope(walker):
             set_ctx_for(tree.body, scope=new_scope)
 
         if type(tree) is ClassDef:
-            set_ctx_for(tree.body, scope=merge_dicts(scope, dict(find_assignments.collect(tree.body))))
+            extend_scope(tree.body, dict(find_assignments.collect(tree.body)))
 
         if type(tree) is ExceptHandler:
-            set_ctx_for(tree.body, scope=merge_dicts(scope, {tree.name.id: tree.name}))
+            extend_scope(tree.body, {tree.name.id: tree.name})
+
+        if type(tree) is For:
+            extend_scope(tree.body, dict(find_names.collect(tree.target)))
 
         return old_func(tree, set_ctx_for=set_ctx_for, scope=scope, **kw)
 
