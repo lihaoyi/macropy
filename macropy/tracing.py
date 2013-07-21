@@ -67,7 +67,6 @@ def trace_walk_func(tree, exact_src):
             except ValueError:
                 txt = exact_src(tree)
                 trace_walk.walk_children(tree)
-
                 wrapped = hq[wrap(unhygienic[log], u[txt], ast[tree])]
                 stop()
                 return wrapped
