@@ -2,76 +2,60 @@ import unittest
 from walkers import Walker
 from macropy.core.analysis import with_scope
 from macropy.core import *
-
+import ast
 @Walker
 @with_scope
 def scoped(tree, scope, collect, **kw):
     try:
-        collect((unparse(tree), scope))
+        if scope != {}:
+            collect((unparse(tree), {k: type(v) for k, v in scope.items()}))
     except:
         pass
 
 class Tests(unittest.TestCase):
     def test_simple_expr(self):
         tree = parse_expr("(lambda x: a)")
-        assert scoped.collect(tree) == [
-            ('(lambda x: a)', []),
-            ('x', []),
-            ('x', []),
-            ('a', ['x'])
-        ]
+
+        assert scoped.collect(tree) == [('a', {'x': ast.Name})]
 
         tree = parse_expr("(lambda x, y: (lambda z: a))")
-        assert scoped.collect(tree) == [
-            ('(lambda x, y: (lambda z: a))', []),
-            ('x, y', []),
-            ('x', []),
-            ('y', []),
-            ('(lambda z: a)', ['x', 'y']),
-            ('z', ['x', 'y']),
-            ('z', ['x', 'y']),
-            ('a', ['x', 'y', 'z']),
-        ]
 
+        assert scoped.collect(tree) == [
+            ('(lambda z: a)', {'y': ast.Name, 'x': ast.Name}),
+            ('z', {'y': ast.Name, 'x': ast.Name}),
+            ('z', {'y': ast.Name, 'x': ast.Name}),
+            ('a', {'y': ast.Name, 'x': ast.Name, 'z': ast.Name})
+        ]
 
         tree = parse_expr("[e for (a, b) in c for d in e if f]")
+
         assert scoped.collect(tree) == [
-            ('[e for (a, b) in c for d in e if f]', []),
-            ('e', ['a', 'b', 'd']),
-            (' for (a, b) in c', []),
-            ('(a, b)', []),
-            ('a', []),
-            ('b', []),
-            ('c', []),
-            (' for d in e if f', []),
-            ('d', ['a', 'b']),
-            ('e', ['a', 'b']),
-            ('f', ['a', 'b', 'd'])
+            ('e', {'a': ast.Name, 'b': ast.Name, 'd': ast.Name}),
+            ('d', {'a': ast.Name, 'b': ast.Name}),
+            ('e', {'a': ast.Name, 'b': ast.Name}),
+            ('f', {'a': ast.Name, 'b': ast.Name, 'd': ast.Name})
         ]
 
+
         tree = parse_expr("{k: v for k, v in d}")
+
         assert scoped.collect(tree) == [
-            ('{k: v for (k, v) in d}', []),
-            ('k', ['k', 'v']),
-            ('v', ['k', 'v']),
-            (' for (k, v) in d', []),
-            ('(k, v)', []),
-            ('k', []),
-            ('v', []),
-            ('d', [])
+            ('k', {'k': ast.Name, 'v': ast.Name}),
+            ('v', {'k': ast.Name, 'v': ast.Name})
         ]
+
     def test_simple_stmt(self):
         tree = parse_stmt("""
 def func(x, y):
     return x
         """)
+
         assert scoped.collect(tree) == [
-            ('\n\ndef func(x, y):\n    return x', []),
-            ('x, y', []),
-            ('x', []),
-            ('y', []),
-            ('\nreturn x', ['x', 'y']),
-            ('x', ['x', 'y'])
+            ('x, y', {'func': ast.FunctionDef}),
+            ('x', {'func': ast.FunctionDef}),
+            ('y', {'func': ast.FunctionDef}),
+            ('\nreturn x', {'y': ast.Name, 'x': ast.Name, 'func': ast.FunctionDef}),
+            ('x', {'y': ast.Name, 'x': ast.Name, 'func': ast.FunctionDef})
         ]
 
         tree = parse_stmt("""
@@ -79,16 +63,16 @@ def func(x, y):
     z = 10
     return x
         """)
+
         assert scoped.collect(tree) == [
-            ('\n\ndef func(x, y):\n    z = 10\n    return x', []),
-            ('x, y', []),
-            ('x', []),
-            ('y', []),
-            ('\nz = 10', ['x', 'y', 'z']),
-            ('z', ['x', 'y', 'z']),
-            ('10', ['x', 'y', 'z']),
-            ('\nreturn x', ['x', 'y', 'z']),
-            ('x', ['x', 'y', 'z'])
+            ('x, y', {'func': ast.FunctionDef}),
+            ('x', {'func': ast.FunctionDef}),
+            ('y', {'func': ast.FunctionDef}),
+            ('\nz = 10', {'y': ast.Name, 'x': ast.Name, 'z': ast.Name, 'func': ast.FunctionDef}),
+            ('z', {'y': ast.Name, 'x': ast.Name, 'z': ast.Name, 'func': ast.FunctionDef}),
+            ('10', {'y': ast.Name, 'x': ast.Name, 'z': ast.Name, 'func': ast.FunctionDef}),
+            ('\nreturn x', {'y': ast.Name, 'x': ast.Name, 'z': ast.Name, 'func': ast.FunctionDef}),
+            ('x', {'y': ast.Name, 'x': ast.Name, 'z': ast.Name, 'func': ast.FunctionDef})
         ]
 
         tree = parse_stmt("""
@@ -96,15 +80,14 @@ class C(A, B):
     z = 10
     print z
         """)
+
+
         assert scoped.collect(tree) == [
-            ('\n\nclass C(A, B):\n    z = 10\n    print z', []),
-            ('A', []),
-            ('B', []),
-            ('\nz = 10', ['z']),
-            ('z', ['z']),
-            ('10', ['z']),
-            ('\nprint z', ['z']),
-            ('z', ['z'])
+            ('\nz = 10', {'z': ast.Name}),
+            ('z', {'z': ast.Name}),
+            ('10', {'z': ast.Name}),
+            ('\nprint z', {'z': ast.Name}),
+            ('z', {'z': ast.Name})
         ]
 
         tree = parse_stmt("""
@@ -113,17 +96,18 @@ def func(x, y):
     class C(): pass
     print 10
         """)
+
         assert scoped.collect(tree) == [
-            ('\n\ndef func(x, y):\n\n    def do_nothing():\n        pass\n\n    class C:\n        pass\n    print 10', []),
-            ('x, y', []),
-            ('x', []),
-            ('y', []),
-            ('\n\ndef do_nothing():\n    pass', ['x', 'y', 'do_nothing', 'C']),
-            ('', ['x', 'y', 'do_nothing', 'C']),
-            ('\npass', ['x', 'y', 'do_nothing', 'C']),
-            ('\n\nclass C:\n    pass', ['x', 'y', 'do_nothing', 'C']),
-            ('\npass', ['x', 'y', 'do_nothing', 'C']),
-            ('\nprint 10', ['x', 'y', 'do_nothing', 'C']),
-            ('10', ['x', 'y', 'do_nothing', 'C'])
+            ('x, y', {'func': ast.FunctionDef}),
+            ('x', {'func': ast.FunctionDef}),
+            ('y', {'func': ast.FunctionDef}),
+            ('\n\ndef do_nothing():\n    pass', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef}),
+            ('', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef}),
+            ('\npass', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef}),
+            ('\n\nclass C:\n    pass', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef}),
+            ('\npass', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef}),
+            ('\nprint 10', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef}),
+            ('10', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef})
         ]
-        print ",\n".join(map(str, scoped.collect(tree)))
+
+        # print ",\n".join(map(str, scoped.collect(tree)))

@@ -22,7 +22,7 @@ def singleton(cls):
     return obj
 
 
-def merge_dicts(my_dicts):
+def merge_dicts(*my_dicts):
     """Combines a bunch of dictionaries together, later dictionaries taking
     precedence if there is a key conflict"""
     return dict((k,v) for d in my_dicts for (k,v) in d.items())

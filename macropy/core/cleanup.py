@@ -30,7 +30,7 @@ def ast_ctx_fixer(tree, stop, set_ctx, set_ctx_for, **kw):
         set_ctx_for(tree.value, ctx=AugLoad())
 
     if type(tree) is Attribute:
-        set_ctx(ctx=Load())
+        set_ctx_for(tree.value, ctx=Load())
 
     if type(tree) is Assign:
         set_ctx_for(tree.targets, ctx=Store())
