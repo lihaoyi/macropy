@@ -109,8 +109,8 @@ def extract_args(bases):
 
 
 def find_members(tree, name):
-    @Walker
     @with_scope
+    @Walker
     def find_member_assignments(tree, collect, stop, scope, **kw):
         if name in scope.keys():
             stop()

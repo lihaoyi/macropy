@@ -49,6 +49,8 @@ class Walker(object):
     def __init__(self, func):
         self.func = func
 
+        self.prep = lambda tree: {}
+
     def walk_children(self, tree, sub_kw=[], **kw):
         if isinstance(tree, AST):
             aggregates = []
@@ -62,7 +64,7 @@ class Walker(object):
                     if item is old_value
                     for k, v in kws.items()
                 ]
-                new_value, new_aggregate = self.recurse_collect(old_value, sub_kw, **dict(kw.items() + specific_sub_kw))
+                new_value, new_aggregate = self.recurse_collect(old_value, sub_kw, external=False, **dict(kw.items() + specific_sub_kw))
                 aggregates.extend(new_aggregate)
                 setattr(tree, field, new_value)
 
@@ -73,7 +75,7 @@ class Walker(object):
             new_tree = []
 
             for t in tree:
-                new_t, new_a = self.recurse_collect(t, sub_kw, **kw)
+                new_t, new_a = self.recurse_collect(t, sub_kw, external=False, **kw)
                 if type(new_t) is list:
                     new_tree.extend(new_t)
                 else:
@@ -88,17 +90,17 @@ class Walker(object):
 
     def recurse(self, tree, **kw):
         """Traverse the given AST and return the transformed tree."""
-        return self.recurse_collect(tree, **kw)[0]
+        return self.recurse_collect(tree, external=True, **kw)[0]
 
     def collect(self, tree, **kw):
         """Traverse the given AST and return the transformed tree."""
-        return self.recurse_collect(tree, **kw)[1]
+        return self.recurse_collect(tree, external=True, **kw)[1]
 
-    def recurse_collect(self, tree, sub_kw=[], **kw):
+    def recurse_collect(self, tree, sub_kw=[], external=True, **kw):
         """Traverse the given AST and return the transformed tree together
         with any values which were collected along with way."""
-        if hasattr(self.func, "start"):
-            print "LOLOL"
+        if external:
+            kw.update(self.prep(tree))
         if isinstance(tree, AST) or type(tree) is Literal or type(tree) is Captured:
             aggregates = []
             stop_now = [False]
@@ -106,9 +108,9 @@ class Walker(object):
             def stop():
                 stop_now[0] = True
 
+
             new_ctx = dict(**kw)
-
-
+            new_ctx
             new_ctx_for = sub_kw[:]
 
             def set_ctx(**new_kw):

@@ -3,8 +3,9 @@ from walkers import Walker
 from macropy.core.analysis import with_scope
 from macropy.core import *
 import ast
-@Walker
+
 @with_scope
+@Walker
 def scoped(tree, scope, collect, **kw):
     try:
         if scope != {}:
@@ -51,6 +52,7 @@ def func(x, y):
         """)
 
         assert scoped.collect(tree) == [
+            ('\n\ndef func(x, y):\n    return x', {'func': ast.FunctionDef}),
             ('x, y', {'func': ast.FunctionDef}),
             ('x', {'func': ast.FunctionDef}),
             ('y', {'func': ast.FunctionDef}),
@@ -65,6 +67,7 @@ def func(x, y):
         """)
 
         assert scoped.collect(tree) == [
+            ('\n\ndef func(x, y):\n    z = 10\n    return x', {'func': ast.FunctionDef}),
             ('x, y', {'func': ast.FunctionDef}),
             ('x', {'func': ast.FunctionDef}),
             ('y', {'func': ast.FunctionDef}),
@@ -81,7 +84,7 @@ class C(A, B):
     print z
         """)
 
-
+        print ",\n".join(map(str, scoped.collect(tree)))
         assert scoped.collect(tree) == [
             ('\nz = 10', {'z': ast.Name}),
             ('z', {'z': ast.Name}),
@@ -96,6 +99,7 @@ def func(x, y):
     class C(): pass
     print 10
         """)
+
 
         assert scoped.collect(tree) == [
             ('x, y', {'func': ast.FunctionDef}),

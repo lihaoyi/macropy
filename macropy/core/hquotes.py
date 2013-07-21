@@ -81,8 +81,8 @@ def hq(tree, **kw):
     return tree
 
 
-@Walker
 @with_scope
+@Walker
 def hygienator(tree, stop, scope, **kw):
     if type(tree) is Name and \
             type(tree.ctx) is Load and \

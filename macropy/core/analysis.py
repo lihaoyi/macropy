@@ -26,7 +26,12 @@ def extract_arg_names(args):
     )
 
 
-def with_scope(func):
+def with_scope(walker):
+
+
+
+    walker.prep = lambda tree: dict(scope=dict(find_assignments.collect(tree)))
+    old_func = walker.func
 
     def new_func(tree, set_ctx, set_ctx_for, scope={}, **kw):
         if type(tree) is Lambda:
@@ -64,6 +69,7 @@ def with_scope(func):
         if type(tree) is ExceptHandler:
             set_ctx_for(tree.body, scope=merge_dicts(scope, {tree.name.id: tree.name}))
 
-        return func(tree, set_ctx_for=set_ctx_for, scope=scope, **kw)
+        return old_func(tree, set_ctx_for=set_ctx_for, scope=scope, **kw)
 
-    return new_func
+    walker.func = new_func
+    return walker
