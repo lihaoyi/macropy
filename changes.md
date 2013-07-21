@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.0.X
+-----
+- Basic scope analysis now available in the form of the `@with_scope` decorator, to be used in conjunction with `@Walker`.
+
 1.0.3
 -----
 - Error messages are now raised at run-time rather than at import time, with other improvements (double stack traces, catchability).
