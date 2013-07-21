@@ -110,4 +110,13 @@ def func(x, y):
             ('10', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef})
         ]
 
-        # print ",\n".join(map(str, scoped.collect(tree)))
+        tree = parse_stmt("""
+try:
+    pass
+except Exception as e:
+    pass
+        """)
+
+        assert scoped.collect(tree) == [
+            ('\npass', {'e': ast.Name})
+        ]

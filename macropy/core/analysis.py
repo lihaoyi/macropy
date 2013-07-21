@@ -59,6 +59,9 @@ def with_scope(func):
         if type(tree) is ClassDef:
             set_ctx_for(tree.body, scope=merge_dicts(scope, dict(find_assignments.collect(tree.body))))
 
+        if type(tree) is ExceptHandler:
+            set_ctx_for(tree.body, scope=merge_dicts(scope, {tree.name.id: tree.name}))
+
         return func(tree, set_ctx_for=set_ctx_for, scope=scope, **kw)
 
     return new_func
