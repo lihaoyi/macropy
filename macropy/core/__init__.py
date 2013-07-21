@@ -25,7 +25,7 @@ real_repr |     |    eval        _v________|_
 """
 import ast
 import sys
-
+from util import *
 __all__ = ['Literal', 'Captured', 'ast_repr', 'parse_expr', 'parse_stmt', 'real_repr', 'unparse', 'box']
 
 class Literal(object):
@@ -236,9 +236,7 @@ trec = {
     alias:      lambda tree, i: tree.name + mix(" as ", tree.asname)
 }
 
-def box(x):
-    "None | T => [T]"
-    return [x] if x else []
+
 
 def mix(*x):
     """Join everything together if none of them are empty"""

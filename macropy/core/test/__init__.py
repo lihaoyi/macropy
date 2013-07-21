@@ -9,7 +9,7 @@ import walkers
 import macros
 import hquotes
 import exporters
-
+import analysis
 class Cases:
     class Tests(unittest.TestCase):
         def test_exact_src(self):
@@ -58,5 +58,6 @@ Tests = test_suite(cases = [
     macros,
     Cases,
     hquotes,
-    exporters
+    exporters,
+    analysis
 ])

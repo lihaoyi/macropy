@@ -50,3 +50,7 @@ def register(array):
         array.append(val)
         return val
     return x
+
+def box(x):
+    "None | T => [T]"
+    return [x] if x else []

@@ -65,4 +65,3 @@ class Tests(unittest.TestCase):
 
         new_tree = stopper.recurse(tree)
         assert unparse(goal) == unparse(new_tree)
-
