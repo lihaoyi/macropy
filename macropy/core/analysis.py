@@ -28,16 +28,18 @@ def extract_arg_names(args):
 
 def with_scope(walker):
 
-
-
     walker.prep = lambda tree: dict(scope=dict(find_assignments.collect(tree)))
     old_func = walker.func
 
-    def new_func(tree, set_ctx, set_ctx_for, scope={}, **kw):
+    def new_func(tree, set_ctx_for, scope, **kw):
 
-        def extend_scope(tree, *dicts):
-            set_ctx_for(tree, scope=merge_dicts(*([scope] + list(dicts))))
+        def extend_scope(tree, *dicts, **kw):
+            new_scope = merge_dicts(*([scope] + list(dicts)))
+            if "remove" in kw:
+                for rem in kw['remove']:
+                    del new_scope[rem]
 
+            set_ctx_for(tree, scope=new_scope)
         if type(tree) is Lambda:
             extend_scope(tree.body, extract_arg_names(tree.args))
 
@@ -58,17 +60,16 @@ def with_scope(walker):
         if type(tree) is FunctionDef:
 
             extend_scope(tree.args, {tree.name: tree})
-            new_scope = merge_dicts(
-                scope,
+            extend_scope(
+                tree.body,
                 {tree.name: tree},
                 extract_arg_names(tree.args),
                 dict(find_assignments.collect(tree.body)),
             )
 
-            set_ctx_for(tree.body, scope=new_scope)
-
         if type(tree) is ClassDef:
-            extend_scope(tree.body, dict(find_assignments.collect(tree.body)))
+            extend_scope(tree.bases, remove=[tree.name])
+            extend_scope(tree.body, dict(find_assignments.collect(tree.body)), remove=[tree.name])
 
         if type(tree) is ExceptHandler:
             extend_scope(tree.body, {tree.name.id: tree.name})

@@ -10,13 +10,13 @@ def double(x):
     return x * value
 
 @macros.expr
-def expand(tree, gen_sym, **kw):
+def expand(tree, **kw):
     tree = hq[(lambda cow, prefix: prefix + "x: " + cow(ast[tree]))(double, str(value))]
     return tree
 
 
 @macros.block
-def expand_block(tree, gen_sym, **kw):
+def expand_block(tree, **kw):
     v = 5
     with hq as new_tree:
         x = v
@@ -26,7 +26,7 @@ def expand_block(tree, gen_sym, **kw):
     return new_tree
 
 @macros.block
-def expand_block_complex(tree, gen_sym, **kw):
+def expand_block_complex(tree, **kw):
     v = 5
     with hq as new_tree:
         x = v
@@ -39,4 +39,5 @@ def expand_block_complex(tree, gen_sym, **kw):
         y = x + v
         z = x + y + v
         return multiply(z, 2, 3, 4)
+
     return new_tree

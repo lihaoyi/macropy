@@ -84,8 +84,9 @@ class C(A, B):
     print z
         """)
 
-        print ",\n".join(map(str, scoped.collect(tree)))
+
         assert scoped.collect(tree) == [
+            ('\n\nclass C(A, B):\n    z = 10\n    print z', {'C': ast.ClassDef}),
             ('\nz = 10', {'z': ast.Name}),
             ('z', {'z': ast.Name}),
             ('10', {'z': ast.Name}),
@@ -102,6 +103,7 @@ def func(x, y):
 
 
         assert scoped.collect(tree) == [
+            ('\n\ndef func(x, y):\n\n    def do_nothing():\n        pass\n\n    class C:\n        pass\n    print 10', {'func': ast.FunctionDef}),
             ('x, y', {'func': ast.FunctionDef}),
             ('x', {'func': ast.FunctionDef}),
             ('y', {'func': ast.FunctionDef}),
@@ -109,7 +111,7 @@ def func(x, y):
             ('', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef}),
             ('\npass', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef}),
             ('\n\nclass C:\n    pass', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef}),
-            ('\npass', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef}),
+            ('\npass', {'y': ast.Name, 'x': ast.Name, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef}),
             ('\nprint 10', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef}),
             ('10', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef})
         ]
@@ -125,10 +127,10 @@ except Exception as e:
             ('\npass', {'e': ast.Name})
         ]
 
+        # This one still doesn't work right
         tree = parse_stmt("""
 C = 1
 class C:
     C
 C
         """)
-        print scoped.collect(tree)
