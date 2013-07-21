@@ -46,7 +46,7 @@ class Tests(unittest.TestCase):
             if type(tree) is Num:
                 tree.n = tree.n + ctx
             else:
-                return set_ctx(ctx + 1)
+                return set_ctx(ctx=ctx + 1)
 
         new_tree = deepen.recurse(tree, ctx=0)
         goal = parse_expr('(2 + (4 + (6 + (8 + 9))))')
@@ -65,3 +65,4 @@ class Tests(unittest.TestCase):
 
         new_tree = stopper.recurse(tree)
         assert unparse(goal) == unparse(new_tree)
+

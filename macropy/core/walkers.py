@@ -49,13 +49,13 @@ class Walker(object):
     def __init__(self, func):
         self.func = func
 
-    def walk_children(self, tree, ctx=None):
+    def walk_children(self, tree, **kw):
         if isinstance(tree, AST):
             aggregates = []
 
             for field, old_value in iter_fields(tree):
                 old_value = getattr(tree, field, None)
-                new_value, new_aggregate = self.recurse_collect(old_value, ctx)
+                new_value, new_aggregate = self.recurse_collect(old_value, **kw)
                 aggregates.extend(new_aggregate)
                 setattr(tree, field, new_value)
 
@@ -66,7 +66,7 @@ class Walker(object):
             aggregates = []
             new_tree = []
             for t in tree:
-                new_t, new_a = self.recurse_collect(t, ctx)
+                new_t, new_a = self.recurse_collect(t, **kw)
                 if type(new_t) is list:
                     new_tree.extend(new_t)
                 else:
@@ -79,15 +79,15 @@ class Walker(object):
         else:
             return []
 
-    def recurse(self, tree, ctx=None):
+    def recurse(self, tree, **kw):
         """Traverse the given AST and return the transformed tree."""
-        return self.recurse_collect(tree, ctx)[0]
+        return self.recurse_collect(tree, **kw)[0]
 
-    def collect(self, tree, ctx=None):
+    def collect(self, tree, **kw):
         """Traverse the given AST and return the transformed tree."""
-        return self.recurse_collect(tree, ctx)[1]
+        return self.recurse_collect(tree, **kw)[1]
 
-    def recurse_collect(self, tree, ctx=None):
+    def recurse_collect(self, tree, **kw):
         """Traverse the given AST and return the transformed tree together
         with any values which were collected along with way."""
 
@@ -98,29 +98,29 @@ class Walker(object):
             def stop():
                 stop_now[0] = True
 
-            new_ctx = [ctx]
+            new_ctx = dict(**kw)
 
-            def set_ctx(new):
-                new_ctx[0] = new
+            def set_ctx(**new_kw):
+                new_ctx.update(new_kw)
 
             # Provide the function with a bunch of controls, in addition to
             # the tree itself.
             new_tree = self.func(
                 tree=tree,
-                ctx=ctx,
                 collect=aggregates.append,
                 set_ctx=set_ctx,
-                stop=stop
+                stop=stop,
+                **kw
             )
 
             if new_tree is not None:
                 tree = new_tree
 
             if not stop_now[0]:
-                aggregates.extend(self.walk_children(tree, new_ctx[0]))
+                aggregates.extend(self.walk_children(tree, **new_ctx))
 
         else:
-            aggregates = self.walk_children(tree, ctx)
+            aggregates = self.walk_children(tree, **kw)
 
         return tree, aggregates
 

@@ -26,7 +26,7 @@ real_repr |     |    eval        _v________|_
 import ast
 import sys
 
-__all__ = ['Literal', 'Captured', 'ast_repr', 'parse_expr', 'parse_stmt', 'real_repr', 'unparse']
+__all__ = ['Literal', 'Captured', 'ast_repr', 'parse_expr', 'parse_stmt', 'real_repr', 'unparse', 'box']
 
 class Literal(object):
     """Used to wrap sections of an AST which must remain intact when

@@ -10,11 +10,12 @@ from walkers import Walker
 
 @register(filters)
 def fix_ctx(tree, **kw):
-    return ast_ctx_fixer.recurse(tree, Load())
+    return ast_ctx_fixer.recurse(tree, ctx=Load())
 
 
 @Walker
-def ast_ctx_fixer(tree, ctx, stop, set_ctx, **kw):
+def ast_ctx_fixer(tree, stop, set_ctx, **kw):
+    ctx = kw.get("ctx", None)
     """Fix any missing `ctx` attributes within an AST; allows you to build
     your ASTs without caring about that stuff and just filling it in later."""
     if "ctx" in type(tree)._fields and (not hasattr(tree, "ctx") or tree.ctx is None):
@@ -23,33 +24,33 @@ def ast_ctx_fixer(tree, ctx, stop, set_ctx, **kw):
 
     if type(tree) is arguments:
         for arg in tree.args:
-            ast_ctx_fixer.recurse(arg, Param())
+            ast_ctx_fixer.recurse(arg, ctx=Param())
         for default in tree.defaults:
-            ast_ctx_fixer.recurse(default, Load())
+            ast_ctx_fixer.recurse(default, ctx=Load())
         stop()
         return tree
 
     if type(tree) is AugAssign:
-        ast_ctx_fixer.recurse(tree.target, AugStore())
-        ast_ctx_fixer.recurse(tree.value, AugLoad())
+        ast_ctx_fixer.recurse(tree.target, ctx=AugStore())
+        ast_ctx_fixer.recurse(tree.value, ctx=AugLoad())
         stop()
         return tree
 
     if type(tree) is Attribute:
-        set_ctx(Load())
+        set_ctx(ctx=Load())
         return tree
 
     if type(tree) is Assign:
         for target in tree.targets:
-            ast_ctx_fixer.recurse(target, Store())
+            ast_ctx_fixer.recurse(target, ctx=Store())
 
-        ast_ctx_fixer.recurse(tree.value, Load())
+        ast_ctx_fixer.recurse(tree.value, ctx=Load())
         stop()
         return tree
 
     if type(tree) is Delete:
         for target in tree.targets:
-            ast_ctx_fixer.recurse(target, Del())
+            ast_ctx_fixer.recurse(target, ctx=Del())
         stop()
         return tree
 
