@@ -61,5 +61,6 @@ Tests = test_suite(cases = [
     Cases,
     hquotes,
     exporters,
+    exporters,
     analysis
 ])

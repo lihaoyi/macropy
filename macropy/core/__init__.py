@@ -152,12 +152,6 @@ trec = {
                                 mix(" ", rec(tree.type, i)) +
                                 mix(" as ", rec(tree.name, i)) + ":" +
                                 rec(tree.body, i+1),
-    ClassDef:   lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
-                                tabs(i) + "class " + tree.name +
-                                mix("(", jmap(", ", lambda t: rec(t, i), tree.bases), ")") + ":" +
-                                rec(tree.body, i+1),
-    FunctionDef: lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
-                                tabs(i) + "def " + tree.name + "(" + rec(tree.args, i) + "):" + rec(tree.body, i+1),
     For:        lambda tree, i: tabs(i) + "for " + rec(tree.target, i) + " in " +
                                 rec(tree.iter, i) + ":" + rec(tree.body, i+1) +
                                 mix(tabs(i), "else:", rec(tree.orelse, i+1)),
@@ -222,14 +216,25 @@ trec = {
 
 if PY3:
     trec.update({
-        Nonlocal:   lambda: tabs + "nonlocal " + jmap(", ", rec, tree.names),
-        YieldFrom:  lambda: "(yield from " + rec(tree.value) + ")",
-        Raise:      lambda: tabs + "raise " + rec(tree.exc) +
-                            mix(" from ", rec(tree.cause)), # See PEP-344 for semantics
-        Try:        lambda: tabs + "try:" + irec(tree.body) +
+        Nonlocal:   lambda tree, i: tabs(i) + "nonlocal " + jmap(", ", rec, tree.names),
+        YieldFrom:  lambda tree, i: "(yield from " + rec(tree.value, i) + ")",
+        Raise:      lambda tree, i: tabs(i) + "raise" + 
+                            mix(" ", rec(tree.exc, i)) +
+                            mix(" from ", rec(tree.cause, i)), # See PEP-344 for semantics
+        Try:        lambda tree, i: tabs + "try:" + rec(tree.body, i+1) +
                             jmap("", rec, tree.handlers) +
-                            mix(tabs, "else:", irec(tree.orelse)) +
-                            mix(tabs, "finally", irec(tree.finalbody)),
+                            mix(tabs, "else:", rec(tree.orelse, i+1)) +
+                            mix(tabs, "finally", rec(tree.finalbody, i+1)),
+        ClassDef:   lambda tree, i: "\n" + "".join(tabs + "@" + rec(dec, i) for dec in tree.decorator_list) +
+                            tabs + "class " + tree.name +
+                            mix("(", ", ".join(
+                                lmap(rec, tree.bases + tree.keywords) +
+                                lmap(lambda e: "*"  + rec(e, i), box(tree.starargs)) +
+                                lmap(lambda e: "**" + rec(e, i), box(tree.kwargs))
+                            ), ")") + ":" + irec(tree.body),
+        FunctionDef: lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
+                                    tabs(i) + "def " + tree.name + "(" + rec(tree.args, i) + "):" + 
+                                    mix(" -> ", rec(tree.returns, i)) +  ":" + rec(tree.body, i+1)
     })
 else:
     trec.update({
@@ -251,6 +256,13 @@ else:
                                     if len(tree.body) == 1 and isinstance(tree.body[0], ast.TryExcept)
                                     else tabs(i) + "try:" + rec(tree.body, i+1)) +
                                     tabs(i) + "finally:" + rec(tree.finalbody, i+1),
+        ClassDef:   lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
+                                    tabs(i) + "class " + tree.name +
+                                    mix("(", jmap(", ", lambda t: rec(t, i), tree.bases), ")") + ":" +
+                                    rec(tree.body, i+1),
+        FunctionDef: lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
+                                    tabs(i) + "def " + tree.name + "(" + rec(tree.args, i) + "):" + rec(tree.body, i+1),
+
     })
 
 def mix(*x):
