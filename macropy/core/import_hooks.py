@@ -4,7 +4,7 @@ import sys
 import imp
 import ast
 import macropy.activate
-from macros import *
+from .macros import *
 import traceback
 
 class _MacroLoader(object):
@@ -72,7 +72,7 @@ class MacroFinder(object):
 
 
             try:
-                exec code in mod.__dict__
+                exec(code, mod.__dict__)
                 macropy.exporter.export_transformed(code, tree, module_name, file.name)
             except Exception as e:
 
@@ -80,8 +80,8 @@ class MacroFinder(object):
 
             return _MacroLoader(mod)
 
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
 
             traceback.print_exc()
             pass

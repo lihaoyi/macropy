@@ -46,13 +46,13 @@ else:
             with self.assertRaises(Exception):
                 failure.run4()
 
-import quotes
-import unparse
-import walkers
-import macros
-import hquotes
-import exporters
-import analysis
+from . import quotes
+from . import unparse
+from . import walkers
+from . import macros
+from . import hquotes
+from . import exporters
+from . import analysis
 Tests = test_suite(cases = [
     quotes,
     unparse,

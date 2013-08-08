@@ -4,23 +4,23 @@ required for macros to run properly"""
 
 
 def activate():
-    import core.macros
-    import core.cleanup
-    import core.exact_src
-    import core.gen_sym
+    from .core import macros
+    from .core import cleanup
+    from .core import exact_src
+    from .core import gen_sym
 
-    import core.import_hooks
+    from .core import import_hooks
     import sys
-    sys.meta_path.append(core.import_hooks.MacroFinder)
-    import core.hquotes
-    import core.failure
+    sys.meta_path.append(import_hooks.MacroFinder)
+    from .core import hquotes
+    from .core import failure
 
 def console():
     from macropy.core.console import MacroConsole
     MacroConsole().interact("0=[]=====> MacroPy Enabled <=====[]=0")
 
 
-import core.exporters
+from .core import exporters
 
 __version__ = "1.0.3"
-exporter = core.exporters.NullExporter()
+exporter = exporters.NullExporter()

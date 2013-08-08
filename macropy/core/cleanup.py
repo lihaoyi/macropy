@@ -4,8 +4,8 @@ to return."""
 
 from ast import *
 from macropy.core.util import register
-from macros import filters
-from walkers import Walker
+from .macros import filters
+from .walkers import Walker
 
 
 @register(filters)

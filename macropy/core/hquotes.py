@@ -11,7 +11,7 @@ macros = Macros()
 def unhygienic():
     """Used to delimit a section of a hq[...] that should not be hygienified"""
 
-from macros import filters, injected_vars, post_processing
+from .macros import filters, injected_vars, post_processing
 
 @register(injected_vars)
 def captured_registry(**kw):

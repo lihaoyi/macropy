@@ -193,7 +193,7 @@ class Tests(unittest.TestCase):
             import json
             try:
                 assert parser.parse(string) == json.loads(string)
-            except Exception, e:
+            except Exception as e:
                 print(parser.parse_string(string))
                 print(json.loads(string))
                 raise e

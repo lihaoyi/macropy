@@ -1,5 +1,5 @@
 import unittest
-from walkers import Walker
+from .walkers import Walker
 from macropy.core.analysis import Scoped
 from macropy.core import *
 import ast

@@ -4,14 +4,17 @@ import sys
 import imp
 import ast
 import itertools
+from six import PY3
 from ast import *
-from util import *
-from walkers import *
+from .util import *
+from .walkers import *
 
 
-# Monkey Patching pickle to pickle module objects properly
-import pickle
-pickle.Pickler.dispatch[type(pickle)] = pickle.Pickler.save_global
+# TODO: How do we do this in py3?
+if not PY3:
+    # Monkey Patching pickle to pickle module objects properly
+    import pickle
+    pickle.Pickler.dispatch[type(pickle)] = pickle.Pickler.save_global
 
 
 class WrappedFunction(object):

@@ -1,6 +1,6 @@
 import unittest
 import sys
-import hq
+from . import hq
 
 class Tests(unittest.TestCase):
     def test_hq(self):

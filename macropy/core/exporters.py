@@ -2,9 +2,16 @@
 import os
 import shutil
 from macropy.core import unparse
-from py_compile import wr_long
 import marshal
 import imp
+
+def wr_long(f, x):
+    """Internal; write a 32-bit int to a file in little-endian order."""
+    f.write(chr( x        & 0xff))
+    f.write(chr((x >> 8)  & 0xff))
+    f.write(chr((x >> 16) & 0xff))
+    f.write(chr((x >> 24) & 0xff))
+
 class NullExporter(object):
     def export_transformed(self, code, tree, module_name, file_name):
         pass
@@ -59,5 +66,5 @@ class PycExporter(object):
                 return None
             x = imp.load_compiled(module_name, pathname + suffix, f)
             return x
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)

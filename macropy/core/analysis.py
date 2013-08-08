@@ -1,5 +1,5 @@
 """Walker that performs simple name-binding analysis as it traverses the AST"""
-from walkers import *
+from .walkers import *
 from macropy.core import merge_dicts
 
 __all__ = ['Scoped']

@@ -98,7 +98,7 @@ class Tests(unittest.TestCase):
             a = 1
             b = 2
             with q as code:
-                print a + u[b + 1]
+                print(a + u[b + 1])
 
         assert result[-3] == '\na = 1'
         assert result[-2] == '\nb = 2'

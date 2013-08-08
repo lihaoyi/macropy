@@ -25,7 +25,8 @@ real_repr |     |    eval        _v________|_
 """
 import ast
 import sys
-from util import *
+from .util import *
+from six import PY3, string_types
 __all__ = ['Literal', 'Captured', 'ast_repr', 'parse_expr', 'parse_stmt', 'real_repr', 'unparse', 'box']
 
 class Literal(object):
@@ -47,20 +48,21 @@ class Captured(object):
 def ast_repr(x):
     """Similar to repr(), but returns an AST instead of a String, which when
     evaluated will return the given value."""
-    if type(x) in (int, float):     return ast.Num(n=x)
-    elif type(x) in (str, unicode): return ast.Str(s=x)
-    elif type(x) is list:           return ast.List(elts=map(ast_repr, x))
-    elif type(x) is dict:           return ast.Dict(keys=map(ast_repr, x.keys()), values=map(ast_repr, x.values()))
-    elif type(x) is set:            return ast.Set(elts=map(ast_repr, x))
-    elif type(x) is Literal:        return x.body
+    if type(x) in (int, float):      return ast.Num(n=x)
+    elif PY3 and type(x) is bytes:   return ast.Bytes(s=x)
+    elif isinstance(x,string_types): return ast.Str(s=x)
+    elif type(x) is list:            return ast.List(elts=list(map(ast_repr, x)))
+    elif type(x) is dict:            return ast.Dict(keys=list(map(ast_repr, x.keys())), values=list(map(ast_repr, x.values())))
+    elif type(x) is set:             return ast.Set(elts=list(map(ast_repr, x)))
+    elif type(x) is Literal:         return x.body
     elif type(x) is Captured:
         return ast.Call(
             ast.Name(id="Captured"),
             [x.val, ast_repr(x.name)], [], None, None
         )
-    elif x is None:                 return ast.Name(id="None")
-    elif x is True:                 return ast.Name(id="True")
-    elif x is False:                 return ast.Name(id="False")
+    elif type(x) in (bool, type(None)):
+        if PY3:                     return ast.NameConstant(value=str(x))
+        else:                       return ast.Name(id=str(x))
     elif isinstance(x, ast.AST):
         fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
         return ast.Call(
@@ -144,25 +146,8 @@ trec = {
     Continue:   lambda tree, i: tabs(i) + "continue",
     Delete:     lambda tree, i: tabs(i) + "del " + jmap(", ", lambda t: rec(t, i), tree.targets),
     Assert:     lambda tree, i: tabs(i) + "assert " + rec(tree.test, i) + mix(", ", rec(tree.msg, i)),
-    Exec:       lambda tree, i: tabs(i) + "exec " + rec(tree.body, i) +
-                                mix(" in ", rec(tree.globals, i)) +
-                                mix(", ", rec(tree.locals, i)),
-    Print:      lambda tree, i: tabs(i) + "print " +
-                                ", ".join(box(mix(">>", rec(tree.dest, i))) + map(lambda t: rec(t, i),tree.values)) +
-                                ("," if not tree.nl else ""),
     Global:     lambda tree, i: tabs(i) + "global " + ", ".join(tree.names),
     Yield:      lambda tree, i: "(yield " + rec(tree.value, i) + ")",
-    Raise:      lambda tree, i: tabs(i) + "raise" + 
-                                mix(" ", rec(tree.type, i)) +
-                                mix(", ", rec(tree.inst, i)) +
-                                mix(", ", rec(tree.tback, i)),
-    TryExcept:  lambda tree, i: tabs(i) + "try:" + rec(tree.body, i+1) +
-                                jmap("", lambda t: rec(t, i), tree.handlers) +
-                                mix(tabs(i), "else:", rec(tree.orelse, i+1)),
-    TryFinally: lambda tree, i: (rec(tree.body, i)
-                                if len(tree.body) == 1 and isinstance(tree.body[0], ast.TryExcept)
-                                else tabs(i) + "try:" + rec(tree.body, i+1)) +
-                                tabs(i) + "finally:" + rec(tree.finalbody, i+1),
     ExceptHandler: lambda tree, i: tabs(i) + "except" +
                                 mix(" ", rec(tree.type, i)) +
                                 mix(" as ", rec(tree.name, i)) + ":" +
@@ -187,7 +172,6 @@ trec = {
                                 #Str doesn't properly handle from __future__ import unicode_literals
     Str:        lambda tree, i: repr(tree.s),
     Name:       lambda tree, i: str(tree.id),
-    Repr:       lambda tree, i: "`" + rec(tree.value) + "`",
     Num:        lambda tree, i: (lambda repr_n:
                                     "(" + repr_n.replace("inf", INFSTR) + ")"
                                     if repr_n.startswith("-")
@@ -213,8 +197,8 @@ trec = {
     Attribute:  lambda tree, i: rec(tree.value, i) + (" " if isinstance(tree.value, Num) and isinstance(tree.value.n, int) else "") + "." + tree.attr,
     Call:       lambda tree, i: rec(tree.func, i) + "(" +
                                 ", ".join(
-                                    map(lambda t: rec(t, i),tree.args) +
-                                    map(lambda t: rec(t, i),tree.keywords) +
+                                    [rec(t, i) for t in tree.args] +
+                                    [rec(t, i) for t in tree.keywords] +
                                     box(mix("*", rec(tree.starargs, i))) +
                                     box(mix("**", rec(tree.kwargs, i)))
                                 ) + ")",
@@ -224,10 +208,10 @@ trec = {
     Slice:      lambda tree, i: rec(tree.lower, i) + ":" + rec(tree.upper, i) + mix(":", rec(tree.step, i)),
     ExtSlice:   lambda tree, i: jmap(", ", lambda t: rec(t, i), tree.dims),
     arguments:  lambda tree, i: ", ".join(
-                                    map(lambda a, d: rec(a, i) + mix("=", rec(d, i)),
+                                    list(map(lambda a, d: rec(a, i) + mix("=", rec(d, i)),
                                         tree.args,
                                         [None] * (len(tree.args) - len(tree.defaults)) + tree.defaults
-                                    ) +
+                                    )) +
                                     box(mix("*", tree.vararg)) +
                                     box(mix("**", tree.kwarg))
                                 ),
@@ -236,7 +220,38 @@ trec = {
     alias:      lambda tree, i: tree.name + mix(" as ", tree.asname)
 }
 
-
+if PY3:
+    trec.update({
+        Nonlocal:   lambda: tabs + "nonlocal " + jmap(", ", rec, tree.names),
+        YieldFrom:  lambda: "(yield from " + rec(tree.value) + ")",
+        Raise:      lambda: tabs + "raise " + rec(tree.exc) +
+                            mix(" from ", rec(tree.cause)), # See PEP-344 for semantics
+        Try:        lambda: tabs + "try:" + irec(tree.body) +
+                            jmap("", rec, tree.handlers) +
+                            mix(tabs, "else:", irec(tree.orelse)) +
+                            mix(tabs, "finally", irec(tree.finalbody)),
+    })
+else:
+    trec.update({
+        Exec:       lambda tree, i: tabs(i) + "exec " + rec(tree.body, i) +
+                                    mix(" in ", rec(tree.globals, i)) +
+                                    mix(", ", rec(tree.locals, i)),
+        Print:      lambda tree, i: tabs(i) + "print " +
+                                    ", ".join(box(mix(">>", rec(tree.dest, i))) + [rec(t, i) for t in tree.values]) +
+                                    ("," if not tree.nl else ""),
+        Repr:       lambda tree, i: "`" + rec(tree.value) + "`",
+        Raise:      lambda tree, i: tabs(i) + "raise" + 
+                                    mix(" ", rec(tree.type, i)) +
+                                    mix(", ", rec(tree.inst, i)) +
+                                    mix(", ", rec(tree.tback, i)),
+        TryExcept:  lambda tree, i: tabs(i) + "try:" + rec(tree.body, i+1) +
+                                    jmap("", lambda t: rec(t, i), tree.handlers) +
+                                    mix(tabs(i), "else:", rec(tree.orelse, i+1)),
+        TryFinally: lambda tree, i: (rec(tree.body, i)
+                                    if len(tree.body) == 1 and isinstance(tree.body[0], ast.TryExcept)
+                                    else tabs(i) + "try:" + rec(tree.body, i+1)) +
+                                    tabs(i) + "finally:" + rec(tree.finalbody, i+1),
+    })
 
 def mix(*x):
     """Join everything together if none of them are empty"""
