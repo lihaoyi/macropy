@@ -78,8 +78,8 @@ class Macros(object):
 
             if name is not None:
                 self.registry[name] = self.wrap(f)
-            if hasattr(f, "func_name"):
-                self.registry[f.func_name] = self.wrap(f)
+            #if hasattr(f, "func_name"):
+            #    self.registry[f.func_name] = self.wrap(f)
             if hasattr(f, "__name__"):
                 self.registry[f.__name__] = self.wrap(f)
 
@@ -101,7 +101,7 @@ filters = []            # functions to call on every macro-expanded snippet
 post_processing = []    # functions to call on every macro-expanded file
 
 def expand_entire_ast(tree, src, bindings):
-
+    print("!"*30)
     def expand_macros(tree):
         """Go through an AST, hunting for macro invocations and expanding any that
         are found"""
@@ -117,7 +117,7 @@ def expand_entire_ast(tree, src, bindings):
                         args=args,
                         src=src,
                         expand_macros=expand_macros,
-                        **dict(kwargs.items() + file_vars.items())
+                        **dict(list(kwargs.items()) + list(file_vars.items()))
                     )
                 except Exception as e:
                     new_tree = e
@@ -130,13 +130,16 @@ def expand_entire_ast(tree, src, bindings):
                         expand_macros=expand_macros,
                         lineno=macro_tree.lineno,
                         col_offset=macro_tree.col_offset,
-                        **dict(kwargs.items() + file_vars.items())
+                        **dict(list(kwargs.items()) + list(file_vars.items()))
                     )
 
                 return new_tree
             elif isinstance(macro_tree, Call):
                 args.extend(macro_tree.args)
                 return expand_if_in_registry(macro_tree.func, body_tree, args, registry)
+
+            elif PY3 and isinstance(macro_tree, withitem): pass
+
 
         def preserve_line_numbers(func):
             """Decorates a tree-transformer function to stick the original line
@@ -157,9 +160,27 @@ def expand_entire_ast(tree, src, bindings):
         @preserve_line_numbers
         def macro_expand(tree):
             """Tail Recursively expands all macros in a single AST node"""
+            #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             if isinstance(tree, With):
                 assert isinstance(tree.body, list), real_repr(tree.body)
-                new_tree = expand_if_in_registry(tree.context_expr, tree.body, [], block_registry, target=tree.optional_vars)
+                if PY3:
+                    new_tree = tree.body
+                    for withitem in tree.items:
+                        new_tree = expand_if_in_registry(
+                                        withitem.context_expr, 
+                                        new_tree, 
+                                        [], 
+                                        block_registry, 
+                                        target=withitem.optional_vars)
+                else:
+                    new_tree = expand_if_in_registry(
+                                        tree.context_expr, 
+                                        tree.body, 
+                                        [], 
+                                        block_registry, 
+                                        target=tree.optional_vars)
+                
+
 
 
                 if new_tree:
@@ -220,7 +241,7 @@ def expand_entire_ast(tree, src, bindings):
 
 
     for v in injected_vars:
-        file_vars[v.func_name] = v(tree=tree, src=src, expand_macros=expand_macros, **file_vars)
+        file_vars[v.__name__] = v(tree=tree, src=src, expand_macros=expand_macros, **file_vars)
 
 
     allnames = [

@@ -23,6 +23,7 @@ class MacroFinder(object):
     """Loads a module and looks for macros inside, only providing a loader if
     it finds some."""
     def find_module(self, module_name, package_path):
+        #print("????????????????"*33)
         try:
             try:
                 (file, pathname, description) = imp.find_module(
@@ -31,12 +32,13 @@ class MacroFinder(object):
                 )
 
                 txt = file.read()
+                file.close()
             except:
                 return
-
             # short circuit heuristic to fail fast if the source code can't
             # possible contain the macro import at all
             if "macros" not in txt:
+                print("failed to find",module_name, package_path)
                 return
 
             # check properly the AST if the macro import really exists
@@ -45,7 +47,9 @@ class MacroFinder(object):
             bindings = detect_macros(tree)
 
             if bindings == []:
+                
                 return # no macros found, carry on
+            #print("\n\nSEARCHING FOR ", module_name, package_path)
 
             mod = macropy.exporter.find(file, pathname, description, module_name, package_path)
 
@@ -68,6 +72,9 @@ class MacroFinder(object):
             else:
                 mod.__package__ = module_name.rpartition('.')[0]
             mod.__file__ = file.name
+            #from . import unparse
+            print("finding",module_name, package_path)
+
             code = compile(tree, file.name, "exec")
 
 
@@ -81,7 +88,8 @@ class MacroFinder(object):
             return _MacroLoader(mod)
 
         except Exception as e:
-            print(e)
+            print("import_hooks.MacroFinder",e)
+            #raise e
 
             traceback.print_exc()
             pass

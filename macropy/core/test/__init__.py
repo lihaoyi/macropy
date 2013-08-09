@@ -54,7 +54,7 @@ from . import hquotes
 from . import exporters
 from . import analysis
 Tests = test_suite(cases = [
-#    quotes,
+    quotes,
     unparse,
     walkers,
 #    macros,

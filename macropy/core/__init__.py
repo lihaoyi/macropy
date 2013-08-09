@@ -61,7 +61,7 @@ def ast_repr(x):
             [x.val, ast_repr(x.name)], [], None, None
         )
     elif type(x) in (bool, type(None)):
-        if PY3:                     return ast.NameConstant(value=str(x))
+        if PY3:                     return ast.NameConstant(value=x)
         else:                       return ast.Name(id=str(x))
     elif isinstance(x, ast.AST):
         fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
