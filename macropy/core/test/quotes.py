@@ -80,7 +80,7 @@ class Tests(unittest.TestCase):
         with self.assertRaises(TypeError) as ce:
             x = u[10]
 
-        assert ce.exception.message == (
+        assert str(ce.exception) == (
             "Stub `u` illegally invoked at runtime; "
             "is it used properly within a macro?"
         )

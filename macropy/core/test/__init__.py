@@ -56,7 +56,7 @@ from . import analysis
 Tests = test_suite(cases = [
 #    quotes,
     unparse,
-#    walkers,
+    walkers,
 #    macros,
 #    Cases,
 #    hquotes,
