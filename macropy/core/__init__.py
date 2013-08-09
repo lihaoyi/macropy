@@ -209,33 +209,47 @@ trec = {
                                 ),
     keyword:    lambda tree, i: tree.arg + "=" + rec(tree.value, i),
     Lambda:     lambda tree, i: "(lambda" + mix(" ", rec(tree.args, i)) + ": "+ rec(tree.body, i) + ")",
-    alias:      lambda tree, i: tree.name + mix(" as ", tree.asname)
+    alias:      lambda tree, i: tree.name + mix(" as ", tree.asname),
+    str:        lambda tree, i: tree
 }
 
 if PY3:
     trec.update({
         Nonlocal:   lambda tree, i: tabs(i) + "nonlocal " + jmap(", ", lambda x: x, tree.names),
         YieldFrom:  lambda tree, i: "(yield from " + rec(tree.value, i) + ")",
-        Raise:      lambda tree, i: tabsexec(i) + "raise" + 
+        Raise:      lambda tree, i: tabs(i) + "raise" + 
                             mix(" ", rec(tree.exc, i)) +
                             mix(" from ", rec(tree.cause, i)), # See PEP-344 for semantics
-        Try:        lambda tree, i: tabs + "try:" + rec(tree.body, i+1) +
-                            jmap("", rec, tree.handlers) +
+        Try:        lambda tree, i: tabs(i) + "try:" + rec(tree.body, i+1) +
+                            jmap("", lambda t: rec(t,i), tree.handlers) +
                             mix(tabs(i), "else:", rec(tree.orelse, i+1)) +
-                            mix(tabs(i), "finally", rec(tree.finalbody, i+1)),
-        ClassDef:   lambda tree, i: "\n" + "".join(tabs + "@" + rec(dec, i) for dec in tree.decorator_list) +
+                            mix(tabs(i), "finally:", rec(tree.finalbody, i+1)),
+        ClassDef:   lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
                             tabs(i) + "class " + tree.name +
                             mix("(", ", ".join(
-                                lmap(rec, tree.bases + tree.keywords) +
-                                lmap(lambda e: "*"  + rec(e, i), box(tree.starargs)) +
-                                lmap(lambda e: "**" + rec(e, i), box(tree.kwargs))
-                            ), ")") + ":" + irec(tree.body),
+                                [rec(t, i) for t in tree.bases + tree.keywords] +
+                                ["*" + rec(t, i) for t in box(tree.starargs)] +
+                                ["**" + rec(t, i) for t in box(tree.kwargs)]
+                            ), ")") + ":" + rec(tree.body, i+1),
         FunctionDef:lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
-                                    tabs(i) + "def " + tree.name + "(" + rec(tree.args, i) + "):" + 
+                                    tabs(i) + "def " + tree.name + "(" + rec(tree.args, i) + ")" + 
                                     mix(" -> ", rec(tree.returns, i)) +  ":" + rec(tree.body, i+1),
         With:       lambda tree, i: tabs(i) + "with " + jmap(", ", lambda x: rec(x,i), tree.items) + ":" + 
                                     rec(tree.body, i+1),
-        Bytes:      lambda tree, i: repr(tree.s)
+        Bytes:      lambda tree, i: repr(tree.s),
+        NameConstant:   lambda tree, i: str(tree.value),
+        Starred:    lambda tree, i: "*" + rec(tree.value),
+        arg:        lambda tree, i: tree.arg + mix(":", tree.annotation),
+        withitem:   lambda tree, i: rec(tree.context_expr, i) + mix(" as ", rec(tree.optional_vars, i)),
+        arguments:  lambda tree, i: ", ".join(
+                                        list(map(lambda a, d: rec(a, i) + mix("=", rec(d, i)),
+                                            tree.args,
+                                            [None] * (len(tree.args) - len(tree.defaults)) + tree.defaults
+                                        )) +
+                                        box(mix("*", rec(tree.vararg, i))) +
+                                        [rec(arg, i) + "=" + rec(d, i) for a, d in zip(tree.kwonlyargs, tree.kw_defaults)] +
+                                        box(mix("**", rec(tree.kwarg, i)))
+                                    ),
     })
 else:
     trec.update({
@@ -265,8 +279,15 @@ else:
         With:       lambda tree, i: tabs(i) + "with " + rec(tree.context_expr, i) +
                                     mix(" as ", rec(tree.optional_vars, i)) + ":" +
                                     rec(tree.body, i+1),
-        Repr:       lambda tree, i: "`" + rec(tree.value) + "`"
-
+        Repr:       lambda tree, i: "`" + rec(tree.value) + "`",
+        arguments:  lambda tree, i: ", ".join(
+                                        list(map(lambda a, d: rec(a, i) + mix("=", rec(d, i)),
+                                            tree.args,
+                                            [None] * (len(tree.args) - len(tree.defaults)) + tree.defaults
+                                        )) +
+                                        box(mix("*", tree.vararg)) +
+                                        box(mix("**", tree.kwarg))
+                                    ),
     })
 
 def mix(*x):

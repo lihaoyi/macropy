@@ -41,13 +41,25 @@ print 'hello', 'world'"""
         self.convert_test(test)
 
     def test_Exec(self):
-        self.convert_test("""
+        if PY3:
+            self.convert_test("""
+exec('foo')
+exec('foo', bar)
+exec('foo', bar, {})""")          
+        else:
+            self.convert_test("""
 exec 'foo'
 exec 'foo' in bar
 exec 'foo' in bar, {}""")
 
     def test_Raise(self):
-        self.convert_test("""
+        if PY3:
+            self.convert_test("""
+raise
+raise Exception(e)
+raise Exception from init_arg""")
+        else:
+            self.convert_test("""
 raise
 raise Exception(e)
 raise Exception, init_arg
