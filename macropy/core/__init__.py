@@ -159,9 +159,7 @@ trec = {
                                 else_rec(tree.orelse, i),
     While:      lambda tree, i: tabs(i) + "while " + rec(tree.test, i) + ":" + rec(tree.body, i+1) +
                                 mix(tabs(i), "else:", rec(tree.orelse, i+1)),
-    With:       lambda tree, i: tabs(i) + "with " + rec(tree.context_expr, i) +
-                                mix(" as ", rec(tree.optional_vars, i)) + ":" +
-                                rec(tree.body, i+1),
+
                                 #Expressions
                                 #Str doesn't properly handle from __future__ import unicode_literals
     Str:        lambda tree, i: repr(tree.s),
@@ -216,25 +214,28 @@ trec = {
 
 if PY3:
     trec.update({
-        Nonlocal:   lambda tree, i: tabs(i) + "nonlocal " + jmap(", ", rec, tree.names),
+        Nonlocal:   lambda tree, i: tabs(i) + "nonlocal " + jmap(", ", lambda x: x, tree.names),
         YieldFrom:  lambda tree, i: "(yield from " + rec(tree.value, i) + ")",
-        Raise:      lambda tree, i: tabs(i) + "raise" + 
+        Raise:      lambda tree, i: tabsexec(i) + "raise" + 
                             mix(" ", rec(tree.exc, i)) +
                             mix(" from ", rec(tree.cause, i)), # See PEP-344 for semantics
         Try:        lambda tree, i: tabs + "try:" + rec(tree.body, i+1) +
                             jmap("", rec, tree.handlers) +
-                            mix(tabs, "else:", rec(tree.orelse, i+1)) +
-                            mix(tabs, "finally", rec(tree.finalbody, i+1)),
+                            mix(tabs(i), "else:", rec(tree.orelse, i+1)) +
+                            mix(tabs(i), "finally", rec(tree.finalbody, i+1)),
         ClassDef:   lambda tree, i: "\n" + "".join(tabs + "@" + rec(dec, i) for dec in tree.decorator_list) +
-                            tabs + "class " + tree.name +
+                            tabs(i) + "class " + tree.name +
                             mix("(", ", ".join(
                                 lmap(rec, tree.bases + tree.keywords) +
                                 lmap(lambda e: "*"  + rec(e, i), box(tree.starargs)) +
                                 lmap(lambda e: "**" + rec(e, i), box(tree.kwargs))
                             ), ")") + ":" + irec(tree.body),
-        FunctionDef: lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
+        FunctionDef:lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
                                     tabs(i) + "def " + tree.name + "(" + rec(tree.args, i) + "):" + 
-                                    mix(" -> ", rec(tree.returns, i)) +  ":" + rec(tree.body, i+1)
+                                    mix(" -> ", rec(tree.returns, i)) +  ":" + rec(tree.body, i+1),
+        With:       lambda tree, i: tabs(i) + "with " + jmap(", ", lambda x: rec(x,i), tree.items) + ":" + 
+                                    rec(tree.body, i+1),
+        Bytes:      lambda tree, i: repr(tree.s)
     })
 else:
     trec.update({
@@ -244,7 +245,6 @@ else:
         Print:      lambda tree, i: tabs(i) + "print " +
                                     ", ".join(box(mix(">>", rec(tree.dest, i))) + [rec(t, i) for t in tree.values]) +
                                     ("," if not tree.nl else ""),
-        Repr:       lambda tree, i: "`" + rec(tree.value) + "`",
         Raise:      lambda tree, i: tabs(i) + "raise" + 
                                     mix(" ", rec(tree.type, i)) +
                                     mix(", ", rec(tree.inst, i)) +
@@ -260,8 +260,12 @@ else:
                                     tabs(i) + "class " + tree.name +
                                     mix("(", jmap(", ", lambda t: rec(t, i), tree.bases), ")") + ":" +
                                     rec(tree.body, i+1),
-        FunctionDef: lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
+        FunctionDef:lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
                                     tabs(i) + "def " + tree.name + "(" + rec(tree.args, i) + "):" + rec(tree.body, i+1),
+        With:       lambda tree, i: tabs(i) + "with " + rec(tree.context_expr, i) +
+                                    mix(" as ", rec(tree.optional_vars, i)) + ":" +
+                                    rec(tree.body, i+1),
+        Repr:       lambda tree, i: "`" + rec(tree.value) + "`"
 
     })
 

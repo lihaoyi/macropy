@@ -16,10 +16,10 @@ from . import tracing
 #import macropy.experimental.test
 import macropy.core.test
 Tests = test_suite(cases=[
-    case_classes,
-    quick_lambda,
-    string_interp,
-    tracing,
+#    case_classes,
+#    quick_lambda,
+#    string_interp,
+#    tracing,
 #    peg
 ], suites=[
 #    macropy.experimental.test,
