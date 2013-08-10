@@ -60,7 +60,7 @@ def interned_processing(tree, gen_sym, interned_count, interned_name, **kw):
             name[interned_name] = [None for x in range(u[interned_count[0]])]
 
         code = ast_ctx_fixer.recurse(code)
-        code = map(fix_missing_locations, code)
+        code = list(map(fix_missing_locations, code))
 
         tree.body = code + tree.body
 

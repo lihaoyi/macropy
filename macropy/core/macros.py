@@ -101,7 +101,6 @@ filters = []            # functions to call on every macro-expanded snippet
 post_processing = []    # functions to call on every macro-expanded file
 
 def expand_entire_ast(tree, src, bindings):
-    print("!"*30)
     def expand_macros(tree):
         """Go through an AST, hunting for macro invocations and expanding any that
         are found"""
@@ -138,9 +137,6 @@ def expand_entire_ast(tree, src, bindings):
                 args.extend(macro_tree.args)
                 return expand_if_in_registry(macro_tree.func, body_tree, args, registry)
 
-            elif PY3 and isinstance(macro_tree, withitem): pass
-
-
         def preserve_line_numbers(func):
             """Decorates a tree-transformer function to stick the original line
             numbers onto the transformed tree"""
@@ -152,7 +148,6 @@ def expand_entire_ast(tree, src, bindings):
                     t = new_tree
                     while type(t) is list:
                         t = t[0]
-
                     (t.lineno, t.col_offset) = pos
                 return new_tree
             return run

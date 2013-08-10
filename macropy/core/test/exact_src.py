@@ -9,10 +9,10 @@ def run1():
 
 def run_block():
     with f as x:
-        print "omg"
-        print "wtf"
+        print("omg")
+        print("wtf")
         if 1:
-            print 'omg'
+            print('omg')
         else:
             import math
             math.acos(0.123)

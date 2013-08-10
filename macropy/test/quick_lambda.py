@@ -4,7 +4,7 @@ from macropy.quick_lambda import macros, f, _, lazy, interned
 from macropy.tracing import macros, show_expanded
 class Tests(unittest.TestCase):
     def test_basic(self):
-        assert map(f[_ - 1], [1, 2, 3]) == [0, 1, 2]
+        assert list(map(f[_ - 1], [1, 2, 3])) == [0, 1, 2]
         assert reduce(f[_ + _], [1, 2, 3]) == 6
 
     def test_partial(self):
@@ -12,7 +12,7 @@ class Tests(unittest.TestCase):
         assert basetwo('10010') == 18
 
     def test_attribute(self):
-        assert map(f[_.split(' ')[0]], ["i am cow", "hear me moo"]) == ["i", "hear"]
+        assert list(map(f[_.split(' ')[0]], ["i am cow", "hear me moo"])) == ["i", "hear"]
 
     def test_no_args(self):
         from random import random

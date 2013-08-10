@@ -12,7 +12,7 @@ class CaseClass(object):
     __slots__ = []
 
     def copy(self, **kwargs):
-        old = map(lambda a: (a, getattr(self, a)), self._fields)
+        old = list(map(lambda a: (a, getattr(self, a)), self._fields))
         new = kwargs.items()
         return self.__class__(**dict(old + new))
 
@@ -121,7 +121,8 @@ def find_members(tree, name):
                 and type(t.value) is Name
                 and t.value.id == name
             ]
-            map(collect, self_assigns)
+            for assign in self_assigns:
+                collect(assign)
     return find_member_assignments.collect(tree)
 
 def split_body(tree, gen_sym):
@@ -196,8 +197,8 @@ def shared_transform(tree, gen_sym, additional_args=[]):
     additional_members = find_members(tree.body, "self") + nested
 
     prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args)
-    set_fields.value.elts = map(Str, args)
-    set_slots.value.elts = map(Str, all_args + additional_members)
+    set_fields.value.elts = list(map(Str, args))
+    set_slots.value.elts = list(map(Str, all_args + additional_members))
     new_body, outer, init_body = split_body(tree, gen_sym)
     init_fun.body.extend(init_body)
     tree.body = new_body
@@ -258,7 +259,8 @@ def enum(tree, gen_sym, exact_src, **kw):
             if type(stmt) is Expr:
                 assert type(stmt.value) in (Tuple, Name, Call)
                 if type(stmt.value) is Tuple:
-                    map(handle, stmt.value.elts)
+                    for el in stmt.value.elts: 
+                        handle(el)
                 else:
                     handle(stmt.value)
             elif type(stmt) is FunctionDef:
