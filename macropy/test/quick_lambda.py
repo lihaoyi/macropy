@@ -2,6 +2,8 @@ import unittest
 
 from macropy.quick_lambda import macros, f, _, lazy, interned
 from macropy.tracing import macros, show_expanded
+from functools import reduce
+
 class Tests(unittest.TestCase):
     def test_basic(self):
         assert list(map(f[_ - 1], [1, 2, 3])) == [0, 1, 2]

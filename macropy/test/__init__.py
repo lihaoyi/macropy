@@ -17,7 +17,7 @@ from . import quick_lambda
 import macropy.core.test
 Tests = test_suite(cases=[
    # case_classes,
-   # quick_lambda,
+    quick_lambda,
    # string_interp,
    # tracing,
    # peg

@@ -2,6 +2,7 @@ from macropy.core.macros import *
 from macropy.core.quotes import macros, q, ast, u
 from macropy.core.hquotes import macros, hq, ast, u, name
 from macropy.core.cleanup import ast_ctx_fixer
+from six import PY3
 macros = Macros()
 
 def _():
@@ -23,7 +24,8 @@ def f(tree, gen_sym, **kw):
     tree, used_names = underscore_search.recurse_collect(tree)
 
     new_tree = q[lambda: ast[tree]]
-    new_tree.args.args = [Arg(Name(id = x)) for x in used_names]
+    if PY3: new_tree.args.args = [arg(arg = x) for x in used_names]
+    else:   new_tree.args.args = [Name(id = x) for x in used_names]
     return new_tree
 
 
