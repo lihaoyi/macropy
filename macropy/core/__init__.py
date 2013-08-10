@@ -247,7 +247,8 @@ if PY3:
                                             [None] * (len(tree.args) - len(tree.defaults)) + tree.defaults
                                         )) +
                                         box(mix("*", rec(tree.vararg, i))) +
-                                        [rec(arg, i) + "=" + rec(d, i) for a, d in zip(tree.kwonlyargs, tree.kw_defaults)] +
+                                        # TODO:
+                                        #[rec(arg, i) + "=" + rec(d, i) for a, d in zip(tree.kwonlyargs, tree.kw_defaults)] +
                                         box(mix("**", rec(tree.kwarg, i)))
                                     ),
     })

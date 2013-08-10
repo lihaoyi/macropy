@@ -282,6 +282,7 @@ def detect_macros(tree):
 
     for stmt in tree.body:
         if isinstance(stmt, ImportFrom) \
+                and stmt.module \
                 and stmt.names[0].name == 'macros' \
                 and stmt.names[0].asname is None:
             __import__(stmt.module)
