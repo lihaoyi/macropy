@@ -25,7 +25,7 @@ class Tests(unittest.TestCase):
 
         trace[1 + 2 + 3 + 4]
 
-        assert(result[-3:] == [
+        self.assertEqual(result[-3:], [
             "1 + 2 -> 3",
             "1 + 2 + 3 -> 6",
             "1 + 2 + 3 + 4 -> 10"
@@ -66,7 +66,7 @@ class Tests(unittest.TestCase):
         with self.assertRaises(AssertionError) as cm:
             require[1 == 10]
 
-        assert cm.exception.message == "Require Failed\n1 == 10 -> False"
+        assert str(cm.exception) == "Require Failed\n1 == 10 -> False"
 
         require[1 == 1]
 
@@ -84,7 +84,7 @@ class Tests(unittest.TestCase):
                 a > 5
                 a * b == 20
                 a < 2
-        assert cm.exception.message == "Require Failed\na < 2 -> False"
+        assert str(cm.exception) == "Require Failed\na < 2 -> False"
 
 
     def test_show_expanded(self):
@@ -98,8 +98,8 @@ class Tests(unittest.TestCase):
             a = 1
             b = 2
             with q as code:
-                print(a + u[b + 1])
+                return(a + u[b + 1])
 
         assert result[-3] == '\na = 1'
         assert result[-2] == '\nb = 2'
-        assert "code = [Print(dest=None, values=[BinOp(left=Name(id='a', ctx=Load()), op=Add(), right=ast_repr((b + 1)))], nl=True)]" in result[-1]
+        self.assertEqual("\ncode = [Return(value=BinOp(left=Name(id='a', ctx=Load()), op=Add(), right=ast_repr((b + 1))))]", result[-1])
