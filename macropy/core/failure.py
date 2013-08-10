@@ -18,8 +18,9 @@ def raise_error(ex):
 @register(filters)
 def clear_errors(tree, **kw):
     if isinstance(tree, Exception):
-        tb = traceback.format_exc()
-        msg = tree.message
+        tb = traceback.format_exc(chain=False)
+        #msg = tree.message
+        msg = str(tree)
         if type(tree) is not AssertionError or tree.args == ():
             msg = "".join(tree.args) + "\nCaused by Macro-Expansion Error:\n" + tb
         return hq[raise_error(MacroExpansionError(msg))]

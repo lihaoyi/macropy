@@ -1,11 +1,11 @@
 """Plumbing related to hooking into the import process, unrelated to MacroPy"""
 
 import sys
-import imp
 import ast
 import macropy.activate
 from .macros import *
 import traceback
+import imp
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
@@ -59,7 +59,7 @@ class MacroFinder(object):
             for (p, _) in bindings:
                 __import__(p)
 
-            modules = [(sys.modules[p], bindings) for (p, bindings) in bindings]
+            modules = [(sys.modules[p], bind) for (p, bind) in bindings]
 
             tree = expand_entire_ast(tree, txt, modules)
 
@@ -84,7 +84,7 @@ class MacroFinder(object):
             except Exception as e:
 
                 traceback.print_exc()
-
+            print("Loading", mod)
             return _MacroLoader(mod)
 
         except Exception as e:
@@ -93,3 +93,62 @@ class MacroFinder(object):
 
             traceback.print_exc()
             pass
+
+import importlib
+from importlib.machinery import SourceFileLoader, PathFinder
+from types import ModuleType
+import importlib.abc
+
+class _MacroLoaderPY3(importlib.abc.Loader):
+    """Performs the loading of a module with macro expansion."""
+    def __init__(self, mod):
+        self.mod = mod
+        #print("init, ", mod)
+
+    def load_module(self, fullname):
+        #print("!! loading", fullname, self.mod)
+        self.mod.__loader__ = self
+        sys.modules[fullname] = self.mod
+        return self.mod
+
+@singleton
+class MacroFinderPY3(importlib.abc.MetaPathFinder):
+    def find_module(self, module_name, package_path):
+        #loader = importlib.find_loader(module_name, pa ckage_path)
+        print(module_name, package_path)
+        #loader = SourceFileLoader(module_name, package_path[0])
+        try:
+            loader = (PathFinder.find_module(module_name, package_path))
+            #print(loader)
+            source_code = loader.get_source(module_name)
+        except:
+            return
+        print(module_name, source_code)
+        if not source_code or "macros" not in source_code:
+            return
+
+        tree = ast.parse(source_code)
+        bindings = detect_macros(tree)
+        if bindings == []:
+            return # no macros found, carry on
+
+
+        # TODO - try to import lazily
+        for (p, _) in bindings:
+            __import__(p)
+
+        modules = [(sys.modules[p], bind) for (p, bind) in bindings]
+
+        tree = expand_entire_ast(tree, source_code, modules)
+
+        code = compile(tree, loader.path, "exec")
+
+        mod = ModuleType(module_name)
+        mod.__package__ = module_name.rpartition('.')[0]
+        mod.__file__ = loader.path
+
+        #sys.modules[module_name] = mod
+
+        exec(code, mod.__dict__)
+        #print("done!")
+        return _MacroLoaderPY3(mod)

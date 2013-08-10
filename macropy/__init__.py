@@ -11,8 +11,9 @@ def activate():
 
     from .core import import_hooks
     import sys
-    sys.meta_path.insert(0, import_hooks.MacroFinder)
+    sys.meta_path.insert(0, import_hooks.MacroFinderPY3)
     print("blah", sys.meta_path)
+    import macropy
     from .core import hquotes
     from .core import failure
 
