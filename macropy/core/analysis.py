@@ -1,6 +1,7 @@
 """Walker that performs simple name-binding analysis as it traverses the AST"""
 from .walkers import *
 from macropy.core import merge_dicts
+from six import PY3
 
 __all__ = ['Scoped']
 @Walker
@@ -21,11 +22,18 @@ def find_assignments(tree, collect, stop, **kw):
 
 
 def extract_arg_names(args):
-    return dict(
-        ([(args.vararg, args.vararg)] if args.vararg else []) +
-        ([(args.kwarg, args.kwarg)] if args.kwarg else []) +
-        [pair for x in args.args for pair in find_names.collect(x)]
-    )
+    if PY3:
+        return dict(
+            ([(args.vararg.arg, args.vararg.arg)] if args.vararg else []) +
+            ([(args.kwarg.arg, args.kwarg.arg)] if args.kwarg else []) +
+            [(arg.arg, Name(id=arg.arg, ctx=Param())) for arg in args.args]
+        )
+    else:
+        return dict(
+            ([(args.vararg, args.vararg)] if args.vararg else []) +
+            ([(args.kwarg, args.kwarg)] if args.kwarg else []) +
+            [pair for x in args.args for pair in find_names.collect(x)]
+        )
 
 class Scoped(Walker):
     """
@@ -94,7 +102,11 @@ class Scoped(Walker):
             extend_scope(tree.body, dict(find_assignments.collect(tree.body)), remove=[tree.name])
 
         if type(tree) is ExceptHandler:
-            extend_scope(tree.body, {tree.name.id: tree.name})
+            if PY3:
+                extend_scope(tree.body, {tree.name: Name(id=tree.name, ctx=Param())})
+            else:
+                extend_scope(tree.body, {tree.name.id: tree.name})
+            
 
         if type(tree) is For:
             extend_scope(tree.body, dict(find_names.collect(tree.target)))

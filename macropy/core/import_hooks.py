@@ -126,9 +126,9 @@ try:
                 return
 
             tree = ast.parse(source_code)
-            print()
-            print()
-            print(module_name)
+            # print()
+            # print()
+            # print(module_name)
             bindings = detect_macros(tree)
             if bindings == []:
                 return # no macros found, carry on

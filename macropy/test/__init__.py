@@ -13,7 +13,7 @@ from . import quick_lambda
 # from . import string_interp
 # from . import tracing
 # from . import peg
-import macropy.experimental.test
+# import macropy.experimental.test
 import macropy.core.test
 Tests = test_suite(cases=[
    # case_classes,
