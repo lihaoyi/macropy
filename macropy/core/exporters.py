@@ -16,7 +16,7 @@ class NullExporter(object):
     def export_transformed(self, code, tree, module_name, file_name):
         pass
 
-    def find(self, file, pathname, description, module_name, package_path):
+    def find(self, file_path, pathname, description, module_name, package_path):
         pass
 
 class SaveExporter(object):
@@ -37,7 +37,7 @@ class SaveExporter(object):
         with open(new_path, "w") as f:
             f.write(unparse(tree))
 
-    def find(self, file, pathname, description, module_name, package_path):
+    def find(self, file_path, pathname, description, module_name, package_path):
         pass
 
 suffix = __debug__ and 'c' or 'o'
@@ -55,9 +55,10 @@ class PycExporter(object):
         f.seek(0, 0)
         f.write(imp.get_magic())
 
-    def find(self, file, pathname, description, module_name, package_path):
+    def find(self, file_path, pathname, description, module_name, package_path):
 
         try:
+            file = open(file_path, 'rb')
             f = open(file.name + suffix, 'rb')
             py_time = os.fstat(file.fileno()).st_mtime
             pyc_time = os.fstat(f.fileno()).st_mtime
