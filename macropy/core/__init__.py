@@ -61,8 +61,8 @@ def ast_repr(x):
             [x.val, ast_repr(x.name)], [], None, None
         )
     elif type(x) in (bool, type(None)):
-        if PY3:                     return ast.NameConstant(value=x)
-        else:                       return ast.Name(id=str(x))
+        if sys.version_info >= (3, 4):  return ast.NameConstant(value=x)
+        else:                           return ast.Name(id=str(x))
     elif isinstance(x, ast.AST):
         fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
         return ast.Call(
@@ -237,7 +237,6 @@ if PY3:
         With:       lambda tree, i: tabs(i) + "with " + jmap(", ", lambda x: rec(x,i), tree.items) + ":" + 
                                     rec(tree.body, i+1),
         Bytes:      lambda tree, i: repr(tree.s),
-        NameConstant:   lambda tree, i: str(tree.value),
         Starred:    lambda tree, i: "*" + rec(tree.value),
         arg:        lambda tree, i: tree.arg + mix(":", tree.annotation),
         withitem:   lambda tree, i: rec(tree.context_expr, i) + mix(" as ", rec(tree.optional_vars, i)),
@@ -252,6 +251,8 @@ if PY3:
                                         box(mix("**", rec(tree.kwarg, i)))
                                     ),
     })
+    if sys.version_info >= (3, 4):
+        trec[NameConstant] = lambda tree, i: str(tree.value)
 else:
     trec.update({
         Exec:       lambda tree, i: tabs(i) + "exec " + rec(tree.body, i) +
