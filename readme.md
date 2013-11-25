@@ -1211,7 +1211,7 @@ Pretty neat! This full example of a JSON parser demonstrates what MacroPEG provi
 - An extremely clear PEG-like syntax
 - Extremely concise parser definitions
 
-Not bad for an implementation that spans [350 lines of code](macropy/experimental/peg.py)!
+Not bad for an implementation that spans [350 lines of code](macropy/peg.py)!
 
 Experimental Macros
 ===================
