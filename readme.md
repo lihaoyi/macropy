@@ -54,7 +54,7 @@ The [Reference Documentation](#reference) contains information about:
 
 Or just skip ahead to the [Discussion](#discussion) and [Conclusion](#macropy-bringing-macros-to-python). We're open to contributions, so send us your ideas/questions/issues/pull-requests and we'll do our best to accommodate you! You can ask questions on the [Google Group](https://groups.google.com/forum/#!forum/macropy) or file bugs on thee [issues](issues) page. See the [changelist](changes.md) to see what's changed recently.
 
-MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but not on Python 3.X or [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy), using a standard [setup.py](setup.py) to manage dependencies, installation and other things. Check out [this gist](https://gist.github.com/lihaoyi/5577609) for an example of setting it up on a clean system.
+MacroPy is tested to run on [CPython 2.7.2](http://en.wikipedia.org/wiki/CPython) and [PyPy 2.0](http://pypy.org/), but with only partial support for Python 3.X (You'll need to clone the [python3 branch](https://github.com/lihaoyi/macropy/tree/python3) yourself) and no support for [Jython](http://www.jython.org/). MacroPy is also available on [PyPI](https://pypi.python.org/pypi/MacroPy), using a standard [setup.py](setup.py) to manage dependencies, installation and other things. Check out [this gist](https://gist.github.com/lihaoyi/5577609) for an example of setting it up on a clean system.
 
 30,000ft Overview
 =================
