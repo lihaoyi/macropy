@@ -1,3 +1,4 @@
+import os
 import unittest
 from macropy.peg import macros, peg, Success, cut, ParseError
 
@@ -365,11 +366,14 @@ expected: '}'
 
 
         # full tests, taken from http://www.json.org/JSON_checker/
+        peg_json_folder = os.path.join(os.path.dirname(__file__), "peg_json")
         for i in range(1, 34):
             if i not in [18]: # skipping the "too much nesting" failure test
 
                 with self.assertRaises(ParseError):
-                    json_doc.parse(open(__file__ + "/../peg_json/fail%s.json" % i).read())
+                    path = os.path.join(peg_json_folder, "fail%s.json" % i)
+                    json_doc.parse(open(path).read())
 
         for i in [1, 2, 3]:
-            test(json_exp, open(__file__ + "/../peg_json/pass%s.json" % i).read())
+            path = os.path.join(peg_json_folder, "pass%s.json" % i)
+            test(json_exp, open(path).read())
