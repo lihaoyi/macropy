@@ -6,17 +6,17 @@ from six import PY3
 __all__ = ['Scoped']
 @Walker
 def find_names(tree, collect, stop, **kw):
-    if type(tree) in [Attribute, Subscript]:
+    if isinstance(tree, (Attribute, Subscript)):
         stop()
     if isinstance(tree, Name):
         collect((tree.id, tree))
 
 @Walker
 def find_assignments(tree, collect, stop, **kw):
-    if type(tree) in [ClassDef, FunctionDef]:
+    if isinstance(tree, (ClassDef, FunctionDef)):
         collect((tree.name, tree))
         stop()
-    if type(tree) is Assign:
+    if isinstance(tree, Assign):
         for x in find_names.collect(tree.targets):
             collect(x)
 
@@ -70,10 +70,10 @@ class Scoped(Walker):
                     del new_scope[rem]
 
             set_ctx_for(tree, scope=new_scope)
-        if type(tree) is Lambda:
+        if isinstance(tree, Lambda):
             extend_scope(tree.body, extract_arg_names(tree.args))
 
-        if type(tree) in (GeneratorExp, ListComp, SetComp, DictComp):
+        if isinstance(tree, (GeneratorExp, ListComp, SetComp, DictComp)):
             iterator_vars = {}
             for gen in tree.generators:
                 extend_scope(gen.target, iterator_vars)
@@ -81,13 +81,13 @@ class Scoped(Walker):
                 iterator_vars.update(dict(find_names.collect(gen.target)))
                 extend_scope(gen.ifs, iterator_vars)
 
-            if type(tree) is DictComp:
+            if isinstance(tree, DictComp):
                 extend_scope(tree.key, iterator_vars)
                 extend_scope(tree.value, iterator_vars)
             else:
                 extend_scope(tree.elt, iterator_vars)
 
-        if type(tree) is FunctionDef:
+        if isinstance(tree, FunctionDef):
 
             extend_scope(tree.args, {tree.name: tree})
             extend_scope(
@@ -97,19 +97,22 @@ class Scoped(Walker):
                 dict(find_assignments.collect(tree.body)),
             )
 
-        if type(tree) is ClassDef:
+        if isinstance(tree, ClassDef):
             extend_scope(tree.bases, remove=[tree.name])
             extend_scope(tree.body, dict(find_assignments.collect(tree.body)), remove=[tree.name])
 
-        if type(tree) is ExceptHandler:
+        if isinstance(tree, ExceptHandler):
             if PY3:
                 extend_scope(tree.body, {tree.name: Name(id=tree.name, ctx=Param())})
             else:
                 extend_scope(tree.body, {tree.name.id: tree.name})
             
 
-        if type(tree) is For:
+        if isinstance(tree, For):
             extend_scope(tree.body, dict(find_names.collect(tree.target)))
+
+        if isinstance(tree, With):
+            extend_scope(tree.body, dict(find_names.collect(tree.items)))
 
         return self.walker.func(
             tree,
