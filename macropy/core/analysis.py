@@ -24,8 +24,8 @@ def find_assignments(tree, collect, stop, **kw):
 def extract_arg_names(args):
     if PY3:
         return dict(
-            ([(args.vararg, args.vararg)] if args.vararg else []) +
-            ([(args.kwarg, args.kwarg)] if args.kwarg else []) +
+            ([(args.vararg.arg, args.vararg)] if args.vararg else []) +
+            ([(args.kwarg.arg, args.kwarg)] if args.kwarg else []) +
             [(arg.arg, Name(id=arg.arg, ctx=Param())) for arg in args.args]
         )
     else:
