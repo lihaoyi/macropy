@@ -1,9 +1,15 @@
+
+
+# Imports added by remove_from_imports.
+
+import macropy.core
+import macropy.core.macros
+
 import re
 
-from macropy.core.macros import *
 from macropy.core.hquotes import macros, hq, u, ast_list
 
-macros = Macros()
+macros = macropy.core.macros.Macros()
 
 @macros.expr
 def s(tree, **kw):
@@ -18,6 +24,6 @@ def s(tree, **kw):
             new_string += "%s"
             captured += [chunks[i]]
 
-    result = hq[u[new_string] % tuple(ast_list[list(map(parse_expr, captured))])]
+    result = hq[u[new_string] % tuple(ast_list[list(map(macropy.core.parse_expr, captured))])]
 
     return result

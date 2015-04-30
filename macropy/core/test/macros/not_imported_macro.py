@@ -1,11 +1,17 @@
-from macropy.core.macros import *
 
-macros = Macros()
+
+# Imports added by remove_from_imports.
+
+import macropy.core.macros
+import _ast
+
+
+macros = macropy.core.macros.Macros()
 
 @macros.expr
 def g(tree, **kw):
-    return Num(n = 0)
+    return _ast.Num(n = 0)
 
 @macros.expr
 def f(tree, **kw):
-    return Num(n = 0)
+    return _ast.Num(n = 0)

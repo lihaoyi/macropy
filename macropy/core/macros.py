@@ -1,13 +1,18 @@
 """The main source of all things MacroPy"""
 
+
+# Imports added by remove_from_imports.
+
+import macropy.core
+import _ast
+import macropy.core.walkers
+
+
 import sys
 import imp
 import ast
 import itertools
 from six import PY3
-from ast import *
-from .util import *
-from .walkers import *
 
 
 # TODO: How do we do this in py3?
@@ -107,7 +112,7 @@ def expand_entire_ast(tree, src, bindings):
 
         def expand_if_in_registry(macro_tree, body_tree, args, registry, **kwargs):
             """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
-            if isinstance(macro_tree, Name) and macro_tree.id in registry:
+            if isinstance(macro_tree, _ast.Name) and macro_tree.id in registry:
 
                 (the_macro, the_module) = registry[macro_tree.id]
                 try:
@@ -133,7 +138,7 @@ def expand_entire_ast(tree, src, bindings):
                     )
 
                 return new_tree
-            elif isinstance(macro_tree, Call):
+            elif isinstance(macro_tree, _ast.Call):
                 args.extend(macro_tree.args)
                 return expand_if_in_registry(macro_tree.func, body_tree, args, registry)
 
@@ -156,8 +161,8 @@ def expand_entire_ast(tree, src, bindings):
         def macro_expand(tree):
             """Tail Recursively expands all macros in a single AST node"""
             #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            if isinstance(tree, With):
-                assert isinstance(tree.body, list), real_repr(tree.body)
+            if isinstance(tree, _ast.With):
+                assert isinstance(tree.body, list), macropy.core.real_repr(tree.body)
                 if PY3:
                     new_tree = tree.body
                     for withitem in tree.items:
@@ -179,21 +184,21 @@ def expand_entire_ast(tree, src, bindings):
 
 
                 if new_tree:
-                    if isinstance(new_tree, expr):
-                        new_tree = [Expr(new_tree)]
+                    if isinstance(new_tree, _ast.expr):
+                        new_tree = [_ast.Expr(new_tree)]
                     if isinstance(new_tree, Exception): raise new_tree
                     assert isinstance(new_tree, list), type(new_tree)
                     return macro_expand(new_tree)
 
-            if isinstance(tree, Subscript) and type(tree.slice) is Index:
+            if isinstance(tree, _ast.Subscript) and type(tree.slice) is _ast.Index:
 
                 new_tree = expand_if_in_registry(tree.value, tree.slice.value, [], expr_registry)
 
                 if new_tree:
-                    assert isinstance(new_tree, expr), type(new_tree)
+                    assert isinstance(new_tree, _ast.expr), type(new_tree)
                     return macro_expand(new_tree)
 
-            if isinstance(tree, ClassDef) or isinstance(tree, FunctionDef):
+            if isinstance(tree, _ast.ClassDef) or isinstance(tree, _ast.FunctionDef):
                 seen_decs = []
                 additions = []
                 while tree.decorator_list != []:
@@ -210,10 +215,10 @@ def expand_entire_ast(tree, src, bindings):
                         if type(tree) is list:
                             additions = tree[1:]
                             tree = tree[0]
-                        elif isinstance(tree, expr):
-                            tree = [Expr(tree)]
+                        elif isinstance(tree, _ast.expr):
+                            tree = [_ast.Expr(tree)]
                             break
-                if type(tree) is ClassDef or type(tree) is FunctionDef:
+                if type(tree) is _ast.ClassDef or type(tree) is _ast.FunctionDef:
                     tree.decorator_list = seen_decs
                 if len(additions) == 0:
                     return tree
@@ -222,7 +227,7 @@ def expand_entire_ast(tree, src, bindings):
 
             return tree
 
-        @Walker
+        @macropy.core.walkers.Walker
         def macro_searcher(tree, **kw):
             x = macro_expand(tree)
             return x
@@ -276,7 +281,7 @@ def detect_macros(tree):
     bindings = []
 
     for stmt in tree.body:
-        if isinstance(stmt, ImportFrom) \
+        if isinstance(stmt, _ast.ImportFrom) \
                 and stmt.module \
                 and stmt.names[0].name == 'macros' \
                 and stmt.names[0].asname is None:
@@ -296,7 +301,7 @@ def detect_macros(tree):
             ]
 
             stmt.names.extend([
-                alias(x, x) for x in
+                _ast.alias(x, x) for x in
                 mod.macros.expose_unhygienic.registry.keys()
             ])
 
@@ -304,8 +309,8 @@ def detect_macros(tree):
 
 def check_annotated(tree):
     """Shorthand for checking if an AST is of the form something[...]"""
-    if isinstance(tree, Subscript) and \
-                    type(tree.slice) is Index and \
-                    type(tree.value) is Name:
+    if isinstance(tree, _ast.Subscript) and \
+                    type(tree.slice) is _ast.Index and \
+                    type(tree.value) is _ast.Name:
         return tree.value.id, tree.slice.value
 

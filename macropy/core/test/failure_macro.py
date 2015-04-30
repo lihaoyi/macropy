@@ -1,7 +1,12 @@
-from macropy.core.failure import MacroExpansionError
-from macropy.core.macros import *
 
-macros = Macros()
+
+# Imports added by remove_from_imports.
+
+import macropy.core.macros
+
+from macropy.core.failure import MacroExpansionError
+
+macros = macropy.core.macros.Macros()
 
 @macros.expr
 def f(tree, gen_sym, **kw):

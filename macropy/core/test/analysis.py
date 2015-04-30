@@ -1,7 +1,12 @@
+
+
+# Imports added by remove_from_imports.
+
+import macropy.core
+
 import unittest
 from .walkers import Walker
 from macropy.core.analysis import Scoped, extract_arg_names
-from macropy.core import *
 import ast
 
 @Scoped
@@ -9,7 +14,7 @@ import ast
 def scoped(tree, scope, collect, **kw):
     try:
         if scope != {}:
-            collect((unparse(tree), {k: type(v) for k, v in scope.items()}))
+            collect((macropy.core.unparse(tree), {k: type(v) for k, v in scope.items()}))
     except:
         pass
 
@@ -31,11 +36,11 @@ class Tests(unittest.TestCase):
 
 
     def test_simple_expr(self):
-        tree = parse_expr("(lambda x: a)")
+        tree = macropy.core.parse_expr("(lambda x: a)")
 
         self.assertEqual(scoped.collect(tree), [('a', {'x': ast.Name})])
 
-        tree = parse_expr("(lambda x, y: (lambda z: a))")
+        tree = macropy.core.parse_expr("(lambda x, y: (lambda z: a))")
 
         self.assertEqual(scoped.collect(tree), [
             ('(lambda z: a)', {'y': ast.Name, 'x': ast.Name}),
@@ -44,7 +49,7 @@ class Tests(unittest.TestCase):
             ('a', {'y': ast.Name, 'x': ast.Name, 'z': ast.Name})
         ])
 
-        tree = parse_expr("[e for (a, b) in c for d in e if f]")
+        tree = macropy.core.parse_expr("[e for (a, b) in c for d in e if f]")
 
         self.assertEqual(scoped.collect(tree), [
             ('e', {'a': ast.Name, 'b': ast.Name, 'd': ast.Name}),
@@ -54,7 +59,7 @@ class Tests(unittest.TestCase):
         ])
 
 
-        tree = parse_expr("{k: v for k, v in d}")
+        tree = macropy.core.parse_expr("{k: v for k, v in d}")
 
         self.assertEqual(scoped.collect(tree), [
             ('k', {'k': ast.Name, 'v': ast.Name}),
@@ -62,7 +67,7 @@ class Tests(unittest.TestCase):
         ])
 
     def test_simple_stmt(self):
-        tree = parse_stmt("""
+        tree = macropy.core.parse_stmt("""
 def func(x, y):
     return x
         """)
@@ -76,7 +81,7 @@ def func(x, y):
             ('x', {'y': ast.Name, 'x': ast.Name, 'func': ast.FunctionDef})
         ])
 
-        tree = parse_stmt("""
+        tree = macropy.core.parse_stmt("""
 def func(x, y):
     z = 10
     return x
@@ -94,7 +99,7 @@ def func(x, y):
             ('x', {'y': ast.Name, 'x': ast.Name, 'z': ast.Name, 'func': ast.FunctionDef})
         ])
 
-        tree = parse_stmt("""
+        tree = macropy.core.parse_stmt("""
 class C(A, B):
     z = 10
     printfunction(z)
@@ -110,7 +115,7 @@ class C(A, B):
             ('z', {'z': ast.Name})
         ])
 
-        tree = parse_stmt("""
+        tree = macropy.core.parse_stmt("""
 def func(x, y):
     def do_nothing(): pass
     class C(): pass
@@ -134,7 +139,7 @@ def func(x, y):
             ('10', {'y': ast.Name, 'x': ast.Name, 'C': ast.ClassDef, 'do_nothing': ast.FunctionDef, 'func': ast.FunctionDef})
         ])
 
-        tree = parse_stmt("""
+        tree = macropy.core.parse_stmt("""
 try:
     pass
 except Exception as e:
@@ -146,7 +151,7 @@ except Exception as e:
         ])
 
         # This one still doesn't work right
-        tree = parse_stmt("""
+        tree = macropy.core.parse_stmt("""
 C = 1
 class C:
     C

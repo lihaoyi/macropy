@@ -3,18 +3,26 @@
 `u`, `name`, `ast` and `ast_list` are the unquote delimiters, used to
 interpolate things into a quoted section.
 """
-from macropy.core.macros import *
 
 
-macros = Macros()
+# Imports added by remove_from_imports.
+
+import macropy.core
+import macropy.core.macros
+import _ast
+import macropy.core.walkers
+
+
+
+macros = macropy.core.macros.Macros()
 
 
 
 
-@Walker
+@macropy.core.walkers.Walker
 def unquote_search(tree, **kw):
 
-    res = check_annotated(tree)
+    res = macropy.core.macros.check_annotated(tree)
     if res:
         func, right = res
         for f in [u, name, ast, ast_list]:
@@ -26,7 +34,7 @@ def unquote_search(tree, **kw):
 @macros.expr
 def q(tree, **kw):
     tree = unquote_search.recurse(tree)
-    tree = ast_repr(tree)
+    tree = macropy.core.ast_repr(tree)
     return tree
 
 
@@ -36,31 +44,31 @@ def q(tree, target, **kw):
     representation which can be manipulated at runtime. Used together with
     the `u`, `name`, `ast`, `ast_list` unquotes."""
     body = unquote_search.recurse(tree)
-    new_body = ast_repr(body)
-    return [Assign([target], new_body)]
+    new_body = macropy.core.ast_repr(body)
+    return [_ast.Assign([target], new_body)]
 
 
-@macro_stub
+@macropy.core.macros.macro_stub
 def u(tree):
     """Splices a value into the quoted code snippet, converting it into an AST
     via ast_repr"""
-    return Literal(Call(Name(id="ast_repr"), [tree], [], None, None))
+    return macropy.core.Literal(_ast.Call(_ast.Name(id="ast_repr"), [tree], [], None, None))
 
 
-@macro_stub
+@macropy.core.macros.macro_stub
 def name(tree):
     "Splices a string value into the quoted code snippet as a Name"
-    return Literal(Call(Name(id="Name"), [], [keyword("id", tree)], None, None))
+    return macropy.core.Literal(_ast.Call(_ast.Name(id="Name"), [], [_ast.keyword("id", tree)], None, None))
 
 
-@macro_stub
+@macropy.core.macros.macro_stub
 def ast(tree):
     "Splices an AST into the quoted code snippet"
-    return Literal(tree)
+    return macropy.core.Literal(tree)
 
 
-@macro_stub
+@macropy.core.macros.macro_stub
 def ast_list(tree):
     """Splices a list of ASTs into the quoted code snippet as a List node"""
-    return Literal(Call(Name(id="List"), [], [keyword("elts", tree)], None, None))
+    return macropy.core.Literal(_ast.Call(_ast.Name(id="List"), [], [_ast.keyword("elts", tree)], None, None))
 

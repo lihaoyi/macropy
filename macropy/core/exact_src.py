@@ -3,9 +3,14 @@ the source extent of an AST.
 
 Exposed to each macro as an `exact_src` funciton."""
 
+
+# Imports added by remove_from_imports.
+
+import _ast
+
+
 from macropy.core import unparse
 from macropy.core.macros import injected_vars
-from ast import *
 from macropy.core.util import Lazy, distinct, register
 from .walkers import Walker
 
@@ -23,10 +28,10 @@ def indexer(tree, collect, **kw):
     except: pass
 
 _transforms = {
-    GeneratorExp: "(%s)",
-    ListComp: "[%s]",
-    SetComp: "{%s}",
-    DictComp: "{%s}"
+    _ast.GeneratorExp: "(%s)",
+    _ast.ListComp: "[%s]",
+    _ast.SetComp: "{%s}",
+    _ast.DictComp: "{%s}"
 }
 
 
@@ -47,14 +52,14 @@ def exact_src(tree, src, **kw):
             prelim = _transforms.get(type(tree), "%s") % prelim
 
 
-            if isinstance(tree, stmt):
+            if isinstance(tree, _ast.stmt):
                 prelim = prelim.replace("\n" + " " * tree.col_offset, "\n")
 
             if isinstance(tree, list):
                 prelim = prelim.replace("\n" + " " * tree[0].col_offset, "\n")
 
             try:
-                if isinstance(tree, expr):
+                if isinstance(tree, _ast.expr):
                     x = "(" + prelim + ")"
                 else:
                     x = prelim

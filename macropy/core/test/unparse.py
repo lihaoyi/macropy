@@ -1,11 +1,17 @@
+
+
+# Imports added by remove_from_imports.
+
+import macropy.core
+import macropy.core.macros
+
 import unittest
 
-from macropy.core.macros import *
 from six import PY3
 
 def convert(code):
     " string -> ast -> string "
-    return unparse(parse_stmt(code))
+    return macropy.core.unparse(macropy.core.parse_stmt(code))
 
 class Tests(unittest.TestCase):
 
@@ -31,7 +37,7 @@ assert foo, bar
 del foo
 global foo, bar, baz
 (yield foo)"""
-        if PY3:
+        if macropy.core.macros.PY3:
             test += """
 print('hello', 'world')
 nonlocal foo, bar, baz"""
@@ -41,7 +47,7 @@ print 'hello', 'world'"""
         self.convert_test(test)
 
     def test_Exec(self):
-        if PY3:
+        if macropy.core.macros.PY3:
             self.convert_test("""
 exec('foo')
 exec('foo', bar)
@@ -53,7 +59,7 @@ exec 'foo' in bar
 exec 'foo' in bar, {}""")
 
     def test_Raise(self):
-        if PY3:
+        if macropy.core.macros.PY3:
             self.convert_test("""
 raise
 raise Exception(e)
@@ -160,7 +166,7 @@ with a as b:
 {1:2, 5:8}
 (1, 2, 3)
 """)
-        if PY3: self.convert_test("\n[1, 5.0, [(-(6))]]")
+        if macropy.core.macros.PY3: self.convert_test("\n[1, 5.0, [(-(6))]]")
         else:   self.convert_test("\n[1, 5.0, [(-6)]]")
         self.convert_test("\n'abcd'")
 

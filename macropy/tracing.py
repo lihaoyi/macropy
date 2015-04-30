@@ -1,10 +1,19 @@
 
-from macropy.core.macros import *
+
+# Imports added by remove_from_imports.
+
+import macropy.core
+import macropy.core.macros
+import ast
+import _ast
+import macropy.core.walkers
+
+
 from macropy.core.hquotes import macros, u, hq, unhygienic
 
 import copy
 
-macros = Macros()
+macros = macropy.core.macros.Macros()
 
 
 def literal_eval(node_or_string):
@@ -16,33 +25,33 @@ def literal_eval(node_or_string):
     """
     _safe_names = {'None': None, 'True': True, 'False': False}
     if isinstance(node_or_string, str):
-        node_or_string = parse(node_or_string, mode='eval')
-    if isinstance(node_or_string, Expression):
+        node_or_string = ast.parse(node_or_string, mode='eval')
+    if isinstance(node_or_string, _ast.Expression):
         node_or_string = node_or_string.body
     def _convert(node):
-        if isinstance(node, Str):
+        if isinstance(node, _ast.Str):
             return node.s
-        elif isinstance(node, Num):
+        elif isinstance(node, _ast.Num):
             return node.n
-        elif isinstance(node, Tuple):
+        elif isinstance(node, _ast.Tuple):
             return tuple(map(_convert, node.elts))
-        elif isinstance(node, List):
+        elif isinstance(node, _ast.List):
             return list(map(_convert, node.elts))
-        elif isinstance(node, Dict):
+        elif isinstance(node, _ast.Dict):
             return dict((_convert(k), _convert(v)) for k, v
                         in zip(node.keys, node.values))
-        elif isinstance(node, Name):
+        elif isinstance(node, _ast.Name):
             if node.id in _safe_names:
                 return _safe_names[node.id]
-        elif isinstance(node, BinOp) and \
-             isinstance(node.op, (Add, Sub)) and \
-             isinstance(node.right, Num) and \
+        elif isinstance(node, _ast.BinOp) and \
+             isinstance(node.op, (_ast.Add, _ast.Sub)) and \
+             isinstance(node.right, _ast.Num) and \
              isinstance(node.right.n, complex) and \
-             isinstance(node.left, Num) and \
+             isinstance(node.left, _ast.Num) and \
              isinstance(node.left.n, (int, long, float)):
             left = node.left.n
             right = node.right.n
-            if isinstance(node.op, Add):
+            if isinstance(node.op, _ast.Add):
                 return left + right
             else:
                 return left - right
@@ -66,7 +75,7 @@ def wrap_simple(printer, txt, x):
 def log(tree, exact_src, **kw):
     """Prints out source code of the wrapped expression and the value it
     evaluates to"""
-    new_tree = hq[wrap(unhygienic[log], u[exact_src(tree)], ast[tree])]
+    new_tree = hq[wrap(unhygienic[log], u[exact_src(tree)], ast.ast[tree])]
     return new_tree
 
 
@@ -75,7 +84,7 @@ def show_expanded(tree, expand_macros,  **kw):
     """Prints out the expanded version of the wrapped source code, after all
     macros inside it have been expanded"""
     expanded_tree = expand_macros(tree)
-    new_tree = hq[wrap_simple(unhygienic[log], u[unparse(expanded_tree)], ast[expanded_tree])]
+    new_tree = hq[wrap_simple(unhygienic[log], u[macropy.core.unparse(expanded_tree)], ast.ast[expanded_tree])]
     return new_tree
 
 
@@ -88,7 +97,7 @@ def show_expanded(tree, expand_macros, **kw):
         new_stmt = expand_macros(stmt)
 
         with hq as code:
-            unhygienic[log](u[unparse(new_stmt)])
+            unhygienic[log](u[macropy.core.unparse(new_stmt)])
         new_tree.append(code)
         new_tree.append(new_stmt)
 
@@ -96,12 +105,12 @@ def show_expanded(tree, expand_macros, **kw):
 
 
 def trace_walk_func(tree, exact_src):
-    @Walker
+    @macropy.core.walkers.Walker
     def trace_walk(tree, stop, **kw):
 
-        if isinstance(tree, expr) and \
+        if isinstance(tree, _ast.expr) and \
                 tree._fields != () and \
-                type(tree) is not Name:
+                type(tree) is not _ast.Name:
 
             try:
                 literal_eval(tree)
@@ -110,11 +119,11 @@ def trace_walk_func(tree, exact_src):
             except ValueError as e:
                 txt = exact_src(tree)
                 trace_walk.walk_children(tree)
-                wrapped = hq[wrap(unhygienic[log], u[txt], ast[tree])]
+                wrapped = hq[wrap(unhygienic[log], u[txt], ast.ast[tree])]
                 stop()
                 return wrapped
 
-        elif isinstance(tree, stmt):
+        elif isinstance(tree, _ast.stmt):
             txt = exact_src(tree)
             trace_walk.walk_children(tree)
             with hq as code:
@@ -145,7 +154,7 @@ def trace(tree, exact_src, **kw):
 def require_transform(tree, exact_src):
     ret = trace_walk_func(copy.deepcopy(tree), exact_src)
     trace_walk_func(copy.deepcopy(tree), exact_src)
-    new = hq[ast[tree] or wrap_require(lambda log: ast[ret])]
+    new = hq[ast.ast[tree] or wrap_require(lambda log: ast.ast[ret])]
     return new
 
 

@@ -1,6 +1,11 @@
-from macropy.core.macros import *
+
+
+# Imports added by remove_from_imports.
+
+import macropy.core.macros
+
 from macropy.core.quotes import macros, q
-macros = Macros()
+macros = macropy.core.macros.Macros()
 
 @macros.block
 def my_macro(tree, **kw):

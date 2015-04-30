@@ -1,8 +1,20 @@
 """Macro providing an extremely concise way of declaring classes"""
-from macropy.core.macros import *
+
+
+# Imports added by remove_from_imports.
+
+import macropy.core
+import macropy.core.macros
+import ast
+import _ast
+import macropy.core.walkers
+
 from macropy.core.hquotes import macros, hq, name, unhygienic, u
 from macropy.core.analysis import Scoped
-macros = Macros()
+
+import six
+
+macros = macropy.core.macros.Macros()
 
 def apply(f):
     return f()
@@ -84,20 +96,20 @@ def extract_args(bases):
     kwarg = None
     defaults = []
     for base in bases:
-        if type(base) is Name:
+        if type(base) is _ast.Name:
             args.append(base.id)
 
-        elif type(base) is List:
+        elif type(base) is _ast.List:
             vararg = base.elts[0].id
 
-        elif type(base) is Set:
+        elif type(base) is _ast.Set:
             kwarg = base.elts[0].id
 
-        elif type(base) is BinOp and type(base.op) is BitOr:
+        elif type(base) is _ast.BinOp and type(base.op) is _ast.BitOr:
             args.append(base.left.id)
             defaults.append(base.right)
         else:
-            assert False, "Illegal expression in case class signature: " + unparse(base)
+            assert False, "Illegal expression in case class signature: " + macropy.core.unparse(base)
 
     all_args = args[:]
     if vararg:
@@ -110,15 +122,15 @@ def extract_args(bases):
 
 def find_members(tree, name):
     @Scoped
-    @Walker
+    @macropy.core.walkers.Walker
     def find_member_assignments(tree, collect, stop, scope, **kw):
         if name in scope.keys():
             stop()
-        elif type(tree) is Assign:
+        elif type(tree) is _ast.Assign:
             self_assigns = [
                 t.attr for t in tree.targets
-                if type(t) is Attribute
-                and type(t.value) is Name
+                if type(t) is _ast.Attribute
+                and type(t.value) is _ast.Name
                 and t.value.id == name
             ]
             for assign in self_assigns:
@@ -130,16 +142,16 @@ def split_body(tree, gen_sym):
         outer = []
         init_body = []
         for statement in tree.body:
-            if type(statement) is ClassDef:
-                outer.append(case_transform(statement, gen_sym, [Name(id=tree.name)]))
+            if type(statement) is _ast.ClassDef:
+                outer.append(case_transform(statement, gen_sym, [_ast.Name(id=tree.name)]))
                 with hq as a:
                     name[tree.name].b = name[statement.name]
                 a_old = a[0]
                 a_old.targets[0].attr = statement.name
 
-                a_new = parse_stmt(unparse(a[0]))[0]
+                a_new = macropy.core.parse_stmt(macropy.core.unparse(a[0]))[0]
                 outer.append(a_new)
-            elif type(statement) is FunctionDef:
+            elif type(statement) is _ast.FunctionDef:
                 new_body.append(statement)
             else:
                 init_body.append(statement)
@@ -148,8 +160,8 @@ def split_body(tree, gen_sym):
 
 def prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args):
 
-    init_fun.args = arguments(
-        args = [Name(id="self")] + [Name(id = id) for id in args],
+    init_fun.args = _ast.arguments(
+        args = [_ast.Name(id="self")] + [_ast.Name(id = id) for id in args],
         vararg = vararg,
         kwarg = kwarg,
         defaults = defaults
@@ -177,19 +189,19 @@ def shared_transform(tree, gen_sym, additional_args=[]):
     init_fun, set_fields, set_varargs, set_kwargs, set_slots, = methods
 
     args, vararg, kwarg, defaults, all_args = extract_args(
-        [Name(id=x) for x in additional_args] + tree.bases
+        [_ast.Name(id=x) for x in additional_args] + tree.bases
     )
 
     if vararg:
-        set_varargs.value = Str(vararg)
+        set_varargs.value = _ast.Str(vararg)
 
     if kwarg:
-        set_kwargs.value = Str(kwarg)
+        set_kwargs.value = _ast.Str(kwarg)
 
     nested = [
         n
         for f in tree.body
-        if type(f) is FunctionDef
+        if type(f) is _ast.FunctionDef
         if len(f.args.args) > 0
         for n in find_members(f.body, f.args.args[0].id)
     ]
@@ -197,8 +209,8 @@ def shared_transform(tree, gen_sym, additional_args=[]):
     additional_members = find_members(tree.body, "self") + nested
 
     prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args)
-    set_fields.value.elts = list(map(Str, args))
-    set_slots.value.elts = list(map(Str, all_args + additional_members))
+    set_fields.value.elts = list(map(_ast.Str, args))
+    set_slots.value.elts = list(map(_ast.Str, all_args + additional_members))
     new_body, outer, init_body = split_body(tree, gen_sym)
     init_fun.body.extend(init_body)
     tree.body = new_body
@@ -212,12 +224,21 @@ def case_transform(tree, gen_sym, parents):
     outer = shared_transform(tree, gen_sym)
 
     tree.bases = parents
-    assign = FunctionDef(
-        gen_sym("prepare_"+tree.name),
-        arguments([], None, None, []),
-        outer,
-        [hq[apply]]
-    )
+    if six.PY3:
+        assign = _ast.FunctionDef(
+            gen_sym("prepare_"+tree.name),
+            _ast.arguments([], None, [], [], None, []),
+            outer,
+            [hq[apply]],
+            None
+        )
+    else:
+        assign = _ast.FunctionDef(
+            gen_sym("prepare_"+tree.name),
+            _ast.arguments([], None, None, []),
+            outer,
+            [hq[apply]]
+        )
     return [tree] + ([assign] if len(outer) > 0 else [])
 
 @macros.decorator
@@ -235,43 +256,43 @@ def enum(tree, gen_sym, exact_src, **kw):
     new_assigns = []
     new_body = []
     def handle(expr):
-        assert type(expr) in (Name, Call), stmt.value
-        if type(expr) is Name:
-            expr.ctx = Store()
-            self_ref = Attribute(value=Name(id=tree.name), attr=expr.id)
+        assert type(expr) in (_ast.Name, _ast.Call), _ast.stmt.value
+        if type(expr) is _ast.Name:
+            expr.ctx = _ast.Store()
+            self_ref = _ast.Attribute(value=_ast.Name(id=tree.name), attr=expr.id)
             with hq as code:
-                ast[self_ref] = name[tree.name](u[count[0]], u[expr.id])
+                ast.ast[self_ref] = name[tree.name](u[count[0]], u[expr.id])
             new_assigns.extend(code)
             count[0] += 1
 
-        elif type(expr) is Call:
-            assert type(expr.func) is Name
-            self_ref = Attribute(value=Name(id=tree.name), attr=expr.func.id)
+        elif type(expr) is _ast.Call:
+            assert type(expr.func) is _ast.Name
+            self_ref = _ast.Attribute(value=_ast.Name(id=tree.name), attr=expr.func.id)
             id = expr.func.id
-            expr.func = Name(id=tree.name)
+            expr.func = _ast.Name(id=tree.name)
 
-            expr.args = [Num(count[0]), Str(id)] + expr.args
-            new_assigns.append(Assign([self_ref], expr))
+            expr.args = [_ast.Num(count[0]), _ast.Str(id)] + expr.args
+            new_assigns.append(_ast.Assign([self_ref], expr))
             count[0] += 1
 
     for stmt in tree.body:
         try:
-            if type(stmt) is Expr:
-                assert type(stmt.value) in (Tuple, Name, Call)
-                if type(stmt.value) is Tuple:
+            if type(stmt) is _ast.Expr:
+                assert type(stmt.value) in (_ast.Tuple, _ast.Name, _ast.Call)
+                if type(stmt.value) is _ast.Tuple:
                     for el in stmt.value.elts: 
                         handle(el)
                 else:
                     handle(stmt.value)
-            elif type(stmt) is FunctionDef:
+            elif type(stmt) is _ast.FunctionDef:
                 new_body.append(stmt)
             else:
                 assert False
 
         except AssertionError as e:
-            assert False, "Can't have `%s` in body of enum" % unparse(stmt).strip("\n")
+            assert False, "Can't have `%s` in body of enum" % macropy.core.unparse(stmt).strip("\n")
 
-    tree.body = new_body + [Pass()]
+    tree.body = new_body + [_ast.Pass()]
 
     shared_transform(tree, gen_sym, additional_args=["id", "name"])
 

@@ -1,6 +1,11 @@
-from macropy.core.macros import *
 
-macros = Macros()
+
+# Imports added by remove_from_imports.
+
+import macropy.core.macros
+
+
+macros = macropy.core.macros.Macros()
 
 @macros.block
 def expand(tree, **kw):
