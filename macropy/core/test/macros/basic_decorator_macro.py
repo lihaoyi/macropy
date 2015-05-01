@@ -1,10 +1,5 @@
-
-
-# Imports added by remove_from_imports.
-
 import macropy.core
 import macropy.core.macros
-
 
 macros = macropy.core.macros.Macros()
 

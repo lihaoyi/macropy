@@ -1,22 +1,17 @@
 """Plumbing related to hooking into the import process, unrelated to MacroPy"""
 
 
-# Imports added by remove_from_imports.
-
+import ast
 import imp
-import macropy.core.macros
-import ast
-import _ast
 import sys
-import macropy.core.util
-
-
-import sys
-import ast
-import macropy.activate
 import traceback
-import imp
+
 from six import PY3
+
+import macropy.core.macros
+import macropy.core.util
+import macropy.activate
+
 
 if macropy.core.macros.PY3:
     from importlib.machinery import PathFinder
@@ -36,7 +31,7 @@ class _MacroLoader(object):
 @macropy.core.util.singleton
 class MacroFinder(object):
     """Loads a module and looks for macros inside, only providing a loader if
-it finds some."""
+    it finds some."""
     def expand_macros(self, source_code, filename):
         """ Parses the source_code and expands the resulting ast. 
         Returns both the compiled ast and new ast. 
@@ -44,7 +39,7 @@ it finds some."""
 
         if not source_code or "macros" not in source_code:
             return None, None
-        tree = ast.ast.parse(source_code)
+        tree = ast.parse(source_code)
         bindings = macropy.core.macros.detect_macros(tree)
 
         if not bindings: 
@@ -53,7 +48,7 @@ it finds some."""
         for (p, _) in bindings:
             __import__(p)
 
-        modules = [(sys.sys.modules[p], bind) for (p, bind) in bindings]
+        modules = [(sys.modules[p], bind) for (p, bind) in bindings]
         new_tree = macropy.core.macros.expand_entire_ast(tree, source_code, modules)
         return compile(tree, filename, "exec"), new_tree
 
@@ -101,7 +96,7 @@ it finds some."""
             module = macropy.exporter.find(
                 file_path, file_path, "", module_name, package_path)
             if module:
-                return _MacroLoader(_ast.mod)
+                return _MacroLoader(ast.mod)
             code, tree = self.expand_macros(source_code, file_path)
             if not code: # no macros!
                 return

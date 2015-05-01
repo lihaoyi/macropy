@@ -1,17 +1,10 @@
-
-
-# Imports added by remove_from_imports.
-
-import macropy.core.macros
 import ast
-import _ast
-import macropy.core.walkers
-
 import inspect
-
 from abc import ABCMeta, abstractmethod
 
 from macropy.core import util
+import macropy.core.macros
+import macropy.core.walkers
 
 from macropy.core.quotes import macros, q
 from macropy.core.hquotes import macros, hq
@@ -228,7 +221,7 @@ def build_matcher(tree, modified):
         return hq[LiteralMatcher(u[tree.s])]
     if isinstance(tree, _ast.Name):
         if tree.id in ['True', 'False', 'None']:
-            return hq[LiteralMatcher(ast.ast[tree])]
+            return hq[LiteralMatcher(ast_splice[tree])]
         elif tree.id in ['_']:
             return hq[WildcardMatcher()]
         modified.add(tree.id)
@@ -287,9 +280,9 @@ def _matching(tree, gen_sym, **kw):
             temp = gen_sym()
             # lol random names for hax
             with hq as assignment:
-                name[temp] = ast.ast[matcher]
+                name[temp] = ast_splice[matcher]
 
-            statements = [assignment, _ast.Expr(hq[name[temp]._match_value(ast.ast[tree.value.right])])]
+            statements = [assignment, _ast.Expr(hq[name[temp]._match_value(ast_splice[tree.value.right])])]
 
             for var_name in modified:
                 statements.append(_ast.Assign([_ast.Name(var_name, _ast.Store())], hq[name[temp].get_var(u[var_name])]))

@@ -2,12 +2,8 @@
 T"""
 
 
-# Imports added by remove_from_imports.
-
 import macropy.core.macros
 import macropy.core.util
-
-
 
 from macropy.core.hquotes import macros, hq
 import traceback

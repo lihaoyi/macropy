@@ -1,13 +1,10 @@
-
-
-# Imports added by remove_from_imports.
+import ast
+import unittest
 
 import macropy.core
-
-import unittest
-from .walkers import Walker
+from macropy.core.walkers import Walker
 from macropy.core.analysis import Scoped, extract_arg_names
-import ast
+
 
 @Scoped
 @Walker

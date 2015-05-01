@@ -1,10 +1,6 @@
-
-
-# Imports added by remove_from_imports.
-
-import macropy.core.macros
 import ast
 
+import macropy.core.macros
 from macropy.core.hquotes import macros, hq, unhygienic
 
 macros = macropy.core.macros.Macros()
@@ -16,7 +12,7 @@ def double(x):
 
 @macros.expr
 def expand(tree, gen_sym, **kw):
-    tree = hq[str(value) + "x: " + double(ast.ast[tree])]
+    tree = hq[str(value) + "x: " + double(ast_splice[tree])]
     return tree
 
 @macros.block

@@ -1,7 +1,3 @@
-
-
-# Imports added by remove_from_imports.
-
 import macropy.core.macros
 
 from macropy.core.failure import MacroExpansionError

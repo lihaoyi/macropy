@@ -1,7 +1,7 @@
 import unittest
 from ast import *
 from macropy.tracing import macros, trace, log, require, show_expanded
-from macropy.core.quotes import macros, q, Literal
+from macropy.core.quotes import macros, q
 result = []
 
 def log(x):

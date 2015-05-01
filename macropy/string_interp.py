@@ -1,13 +1,10 @@
-
-
-# Imports added by remove_from_imports.
+import re
 
 import macropy.core
 import macropy.core.macros
 
-import re
-
-from macropy.core.hquotes import macros, hq, u, ast_list
+from macropy.core.quotes import u, ast_list
+from macropy.core.hquotes import macros, hq
 
 macros = macropy.core.macros.Macros()
 

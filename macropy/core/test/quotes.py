@@ -1,12 +1,7 @@
-
-
-# Imports added by remove_from_imports.
-
-import macropy.core
 import ast
-
 import unittest
 
+import macropy.core
 from macropy.core.quotes import macros, q, u
 
 class Tests(unittest.TestCase):
@@ -57,7 +52,9 @@ class Tests(unittest.TestCase):
     def test_quote_unquote_ast(self):
 
         a = q[x + y]
-        b = q[ast.ast[a] + z]
+        # TODO: This is almost certainly broken but I don't know what
+        # it's supposed to do.
+        b = q[ast[a] + z]
 
         x, y, z = 1, 2, 3
         assert(eval(macropy.core.unparse(b)) == 6)

@@ -1,15 +1,9 @@
-
-
-# Imports added by remove_from_imports.
+import ast
 
 import macropy.core.macros
-import ast
-import _ast
 import macropy.core.walkers
 
-from ast import Call
-
-from macropy.core.hquotes import macros, hq, ast, name, ast_list
+from macropy.core.hquotes import macros, hq, ast_splice, name, ast_list
 from macropy.quick_lambda import macros, f, _
 import sqlalchemy
 
@@ -32,38 +26,38 @@ def query(tree, gen_sym, **kw):
     x = expand_let_bindings.recurse(x)
     sym = gen_sym()
     # return q[(lambda query: query.bind.execute(query).fetchall())(ast[x])]
-    new_tree = hq[(lambda query: name[sym].bind.execute(name[sym]).fetchall())(ast.ast[x])]
-    new_tree.func.args = _ast.arguments([_ast.Name(id=sym)], None, None, [])
+    new_tree = hq[(lambda query: name[sym].bind.execute(name[sym]).fetchall())(ast_splice[x])]
+    new_tree.func.args = ast.arguments([ast.Name(id=sym)], None, None, [])
     return new_tree
 
 
 def process(tree):
     @macropy.core.walkers.Walker
     def recurse(tree, **kw):
-        if type(tree) is _ast.Compare and type(tree.ops[0]) is _ast.In:
-            return hq[(ast.ast[tree.left]).in_(ast.ast[tree.comparators[0]])]
+        if type(tree) is ast.Compare and type(tree.ops[0]) is ast.In:
+            return hq[(ast_splice[tree.left]).in_(ast_splice[tree.comparators[0]])]
 
-        elif type(tree) is _ast.GeneratorExp:
+        elif type(tree) is ast.GeneratorExp:
 
             aliases = list(map(f[_.target], tree.generators))
             tables = map(f[_.iter], tree.generators)
 
-            aliased_tables = list(map(lambda x: hq[(ast.ast[x]).alias().c], tables))
+            aliased_tables = list(map(lambda x: hq[(ast_splice[x]).alias().c], tables))
 
             elt = tree.elt
-            if type(elt) is _ast.Tuple:
+            if type(elt) is ast.Tuple:
                 sel = hq[ast_list[elt.elts]]
             else:
-                sel = hq[[ast.ast[elt]]]
+                sel = hq[[ast_splice[elt]]]
 
-            out = hq[sqlalchemy.select(ast.ast[sel])]
+            out = hq[sqlalchemy.select(ast_splice[sel])]
 
             for gen in tree.generators:
                 for cond in gen.ifs:
-                    out = hq[ast.ast[out].where(ast.ast[cond])]
+                    out = hq[ast_splice[out].where(ast_splice[cond])]
 
 
-            out = hq[(lambda x: ast.ast[out])()]
+            out = hq[(lambda x: ast_splice[out])()]
             out.func.args.args = aliases
             out.args = aliased_tables
             return out
@@ -81,12 +75,12 @@ def generate_schema(engine):
 
 @macropy.core.walkers.Walker
 def _find_let_bindings(tree, ctx, stop, collect, **kw):
-    if type(tree) is _ast.Call and type(tree.func) is _ast.Lambda:
+    if type(tree) is ast.Call and type(tree.func) is ast.Lambda:
         stop()
         collect(tree)
         return tree.func.body
 
-    elif type(tree) in [_ast.Lambda, _ast.GeneratorExp, _ast.ListComp, _ast.SetComp, _ast.DictComp]:
+    elif type(tree) in [ast.Lambda, ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp]:
         stop()
         return tree
 

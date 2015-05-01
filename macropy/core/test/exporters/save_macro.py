@@ -1,9 +1,6 @@
-
-
-# Imports added by remove_from_imports.
+import ast
 
 import macropy.core.macros
-import ast
 
 from macropy.core.test import exporters
 from macropy.core.hquotes import macros, hq
@@ -14,4 +11,4 @@ def double(x):
 @macros.expr
 def f(tree, **kw):
     n = 10
-    return hq[double(ast.ast[tree]) + n]
+    return hq[double(ast_splice[tree]) + n]

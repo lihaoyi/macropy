@@ -1,10 +1,6 @@
-
-
-# Imports added by remove_from_imports.
+import ast
 
 import macropy.core.macros
-import _ast
-
 
 macros = macropy.core.macros.Macros()
 
@@ -16,4 +12,4 @@ def f(tree, gen_sym, **kw):
     assert renamed == ["max1", "max2", "run1", "run2"], renamed
     unchanged = [gen_sym("grar"), gen_sym("grar"), gen_sym("omg"), gen_sym("omg")]
     assert unchanged == ["grar", "grar1", "omg", "omg1"], unchanged
-    return _ast.Num(n = 10)
+    return ast.Num(n = 10)

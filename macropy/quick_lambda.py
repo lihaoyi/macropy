@@ -1,17 +1,15 @@
+import ast
 
-
-# Imports added by remove_from_imports.
+from six import PY3
 
 import macropy.core.macros
-import ast
-import _ast
 import macropy.core.util
 import macropy.core.walkers
 
-from macropy.core.quotes import macros, q, ast, u
-from macropy.core.hquotes import macros, hq, ast, u, name
+from macropy.core.quotes import macros, q, ast_splice, u
+from macropy.core.hquotes import macros, hq
 from macropy.core.cleanup import ast_ctx_fixer
-from six import PY3
+
 macros = macropy.core.macros.Macros()
 
 def _():
@@ -24,7 +22,7 @@ def f(tree, gen_sym, **kw):
     wrapped expression becomes an argument to the generated function."""
     @macropy.core.walkers.Walker
     def underscore_search(tree, collect, **kw):
-        if isinstance(tree, _ast.Name) and tree.id == "_":
+        if isinstance(tree, ast.Name) and tree.id == "_":
             name = gen_sym("_")
             tree.id = name
             collect(name)
@@ -32,9 +30,9 @@ def f(tree, gen_sym, **kw):
 
     tree, used_names = underscore_search.recurse_collect(tree)
 
-    new_tree = q[lambda: ast.ast[tree]]
-    if macropy.core.macros.PY3: new_tree.args.args = [_ast.arg(arg = x) for x in used_names]
-    else:   new_tree.args.args = [_ast.Name(id = x) for x in used_names]
+    new_tree = q[lambda: ast_splice[tree]]
+    if macropy.core.macros.PY3: new_tree.args.args = [ast.arg(arg = x) for x in used_names]
+    else:   new_tree.args.args = [ast.Name(id = x) for x in used_names]
     return new_tree
 
 
@@ -44,7 +42,7 @@ def lazy(tree, **kw):
     called via `thing()` to extract the value. The wrapped expression is
     only evaluated the first time the thunk is called and the result cached
     for all subsequent evaluations."""
-    return hq[macropy.core.util.Lazy(lambda: ast.ast[tree])]
+    return hq[macropy.core.util.Lazy(lambda: ast_splice[tree])]
 
 
 def get_interned(store, index, thunk):
@@ -84,4 +82,4 @@ def interned(tree, interned_name, interned_count, **kw):
     """Macro to intern the wrapped expression on a per-module basis"""
     interned_count[0] += 1
 
-    return hq[get_interned(name[interned_name], interned_count[0] - 1, lambda: ast.ast[tree])]
+    return hq[get_interned(name[interned_name], interned_count[0] - 1, lambda: ast_splice[tree])]

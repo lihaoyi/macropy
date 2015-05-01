@@ -1,13 +1,9 @@
-
-
-# Imports added by remove_from_imports.
-
-import macropy.core
-import macropy.core.macros
-
 import unittest
 
 from six import PY3
+
+import macropy.core
+import macropy.core.macros
 
 def convert(code):
     " string -> ast -> string "

@@ -3,11 +3,9 @@
 Exposes this functionality as the `gen_sym` function.
 """
 
-
-# Imports added by remove_from_imports.
+import ast
 
 import macropy.core.macros
-import _ast
 import macropy.core.util
 import macropy.core.walkers
 
@@ -21,15 +19,15 @@ def gen_sym(tree, **kw):
     limited to `tree` e.g. by a lambda expression or a function body"""
     @macropy.core.walkers.Walker
     def name_finder(tree, collect, **kw):
-        if type(tree) is _ast.Name:
+        if type(tree) is ast.Name:
             collect(tree.id)
-        if type(tree) is _ast.Import:
+        if type(tree) is ast.Import:
             names = [x.asname or x.name for x in tree.names]
             for name in names: collect(name)
-        if type(tree) is _ast.ImportFrom:
+        if type(tree) is ast.ImportFrom:
             names = [x.asname or x.name for x in tree.names]
             for name in names: collect(name)
-        if type(tree) in (_ast.FunctionDef, _ast.ClassDef):
+        if type(tree) in (ast.FunctionDef, ast.ClassDef):
             collect(tree.name)
 
     found_names = set(name_finder.collect(tree))
