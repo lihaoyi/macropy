@@ -16,6 +16,7 @@ def scoped(tree, scope, collect, **kw):
         pass
 
 class Tests(unittest.TestCase):
+    # TODO: shallow failure here because AST fields are different in 3.
     def test_extract_arg_names(self):
         from ast import parse, dump, Name, Param
         expr = parse("lambda a, b, f=6, *c, **d: 5")
