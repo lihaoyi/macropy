@@ -1,8 +1,9 @@
 """Implementation of Walkers, a nice way of transforming and traversing ASTs."""
 
-from macropy.core import *
-from ast import *
+import ast
 
+import macropy.core
+from .util import box
 
 class Walker(object):
     """
@@ -53,10 +54,10 @@ class Walker(object):
         self.func = func
 
     def walk_children(self, tree, sub_kw=[], **kw):
-        if isinstance(tree, AST):
+        if isinstance(tree, ast.AST):
             aggregates = []
 
-            for field, old_value in iter_fields(tree):
+            for field, old_value in ast.iter_fields(tree):
 
                 old_value = getattr(tree, field, None)
                 specific_sub_kw = [
@@ -101,7 +102,7 @@ class Walker(object):
         """Traverse the given AST and return the transformed tree together
         with any values which were collected along with way."""
 
-        if isinstance(tree, AST) or type(tree) is Literal or type(tree) is Captured:
+        if isinstance(tree, ast.AST) or type(tree) is macropy.core.Literal or type(tree) is macropy.core.Captured:
             aggregates = []
             stop_now = [False]
 
