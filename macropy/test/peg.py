@@ -202,7 +202,8 @@ class Tests(unittest.TestCase):
             x = x.decode('unicode-escape')
             try:
                 return str(x)
-            except:
+            except Exception as e:
+                print("This shouldn't happen", e, file=sys.stderr) # TODO
                 return x
         escape_map = {
             '"': '"',

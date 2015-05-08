@@ -2,16 +2,19 @@
 
 import sys
 import ast
-import macropy.activate
-from .macros import *
 import traceback
 import imp
+import inspect
+
 from six import PY3
 
 if PY3:
     from importlib.machinery import PathFinder
     from types import ModuleType
 
+import macropy.activate
+from .macros import *
+from macropy.core.util import singleton
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
@@ -61,7 +64,8 @@ it finds some."""
         try:
             macropy.exporter.export_transformed(
                 code, tree, module_name, file_path)
-        except: pass 
+        except Exception as e:
+            print("This shouldn't happen", e, file=sys.stderr) # TODO
 
     def get_source(self, module_name, package_path):
         if PY3:
@@ -83,7 +87,8 @@ it finds some."""
     def find_module(self, module_name, package_path):
         try:
             source_code, file_path = self.get_source(module_name, package_path)
-        except:
+        except Exception as e:
+            print("This shouldn't happen", e, file=sys.stderr) # TODO
             return
         try:
             # try to find already exported module
@@ -100,7 +105,8 @@ it finds some."""
             self.export(code, tree, module_name, file_path)
             return module.__loader__
         except Exception as e:
-            print ("import_hooks.MacroFinder raised",e)
+            print("import_hooks.MacroFinder raised", e, file=sys.stderr)
+            print(inspect.trace()[-1][0].f_locals, file=sys.stderr)
             traceback.print_exc()
 
 

@@ -1,5 +1,5 @@
 import unittest
-from .walkers import Walker
+from macropy.core.walkers import Walker
 from macropy.core.analysis import Scoped, extract_arg_names
 from macropy.core import *
 import ast
@@ -10,7 +10,7 @@ def scoped(tree, scope, collect, **kw):
     try:
         if scope != {}:
             collect((unparse(tree), {k: type(v) for k, v in scope.items()}))
-    except:
+    except Exception:
         pass
 
 class Tests(unittest.TestCase):

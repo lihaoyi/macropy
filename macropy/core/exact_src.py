@@ -20,7 +20,8 @@ def indexer(tree, collect, **kw):
     try:
         unparse(tree)
         collect((tree.lineno, tree.col_offset))
-    except: pass
+    except Exception as e:
+        print("This shouldn't happen", e, file=sys.stderr) # TODO
 
 _transforms = {
     GeneratorExp: "(%s)",

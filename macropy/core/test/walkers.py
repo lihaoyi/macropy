@@ -1,7 +1,10 @@
 import unittest
 
+import ast
+
 from macropy.core.macros import *
 from macropy.core.quotes import macros, q, u
+from macropy.core.walkers import Walker
 
 class Tests(unittest.TestCase):
     def test_transform(self):
@@ -10,14 +13,14 @@ class Tests(unittest.TestCase):
 
         @Walker
         def transform(tree, **kw):
-            if type(tree) is Num:
-                return Str(s = str(tree.n))
-            if type(tree) is Str:
-                return Num(n = int(tree.s))
-            if type(tree) is BinOp and type(tree.op) is Mult:
-                return BinOp(tree.left, Add(), tree.right)
-            if type(tree) is BinOp and type(tree.op) is Add:
-                return BinOp(tree.left, Mult(), tree.right)
+            if type(tree) is ast.Num:
+                return ast.Str(s = str(tree.n))
+            if type(tree) is ast.Str:
+                return ast.Num(n = int(tree.s))
+            if type(tree) is ast.BinOp and type(tree.op) is ast.Mult:
+                return ast.BinOp(tree.left, ast.Add(), tree.right)
+            if type(tree) is ast.BinOp and type(tree.op) is ast.Add:
+                return ast.BinOp(tree.left, ast.Mult(), tree.right)
 
         assert unparse(transform.recurse(tree)) == unparse(goal)
 

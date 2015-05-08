@@ -258,20 +258,20 @@ if PY3:
         trec[ast.NameConstant] = lambda tree, i: str(tree.value)
 else:
     trec.update({
-        Exec:       lambda tree, i: tabs(i) + "exec " + rec(tree.body, i) +
+        ast.Exec:       lambda tree, i: tabs(i) + "exec " + rec(tree.body, i) +
                                     mix(" in ", rec(tree.globals, i)) +
                                     mix(", ", rec(tree.locals, i)),
-        Print:      lambda tree, i: tabs(i) + "print " +
+        ast.Print:      lambda tree, i: tabs(i) + "print " +
                                     ", ".join(macropy.core.util.box(mix(">>", rec(tree.dest, i))) + [rec(t, i) for t in tree.values]) +
                                     ("," if not tree.nl else ""),
         ast.Raise:      lambda tree, i: tabs(i) + "raise" + 
                                     mix(" ", rec(tree.type, i)) +
                                     mix(", ", rec(tree.inst, i)) +
                                     mix(", ", rec(tree.tback, i)),
-        TryExcept:  lambda tree, i: tabs(i) + "try:" + rec(tree.body, i+1) +
+        ast.TryExcept:  lambda tree, i: tabs(i) + "try:" + rec(tree.body, i+1) +
                                     jmap("", lambda t: rec(t, i), tree.handlers) +
                                     mix(tabs(i), "else:", rec(tree.orelse, i+1)),
-        TryFinally: lambda tree, i: (rec(tree.body, i)
+        ast.TryFinally: lambda tree, i: (rec(tree.body, i)
                                     if len(tree.body) == 1 and isinstance(tree.body[0], ast.TryExcept)
                                     else tabs(i) + "try:" + rec(tree.body, i+1)) +
                                     tabs(i) + "finally:" + rec(tree.finalbody, i+1),
@@ -284,7 +284,7 @@ else:
         ast.With:       lambda tree, i: tabs(i) + "with " + rec(tree.context_expr, i) +
                                     mix(" as ", rec(tree.optional_vars, i)) + ":" +
                                     rec(tree.body, i+1),
-        Repr:       lambda tree, i: "`" + rec(tree.value) + "`",
+        ast.Repr:       lambda tree, i: "`" + rec(tree.value) + "`",
         ast.arguments:  lambda tree, i: ", ".join(
                                         list(map(lambda a, d: rec(a, i) + mix("=", rec(d, i)),
                                             tree.args,

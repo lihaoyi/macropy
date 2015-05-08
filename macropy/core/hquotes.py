@@ -1,23 +1,33 @@
 """Hygienic Quasiquotes, which pull in names from their definition scope rather
 than their expansion scope."""
-from macropy.core.macros import *
 
-from macropy.core.quotes import macros, q, unquote_search, u, ast, ast_list, name
+
+# Imports added by remove_from_imports.
+
+import macropy.core.macros
+import ast
+
+
+from macropy.core.quotes import macros, q, unquote_search, u, ast_literal, ast_list, name
 from macropy.core.analysis import Scoped
 
-macros = Macros()
+from macropy.core import ast_repr, Captured, Literal
+from macropy.core.util import register, singleton
+from macropy.core.walkers import Walker
 
-@macro_stub
+macros = macropy.core.macros.Macros()
+
+@macropy.core.macros.macro_stub
 def unhygienic():
     """Used to delimit a section of a hq[...] that should not be hygienified"""
 
 from .macros import filters, injected_vars, post_processing
 
-@register(injected_vars)
+@register(macropy.core.macros.injected_vars)
 def captured_registry(**kw):
     return []
 
-@register(post_processing)
+@register(macropy.core.macros.post_processing)
 def post_proc(tree, captured_registry, gen_sym, **kw):
     if captured_registry == []:
         return tree
@@ -43,7 +53,7 @@ def post_proc(tree, captured_registry, gen_sym, **kw):
 
     return tree
 
-@register(filters)
+@register(macropy.core.macros.filters)
 def hygienate(tree, captured_registry, gen_sym, **kw):
     @Walker
     def hygienator(tree, stop, **kw):
@@ -55,7 +65,7 @@ def hygienate(tree, captured_registry, gen_sym, **kw):
                 captured_registry.append((tree.val, new_sym))
             else:
                 new_sym = new_sym[0]
-            return Name(new_sym, Load())
+            return ast.Name(new_sym, Load())
 
     return hygienator.recurse(tree)
 
@@ -66,7 +76,7 @@ def hq(tree, target, **kw):
     tree = hygienator.recurse(tree)
     tree = ast_repr(tree)
 
-    return [Assign([target], tree)]
+    return [ast.Assign([target], tree)]
 
 
 @macros.expr
@@ -84,8 +94,8 @@ def hq(tree, **kw):
 @Scoped
 @Walker
 def hygienator(tree, stop, scope, **kw):
-    if type(tree) is Name and \
-            type(tree.ctx) is Load and \
+    if type(tree) is ast.Name and \
+            type(tree.ctx) is ast.Load and \
             tree.id not in scope.keys():
 
         stop()
@@ -99,7 +109,7 @@ def hygienator(tree, stop, scope, **kw):
         stop()
         return tree
 
-    res = check_annotated(tree)
+    res = macropy.core.macros.check_annotated(tree)
     if res:
         id, subtree = res
         if 'unhygienic' == id:
