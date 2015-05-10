@@ -203,7 +203,7 @@ class Tests(unittest.TestCase):
             try:
                 return str(x)
             except Exception as e:
-                print("This shouldn't happen", e, file=sys.stderr) # TODO
+                print("PEG test failure", e, file=sys.stderr) # TODO
                 return x
         escape_map = {
             '"': '"',

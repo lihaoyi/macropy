@@ -1,19 +1,24 @@
 """Plumbing related to hooking into the import process, unrelated to MacroPy"""
 
-import sys
+from __future__ import print_function
+
 import ast
-import traceback
 import imp
 import inspect
+import sys
+import traceback
+import types
 
-from six import PY3
+import six
 
-if PY3:
+if six.PY3:
     from importlib.machinery import PathFinder
-    from types import ModuleType
 
+
+import macropy.core.macros
+    
 import macropy.activate
-from .macros import *
+import macropy.core.exporters
 from macropy.core.util import singleton
 
 class _MacroLoader(object):
@@ -35,10 +40,12 @@ it finds some."""
         Returns both the compiled ast and new ast. 
         If no macros are found, returns None, None."""
 
+        print('Expand macros in %s' % filename, file=sys.stderr)
+
         if not source_code or "macros" not in source_code:
             return None, None
         tree = ast.parse(source_code)
-        bindings = detect_macros(tree)
+        bindings = macropy.core.macros.detect_macros(tree)
 
         if not bindings: 
             return None, None
@@ -47,14 +54,11 @@ it finds some."""
             __import__(p)
 
         modules = [(sys.modules[p], bind) for (p, bind) in bindings]
-        new_tree = expand_entire_ast(tree, source_code, modules)
+        new_tree = macropy.core.macros.expand_entire_ast(tree, source_code, modules)
         return compile(tree, filename, "exec"), new_tree
 
     def construct_module(self, module_name, file_path):
-        if PY3:
-            mod = ModuleType(module_name)
-        else:
-            mod = imp.new_module(module_name)
+        mod = types.ModuleType(module_name)
         mod.__package__ = module_name.rpartition('.')[0]
         mod.__file__ = file_path
         mod.__loader__ = _MacroLoader(module_name, mod)
@@ -62,13 +66,13 @@ it finds some."""
 
     def export(self, code, tree, module_name, file_path):
         try:
-            macropy.exporter.export_transformed(
+            macropy.core.exporters.NullExporter().export_transformed(
                 code, tree, module_name, file_path)
         except Exception as e:
-            print("This shouldn't happen", e, file=sys.stderr) # TODO
+            print("Export failure", e, file=sys.stderr) # TODO
 
     def get_source(self, module_name, package_path):
-        if PY3:
+        if six.PY3:
             # try to get the module using a "normal" loader.
             # if we fail here, just let python handle the rest
             original_loader = (PathFinder.find_module(module_name, package_path))
@@ -88,12 +92,12 @@ it finds some."""
         try:
             source_code, file_path = self.get_source(module_name, package_path)
         except Exception as e:
-            print("This shouldn't happen", e, file=sys.stderr) # TODO
+            print('Failed to get source', e, file=sys.stderr)
             return
         try:
             # try to find already exported module
             # TODO: are these the right arguments?
-            module = macropy.exporter.find(
+            module = macropy.core.exporters.NullExporter().find(
                 file_path, file_path, "", module_name, package_path)
             if module:
                 return _MacroLoader(mod)
@@ -105,8 +109,10 @@ it finds some."""
             self.export(code, tree, module_name, file_path)
             return module.__loader__
         except Exception as e:
-            print("import_hooks.MacroFinder raised", e, file=sys.stderr)
-            print(inspect.trace()[-1][0].f_locals, file=sys.stderr)
+            print(
+                "import_hooks.MacroFinder raised %s at line %s" %
+                (e, e.__traceback__.tb_lineno),
+                file=sys.stderr)
+            origin = inspect.trace()[-1][0]
+            print(origin.f_locals, origin.f_lineno, file=sys.stderr)
             traceback.print_exc()
-
-

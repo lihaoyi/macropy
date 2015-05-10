@@ -1,11 +1,10 @@
 """Hygienic Quasiquotes, which pull in names from their definition scope rather
 than their expansion scope."""
 
-
-# Imports added by remove_from_imports.
+import ast
+import sys
 
 import macropy.core.macros
-import ast
 
 
 from macropy.core.quotes import macros, q, unquote_search, u, ast_literal, ast_list, name
@@ -40,7 +39,7 @@ def post_proc(tree, captured_registry, gen_sym, **kw):
 
     import pickle
 
-    syms = [Name(id=sym) for val, sym in captured_registry]
+    syms = [ast.Name(id=sym) for val, sym in captured_registry]
     vals = [val for val, sym in captured_registry]
 
     with q as stored:
@@ -55,6 +54,7 @@ def post_proc(tree, captured_registry, gen_sym, **kw):
 
 @register(macropy.core.macros.filters)
 def hygienate(tree, captured_registry, gen_sym, **kw):
+    print('Hygienate %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
     @Walker
     def hygienator(tree, stop, **kw):
         if type(tree) is Captured:
@@ -65,7 +65,7 @@ def hygienate(tree, captured_registry, gen_sym, **kw):
                 captured_registry.append((tree.val, new_sym))
             else:
                 new_sym = new_sym[0]
-            return ast.Name(new_sym, Load())
+            return ast.Name(new_sym, ast.Load())
 
     return hygienator.recurse(tree)
 
@@ -75,7 +75,7 @@ def hq(tree, target, **kw):
     tree = unquote_search.recurse(tree)
     tree = hygienator.recurse(tree)
     tree = ast_repr(tree)
-
+    print('Hquote block %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
     return [ast.Assign([target], tree)]
 
 
@@ -88,6 +88,7 @@ def hq(tree, **kw):
     tree = unquote_search.recurse(tree)
     tree = hygienator.recurse(tree)
     tree = ast_repr(tree)
+    print('Hquote expr %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
     return tree
 
 

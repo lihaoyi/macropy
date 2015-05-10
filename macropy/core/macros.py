@@ -108,6 +108,7 @@ def expand_entire_ast(tree, src, bindings):
 
         def expand_if_in_registry(macro_tree, body_tree, args, registry, **kwargs):
             """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
+            # print(registry, file=sys.stderr)
             if isinstance(macro_tree, ast.Name) and macro_tree.id in registry:
 
                 (the_macro, the_module) = registry[macro_tree.id]
@@ -122,8 +123,8 @@ def expand_entire_ast(tree, src, bindings):
                 except Exception as e:
                     new_tree = e
 
-                for filter in reversed(filters):
-                    new_tree = filter(
+                for function in reversed(filters):
+                    new_tree = function(
                         tree=new_tree,
                         args=args,
                         src=src,

@@ -1,3 +1,4 @@
+import ast
 import unittest
 
 from macropy.quick_lambda import macros, f, _, lazy, interned

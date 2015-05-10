@@ -70,7 +70,7 @@ def ast_repr(x):
     elif isinstance(x, ast.AST):
         fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
         return ast.Call(
-            ast.Name(id=x.__class__.__name__),
+            ast.Name(id='ast.%s' % x.__class__.__name__),
             [], fields, None, None
         )
     raise Exception("Don't know how to ast_repr this: ", x)

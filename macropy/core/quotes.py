@@ -5,6 +5,7 @@ interpolate things into a quoted section.
 """
 
 import ast
+import sys
 
 from macropy.core import ast_repr, Literal
 import macropy.core.macros
@@ -19,6 +20,7 @@ def unquote_search(tree, **kw):
     if res:
         func, right = res
         for f in [u, name, ast_literal, ast_list]:
+            print('Unquote search %s' % f, file=sys.stderr)
             if f.__name__ == func:
                 return f(right)
 
@@ -28,6 +30,7 @@ def unquote_search(tree, **kw):
 def q(tree, **kw):
     tree = unquote_search.recurse(tree)
     tree = ast_repr(tree)
+    print('Quote expr %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
     return tree
 
 

@@ -3,6 +3,8 @@ the source extent of an AST.
 
 Exposed to each macro as an `exact_src` funciton."""
 
+from __future__ import print_function
+
 from macropy.core import unparse
 from macropy.core.macros import injected_vars
 from ast import *
@@ -21,7 +23,7 @@ def indexer(tree, collect, **kw):
         unparse(tree)
         collect((tree.lineno, tree.col_offset))
     except Exception as e:
-        print("This shouldn't happen", e, file=sys.stderr) # TODO
+        print("Failure in exact_src.py", e, file=sys.stderr) # TODO
 
 _transforms = {
     GeneratorExp: "(%s)",

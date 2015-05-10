@@ -1,8 +1,8 @@
 import ast
-import macropy.core.macros
 
 from six import PY3
 
+import macropy.core.macros
 from macropy.core.util import register
 from macropy.core.quotes import macros, q, ast_literal, u
 from macropy.core.hquotes import macros, hq, ast_literal, u, name
