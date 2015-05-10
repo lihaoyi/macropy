@@ -20,7 +20,7 @@ def unquote_search(tree, **kw):
     if res:
         func, right = res
         for f in [u, name, ast_literal, ast_list]:
-            print('Unquote search %s' % f, file=sys.stderr)
+            # print('Unquote search %s' % f, file=sys.stderr)
             if f.__name__ == func:
                 return f(right)
 

@@ -1,3 +1,5 @@
+import ast
+
 
 from macropy.core.macros import *
 from macropy.core.hquotes import macros, u, hq, unhygienic
