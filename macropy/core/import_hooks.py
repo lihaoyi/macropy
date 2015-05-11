@@ -1,34 +1,37 @@
 """Plumbing related to hooking into the import process, unrelated to MacroPy"""
 
+from __future__ import print_function
 
 import ast
 import imp
+import inspect
 import sys
 import traceback
+import types
 
-from six import PY3
+import six
+
+if six.PY3:
+    from importlib.machinery import PathFinder
+
 
 import macropy.core.macros
-import macropy.core.util
+    
 import macropy.activate
-
-
-if macropy.core.macros.PY3:
-    from importlib.machinery import PathFinder
-    from types import ModuleType
-
+import macropy.core.exporters
+from macropy.core.util import singleton
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
     def __init__(self, module_name, mod):
         self.mod = mod
-        sys.sys.modules[module_name] = mod
+        sys.modules[module_name] = mod
 
     def load_module(self, fullname):
         return self.mod
 
 
-@macropy.core.util.singleton
+@singleton
 class MacroFinder(object):
     """Loads a module and looks for macros inside, only providing a loader if
     it finds some."""
@@ -36,6 +39,8 @@ class MacroFinder(object):
         """ Parses the source_code and expands the resulting ast. 
         Returns both the compiled ast and new ast. 
         If no macros are found, returns None, None."""
+
+        print('Expand macros in %s' % filename, file=sys.stderr)
 
         if not source_code or "macros" not in source_code:
             return None, None
@@ -53,10 +58,7 @@ class MacroFinder(object):
         return compile(tree, filename, "exec"), new_tree
 
     def construct_module(self, module_name, file_path):
-        if macropy.core.macros.PY3:
-            mod = ModuleType(module_name)
-        else:
-            mod = imp.imp.new_module(module_name)
+        mod = types.ModuleType(module_name)
         mod.__package__ = module_name.rpartition('.')[0]
         mod.__file__ = file_path
         mod.__loader__ = _MacroLoader(module_name, mod)
@@ -64,19 +66,20 @@ class MacroFinder(object):
 
     def export(self, code, tree, module_name, file_path):
         try:
-            macropy.exporter.export_transformed(
+            macropy.core.exporters.NullExporter().export_transformed(
                 code, tree, module_name, file_path)
-        except: pass 
+        except Exception as e:
+            print("Export failure", e, file=sys.stderr) # TODO
 
     def get_source(self, module_name, package_path):
-        if macropy.core.macros.PY3:
+        if six.PY3:
             # try to get the module using a "normal" loader.
             # if we fail here, just let python handle the rest
             original_loader = (PathFinder.find_module(module_name, package_path))
             source_code = original_loader.get_source(module_name)
             file_path = original_loader.path
         else:
-            (file, pathname, description) = imp.imp.find_module(
+            (file, pathname, description) = imp.find_module(
                 module_name.split('.')[-1],
                 package_path
             )
@@ -88,12 +91,13 @@ class MacroFinder(object):
     def find_module(self, module_name, package_path):
         try:
             source_code, file_path = self.get_source(module_name, package_path)
-        except:
+        except Exception as e:
+            print('Failed to get source', e, file=sys.stderr)
             return
         try:
             # try to find already exported module
             # TODO: are these the right arguments?
-            module = macropy.exporter.find(
+            module = macropy.core.exporters.NullExporter().find(
                 file_path, file_path, "", module_name, package_path)
             if module:
                 return _MacroLoader(ast.mod)
@@ -105,5 +109,10 @@ class MacroFinder(object):
             self.export(code, tree, module_name, file_path)
             return module.__loader__
         except Exception as e:
-            print("import_hooks.MacroFinder raised", e)
+            print(
+                "import_hooks.MacroFinder raised %s at line %s" %
+                (e, e.__traceback__.tb_lineno),
+                file=sys.stderr)
+            origin = inspect.trace()[-1][0]
+            print(origin.f_locals, origin.f_lineno, file=sys.stderr)
             traceback.print_exc()

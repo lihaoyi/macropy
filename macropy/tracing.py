@@ -70,7 +70,7 @@ def wrap_simple(printer, txt, x):
 def log(tree, exact_src, **kw):
     """Prints out source code of the wrapped expression and the value it
     evaluates to"""
-    new_tree = hq[wrap(unhygienic[log], u[exact_src(tree)], ast_splice[tree])]
+    new_tree = hq[wrap(unhygienic[log], u[exact_src(tree)], ast_literal[tree])]
     return new_tree
 
 
@@ -79,7 +79,7 @@ def show_expanded(tree, expand_macros,  **kw):
     """Prints out the expanded version of the wrapped source code, after all
     macros inside it have been expanded"""
     expanded_tree = expand_macros(tree)
-    new_tree = hq[wrap_simple(unhygienic[log], u[macropy.core.unparse(expanded_tree)], ast_splice[expanded_tree])]
+    new_tree = hq[wrap_simple(unhygienic[log], u[macropy.core.unparse(expanded_tree)], ast_literal[expanded_tree])]
     return new_tree
 
 
@@ -114,7 +114,7 @@ def trace_walk_func(tree, exact_src):
             except ValueError as e:
                 txt = exact_src(tree)
                 trace_walk.walk_children(tree)
-                wrapped = hq[wrap(unhygienic[log], u[txt], ast_splice[tree])]
+                wrapped = hq[wrap(unhygienic[log], u[txt], ast_literal[tree])]
                 stop()
                 return wrapped
 
@@ -149,7 +149,7 @@ def trace(tree, exact_src, **kw):
 def require_transform(tree, exact_src):
     ret = trace_walk_func(copy.deepcopy(tree), exact_src)
     trace_walk_func(copy.deepcopy(tree), exact_src)
-    new = hq[ast_splice[tree] or wrap_require(lambda log: ast_splice[ret])]
+    new = hq[ast_literal[tree] or wrap_require(lambda log: ast_literal[ret])]
     return new
 
 

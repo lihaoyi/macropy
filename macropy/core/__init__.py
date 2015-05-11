@@ -24,9 +24,6 @@ real_repr |     |    eval        _v________|_
           ----------------------|____________|
 """
 
-
-# Imports added by remove_from_imports.
-
 import ast
 import sys
 
@@ -34,7 +31,7 @@ from six import PY3, string_types
 
 import macropy.core.util
 
-__all__ = ['Literal', 'Captured', 'ast_repr', 'parse_expr', 'parse_stmt', 'real_repr', 'unparse', 'box']
+__all__ = ['Literal', 'Captured', 'ast_repr', 'parse_expr', 'parse_stmt', 'real_repr', 'unparse'] # , 'box']
 
 class Literal(object):
     """Used to wrap sections of an AST which must remain intact when
@@ -61,8 +58,8 @@ def ast_repr(x):
     elif type(x) is list:            return ast.List(elts=list(map(ast_repr, x)))
     elif type(x) is dict:            return ast.Dict(keys=list(map(ast_repr, x.keys())), values=list(map(ast_repr, x.values())))
     elif type(x) is set:             return ast.Set(elts=list(map(ast_repr, x)))
-    elif type(x) is ast.Literal:     return x.body
-    elif type(x) is ast.Captured:
+    elif type(x) is Literal:         return x.body
+    elif type(x) is Captured:
         return ast.Call(
             ast.Name(id="Captured"),
             [x.val, ast_repr(x.name)], [], None, None
@@ -73,7 +70,7 @@ def ast_repr(x):
     elif isinstance(x, ast.AST):
         fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
         return ast.Call(
-            ast.Name(id=x.__class__.__name__),
+            ast.Name(id='ast.%s' % x.__class__.__name__),
             [], fields, None, None
         )
     raise Exception("Don't know how to ast_repr this: ", x)
@@ -261,20 +258,20 @@ if PY3:
         trec[ast.NameConstant] = lambda tree, i: str(tree.value)
 else:
     trec.update({
-        Exec:       lambda tree, i: tabs(i) + "exec " + rec(tree.body, i) +
+        ast.Exec:       lambda tree, i: tabs(i) + "exec " + rec(tree.body, i) +
                                     mix(" in ", rec(tree.globals, i)) +
                                     mix(", ", rec(tree.locals, i)),
-        Print:      lambda tree, i: tabs(i) + "print " +
+        ast.Print:      lambda tree, i: tabs(i) + "print " +
                                     ", ".join(macropy.core.util.box(mix(">>", rec(tree.dest, i))) + [rec(t, i) for t in tree.values]) +
                                     ("," if not tree.nl else ""),
         ast.Raise:      lambda tree, i: tabs(i) + "raise" + 
                                     mix(" ", rec(tree.type, i)) +
                                     mix(", ", rec(tree.inst, i)) +
                                     mix(", ", rec(tree.tback, i)),
-        TryExcept:  lambda tree, i: tabs(i) + "try:" + rec(tree.body, i+1) +
+        ast.TryExcept:  lambda tree, i: tabs(i) + "try:" + rec(tree.body, i+1) +
                                     jmap("", lambda t: rec(t, i), tree.handlers) +
                                     mix(tabs(i), "else:", rec(tree.orelse, i+1)),
-        TryFinally: lambda tree, i: (rec(tree.body, i)
+        ast.TryFinally: lambda tree, i: (rec(tree.body, i)
                                     if len(tree.body) == 1 and isinstance(tree.body[0], ast.TryExcept)
                                     else tabs(i) + "try:" + rec(tree.body, i+1)) +
                                     tabs(i) + "finally:" + rec(tree.finalbody, i+1),
@@ -287,7 +284,7 @@ else:
         ast.With:       lambda tree, i: tabs(i) + "with " + rec(tree.context_expr, i) +
                                     mix(" as ", rec(tree.optional_vars, i)) + ":" +
                                     rec(tree.body, i+1),
-        Repr:       lambda tree, i: "`" + rec(tree.value) + "`",
+        ast.Repr:       lambda tree, i: "`" + rec(tree.value) + "`",
         ast.arguments:  lambda tree, i: ", ".join(
                                         list(map(lambda a, d: rec(a, i) + mix("=", rec(d, i)),
                                             tree.args,

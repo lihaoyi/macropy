@@ -1,11 +1,7 @@
 """The main source of all things MacroPy"""
 
 
-# Imports added by remove_from_imports.
-
 import ast
-import imp
-import itertools
 import sys
 
 from six import PY3
@@ -111,6 +107,7 @@ def expand_entire_ast(tree, src, bindings):
 
         def expand_if_in_registry(macro_tree, body_tree, args, registry, **kwargs):
             """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
+            # print(registry, file=sys.stderr)
             if isinstance(macro_tree, ast.Name) and macro_tree.id in registry:
 
                 (the_macro, the_module) = registry[macro_tree.id]
@@ -125,8 +122,8 @@ def expand_entire_ast(tree, src, bindings):
                 except Exception as e:
                     new_tree = e
 
-                for filter in reversed(filters):
-                    new_tree = filter(
+                for function in reversed(filters):
+                    new_tree = function(
                         tree=new_tree,
                         args=args,
                         src=src,
@@ -135,7 +132,6 @@ def expand_entire_ast(tree, src, bindings):
                         col_offset=macro_tree.col_offset,
                         **dict(list(kwargs.items()) + list(file_vars.items()))
                     )
-
                 return new_tree
             elif isinstance(macro_tree, ast.Call):
                 args.extend(macro_tree.args)
@@ -147,7 +143,7 @@ def expand_entire_ast(tree, src, bindings):
             def run(tree):
                 pos = (tree.lineno, tree.col_offset) if hasattr(tree, "lineno") and hasattr(tree, "col_offset") else None
                 new_tree = func(tree)
-
+                
                 if pos:
                     t = new_tree
                     while type(t) is list:

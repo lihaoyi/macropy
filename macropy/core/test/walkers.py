@@ -4,6 +4,7 @@ import unittest
 import macropy.core
 import macropy.core.walkers
 from macropy.core.quotes import macros, q, u
+from macropy.core.walkers import Walker
 
 class Tests(unittest.TestCase):
     def test_transform(self):

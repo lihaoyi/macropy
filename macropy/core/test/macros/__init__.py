@@ -35,7 +35,7 @@ class Tests(unittest.TestCase):
         assert line_number_source.run(0, False) == 10
         try:
             line_number_source.run(0, True)
-        except:
+        except Exception:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             assert exc_traceback.tb_next.tb_lineno == 8
 
@@ -56,13 +56,13 @@ class Tests(unittest.TestCase):
         assert quote_source.run(8) == 1
         try:
             quote_source.run(4)
-        except:
+        except Exception:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             assert exc_traceback.tb_next.tb_lineno == 6, exc_traceback.tb_next.tb_lineno
 
         try:
             quote_source.run(2)
-        except:
+        except Exception:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             assert exc_traceback.tb_next.tb_lineno == 6
 

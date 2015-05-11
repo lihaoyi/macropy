@@ -1,12 +1,13 @@
 """Walker that performs simple name-binding analysis as it traverses the AST"""
 
-__all__ = ['Scoped']
-
 import ast
+
 from six import PY3
 
 import macropy.core.walkers
 from macropy.core.util import merge_dicts
+
+__all__ = ['Scoped']
 
 @macropy.core.walkers.Walker
 def find_names(tree, collect, stop, **kw):

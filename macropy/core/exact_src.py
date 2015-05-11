@@ -21,7 +21,8 @@ def indexer(tree, collect, **kw):
     try:
         unparse(tree)
         collect((tree.lineno, tree.col_offset))
-    except: pass
+    except Exception as e:
+        print("Failure in exact_src.py", e, file=sys.stderr) # TODO
 
 _transforms = {
     ast.GeneratorExp: "(%s)",

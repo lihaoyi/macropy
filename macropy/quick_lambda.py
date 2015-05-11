@@ -3,12 +3,11 @@ import ast
 from six import PY3
 
 import macropy.core.macros
-import macropy.core.util
-import macropy.core.walkers
-
-from macropy.core.quotes import macros, q, ast_splice, u
-from macropy.core.hquotes import macros, hq
+from macropy.core.util import register
+from macropy.core.quotes import macros, q, ast_literal, u
+from macropy.core.hquotes import macros, hq, ast_literal, u, name
 from macropy.core.cleanup import ast_ctx_fixer
+from macropy.core.walkers import Walker
 
 macros = macropy.core.macros.Macros()
 
@@ -20,7 +19,7 @@ def _():
 def f(tree, gen_sym, **kw):
     """Macro to concisely create function literals; any `_`s within the
     wrapped expression becomes an argument to the generated function."""
-    @macropy.core.walkers.Walker
+    @Walker
     def underscore_search(tree, collect, **kw):
         if isinstance(tree, ast.Name) and tree.id == "_":
             name = gen_sym("_")
@@ -30,8 +29,8 @@ def f(tree, gen_sym, **kw):
 
     tree, used_names = underscore_search.recurse_collect(tree)
 
-    new_tree = q[lambda: ast_splice[tree]]
-    if macropy.core.macros.PY3: new_tree.args.args = [ast.arg(arg = x) for x in used_names]
+    new_tree = q[lambda: ast_literal[tree]]
+    if macropy.core.macros.PY3: new_tree.args.args = [ast_literal.arg(arg = x) for x in used_names]
     else:   new_tree.args.args = [ast.Name(id = x) for x in used_names]
     return new_tree
 
@@ -42,7 +41,7 @@ def lazy(tree, **kw):
     called via `thing()` to extract the value. The wrapped expression is
     only evaluated the first time the thunk is called and the result cached
     for all subsequent evaluations."""
-    return hq[macropy.core.util.Lazy(lambda: ast_splice[tree])]
+    return hq[Lazy(lambda: ast_literal[tree])]
 
 
 def get_interned(store, index, thunk):
@@ -53,15 +52,15 @@ def get_interned(store, index, thunk):
     return store[index][0]
 
 
-@macropy.core.util.register(macropy.core.macros.injected_vars)
+@register(macropy.core.macros.injected_vars)
 def interned_count(**kw):
     return [0]
 
-@macropy.core.util.register(macropy.core.macros.injected_vars)
+@register(macropy.core.macros.injected_vars)
 def interned_name(gen_sym, **kw):
     return gen_sym()
 
-@macropy.core.util.register(macropy.core.macros.post_processing)
+@register(macropy.core.macros.post_processing)
 def interned_processing(tree, gen_sym, interned_count, interned_name, **kw):
 
     if interned_count[0] != 0:
@@ -69,7 +68,7 @@ def interned_processing(tree, gen_sym, interned_count, interned_name, **kw):
             name[interned_name] = [None for x in range(u[interned_count[0]])]
 
         code = ast_ctx_fixer.recurse(code)
-        code = list(map(ast.fix_missing_locations, code))
+        code = list(map(fix_missing_locations, code))
 
         tree.body = code + tree.body
 
@@ -82,4 +81,4 @@ def interned(tree, interned_name, interned_count, **kw):
     """Macro to intern the wrapped expression on a per-module basis"""
     interned_count[0] += 1
 
-    return hq[get_interned(name[interned_name], interned_count[0] - 1, lambda: ast_splice[tree])]
+    return hq[get_interned(name[interned_name], interned_count[0] - 1, lambda: ast_literal[tree])]

@@ -1,3 +1,4 @@
+import ast
 import unittest
 from ast import *
 from macropy.tracing import macros, trace, log, require, show_expanded

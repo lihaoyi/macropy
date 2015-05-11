@@ -1,13 +1,14 @@
 """Transform macro expansion errors into runtime errors with nice stack traces.
 T"""
 
+import sys
+import traceback
+
+from six import PY3
 
 import macropy.core.macros
-import macropy.core.util
-
 from macropy.core.hquotes import macros, hq
-import traceback
-from six import PY3
+from macropy.core.util import register
 
 
 class MacroExpansionError(Exception):
@@ -18,10 +19,11 @@ class MacroExpansionError(Exception):
 def raise_error(ex):
     raise ex
 
-@macropy.core.util.register(macropy.core.macros.filters)
+@register(macropy.core.macros.filters)
 def clear_errors(tree, **kw):
     if isinstance(tree, Exception):
-        if macropy.core.macros.PY3: tb = "".join(traceback.format_tb(tree.__traceback__))
+        print(macropy.core.macros.filters, file=sys.stderr)
+        if PY3: tb = "".join(traceback.format_tb(tree.__traceback__))
         else:   tb = traceback.format_exc()
         #msg = tree.message
         msg = str(tree)
