@@ -30,7 +30,7 @@ def unquote_search(tree, **kw):
 def q(tree, **kw):
     tree = unquote_search.recurse(tree)
     tree = ast_repr(tree)
-    print('Quote expr %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
+    # print('Quote expr %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
     return tree
 
 

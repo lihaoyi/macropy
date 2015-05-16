@@ -5,7 +5,7 @@ import macropy.core
 import macropy.core.macros
 import macropy.core.walkers
 
-from macropy.core.quotes import u
+from macropy.core.quotes import ast_literal, u
 from macropy.core.hquotes import macros, hq, unhygienic
 
 macros = macropy.core.macros.Macros()
@@ -43,7 +43,7 @@ def literal_eval(node_or_string):
              isinstance(node.right, ast.Num) and \
              isinstance(node.right.n, complex) and \
              isinstance(node.left, ast.Num) and \
-             isinstance(node.left.n, (int, long, float)):
+             isinstance(node.left.n, (int, float)): # TODO: long, 
             left = node.left.n
             right = node.right.n
             if isinstance(node.op, ast.Add):

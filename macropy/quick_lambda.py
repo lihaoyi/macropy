@@ -1,11 +1,12 @@
 import ast
+import sys
 
 from six import PY3
 
 import macropy.core.macros
 from macropy.core.util import register
 from macropy.core.quotes import macros, q, ast_literal, u
-from macropy.core.hquotes import macros, hq, ast_literal, u, name
+from macropy.core.hquotes import macros, hq, u, name
 from macropy.core.cleanup import ast_ctx_fixer
 from macropy.core.walkers import Walker
 
@@ -29,9 +30,11 @@ def f(tree, gen_sym, **kw):
 
     tree, used_names = underscore_search.recurse_collect(tree)
 
+    print(ast.dump(q[lambda: ast_literal[tree]]), file=sys.stderr)
     new_tree = q[lambda: ast_literal[tree]]
-    if macropy.core.macros.PY3: new_tree.args.args = [ast_literal.arg(arg = x) for x in used_names]
+    if PY3: new_tree.args.args = [ast.arg(arg = x) for x in used_names]
     else:   new_tree.args.args = [ast.Name(id = x) for x in used_names]
+    print('f macro %s' % ast.dump(new_tree) if isinstance(tree, ast.AST) else new_tree, file=sys.stderr)
     return new_tree
 
 

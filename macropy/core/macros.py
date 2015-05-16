@@ -1,8 +1,10 @@
 """The main source of all things MacroPy"""
 
+from __future__ import print_function
 
 import ast
 import sys
+import traceback
 
 from six import PY3
 
@@ -111,6 +113,7 @@ def expand_entire_ast(tree, src, bindings):
             if isinstance(macro_tree, ast.Name) and macro_tree.id in registry:
 
                 (the_macro, the_module) = registry[macro_tree.id]
+                # print('Macro, module: %s, %s' % (the_macro.func.__doc__, the_module), file=sys.stderr)
                 try:
                     new_tree = the_macro(
                         tree=body_tree,
@@ -120,7 +123,10 @@ def expand_entire_ast(tree, src, bindings):
                         **dict(list(kwargs.items()) + list(file_vars.items()))
                     )
                 except Exception as e:
-                    new_tree = e
+                    # traceback.print_exc()
+                    # new_tree = e
+                    raise
+                print('Pre filters: %s' % new_tree, file=sys.stderr)
 
                 for function in reversed(filters):
                     new_tree = function(

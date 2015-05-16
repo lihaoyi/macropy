@@ -1,6 +1,9 @@
 """Transform macro expansion errors into runtime errors with nice stack traces.
 T"""
 
+from __future__ import print_function
+
+import ast
 import sys
 import traceback
 

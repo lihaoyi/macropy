@@ -22,7 +22,8 @@ def indexer(tree, collect, **kw):
         unparse(tree)
         collect((tree.lineno, tree.col_offset))
     except Exception as e:
-        print("Failure in exact_src.py", e, file=sys.stderr) # TODO
+        # print("Failure in exact_src.py", e, file=sys.stderr) # TODO
+        raise
 
 _transforms = {
     ast.GeneratorExp: "(%s)",
@@ -60,7 +61,6 @@ def exact_src(tree, src, **kw):
                     x = "(" + prelim + ")"
                 else:
                     x = prelim
-                import ast
                 parsed = ast.parse(x)
                 if unparse(parsed).strip() == unparse(tree).strip():
                     return prelim
@@ -73,5 +73,6 @@ def exact_src(tree, src, **kw):
     line_lengths = Lazy(lambda: list(map(len, src.split("\n"))))
     indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)]))
     return lambda t: exact_src_imp(t, src, indexes, line_lengths)
+
 class ExactSrcException(Exception):
     pass

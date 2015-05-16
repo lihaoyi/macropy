@@ -54,7 +54,7 @@ def post_proc(tree, captured_registry, gen_sym, **kw):
 
 @register(macropy.core.macros.filters)
 def hygienate(tree, captured_registry, gen_sym, **kw):
-    print('Hygienate %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
+    # print('Hygienate %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
     @Walker
     def hygienator(tree, stop, **kw):
         if type(tree) is Captured:
@@ -75,7 +75,7 @@ def hq(tree, target, **kw):
     tree = unquote_search.recurse(tree)
     tree = hygienator.recurse(tree)
     tree = ast_repr(tree)
-    print('Hquote block %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
+    # print('Hquote block %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
     return [ast.Assign([target], tree)]
 
 
@@ -88,7 +88,7 @@ def hq(tree, **kw):
     tree = unquote_search.recurse(tree)
     tree = hygienator.recurse(tree)
     tree = ast_repr(tree)
-    print('Hquote expr %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
+    # print('Hquote expr %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
     return tree
 
 

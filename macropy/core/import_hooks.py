@@ -69,7 +69,8 @@ class MacroFinder(object):
             macropy.core.exporters.NullExporter().export_transformed(
                 code, tree, module_name, file_path)
         except Exception as e:
-            print("Export failure", e, file=sys.stderr) # TODO
+            # print("Export failure", e, file=sys.stderr) # TODO
+            raise
 
     def get_source(self, module_name, package_path):
         if six.PY3:
@@ -83,6 +84,7 @@ class MacroFinder(object):
                 module_name.split('.')[-1],
                 package_path
             )
+            print('Get source: %s %s %s' % (file, pathname, description))
             source_code = file.read()
             file.close()
             file_path = file.name
@@ -92,8 +94,9 @@ class MacroFinder(object):
         try:
             source_code, file_path = self.get_source(module_name, package_path)
         except Exception as e:
-            print('Failed to get source', e, file=sys.stderr)
-            return
+            # print('Failed to get source', e, file=sys.stderr)
+            # return
+            raise
         try:
             # try to find already exported module
             # TODO: are these the right arguments?
@@ -109,10 +112,11 @@ class MacroFinder(object):
             self.export(code, tree, module_name, file_path)
             return module.__loader__
         except Exception as e:
-            print(
-                "import_hooks.MacroFinder raised %s at line %s" %
-                (e, e.__traceback__.tb_lineno),
-                file=sys.stderr)
-            origin = inspect.trace()[-1][0]
-            print(origin.f_locals, origin.f_lineno, file=sys.stderr)
-            traceback.print_exc()
+            # print(
+            #     "import_hooks.MacroFinder raised %s at line %s" %
+            #     (e, e.__traceback__.tb_lineno),
+            #     file=sys.stderr)
+            # origin = inspect.trace()[-1][0]
+            # print(origin.f_locals, origin.f_lineno, file=sys.stderr)
+            # traceback.print_exc()
+            raise

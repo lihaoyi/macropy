@@ -68,4 +68,5 @@ class PycExporter(object):
             x = imp.load_compiled(module_name, pathname + suffix, f)
             return x
         except Exception as e:
-            print(e)
+            # print(e)
+            raise
