@@ -29,6 +29,7 @@ class MacroFinder(object):
                     module_name.split('.')[-1],
                     package_path
                 )
+                print('Get source: %s %s %s' % (file, pathname, description))
 
                 txt = file.read()
             except:
