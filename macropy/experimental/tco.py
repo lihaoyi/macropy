@@ -90,15 +90,15 @@ def tco(tree, **kw):
                     with hq as code:
                     # get rid of starargs
                         return (TcoCall,
-                                ast_splice[func],
-                                ast_splice[_ast.List(args, _ast.Load())] + list(ast_splice[starargs]),
-                                ast_splice[kwargs or _ast.Dict([],[])])
+                                ast_literal[func],
+                                ast_literal[_ast.List(args, _ast.Load())] + list(ast_literal[starargs]),
+                                ast_literal[kwargs or _ast.Dict([],[])])
                 else:
                     with hq as code:
                         return (TcoCall,
-                                ast_splice[func],
-                                ast_splice[_ast.List(args, _ast.Load())],
-                                ast_splice[kwargs or _ast.Dict([], [])])
+                                ast_literal[func],
+                                ast_literal[_ast.List(args, _ast.Load())],
+                                ast_literal[kwargs or _ast.Dict([], [])])
 
                 return code
             else:
@@ -117,15 +117,15 @@ def tco(tree, **kw):
                     with hq as code:
                     # get rid of starargs
                         return (TcoIgnore,
-                                ast_splice[func],
-                                ast_splice[_ast.List(args, _ast.Load())] + list(ast_splice[starargs]),
-                                ast_splice[kwargs or _ast.Dict([],[])])
+                                ast_literal[func],
+                                ast_literal[_ast.List(args, _ast.Load())] + list(ast_literal[starargs]),
+                                ast_literal[kwargs or _ast.Dict([],[])])
                 else:
                     with hq as code:
                         return (TcoIgnore,
-                                ast_splice[func],
-                                ast_splice[_ast.List(args, _ast.Load())],
-                                ast_splice[kwargs or _ast.Dict([], [])])
+                                ast_literal[func],
+                                ast_literal[_ast.List(args, _ast.Load())],
+                                ast_literal[kwargs or _ast.Dict([], [])])
                 return code
             elif _ast.If(test=test, body=body, orelse=orelse):
                 body[-1] = replace_tc_pos(body[-1])

@@ -2,6 +2,7 @@ import ast
 
 import macropy.core.macros
 from macropy.core.hquotes import macros, hq, unhygienic
+from macropy.core import Captured
 
 macros = macropy.core.macros.Macros()
 
@@ -12,7 +13,7 @@ def double(x):
 
 @macros.expr
 def expand(tree, gen_sym, **kw):
-    tree = hq[str(value) + "x: " + double(ast_splice[tree])]
+    tree = hq[str(value) + "x: " + double(ast_literal[tree])]
     return tree
 
 @macros.block

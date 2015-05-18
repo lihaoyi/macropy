@@ -3,7 +3,7 @@ import ast
 import macropy.core.macros
 import macropy.core.walkers
 
-from macropy.core.hquotes import macros, hq, ast_splice, name, ast_list
+from macropy.core.hquotes import macros, hq, ast_literal, name, ast_list
 from macropy.quick_lambda import macros, f, _
 import sqlalchemy
 
@@ -26,7 +26,7 @@ def query(tree, gen_sym, **kw):
     x = expand_let_bindings.recurse(x)
     sym = gen_sym()
     # return q[(lambda query: query.bind.execute(query).fetchall())(ast[x])]
-    new_tree = hq[(lambda query: name[sym].bind.execute(name[sym]).fetchall())(ast_splice[x])]
+    new_tree = hq[(lambda query: name[sym].bind.execute(name[sym]).fetchall())(ast_literal[x])]
     new_tree.func.args = ast.arguments([ast.Name(id=sym)], None, None, [])
     return new_tree
 
@@ -35,29 +35,29 @@ def process(tree):
     @macropy.core.walkers.Walker
     def recurse(tree, **kw):
         if type(tree) is ast.Compare and type(tree.ops[0]) is ast.In:
-            return hq[(ast_splice[tree.left]).in_(ast_splice[tree.comparators[0]])]
+            return hq[(ast_literal[tree.left]).in_(ast_literal[tree.comparators[0]])]
 
         elif type(tree) is ast.GeneratorExp:
 
             aliases = list(map(f[_.target], tree.generators))
             tables = map(f[_.iter], tree.generators)
 
-            aliased_tables = list(map(lambda x: hq[(ast_splice[x]).alias().c], tables))
+            aliased_tables = list(map(lambda x: hq[(ast_literal[x]).alias().c], tables))
 
             elt = tree.elt
             if type(elt) is ast.Tuple:
                 sel = hq[ast_list[elt.elts]]
             else:
-                sel = hq[[ast_splice[elt]]]
+                sel = hq[[ast_literal[elt]]]
 
-            out = hq[sqlalchemy.select(ast_splice[sel])]
+            out = hq[sqlalchemy.select(ast_literal[sel])]
 
             for gen in tree.generators:
                 for cond in gen.ifs:
-                    out = hq[ast_splice[out].where(ast_splice[cond])]
+                    out = hq[ast_literal[out].where(ast_literal[cond])]
 
 
-            out = hq[(lambda x: ast_splice[out])()]
+            out = hq[(lambda x: ast_literal[out])()]
             out.func.args.args = aliases
             out.args = aliased_tables
             return out

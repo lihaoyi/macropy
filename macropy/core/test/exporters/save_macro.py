@@ -11,4 +11,4 @@ def double(x):
 @macros.expr
 def f(tree, **kw):
     n = 10
-    return hq[double(ast_splice[tree]) + n]
+    return hq[double(ast_literal[tree]) + n]

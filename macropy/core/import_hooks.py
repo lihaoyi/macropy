@@ -39,11 +39,11 @@ class MacroFinder(object):
         """ Parses the source_code and expands the resulting ast. 
         Returns both the compiled ast and new ast. 
         If no macros are found, returns None, None."""
+        if not source_code or "macros" not in source_code:
+            return None, None
 
         print('Expand macros in %s' % filename, file=sys.stderr)
 
-        if not source_code or "macros" not in source_code:
-            return None, None
         tree = ast.parse(source_code)
         bindings = macropy.core.macros.detect_macros(tree)
 
@@ -55,6 +55,7 @@ class MacroFinder(object):
 
         modules = [(sys.modules[p], bind) for (p, bind) in bindings]
         new_tree = macropy.core.macros.expand_entire_ast(tree, source_code, modules)
+        # print('Compiling', ast.dump(tree), ast.dump(new_tree), sep='\n')
         return compile(tree, filename, "exec"), new_tree
 
     def construct_module(self, module_name, file_path):
@@ -80,11 +81,13 @@ class MacroFinder(object):
             source_code = original_loader.get_source(module_name)
             file_path = original_loader.path
         else:
+            # When this is a package, imp.find_module(...)[0] will be
+            # None, and this will raise an AttributeError.
             (file, pathname, description) = imp.find_module(
                 module_name.split('.')[-1],
                 package_path
             )
-            print('Get source: %s %s %s' % (file, pathname, description))
+            # print('Get source: %s %s %s' % (file, pathname, description))
             source_code = file.read()
             file.close()
             file_path = file.name
@@ -93,10 +96,13 @@ class MacroFinder(object):
     def find_module(self, module_name, package_path):
         try:
             source_code, file_path = self.get_source(module_name, package_path)
-        except Exception as e:
-            # print('Failed to get source', e, file=sys.stderr)
-            # return
-            raise
+        except AttributeError as e:
+            # When trying to find a package, get_source() will raise
+            # an AttributeError, which apparently this try-except is
+            # designed to catch.  I don't know what happens after
+            # that.
+            # print('Failed to get source', e, file=macropy/core/sys.stderr)
+            return
         try:
             # try to find already exported module
             # TODO: are these the right arguments?

@@ -257,7 +257,7 @@ def enum(tree, gen_sym, exact_src, **kw):
             expr.ctx = ast.Store()
             self_ref = ast.Attribute(value=ast.Name(id=tree.name), attr=expr.id)
             with hq as code:
-                ast_splice[self_ref] = name[tree.name](u[count[0]], u[expr.id])
+                ast_literal[self_ref] = name[tree.name](u[count[0]], u[expr.id])
             new_assigns.extend(code)
             count[0] += 1
 

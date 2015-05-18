@@ -4,6 +4,8 @@
 interpolate things into a quoted section.
 """
 
+from __future__ import print_function
+
 import ast
 import sys
 
@@ -29,8 +31,9 @@ def unquote_search(tree, **kw):
 @macros.expr
 def q(tree, **kw):
     tree = unquote_search.recurse(tree)
+    # print('Quote expr after search %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
     tree = ast_repr(tree)
-    # print('Quote expr %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
+    # print('Quote expr after repr %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
     return tree
 
 
@@ -40,7 +43,9 @@ def q(tree, target, **kw):
     representation which can be manipulated at runtime. Used together with
     the `u`, `name`, `ast_literal`, `ast_list` unquotes."""
     body = unquote_search.recurse(tree)
+    # print('Quote block after search %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
     new_body = ast_repr(body)
+    # print('Quote block after repr %s' % ast.dump(tree) if isinstance(tree, ast.AST) else tree, file=sys.stderr)
     return [ast.Assign([target], new_body)]
 
 
@@ -54,7 +59,11 @@ def u(tree):
 @macropy.core.macros.macro_stub
 def name(tree):
     "Splices a string value into the quoted code snippet as a Name"
-    return Literal(ast.Call(ast.Name(id="Name"), [], [ast.keyword("id", tree)], None, None))
+    # TODO: another hard-coded call now assuming `ast.Name`
+    return Literal(ast.Call(ast.Attribute(
+                value=ast.Name(id='ast', ctx=ast.Load()),
+                attr='Name',
+                ctx=ast.Load()), [], [ast.keyword("id", tree)], None, None))
 
 
 @macropy.core.macros.macro_stub
@@ -66,5 +75,9 @@ def ast_literal(tree):
 @macropy.core.macros.macro_stub
 def ast_list(tree):
     """Splices a list of ASTs into the quoted code snippet as a List node"""
-    return Literal(ast.Call(ast.Name(id="List"), [], [ast.keyword("elts", tree)], None, None))
+     # TODO: another hard-coded call now assuming `ast.Name`
+    return Literal(ast.Call(ast.Attribute(
+                value=ast.Name(id='ast', ctx=ast.Load()),
+                attr='List',
+                ctx=ast.Load()), [], [ast.keyword("elts", tree)], None, None))
 

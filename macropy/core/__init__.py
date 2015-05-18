@@ -54,7 +54,7 @@ def ast_repr(x):
     evaluated will return the given value."""
     if type(x) in (int, float):      return ast.Num(n=x)
     elif PY3 and type(x) is bytes:   return ast.Bytes(s=x)
-    elif isinstance(x,string_types): return ast.Str(s=x)
+    elif isinstance(x, string_types): return ast.Str(s=x)
     elif type(x) is list:            return ast.List(elts=list(map(ast_repr, x)))
     elif type(x) is dict:            return ast.Dict(keys=list(map(ast_repr, x.keys())), values=list(map(ast_repr, x.values())))
     elif type(x) is set:             return ast.Set(elts=list(map(ast_repr, x)))
@@ -69,8 +69,20 @@ def ast_repr(x):
         else:                           return ast.Name(id=str(x))
     elif isinstance(x, ast.AST):
         fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
+        # return ast.Call(
+        #     ast.Name(id='ast.%s' % x.__class__.__name__),
+        #     [], fields, None, None
+        # )
+
+        # TODO: the original code hard-coded an expectation that ast
+        # classes would be imported into the global namespace.  This
+        # hard-codes an expectation that ast classes will be bound to
+        # the name `ast`.  There must be a better way.
         return ast.Call(
-            ast.Name(id='ast.%s' % x.__class__.__name__),
+            ast.Attribute(
+                value=ast.Name(id='ast', ctx=ast.Load()),
+                attr=x.__class__.__name__,
+                ctx=ast.Load()),
             [], fields, None, None
         )
     raise Exception("Don't know how to ast_repr this: ", x)

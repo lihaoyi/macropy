@@ -27,7 +27,7 @@ def merge_dicts(*my_dicts):
     precedence if there is a key conflict"""
     return dict((k,v) for d in my_dicts for (k,v) in d.items())
 
-class Lazy:
+class Lazy(object):
     def __init__(self, thunk):
         self.thunk = thunk
         self.val = None

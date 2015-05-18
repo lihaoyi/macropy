@@ -4,6 +4,7 @@ the source extent of an AST.
 Exposed to each macro as an `exact_src` funciton."""
 
 import ast
+import sys
 
 from macropy.core import unparse
 from macropy.core.macros import injected_vars
@@ -19,11 +20,18 @@ def linear_index(line_lengths, lineno, col_offset):
 @Walker
 def indexer(tree, collect, **kw):
     try:
+        # print('Indexer: %s' % ast.dump(tree), file=sys.stderr)
         unparse(tree)
         collect((tree.lineno, tree.col_offset))
-    except Exception as e:
-        # print("Failure in exact_src.py", e, file=sys.stderr) # TODO
-        raise
+    except (AttributeError, KeyError):
+        pass
+        # TODO: This originally just ignored all errors here,
+        # presumably to simply catch all errors from source code that
+        # can't be unparsed, but I can't say for sure.
+
+        # print("Failure in exact_src.py", e, file=sys.stderr)
+
+        # raise
 
 _transforms = {
     ast.GeneratorExp: "(%s)",

@@ -43,7 +43,7 @@ def peg(tree, gen_sym, **kw):
         if type(statement) is ast.Assign:
             new_tree = process(statement.value, potential_targets, gen_sym)
             statement.value = hq[
-                Parser.Named(lambda: ast_splice[new_tree], [u[statement.targets[0].id]])
+                Parser.Named(lambda: ast_literal[new_tree], [u[statement.targets[0].id]])
             ]
 
     return tree
@@ -60,12 +60,12 @@ def process(tree, potential_targets, gen_sym):
     def PegWalker(tree, stop, collect, **kw):
         if type(tree) is ast.Str:
             stop()
-            return hq[Parser.Raw(ast_splice[tree])]
+            return hq[Parser.Raw(ast_literal[tree])]
         if type(tree) is ast.Name and tree.id in potential_targets:
             collect(tree.id)
         if type(tree) is ast.BinOp and type(tree.op) is ast.RShift:
             tree.left, b_left = PegWalker.recurse_collect(tree.left)
-            tree.right = hq[lambda bindings: ast_splice[tree.right]]
+            tree.right = hq[lambda bindings: ast_literal[tree.right]]
             names = macropy.core.util.distinct(macropy.core.util.flatten(b_left))
             tree.right.args.args = list(map(f[ast.Name(id = _)], names))
             tree.right.args.defaults = [hq[[]]] * len(names)
@@ -94,7 +94,7 @@ def process(tree, potential_targets, gen_sym):
 
         if type(tree) is ast.Compare and type(tree.ops[0]) is ast.Is:
             left_tree, bindings = PegWalker.recurse_collect(tree.left)
-            new_tree = hq[ast_splice[left_tree].bind_to(u[tree.comparators[0].id])]
+            new_tree = hq[ast_literal[left_tree].bind_to(u[tree.comparators[0].id])]
             stop()
             collect(bindings + [tree.comparators[0].id])
             return new_tree

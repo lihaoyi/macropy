@@ -1,6 +1,4 @@
-
-
-# Imports added by remove_from_imports.
+import ast
 
 import macropy.core.macros
 

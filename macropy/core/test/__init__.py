@@ -29,6 +29,9 @@ else:
             with self.assertRaises(Exception) as ce:
                 failure.run1()
             msg = str(ce.exception)
+            # TODO: changed the behavior of this test by improving
+            # tracebacks for errors.
+
             # this should contain at least two "i am a cow" and a bunch of stack trace
             assert len(msg.splitlines()) >= 8, msg
             assert msg.rfind("i am a cow") != msg.find("i am a cow")

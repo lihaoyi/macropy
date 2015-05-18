@@ -1,13 +1,12 @@
 import ast
 import unittest
-from ast import *
+
 from macropy.tracing import macros, trace, log, require, show_expanded
 from macropy.core.quotes import macros, q
 result = []
 
 def log(x):
     result.append(x)
-    pass
 
 
 class Tests(unittest.TestCase):
@@ -93,7 +92,7 @@ class Tests(unittest.TestCase):
         from macropy.core import ast_repr
         show_expanded[q[1 + 2]]
 
-        assert "BinOp(left=Num(n=1), op=Add(), right=Num(n=2))" in result[-1]
+        assert "ast.BinOp(left=ast.Num(n=1), op=ast.Add(), right=ast.Num(n=2))" in result[-1]
 
         with show_expanded:
             a = 1
@@ -103,4 +102,4 @@ class Tests(unittest.TestCase):
 
         assert result[-3] == '\na = 1'
         assert result[-2] == '\nb = 2'
-        self.assertEqual("\ncode = [Return(value=BinOp(left=Name(id='a', ctx=Load()), op=Add(), right=ast_repr((b + 1))))]", result[-1])
+        self.assertEqual("\ncode = [ast.Return(value=ast.BinOp(left=ast.Name(id='a', ctx=ast.Load()), op=ast.Add(), right=ast_repr((b + 1))))]", result[-1])

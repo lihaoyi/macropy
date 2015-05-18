@@ -6,6 +6,7 @@ import macropy.core.macros
 
 from macropy.core.quotes import u, ast_list
 from macropy.core.hquotes import macros, hq
+from macropy.core import ast_repr, Captured
 
 macros = macropy.core.macros.Macros()
 

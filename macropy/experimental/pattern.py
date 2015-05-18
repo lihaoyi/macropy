@@ -221,7 +221,7 @@ def build_matcher(tree, modified):
         return hq[LiteralMatcher(u[tree.s])]
     if isinstance(tree, _ast.Name):
         if tree.id in ['True', 'False', 'None']:
-            return hq[LiteralMatcher(ast_splice[tree])]
+            return hq[LiteralMatcher(ast_literal[tree])]
         elif tree.id in ['_']:
             return hq[WildcardMatcher()]
         modified.add(tree.id)
@@ -280,9 +280,9 @@ def _matching(tree, gen_sym, **kw):
             temp = gen_sym()
             # lol random names for hax
             with hq as assignment:
-                name[temp] = ast_splice[matcher]
+                name[temp] = ast_literal[matcher]
 
-            statements = [assignment, _ast.Expr(hq[name[temp]._match_value(ast_splice[tree.value.right])])]
+            statements = [assignment, _ast.Expr(hq[name[temp]._match_value(ast_literal[tree.value.right])])]
 
             for var_name in modified:
                 statements.append(_ast.Assign([_ast.Name(var_name, _ast.Store())], hq[name[temp].get_var(u[var_name])]))

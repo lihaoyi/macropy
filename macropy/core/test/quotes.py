@@ -3,6 +3,7 @@ import unittest
 
 import macropy.core
 from macropy.core.quotes import macros, q, u
+from macropy.core import ast_repr
 
 class Tests(unittest.TestCase):
 
@@ -54,7 +55,7 @@ class Tests(unittest.TestCase):
         a = q[x + y]
         # TODO: This is almost certainly broken but I don't know what
         # it's supposed to do.
-        b = q[ast[a] + z]
+        b = q[ast_literal[a] + z]
 
         x, y, z = 1, 2, 3
         assert(eval(macropy.core.unparse(b)) == 6)

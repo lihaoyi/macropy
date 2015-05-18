@@ -3,6 +3,8 @@
 from __future__ import print_function
 
 import ast
+import dis
+import inspect
 import sys
 import traceback
 
@@ -30,6 +32,7 @@ class WrappedFunction(object):
         functools.update_wrapper(self, func)
 
     def __call__(self, *args, **kwargs):
+        # print('Wrapped Function', dis.dis(self.func.__code__))
         return self.func(*args, **kwargs)
 
     def __getitem__(self, i):
@@ -114,6 +117,7 @@ def expand_entire_ast(tree, src, bindings):
 
                 (the_macro, the_module) = registry[macro_tree.id]
                 # print('Macro, module: %s, %s' % (the_macro.func.__doc__, the_module), file=sys.stderr)
+                # print('expand if in registry', body_tree, args, src, expand_macros, kwargs, file_vars, sep='\n', file=sys.stderr)
                 try:
                     new_tree = the_macro(
                         tree=body_tree,
@@ -126,7 +130,7 @@ def expand_entire_ast(tree, src, bindings):
                     # traceback.print_exc()
                     # new_tree = e
                     raise
-                print('Pre filters: %s' % new_tree, file=sys.stderr)
+                # print('Pre filters: %s' % new_tree, file=sys.stderr)
 
                 for function in reversed(filters):
                     new_tree = function(

@@ -25,7 +25,7 @@ def raise_error(ex):
 @register(macropy.core.macros.filters)
 def clear_errors(tree, **kw):
     if isinstance(tree, Exception):
-        print(macropy.core.macros.filters, file=sys.stderr)
+        # print(macropy.core.macros.filters, file=sys.stderr)
         if PY3: tb = "".join(traceback.format_tb(tree.__traceback__))
         else:   tb = traceback.format_exc()
         #msg = tree.message
