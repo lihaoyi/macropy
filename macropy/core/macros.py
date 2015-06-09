@@ -166,6 +166,13 @@ def expand_entire_ast(tree, src, bindings):
                     assert isinstance(new_tree, list), type(new_tree)
                     return macro_expand(new_tree)
 
+            if isinstance(tree, Call):
+                new_tree = expand_if_in_registry(tree.func, tree, [], expr_registry)
+
+                if new_tree:
+                    assert isinstance(new_tree, expr), type(new_tree)
+                    return macro_expand(new_tree)
+
             if isinstance(tree, Subscript) and type(tree.slice) is Index:
 
                 new_tree = expand_if_in_registry(tree.value, tree.slice.value, [], expr_registry)
