@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import ast
 import dis
+import functools
 import inspect
 import sys
 import traceback
@@ -28,7 +29,6 @@ class WrappedFunction(object):
     def __init__(self, func, msg):
         self.func = func
         self.msg = msg
-        import functools
         functools.update_wrapper(self, func)
 
     def __call__(self, *args, **kwargs):

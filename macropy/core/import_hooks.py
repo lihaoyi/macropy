@@ -96,7 +96,7 @@ class MacroFinder(object):
     def find_module(self, module_name, package_path):
         try:
             source_code, file_path = self.get_source(module_name, package_path)
-        except AttributeError as e:
+        except (AttributeError, ImportError) as e:
             # When trying to find a package, get_source() will raise
             # an AttributeError, which apparently this try-except is
             # designed to catch.  I don't know what happens after

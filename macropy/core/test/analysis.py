@@ -12,9 +12,11 @@ from macropy.core.analysis import Scoped, extract_arg_names
 def scoped(tree, scope, collect, **kw):
     try:
         if scope != {}:
-            print(scope)
             collect((macropy.core.unparse(tree), {k: type(v) for k, v in scope.items()}))
     except Exception as e:
+        # TODO: This is ignoring a bunch of errors related to the
+        # unparser not knowing how to unparse some elements of Python
+        # code.
         pass
 
 class Tests(unittest.TestCase):
