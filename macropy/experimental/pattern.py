@@ -2,7 +2,7 @@ import ast
 import inspect
 from abc import ABCMeta, abstractmethod
 
-from macropy.core import util
+from macropy.core import ast_repr, Captured, util
 import macropy.core.macros
 import macropy.core.walkers
 
@@ -215,55 +215,55 @@ class ClassMatcher(Matcher):
 
 
 def build_matcher(tree, modified):
-    if isinstance(tree, _ast.Num):
+    if isinstance(tree, ast.Num):
         return hq[LiteralMatcher(u[tree.n])]
-    if isinstance(tree, _ast.Str):
+    if isinstance(tree, ast.Str):
         return hq[LiteralMatcher(u[tree.s])]
-    if isinstance(tree, _ast.Name):
+    if isinstance(tree, ast.Name):
         if tree.id in ['True', 'False', 'None']:
             return hq[LiteralMatcher(ast_literal[tree])]
         elif tree.id in ['_']:
             return hq[WildcardMatcher()]
         modified.add(tree.id)
         return hq[NameMatcher(u[tree.id])]
-    if isinstance(tree, _ast.List):
+    if isinstance(tree, ast.List):
         sub_matchers = []
         for child in tree.elts:
             sub_matchers.append(build_matcher(child, modified))
-        return _ast.Call(_ast.Name('ListMatcher', _ast.Load()), sub_matchers, [], None, None)
-    if isinstance(tree, _ast.Tuple):
+        return ast.Call(ast.Name('ListMatcher', ast.Load()), sub_matchers, [], None, None)
+    if isinstance(tree, ast.Tuple):
         sub_matchers = []
         for child in tree.elts:
             sub_matchers.append(build_matcher(child, modified))
-        return _ast.Call(_ast.Name('TupleMatcher', _ast.Load()), sub_matchers, [], None, None)
-    if isinstance(tree, _ast.Call):
+        return ast.Call(ast.Name('TupleMatcher', ast.Load()), sub_matchers, [], None, None)
+    if isinstance(tree, ast.Call):
         sub_matchers = []
         for child in tree.args:
             sub_matchers.append(build_matcher(child, modified))
-        positional_matchers = _ast.List(sub_matchers, _ast.Load())
+        positional_matchers = ast.List(sub_matchers, ast.Load())
         kw_matchers = []
         for kw in tree.keywords:
             kw_matchers.append(
-                    _ast.keyword(kw.arg, build_matcher(kw.value, modified)))
-        return _ast.Call(_ast.Name('ClassMatcher', _ast.Load()), [tree.func,
+                    ast.keyword(kw.arg, build_matcher(kw.value, modified)))
+        return ast.Call(ast.Name('ClassMatcher', ast.Load()), [tree.func,
             positional_matchers], kw_matchers, None, None)
-    if (isinstance(tree, _ast.BinOp) and isinstance(tree.op, _ast.BitAnd)):
+    if (isinstance(tree, ast.BinOp) and isinstance(tree.op, ast.BitAnd)):
         sub1 = build_matcher(tree.left, modified)
         sub2 = build_matcher(tree.right, modified)
-        return _ast.Call(_ast.Name('ParallelMatcher', _ast.Load()), [sub1, sub2], [], None,
+        return ast.Call(ast.Name('ParallelMatcher', ast.Load()), [sub1, sub2], [], None,
                 None)
 
     raise Exception("Unrecognized tree " + repr(tree))
 
 
 def _is_pattern_match_stmt(tree):
-    return (isinstance(tree, _ast.Expr) and
+    return (isinstance(tree, ast.Expr) and
             _is_pattern_match_expr(tree.value))
 
 
 def _is_pattern_match_expr(tree):
-    return (isinstance(tree, _ast.BinOp) and
-            isinstance(tree.op, _ast.LShift))
+    return (isinstance(tree, ast.BinOp) and
+            isinstance(tree.op, ast.LShift))
 
 
 @macros.block
@@ -282,10 +282,10 @@ def _matching(tree, gen_sym, **kw):
             with hq as assignment:
                 name[temp] = ast_literal[matcher]
 
-            statements = [assignment, _ast.Expr(hq[name[temp]._match_value(ast_literal[tree.value.right])])]
+            statements = [assignment, ast.Expr(hq[name[temp]._match_value(ast_literal[tree.value.right])])]
 
             for var_name in modified:
-                statements.append(_ast.Assign([_ast.Name(var_name, _ast.Store())], hq[name[temp].get_var(u[var_name])]))
+                statements.append(ast.Assign([ast.Name(var_name, ast.Store())], hq[name[temp].get_var(u[var_name])]))
 
             return statements
         else:
@@ -317,25 +317,25 @@ def _rewrite_if(tree, var_name=None, **kw_args):
     #     except PatternMatchException:
     #         u%(_maybe_rewrite_if(failBody))
     # return rewritten
-    if not isinstance(tree, _ast.If):
+    if not isinstance(tree, ast.If):
         return tree
 
     if var_name:
-        tree.test = _ast.BinOp(tree.test, _ast.LShift(), _ast.Name(var_name, _ast.Load()))
-    elif not (isinstance(tree.test, _ast.BinOp) and isinstance(tree.test.op, _ast.LShift)):
+        tree.test = ast.BinOp(tree.test, ast.LShift(), ast.Name(var_name, ast.Load()))
+    elif not (isinstance(tree.test, ast.BinOp) and isinstance(tree.test.op, ast.LShift)):
         return tree      
 
-    handler = _ast.ExceptHandler(hq[PatternMatchException], None, tree.orelse)
-    try_stmt = TryExcept(tree.body, [handler], [])
+    handler = ast.ExceptHandler(hq[PatternMatchException], None, tree.orelse)
+    try_stmt = ast.TryExcept(tree.body, [handler], [])
 
-    macroed_match = _ast.With(_ast.Name('_matching', _ast.Load()), None, [_ast.Expr(tree.test)])
+    macroed_match = ast.With(ast.Name('_matching', ast.Load()), None, [ast.Expr(tree.test)])
     try_stmt.body = [macroed_match] + try_stmt.body
 
     if len(handler.body) == 1: # (== tree.orelse)
         # Might be an elif
         handler.body = [_rewrite_if(handler.body[0], var_name)]
     elif not handler.body:
-        handler.body = [_ast.Pass()]
+        handler.body = [ast.Pass()]
 
     return try_stmt
 
@@ -352,7 +352,7 @@ def switch(tree, args, gen_sym, **kw):
     new_id = gen_sym()
     for i in xrange(len(tree)):
         tree[i] = _rewrite_if(tree[i], new_id)
-    tree = [_ast.Assign([_ast.Name(new_id, _ast.Store())], args[0])] + tree
+    tree = [ast.Assign([ast.Name(new_id, ast.Store())], args[0])] + tree
     return tree
 
 

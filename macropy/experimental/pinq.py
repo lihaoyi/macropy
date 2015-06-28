@@ -3,7 +3,9 @@ import ast
 import macropy.core.macros
 import macropy.core.walkers
 
-from macropy.core.hquotes import macros, hq, ast_literal, name, ast_list
+from macropy.core import Captured
+from macropy.core.quotes import ast_literal, name
+from macropy.core.hquotes import macros, hq, ast_list
 from macropy.quick_lambda import macros, f, _
 import sqlalchemy
 
