@@ -143,14 +143,16 @@ class Tests(unittest.TestCase):
         x, y = p
 
 
-    def test_definition_error(self):
-        with self.assertRaises(MacroExpansionError) as ce:
-            @case
-            class Point(1 + 2):
-                pass
-        assert ce.exception.message == (
-            "Illegal expression in case class signature: (1 + 2)"
-        )
+    # TODO: test temporarily disabled due to disabling MacroExpansionErrors
+
+    # def test_definition_error(self):
+    #     with self.assertRaises(MacroExpansionError) as ce:
+    #         @case
+    #         class Point(1 + 2):
+    #             pass
+    #     assert ce.exception.message == (
+    #         "Illegal expression in case class signature: (1 + 2)"
+    #     )
 
     def test_cannot_detect_self(self):
         @case
@@ -269,16 +271,18 @@ class Tests(unittest.TestCase):
         # methods
         assert Direction.South.padded_name(2) == "  South  "
 
-    def test_enum_error(self):
-        with self.assertRaises(MacroExpansionError) as e:
-            @enum
-            class Direction:
-                2
-        assert e.exception.message == "Can't have `2` in body of enum"
+    # TODO: test temporarily disabled due to disabling MacroExpansionErrors
 
-        with self.assertRaises(MacroExpansionError) as e:
-            @enum
-            class Direction:
-                a()(b)
-        assert e.exception.message == "Can't have `a()(b)` in body of enum"
+    # def test_enum_error(self):
+    #     with self.assertRaises(MacroExpansionError) as e:
+    #         @enum
+    #         class Direction:
+    #             2
+    #     assert e.exception.message == "Can't have `2` in body of enum"
+
+    #     with self.assertRaises(MacroExpansionError) as e:
+    #         @enum
+    #         class Direction:
+    #             a()(b)
+    #     assert e.exception.message == "Can't have `a()(b)` in body of enum"
 
