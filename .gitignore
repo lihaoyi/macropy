@@ -3,4 +3,7 @@
 *.iml
 *.pyc
 *.swp
+build/
 MANIFEST
+MacroPy.egg-info/
+dist/
