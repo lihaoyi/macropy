@@ -4,7 +4,7 @@ from macropy.experimental.pyxl_strings import macros, p
 from macropy.tracing import macros, require
 
 
-from pyxl.html import *
+import pyxl.html as html
 import re
 import unittest
 from xml.etree import ElementTree

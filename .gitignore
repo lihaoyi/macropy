@@ -7,3 +7,4 @@ build/
 MANIFEST
 MacroPy.egg-info/
 dist/
+pyc_cache.py
