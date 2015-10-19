@@ -26,11 +26,11 @@ class Tests(unittest.TestCase):
 
         # reloading the file should re-run file but not macro
         reload(pyc_cache)
-        assert (pyc_cache_count, pyc_cache_macro_count) == (4, 3)
+        assert (pyc_cache_count, pyc_cache_macro_count) == (4, 3),(pyc_cache_count, pyc_cache_macro_count)
         reload(pyc_cache)
         assert (pyc_cache_count, pyc_cache_macro_count) == (5, 3)
 
-        
+
         cache_file = os.path.join(THIS_FOLDER, "pyc_cache.py")
         # unless you touch the file to bring its mtime up to that of the
         # stored .pyc, in which case the macro gets re-run too
