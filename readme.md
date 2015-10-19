@@ -1689,7 +1689,7 @@ block2 = p['<div>{element_list}</div>']
 assert block2.to_string() == '<div><img src="/static/images/bolton.png" />Michael Bolton</div>'
 ```
 
-[Pyxl](https://github.com/dropbox/pyxl) is a way of integrating XML markup into your Python code. By default, pyxl hooks into the python UTF-8 decoder in order to transform the source files at load-time. In this, it is similar to how MacroPy transforms source files at import time.
+[Pyxl](https://github.com/dropbox/pyxl) is a way of integrating XML markup into your Python code. By default, pyxl hooks into the python UTF-8 decoder in order to transform the source files at load-time. In this, it is similar to how MacroPy transforms source files at import time (Note: at present, pyxl must be manually installed from its github repo; it cannot be installed via `pip`)
 
 A major difference is that Pyxl by default leaves the HTML fragments directly in the source code:
 
