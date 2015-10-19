@@ -165,6 +165,7 @@ Feel free to open up a REPL and try out the examples in the console; simply `imp
 
 Case Classes
 ------------
+Put this demo in one file, say `point_demo.py`
 ```python
 from macropy.case_classes import macros, case
 
@@ -179,6 +180,23 @@ print p.y    # 2
 print Point(1, 2) == Point(1, 2) # True
 x, y = p
 print x, y   # 1 2
+```
+Call it from another file, say `run_point_demo.py:`
+```python
+import macropy.activate
+import point_demo
+```
+like this:
+```bash
+$ python run_point_demo.py
+```
+Expect to see:
+```bash
+Point(1, 2)
+1
+2
+True
+1 2
 ```
 
 [Case classes](http://www.codecommit.com/blog/scala/case-classes-are-cool) are classes with extra goodies:
