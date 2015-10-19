@@ -54,11 +54,15 @@ class Tests(unittest.TestCase):
         safe_value = "<b>Puppies!</b>"
         unsafe_value = "<script>bad();</script>"
         unsafe_attr = '">'
-        pyxl_blob = p["""<div class="{unsafe_attr}">
-                   {unsafe_value}
-                   {rawhtml(safe_value)}
-               </div>"""]
-        target_blob = '<div class="&quot;&gt;">&lt;script&gt;bad();&lt;/script&gt;<b>Puppies!</b></div>'
+        pyxl_blob = p[
+            '''
+            <div class="{unsafe_attr}">
+                {unsafe_value}
+                {html.rawhtml(safe_value)}
+            </div>
+            '''
+        ]
+        target_blob = '<div class="&quot;&gt;">&lt;script&gt;bad();&lt;/script&gt; <b>Puppies!</b></div>'
         with require:
             normalize(pyxl_blob.to_string()) == normalize(target_blob)
 
