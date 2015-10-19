@@ -165,12 +165,18 @@ Feel free to open up a REPL and try out the examples in the console; simply `imp
 
 Case Classes
 ------------
-Put this demo in one file, say `point_demo.py`
+Put this definition in one file, say `define_point_demo.py`
 ```python
 from macropy.case_classes import macros, case
 
 @case
-class Point(x, y): pass
+class Point(x, y): 
+    pass
+```
+Use it from another file, say `use_point_demo.py:`
+```python
+import macropy.activate
+from define_point_demo import *
 
 p = Point(1, 2)
 
@@ -180,15 +186,11 @@ print p.y    # 2
 print Point(1, 2) == Point(1, 2) # True
 x, y = p
 print x, y   # 1 2
-```
-Call it from another file, say `run_point_demo.py:`
-```python
-import macropy.activate
-import point_demo
+
 ```
 like this:
 ```bash
-$ python run_point_demo.py
+$ python use_point_demo.py
 ```
 Expect to see:
 ```bash
