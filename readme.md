@@ -212,6 +212,8 @@ True
 
 The reasoning being that although you may sometimes want complex, custom-built classes with custom features and fancy inheritance, very (very!) often you want a simple class with a constructor, pretty `__str__` and `__repr__` methods, and structural equality which doesn't inherit from anything. Case classes provide you just that, with an extremely concise declaration:
 
+### Boilerplate Reduction
+
 ```python
 @case
 class Point(x, y): pass
@@ -253,6 +255,114 @@ b = a.copy(x = 3)
 print a # Point(1, 2)
 print b # Point(3, 2)
 ```
+
+### Lazy, Shallow Copy-On-Write
+
+Instances of case classes with the same attribute values are shared until
+modified, that is, they implement lazy, shallow copy-on-write:
+
+```python
+p = Point(1, 2)
+q = Point(1, 2)
+p == q # True
+p.x = 42
+print p # Point(42, 2)
+print q # Point(1, 2)
+p == q # False
+```
+
+This behavior is shallow, however, as the following example shows:
+
+In `define_dictdock.py`:
+
+```python
+from macropy.case_classes import macros, case
+@case
+class DictDock(d | {}): pass
+```
+
+In `use_dictdock.py`:
+
+```python
+import macropy.activate
+from define_dictdock import *
+a = DictDock()
+b = DictDock()
+print a == b # True
+a.d['foo'] = 'bar'
+print a      # DictDock({'foo': 'bar'})
+print b      # DictDock({'foo': 'bar'})
+print a == b # True
+```
+
+#### Concise Singleton Cache Classes
+
+This behavior enables concise definition of singleton cache classes.
+For instance, here is a class that will force re-importation of modules, which
+is valuable for iterative development of macros (remember, they're only applied
+at import time):
+
+```python
+@case
+class ForceImporter(_imported | {}):
+    def __call__(self, module_str):
+        if module_str not in self._imported:
+            # importlib.import_module won't import the module more than once,
+            # but we want to force repeated loading. Save it away for reloading
+            # for all but the first time.
+            self._imported[module_str] = importlib.import_module(module_str)
+        else:
+            reload (self._imported[module_str])
+```
+
+Every instance of this class will share the same `_imported` cache of
+module-name to module mappings.  Contrast this with the complications of other
+recommendations for singleton classes, *e.g.*,
+http://stackoverflow.com/questions/6760685/.
+
+#### Simulating Runtime Application of Macros
+
+But this lets you simulate *runtime* application of macros.  If you have
+
+```python
+# file: define_string_interpolation.py
+from macropy.string_interp import macros, s
+a, b = 41, 72
+print s["{a} apples and {b} bananas"]
+print s["a = {a}"]
+print s["b = {b}"]
+print s["b x a = {a * b}"]
+```
+
+then, without something like `ForceImporter`, you would only be able to run this
+code one time, as in
+
+```python
+import define_string_interpolation
+# 41 apples and 72 bananas
+# a = 41
+# b = 72
+# b x a = 2952
+import define_string_interpolation
+# <silence from Python>
+```
+because the Python importer caches the module.  With `ForceImporter`, however,
+you may write
+
+```python
+ForceImporter()('define_string_interpolation')
+# 41 apples and 72 bananas
+# a = 41
+# b = 72
+# b x a = 2952
+ForceImporter()('define_string_interpolation')
+# 41 apples and 72 bananas
+# a = 41
+# b = 72
+# b x a = 2952
+```
+
+### Methods
 
 Like any other class, a case class may contain methods in its body:
 
