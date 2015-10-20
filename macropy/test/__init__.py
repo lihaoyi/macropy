@@ -9,6 +9,7 @@ def test_suite(suites=[], cases=[]):
 
 
 import case_classes
+import dump
 import quick_lambda
 import string_interp
 import tracing
@@ -17,6 +18,7 @@ import macropy.experimental.test
 import macropy.core.test
 Tests = test_suite(cases=[
     case_classes,
+    dump,
     quick_lambda,
     string_interp,
     tracing,

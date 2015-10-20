@@ -6,4 +6,4 @@ macros = Macros()
 @macros.expr
 def dump(tree, **kw):
     """Macro to dump a literal expression and its value so we DRY."""
-    return hq[unparse(tree) + ' = ' + str(ast[tree])]
+    return hq[unparse(tree) + ' ~~> ' + str(ast[tree])]
