@@ -768,7 +768,10 @@ expression as written by the programmer. We give `dumpid` both as a separate
 package with its unique utility and as an example of how to write a very
 parsimonious macro: short, easy to read and write. `dumpid` presents a `~~>`
 arrow instead of `log's` `->` arrow so that you can immediately distinguish the
-two. The following are examples of using it.
+two. We hasten to emphasize that `trace` is much more complete: able to handle
+statements, whereas `dump` and `dumpid` can only handle expressions. 
+
+The following are examples of using it.
 
 From MacroPy's root directory, try this:
 
