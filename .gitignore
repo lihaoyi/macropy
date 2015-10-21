@@ -1,6 +1,11 @@
+TAGS
 .idea/*
 .idea_modules/
 *.iml
 *.pyc
 *.swp
+build/
 MANIFEST
+MacroPy.egg-info/
+dist/
+pyc_cache.py

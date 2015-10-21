@@ -23,7 +23,10 @@ MacroPy has been used to implement features such as:
 
 - [Case Classes](#case-classes), easy Algebraic Data Types from Scala, and [Enums](#enums)
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy, and the [Lazy](#lazy) and [Interned](#interned) utility macros
-- [String Interpolation](#string-interpolation), a common feature in many programming languages
+- [String Interpolation](#string-interpolation), a common feature in many
+  programming languages
+- [Dump and Dumpid](#dump-and-dumpid), a single-expression tracer
+  borrowed from [LinqPAD](http://www.linqpad.net/)
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts), and [show_expanded](#show_expanded), to help in the debugging effort
 - [MacroPEG](#macropeg-parser-combinators), Parser Combinators inspired by Scala's
 
@@ -165,11 +168,18 @@ Feel free to open up a REPL and try out the examples in the console; simply `imp
 
 Case Classes
 ------------
+Put this definition in one file, say `define_point_demo.py`
 ```python
 from macropy.case_classes import macros, case
 
 @case
-class Point(x, y): pass
+class Point(x, y): 
+    pass
+```
+Use it from another file, say `use_point_demo.py:`
+```python
+import macropy.activate
+from define_point_demo import *
 
 p = Point(1, 2)
 
@@ -179,6 +189,19 @@ print p.y    # 2
 print Point(1, 2) == Point(1, 2) # True
 x, y = p
 print x, y   # 1 2
+
+```
+like this:
+```bash
+$ python use_point_demo.py
+```
+Expect to see:
+```bash
+Point(1, 2)
+1
+2
+True
+1 2
 ```
 
 [Case classes](http://www.codecommit.com/blog/scala/case-classes-are-cool) are classes with extra goodies:
@@ -191,6 +214,8 @@ print x, y   # 1 2
 - An `__iter__` method, to allow destructuring
 
 The reasoning being that although you may sometimes want complex, custom-built classes with custom features and fancy inheritance, very (very!) often you want a simple class with a constructor, pretty `__str__` and `__repr__` methods, and structural equality which doesn't inherit from anything. Case classes provide you just that, with an extremely concise declaration:
+
+### Boilerplate Reduction
 
 ```python
 @case
@@ -233,6 +258,114 @@ b = a.copy(x = 3)
 print a # Point(1, 2)
 print b # Point(3, 2)
 ```
+
+### Lazy, Shallow Copy-On-Write
+
+Instances of case classes with the same attribute values are shared until
+modified, that is, they implement lazy, shallow copy-on-write:
+
+```python
+p = Point(1, 2)
+q = Point(1, 2)
+p == q # True
+p.x = 42
+print p # Point(42, 2)
+print q # Point(1, 2)
+p == q # False
+```
+
+This behavior is shallow, however, as the following example shows:
+
+In `define_dictdock.py`:
+
+```python
+from macropy.case_classes import macros, case
+@case
+class DictDock(d | {}): pass
+```
+
+In `use_dictdock.py`:
+
+```python
+import macropy.activate
+from define_dictdock import *
+a = DictDock()
+b = DictDock()
+print a == b # True
+a.d['foo'] = 'bar'
+print a      # DictDock({'foo': 'bar'})
+print b      # DictDock({'foo': 'bar'})
+print a == b # True
+```
+
+#### Concise Singleton Cache Classes
+
+This behavior enables concise definition of singleton cache classes.
+For instance, here is a class that will force re-importation of modules, which
+is valuable for iterative development of macros (remember, they're only applied
+at import time):
+
+```python
+@case
+class ForceImporter(_imported | {}):
+    def __call__(self, module_str):
+        if module_str not in self._imported:
+            # importlib.import_module won't import the module more than once,
+            # but we want to force repeated loading. Save it away for reloading
+            # for all but the first time.
+            self._imported[module_str] = importlib.import_module(module_str)
+        else:
+            reload (self._imported[module_str])
+```
+
+Every instance of this class will share the same `_imported` cache of
+module-name to module mappings.  Contrast this with the complications of other
+recommendations for singleton classes, *e.g.*,
+http://stackoverflow.com/questions/6760685/.
+
+#### Simulating Runtime Application of Macros
+
+But this lets you simulate *runtime* application of macros.  If you have
+
+```python
+# file: define_string_interpolation.py
+from macropy.string_interp import macros, s
+a, b = 41, 72
+print s["{a} apples and {b} bananas"]
+print s["a = {a}"]
+print s["b = {b}"]
+print s["b x a = {a * b}"]
+```
+
+then, without something like `ForceImporter`, you would only be able to run this
+code one time, as in
+
+```python
+import define_string_interpolation
+# 41 apples and 72 bananas
+# a = 41
+# b = 72
+# b x a = 2952
+import define_string_interpolation
+# <silence from Python>
+```
+because the Python importer caches the module.  With `ForceImporter`, however,
+you may write
+
+```python
+ForceImporter()('define_string_interpolation')
+# 41 apples and 72 bananas
+# a = 41
+# b = 72
+# b x a = 2952
+ForceImporter()('define_string_interpolation')
+# 41 apples and 72 bananas
+# a = 41
+# b = 72
+# b x a = 2952
+```
+
+### Methods
 
 Like any other class, a case class may contain methods in its body:
 
@@ -608,6 +741,55 @@ A = 10
 B = 5
 print s["{A} + {B} = {A + B}"]
 # 10 + 5 = 15
+```
+
+Dump and Dumpid
+---------------
+
+[LinqPAD](http://www.linqpad.net/) is a brilliant program for the .NET platform.
+It implements a REPL for C#, F#, and VB.NET. One of its coolest features is
+`dump`, which has the semantics of the identity function but displays results as
+a side-effect. Here, we provide 
+
+* `dump`, which produces a string representation
+of both (the AST of) any Python expression and the value of that expression
+
+* `dumpid`, which prints that string as a side effect and produces the value of
+the expression
+
+With some effort, these macros can be extended to macros that plot
+[numpy](http://www.numpy.org) arrays, display images, and produce other
+artifacts as side effects, all the while returning their inputs' values.
+
+This `dumpid` is similar to but simpler than the `log` macro in the
+[Tracing](#tracing) package documented below. `dumpid` prints the AST as
+developed by MacroPy's parser and unparser whereas `log` prints the original
+expression as written by the programmer. We give `dumpid` both as a separate
+package with its unique utility and as an example of how to write a very
+parsimonious macro: short, easy to read and write. `dumpid` presents a `~~>`
+arrow instead of `log's` `->` arrow so that you can immediately distinguish the
+two. We hasten to emphasize that `trace` is much more complete: able to handle
+statements, whereas `dump` and `dumpid` can only handle expressions.
+Understanding how the `dump` and `dumpid` macros are implemented is a stepping
+stone to understanding how to implement the macros in the `tracing` package.
+
+The following are examples of using it.
+
+From MacroPy's root directory, try this:
+
+```python
+import macropy.console
+from macropy.dump import macros, dump, dumpid
+dump[1 + 2]
+# '(1 + 2) ~~> 3'
+dumpid[1 + 2]
+# (1 + 2) ~~> 3
+# 3
+dump["omg" * 3]
+# "('omg' * 3) ~~> omgomgomg"
+dumpid["omg" * 3]
+# ('omg' * 3) ~~> omgomgomg
+# 'omgomgomg'
 ```
 
 Tracing
@@ -1669,7 +1851,7 @@ block2 = p['<div>{element_list}</div>']
 assert block2.to_string() == '<div><img src="/static/images/bolton.png" />Michael Bolton</div>'
 ```
 
-[Pyxl](https://github.com/dropbox/pyxl) is a way of integrating XML markup into your Python code. By default, pyxl hooks into the python UTF-8 decoder in order to transform the source files at load-time. In this, it is similar to how MacroPy transforms source files at import time.
+[Pyxl](https://github.com/dropbox/pyxl) is a way of integrating XML markup into your Python code. By default, pyxl hooks into the python UTF-8 decoder in order to transform the source files at load-time. In this, it is similar to how MacroPy transforms source files at import time (Note: at present, pyxl must be manually installed from its github repo; it cannot be installed via `pip`)
 
 A major difference is that Pyxl by default leaves the HTML fragments directly in the source code:
 

@@ -22,7 +22,7 @@ class _MacroLoader(object):
 class MacroFinder(object):
     """Loads a module and looks for macros inside, only providing a loader if
     it finds some."""
-    def find_module(self, module_name, package_path):
+    def find_module(self, module_name, package_path = None):
         try:
             try:
                 (file, pathname, description) = imp.find_module(
