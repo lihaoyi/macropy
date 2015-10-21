@@ -23,7 +23,10 @@ MacroPy has been used to implement features such as:
 
 - [Case Classes](#case-classes), easy Algebraic Data Types from Scala, and [Enums](#enums)
 - [Quick Lambdas](#quick-lambdas) from Scala and Groovy, and the [Lazy](#lazy) and [Interned](#interned) utility macros
-- [String Interpolation](#string-interpolation), a common feature in many programming languages
+- [String Interpolation](#string-interpolation), a common feature in many
+  programming languages
+- [Dump and Dumpid](#dump-and-dumpid), a single-expression tracer
+  borrowed from [LinqPAD](http://www.linqpad.net/)
 - [Tracing](#tracing) and [Smart Asserts](#smart-asserts), and [show_expanded](#show_expanded), to help in the debugging effort
 - [MacroPEG](#macropeg-parser-combinators), Parser Combinators inspired by Scala's
 
@@ -738,6 +741,50 @@ A = 10
 B = 5
 print s["{A} + {B} = {A + B}"]
 # 10 + 5 = 15
+```
+
+Dump and Dumpid
+---------------
+
+[LinqPAD](http://www.linqpad.net/) is a brilliant program for the .NET platform.
+It implements a REPL for C#, F#, and VB.NET. One of its coolest features is
+`dump`, which has the semantics of the identity function but displays results as
+a side-effect. Here, we provide 
+
+* `dump`, which produces a string representation
+of both (the AST of) any Python expression and the value of that expression
+
+* `dumpid`, which prints that string as a side effect and produces the value of
+the expression
+
+With some effort, these macros can be extended to macros that plot
+[numpy](http://www.numpy.org) arrays, display images, and produce other
+artifacts as side effects, all the while returning their inputs' values.
+
+This `dumpid` is similar to but simpler than the `log` macro in the
+[Tracing](#tracing) package documented below. `dumpid` prints the AST as
+developed by MacroPy's parser and unparser whereas `log` prints the original
+expression as written by the programmer. We give `dumpid` both as a separate
+package with its unique utility and as an example of how to write a very
+parsimonious macro: short, easy to read and write. `dumpid` presents a `~~>`
+arrow instead of `log's` `->` arrow so that you can immediately distinguish the
+two. The following are examples of using it.
+
+From MacroPy's root directory, try this:
+
+```python
+import macropy.console
+from macropy.dump import macros, dump, dumpid
+dump[1 + 2]
+# '(1 + 2) ~~> 3'
+dumpid[1 + 2]
+# (1 + 2) ~~> 3
+# 3
+dump["omg" * 3]
+# "('omg' * 3) ~~> omgomgomg"
+dumpid["omg" * 3]
+# ('omg' * 3) ~~> omgomgomg
+# 'omgomgomg'
 ```
 
 Tracing
