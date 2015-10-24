@@ -11,24 +11,24 @@ class Tests(unittest.TestCase):
     def test_null_exporter(self):
         import pyc_cache
         # every load and reload should re-run both macro and file
-        assert (pyc_cache_count, pyc_cache_macro_count) == (1, 1)
+        assert (pyc_cache_count, pyc_cache_macro_count) == (1, 1),(pyc_cache_count, pyc_cache_macro_count)
         reload(pyc_cache)
-        assert (pyc_cache_count, pyc_cache_macro_count) == (2, 2)
+        assert (pyc_cache_count, pyc_cache_macro_count) == (2, 2),(pyc_cache_count, pyc_cache_macro_count)
         reload(pyc_cache)
-        assert (pyc_cache_count, pyc_cache_macro_count) == (3, 3)
+        assert (pyc_cache_count, pyc_cache_macro_count) == (3, 3),(pyc_cache_count, pyc_cache_macro_count)
 
     def test_pyc_exporter(self):
         import macropy
 
         macropy.exporter = PycExporter()
         import pyc_cache
-        assert (pyc_cache_count, pyc_cache_macro_count) == (3, 3)
+        assert (pyc_cache_count, pyc_cache_macro_count) == (3, 3),(pyc_cache_count, pyc_cache_macro_count)
 
         # reloading the file should re-run file but not macro
         reload(pyc_cache)
         assert (pyc_cache_count, pyc_cache_macro_count) == (4, 3),(pyc_cache_count, pyc_cache_macro_count)
         reload(pyc_cache)
-        assert (pyc_cache_count, pyc_cache_macro_count) == (5, 3)
+        assert (pyc_cache_count, pyc_cache_macro_count) == (5, 3),(pyc_cache_count, pyc_cache_macro_count)
 
 
         cache_file = os.path.join(THIS_FOLDER, "pyc_cache.py")
@@ -39,10 +39,10 @@ class Tests(unittest.TestCase):
         f.close()
 
         reload(pyc_cache)
-        assert (pyc_cache_count, pyc_cache_macro_count) == (6, 4)
+        assert (pyc_cache_count, pyc_cache_macro_count) == (6, 4),(pyc_cache_count, pyc_cache_macro_count)
 
         reload(pyc_cache)
-        assert (pyc_cache_count, pyc_cache_macro_count) == (7, 4)
+        assert (pyc_cache_count, pyc_cache_macro_count) == (7, 4),(pyc_cache_count, pyc_cache_macro_count)
 
         f = open(cache_file, "a")
         f.write(" ")
@@ -52,7 +52,7 @@ class Tests(unittest.TestCase):
         # [rebcabin: this test just appeared to be numerically wrong. I am not
         #  absolutely positive I did the right thing, here, because I don't
         #  deeply understand the caching process.]
-        assert (pyc_cache_count, pyc_cache_macro_count) == (8, 4), (pyc_cache_count, pyc_cache_macro_count)
+        assert (pyc_cache_count, pyc_cache_macro_count) == (8, 4),(pyc_cache_count, pyc_cache_macro_count)
 
     def test_save_exporter(self):
         import macropy

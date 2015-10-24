@@ -6,6 +6,5 @@ TAGS
 *.swp
 build/
 MANIFEST
-pyc_cache.py
 MacroPy.egg-info/
 dist/
