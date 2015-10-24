@@ -8,6 +8,11 @@ class Tests(unittest.TestCase):
         assert dump[1 + 2] == '(1 + 2) ~~> 3'
         assert dump[2 + 1] == '(2 + 1) ~~> 3'
         assert dump[3*7  +  7*3] == '((3 * 7) + (7 * 3)) ~~> 42'
+        x = 3
+        y = 2
+        z = 7
+        assert dump[x * z  +  z * x] == '((x * z) + (z * x)) ~~> 42'
+        assert dump[x*y*z == z*y*x] == '(((x * y) * z) == ((z * y) * x)) ~~> True'
 
     def test_if(self):
         assert dump[42 if None else 43] == '(42 if None else 43) ~~> 43'

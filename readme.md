@@ -248,7 +248,7 @@ class Point(object):
         yield self.y
 ```
 
-Whew, what a lot of boilerplate! This is clearly a pain to do, error prone to deal with, and violates [DRY](http://en.wikipedia.org/wiki/Don't_repeat_yourself) in an extreme way: each member of the class (`x` and `y` in this case) has to be repeated _8 times_, with loads and loads of boilerplate. It is also *buggy*, and will fail at runtime when the above example is run, so see if you can spot the bug in it! Given how tedious writing all this code is, it is no surprise that most python classes do not come with proper `__str__` or useful `__eq__` functions! With case classes, there is no excuse, since all this will be generated for you.
+Whew, what a lot of boilerplate! This is clearly a pain to do, error prone to deal with, and violates [DRY](http://en.wikipedia.org/wiki/Don't_repeat_yourself) in an extreme way: each member of the class (`x` and `y` in this case) must be repeated _8 times_, with loads and loads of boilerplate. It is also *buggy*, and will fail at runtime when the above example is run, so see if you can spot the bug in it! Given how tedious writing all this code is, it is no surprise that most python classes do not come with proper `__str__` or useful `__eq__` functions! With case classes, there is no excuse, since all this will be generated for you.
 
 Case classes also provide a convenient *copy-constructor*, which creates a shallow copy of the case class with modified fields, leaving the original unchanged:
 
@@ -259,51 +259,53 @@ print a # Point(1, 2)
 print b # Point(3, 2)
 ```
 
-### Lazy, Shallow Copy-On-Write
+#### Concise Singleton Cache Classes
 
-Instances of case classes with the same attribute values are shared until
-modified, that is, they implement lazy, shallow copy-on-write:
+Consider the following:
 
-```python
-p = Point(1, 2)
-q = Point(1, 2)
-p == q # True
-p.x = 42
-print p # Point(42, 2)
-print q # Point(1, 2)
-p == q # False
-```
-
-This behavior is shallow, however, as the following example shows:
-
-In `define_dictdock.py`:
+In `dictdock.py`:
 
 ```python
 from macropy.case_classes import macros, case
 @case
-class DictDock(d | {}): pass
+class DictDock(d | {}):
+    pass
+from macropy.tracing import macros, trace
+with trace:
+    a = DictDock()   # new instance
+    b = DictDock()   # new instance
+    a == b           # their contents are equal and empty
+    a is b           # but they're different identities
+    a.d is b.d       # and their dict's have the same ident
+a.d['foo'] = 'bar'   # put something in a's dictionary
+with trace:
+    a.d['foo']       # the 'something' is in a's dictionary
+    b.d['foo']       # but it's in b's dictionary too
+    a == b           # their contents are still equal
+    a is b           # and they're still not the same
+    a.d is b.d       # their dict's are still same ident
+with trace:
+    g = DictDock({}) # new instance; explicit initializer
+    h = DictDock({}) # new instance; explicit initializer
+    g.d is h.d       # different dictionaries inside
+g.d['x'] = 42        # put something in g's dict
+with trace:
+    g.d              # check g's dict
+    h.d              # check h's dict
 ```
 
 In `use_dictdock.py`:
 
 ```python
 import macropy.activate
-from define_dictdock import *
-a = DictDock()
-b = DictDock()
-print a == b # True
-a.d['foo'] = 'bar'
-print a      # DictDock({'foo': 'bar'})
-print b      # DictDock({'foo': 'bar'})
-print a == b # True
+import dictdock
 ```
 
-#### Concise Singleton Cache Classes
-
-This behavior enables concise definition of singleton cache classes.
-For instance, here is a class that will force re-importation of modules, which
-is valuable for iterative development of macros (remember, they're only applied
-at import time):
+Every instance of `DictDock` created with an empty argument list shares the same
+backing dictionary. This behavior enables concise definition of singleton cache
+classes. For instance, here is a class that will force re-importation of
+modules, which is valuable for iterative development of macros (remember,
+macros are only applied at import time):
 
 ```python
 @case
