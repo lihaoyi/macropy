@@ -65,7 +65,7 @@ class Walker(object):
                     if item is old_value
                     for k, v in kws.items()
                 ]
-                new_value, new_aggregate = self.recurse_collect(old_value, sub_kw, **dict(kw.items() + specific_sub_kw))
+                new_value, new_aggregate = self.recurse_collect(old_value, sub_kw, **dict(list(kw.items()) + specific_sub_kw))
                 aggregates.extend(new_aggregate)
                 setattr(tree, field, new_value)
 

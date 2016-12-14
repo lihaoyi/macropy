@@ -1,6 +1,6 @@
 import unittest
 import sys
-import hq
+from . import hq
 
 class Tests(unittest.TestCase):
     def test_hq(self):
@@ -15,13 +15,13 @@ class Tests(unittest.TestCase):
         with self.assertRaises(TypeError) as ce:
             hq.run_error()
 
-        assert ce.exception.message == (
+        assert str(ce.exception == (
             "Stub `unhygienic` illegally invoked at runtime; "
             "is it used properly within a macro?"
-        )
+        ))
 
     def test_hq2(self):
-        import hq2
+        from . import hq2
 
         assert hq2.run1() == "2x: 1 double 1 double "
 

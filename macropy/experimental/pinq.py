@@ -37,10 +37,10 @@ def process(tree):
 
         elif type(tree) is GeneratorExp:
 
-            aliases = map(f[_.target], tree.generators)
+            aliases = list(map(f[_.target], tree.generators))
             tables = map(f[_.iter], tree.generators)
 
-            aliased_tables = map(lambda x: hq[(ast[x]).alias().c], tables)
+            aliased_tables = list(map(lambda x: hq[(ast[x]).alias().c], tables))
 
             elt = tree.elt
             if type(elt) is Tuple:

@@ -7,7 +7,7 @@ from macropy.core import unparse
 from macropy.core.macros import injected_vars
 from ast import *
 from macropy.core.util import Lazy, distinct, register
-from walkers import Walker
+from .walkers import Walker
 
 
 def linear_index(line_lengths, lineno, col_offset):
@@ -20,8 +20,7 @@ def indexer(tree, collect, **kw):
     try:
         unparse(tree)
         collect((tree.lineno, tree.col_offset))
-    except Exception, e:
-        pass
+    except: pass
 
 _transforms = {
     GeneratorExp: "(%s)",
@@ -69,7 +68,7 @@ def exact_src(tree, src, **kw):
         raise ExactSrcException()
 
     positions = Lazy(lambda: indexer.collect(tree))
-    line_lengths = Lazy(lambda: map(len, src.split("\n")))
+    line_lengths = Lazy(lambda: list(map(len, src.split("\n"))))
     indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)]))
     return lambda t: exact_src_imp(t, src, indexes, line_lengths)
 class ExactSrcException(Exception):

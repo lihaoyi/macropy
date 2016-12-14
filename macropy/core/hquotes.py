@@ -11,7 +11,7 @@ macros = Macros()
 def unhygienic():
     """Used to delimit a section of a hq[...] that should not be hygienified"""
 
-from macros import filters, injected_vars, post_processing
+from .macros import filters, injected_vars, post_processing
 
 @register(injected_vars)
 def captured_registry(**kw):
@@ -36,10 +36,10 @@ def post_proc(tree, captured_registry, gen_sym, **kw):
     with q as stored:
         ast_list[syms] = name[unpickle_name](u[pickle.dumps(vals)])
 
-    from cleanup import ast_ctx_fixer
+    from .cleanup import ast_ctx_fixer
     stored = ast_ctx_fixer.recurse(stored)
 
-    tree.body = map(fix_missing_locations, pickle_import + stored) + tree.body
+    tree.body = list(map(fix_missing_locations, pickle_import + stored)) + tree.body
 
     return tree
 

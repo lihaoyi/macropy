@@ -17,10 +17,10 @@ def gen_sym(tree, **kw):
             collect(tree.id)
         if type(tree) is Import:
             names = [x.asname or x.name for x in tree.names]
-            map(collect, names)
+            for name in names: collect(name)
         if type(tree) is ImportFrom:
             names = [x.asname or x.name for x in tree.names]
-            map(collect, names)
+            for name in names: collect(name)
         if type(tree) in (FunctionDef, ClassDef):
             collect(tree.name)
 

@@ -61,7 +61,7 @@ def process(tree, potential_targets, gen_sym):
             tree.left, b_left = PegWalker.recurse_collect(tree.left)
             tree.right = hq[lambda bindings: ast[tree.right]]
             names = distinct(flatten(b_left))
-            tree.right.args.args = map(f[Name(id = _)], names)
+            tree.right.args.args = list(map(f[Name(id = _)], names))
             tree.right.args.defaults = [hq[[]]] * len(names)
             tree.right.args.kwarg = gen_sym("kw")
             stop()
