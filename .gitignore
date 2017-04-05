@@ -4,3 +4,4 @@
 *.pyc
 *.swp
 MANIFEST
+*.egg-info
