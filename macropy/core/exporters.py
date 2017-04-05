@@ -46,6 +46,8 @@ class PycExporter(object):
         self.root = root
 
     def export_transformed(self, code, tree, module_name, file_name):
+        """TODO: this needs to be updated, look into py_compile.compile, the
+        following code was copied verbatim from there on pyhon2"""
         f = open(file_name + suffix , 'wb')
         f.write('\0\0\0\0')
         timestamp = long(os.fstat(f.fileno()).st_mtime)
