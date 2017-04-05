@@ -100,8 +100,11 @@ class MacroFinder(object):
             # When trying to find a package, get_source() will raise
             # an AttributeError, which apparently this try-except is
             # designed to catch.  I don't know what happens after
-            # that.
-            # print('Failed to get source', e, file=macropy/core/sys.stderr)
+            # that.  TODO: This seems to be intercepting many imports
+            # unrelated to MacroPy.  Unfortunately, it's also
+            # swallowing real ImportErrors when modules inside MacroPy
+            # can't import external modules.
+            # print('Failed to get source', e, file=sys.stderr)
             return
         try:
             # try to find already exported module

@@ -8,6 +8,7 @@ import macropy.core.macros
 import macropy.core.util
 import macropy.core.walkers
 
+from macropy.core import ast_repr, Captured
 from macropy.core.hquotes import macros, hq, u
 from macropy.quick_lambda import macros, f
 from macropy.case_classes import macros, case

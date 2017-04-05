@@ -1,13 +1,10 @@
-
-
-# Imports added by remove_from_imports.
+import ast
 
 import macropy.core.macros
-import ast
-import _ast
 import macropy.core.util
 import macropy.core.walkers
 
+from macropy.core import Captured
 from macropy.experimental.pattern import macros, switch, _matching, ClassMatcher, NameMatcher
 
 from macropy.core.hquotes import macros, hq
@@ -81,7 +78,7 @@ def tco(tree, **kw):
     # Replace returns of calls
     def return_replacer(tree, **kw):
         with switch(tree):
-            if _ast.Return(value=_ast.Call(
+            if ast.Return(value=ast.Call(
                     func=func, 
                     args=args, 
                     starargs=starargs, 
@@ -91,14 +88,14 @@ def tco(tree, **kw):
                     # get rid of starargs
                         return (TcoCall,
                                 ast_literal[func],
-                                ast_literal[_ast.List(args, _ast.Load())] + list(ast_literal[starargs]),
-                                ast_literal[kwargs or _ast.Dict([],[])])
+                                ast_literal[ast.List(args, ast.Load())] + list(ast_literal[starargs]),
+                                ast_literal[kwargs or ast.Dict([],[])])
                 else:
                     with hq as code:
                         return (TcoCall,
                                 ast_literal[func],
-                                ast_literal[_ast.List(args, _ast.Load())],
-                                ast_literal[kwargs or _ast.Dict([], [])])
+                                ast_literal[ast.List(args, ast.Load())],
+                                ast_literal[kwargs or ast.Dict([], [])])
 
                 return code
             else:
@@ -108,7 +105,7 @@ def tco(tree, **kw):
     # position
     def replace_tc_pos(node):
         with switch(node):
-            if _ast.Expr(value=_ast.Call(
+            if ast.Expr(value=ast.Call(
                     func=func,
                     args=args,
                     starargs=starargs,
@@ -118,20 +115,20 @@ def tco(tree, **kw):
                     # get rid of starargs
                         return (TcoIgnore,
                                 ast_literal[func],
-                                ast_literal[_ast.List(args, _ast.Load())] + list(ast_literal[starargs]),
-                                ast_literal[kwargs or _ast.Dict([],[])])
+                                ast_literal[ast.List(args, ast.Load())] + list(ast_literal[starargs]),
+                                ast_literal[kwargs or ast.Dict([],[])])
                 else:
                     with hq as code:
                         return (TcoIgnore,
                                 ast_literal[func],
-                                ast_literal[_ast.List(args, _ast.Load())],
-                                ast_literal[kwargs or _ast.Dict([], [])])
+                                ast_literal[ast.List(args, ast.Load())],
+                                ast_literal[kwargs or ast.Dict([], [])])
                 return code
-            elif _ast.If(test=test, body=body, orelse=orelse):
+            elif ast.If(test=test, body=body, orelse=orelse):
                 body[-1] = replace_tc_pos(body[-1])
                 if orelse:
                     orelse[-1] = replace_tc_pos(orelse[-1])
-                return _ast.If(test, body, orelse)
+                return ast.If(test, body, orelse)
             else:
                 return node
 

@@ -267,6 +267,22 @@ def expand_entire_ast(tree, src, bindings):
     expr_registry = extract_macros(lambda x: x.expr)
     decorator_registry = extract_macros(lambda x: x.decorator)
 
+    # This is kind of a crude modification to handle from __future__
+    # imports, simply removing them (and maybe a docstring) from the
+    # front of the ast.Module.body list and sticking them back on
+    # after all the macro processing.  It assumes that all trees at
+    # this point are ast.Modules.  It might be better to make the
+    # macro processors themselves ignore docstrings and __future__
+    # imports.  For that matter, I don't know if macro processing
+    # currently moves docstrings, either.
+    preamble = None
+    if isinstance(tree, ast.Module) and tree.body:
+        if isinstance(tree.body[0], ast.ImportFrom) and tree.body[0].module == '__future__':
+            preamble = [tree.body.pop(0)]
+        elif isinstance(tree.body[0], ast.Expr) and isinstance(tree.body[1], ast.ImportFrom) and tree.body[1].module == '__future__':
+            preamble = tree.body[0:1]
+            del tree.body[0:1]
+
     tree = expand_macros(tree)
 
     for post in post_processing:
@@ -276,6 +292,9 @@ def expand_entire_ast(tree, src, bindings):
             expand_macros=expand_macros,
             **file_vars
         )
+
+    if preamble:
+        tree.body = preamble + tree.body
 
     return tree
 

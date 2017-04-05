@@ -5,7 +5,9 @@ import ast
 import macropy.core
 import macropy.core.macros
 import macropy.core.walkers
-from macropy.core.hquotes import macros, hq, name, unhygienic, u
+from macropy.core import ast_repr, Captured
+from macropy.core.hquotes import macros, hq, unhygienic, u
+from macropy.core.quotes import name
 from macropy.core.analysis import Scoped
 
 import six
