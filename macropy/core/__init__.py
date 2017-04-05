@@ -131,13 +131,13 @@ boolops = {
 }
 
 def else_rec(tree, i):
-    if not tree: 
+    if not tree:
         return ""
     if isinstance(tree[0], ast.If):
         return tabs(i) + "elif " + rec(tree[0].test, i) + ":" + \
                 rec(tree[0].body, i+1) + else_rec(tree[0].orelse, i)
     return tabs(i) + "else:" + rec(tree, i+1)
-    
+
 
 trec = {
     #Misc
@@ -232,7 +232,7 @@ if PY3:
     trec.update({
         ast.Nonlocal:   lambda tree, i: tabs(i) + "nonlocal " + jmap(", ", lambda x: x, tree.names),
         ast.YieldFrom:  lambda tree, i: "(yield from " + rec(tree.value, i) + ")",
-        ast.Raise:      lambda tree, i: tabs(i) + "raise" + 
+        ast.Raise:      lambda tree, i: tabs(i) + "raise" +
                             mix(" ", rec(tree.exc, i)) +
                             mix(" from ", rec(tree.cause, i)), # See PEP-344 for semantics
         ast.Try:        lambda tree, i: tabs(i) + "try:" + rec(tree.body, i+1) +
@@ -247,9 +247,9 @@ if PY3:
                                 ["**" + rec(t, i) for t in macropy.core.util.box(tree.kwargs)]
                             ), ")") + ":" + rec(tree.body, i+1),
         ast.FunctionDef:lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
-                                    tabs(i) + "def " + tree.name + "(" + rec(tree.args, i) + ")" + 
+                                    tabs(i) + "def " + tree.name + "(" + rec(tree.args, i) + ")" +
                                     mix(" -> ", rec(tree.returns, i)) +  ":" + rec(tree.body, i+1),
-        ast.With:       lambda tree, i: tabs(i) + "with " + jmap(", ", lambda x: rec(x,i), tree.items) + ":" + 
+        ast.With:       lambda tree, i: tabs(i) + "with " + jmap(", ", lambda x: rec(x,i), tree.items) + ":" +
                                     rec(tree.body, i+1),
         ast.Bytes:      lambda tree, i: repr(tree.s),
         ast.Starred:    lambda tree, i: "*" + rec(tree.value),
@@ -276,7 +276,7 @@ else:
         ast.Print:      lambda tree, i: tabs(i) + "print " +
                                     ", ".join(macropy.core.util.box(mix(">>", rec(tree.dest, i))) + [rec(t, i) for t in tree.values]) +
                                     ("," if not tree.nl else ""),
-        ast.Raise:      lambda tree, i: tabs(i) + "raise" + 
+        ast.Raise:      lambda tree, i: tabs(i) + "raise" +
                                     mix(" ", rec(tree.type, i)) +
                                     mix(", ", rec(tree.inst, i)) +
                                     mix(", ", rec(tree.tback, i)),
@@ -319,7 +319,7 @@ def jmap(s, f, *l):
     """Shorthand for the join+map operation"""
     return s.join(map(f, *l))
 
-def tabs(i): 
+def tabs(i):
     return "\n" + "    "*i
 
 def unparse(tree):
