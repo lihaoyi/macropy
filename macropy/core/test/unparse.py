@@ -1,10 +1,13 @@
 import unittest
 
-from macropy.core.macros import *
+from six import PY3
+
+import macropy.core
+import macropy.core.macros
 
 def convert(code):
     " string -> ast -> string "
-    return unparse(parse_stmt(code))
+    return macropy.core.unparse(macropy.core.parse_stmt(code))
 
 class Tests(unittest.TestCase):
 
@@ -16,7 +19,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(convert("1 +2 / a"), "\n(1 + (2 / a))")
 
     def test_stmts(self):
-        self.convert_test("""
+        test = """
 import foo
 from foo import bar
 foo = something
@@ -27,19 +30,38 @@ break
 continue
 del a, b, c
 assert foo, bar
-print 'hello', 'world'
 del foo
 global foo, bar, baz
-(yield foo)""")
+(yield foo)"""
+        if macropy.core.macros.PY3:
+            test += """
+print('hello', 'world')
+nonlocal foo, bar, baz"""
+        else:
+            test += """
+print 'hello', 'world'"""
+        self.convert_test(test)
 
     def test_Exec(self):
-        self.convert_test("""
+        if macropy.core.macros.PY3:
+            self.convert_test("""
+exec('foo')
+exec('foo', bar)
+exec('foo', bar, {})""")          
+        else:
+            self.convert_test("""
 exec 'foo'
 exec 'foo' in bar
 exec 'foo' in bar, {}""")
 
     def test_Raise(self):
-        self.convert_test("""
+        if macropy.core.macros.PY3:
+            self.convert_test("""
+raise
+raise Exception(e)
+raise Exception from init_arg""")
+        else:
+            self.convert_test("""
 raise
 raise Exception(e)
 raise Exception, init_arg
@@ -136,11 +158,12 @@ with a as b:
 
     def test_datatypes(self):
         self.convert_test("""
-[1, 5.0, [(-6)]]
 {1, 2, 3, 4}
 {1:2, 5:8}
 (1, 2, 3)
 """)
+        if macropy.core.macros.PY3: self.convert_test("\n[1, 5.0, [(-(6))]]")
+        else:   self.convert_test("\n[1, 5.0, [(-6)]]")
         self.convert_test("\n'abcd'")
 
     def test_comprehension(self):

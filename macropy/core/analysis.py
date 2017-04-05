@@ -1,33 +1,46 @@
 """Walker that performs simple name-binding analysis as it traverses the AST"""
-from walkers import *
-from macropy.core import merge_dicts
+
+import ast
+
+from six import PY3
+
+import macropy.core.walkers
+from macropy.core.util import merge_dicts
 
 __all__ = ['Scoped']
-@Walker
+
+@macropy.core.walkers.Walker
 def find_names(tree, collect, stop, **kw):
-    if type(tree) in [Attribute, Subscript]:
+    if isinstance(tree, (ast.Attribute, ast.Subscript)):
         stop()
-    if isinstance(tree, Name):
+    if isinstance(tree, ast.Name):
         collect((tree.id, tree))
 
-@Walker
+@macropy.core.walkers.Walker
 def find_assignments(tree, collect, stop, **kw):
-    if type(tree) in [ClassDef, FunctionDef]:
+    if isinstance(tree, (ast.ClassDef, ast.FunctionDef)):
         collect((tree.name, tree))
         stop()
-    if type(tree) is Assign:
+    if isinstance(tree, ast.Assign):
         for x in find_names.collect(tree.targets):
             collect(x)
 
 
 def extract_arg_names(args):
-    return dict(
-        ([(args.vararg, args.vararg)] if args.vararg else []) +
-        ([(args.kwarg, args.kwarg)] if args.kwarg else []) +
-        [pair for x in args.args for pair in find_names.collect(x)]
-    )
+    if PY3:
+        return dict(
+            ([(args.vararg.arg, args.vararg)] if args.vararg else []) +
+            ([(args.kwarg.arg, args.kwarg)] if args.kwarg else []) +
+            [(arg.arg, ast.Name(id=arg.arg, ctx=ast.Param())) for arg in args.args]
+        )
+    else:
+        return dict(
+            ([(args.vararg, args.vararg)] if args.vararg else []) +
+            ([(args.kwarg, args.kwarg)] if args.kwarg else []) +
+            [pair for x in args.args for pair in find_names.collect(x)]
+        )
 
-class Scoped(Walker):
+class Scoped(macropy.core.walkers.Walker):
     """
     Used in conjunction with `@Walker`, via
 
@@ -52,7 +65,7 @@ class Scoped(Walker):
     def recurse_collect(self, tree, sub_kw=[], **kw):
 
         kw['scope'] = kw.get('scope', dict(find_assignments.collect(tree)))
-        return Walker.recurse_collect(self, tree, sub_kw, **kw)
+        return macropy.core.walkers.Walker.recurse_collect(self, tree, sub_kw, **kw)
 
     def func(self, tree, set_ctx_for, scope, **kw):
         def extend_scope(tree, *dicts, **kw):
@@ -62,10 +75,10 @@ class Scoped(Walker):
                     del new_scope[rem]
 
             set_ctx_for(tree, scope=new_scope)
-        if type(tree) is Lambda:
+        if isinstance(tree, ast.Lambda):
             extend_scope(tree.body, extract_arg_names(tree.args))
 
-        if type(tree) in (GeneratorExp, ListComp, SetComp, DictComp):
+        if isinstance(tree, (ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp)):
             iterator_vars = {}
             for gen in tree.generators:
                 extend_scope(gen.target, iterator_vars)
@@ -73,13 +86,13 @@ class Scoped(Walker):
                 iterator_vars.update(dict(find_names.collect(gen.target)))
                 extend_scope(gen.ifs, iterator_vars)
 
-            if type(tree) is DictComp:
+            if isinstance(tree, ast.DictComp):
                 extend_scope(tree.key, iterator_vars)
                 extend_scope(tree.value, iterator_vars)
             else:
                 extend_scope(tree.elt, iterator_vars)
 
-        if type(tree) is FunctionDef:
+        if isinstance(tree, ast.FunctionDef):
 
             extend_scope(tree.args, {tree.name: tree})
             extend_scope(
@@ -89,15 +102,22 @@ class Scoped(Walker):
                 dict(find_assignments.collect(tree.body)),
             )
 
-        if type(tree) is ClassDef:
+        if isinstance(tree, ast.ClassDef):
             extend_scope(tree.bases, remove=[tree.name])
             extend_scope(tree.body, dict(find_assignments.collect(tree.body)), remove=[tree.name])
 
-        if type(tree) is ExceptHandler:
-            extend_scope(tree.body, {tree.name.id: tree.name})
+        if isinstance(tree, ast.ExceptHandler):
+            if PY3:
+                extend_scope(tree.body, {tree.name: ast.Name(id=tree.name, ctx=ast.Param())})
+            else:
+                extend_scope(tree.body, {tree.name.id: tree.name})
+            
 
-        if type(tree) is For:
+        if isinstance(tree, ast.For):
             extend_scope(tree.body, dict(find_names.collect(tree.target)))
+
+        if isinstance(tree, ast.With):
+            extend_scope(tree.body, dict(find_names.collect(tree.items)))
 
         return self.walker.func(
             tree,

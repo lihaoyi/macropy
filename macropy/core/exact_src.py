@@ -3,11 +3,13 @@ the source extent of an AST.
 
 Exposed to each macro as an `exact_src` funciton."""
 
+import ast
+import sys
+
 from macropy.core import unparse
 from macropy.core.macros import injected_vars
-from ast import *
 from macropy.core.util import Lazy, distinct, register
-from walkers import Walker
+from .walkers import Walker
 
 
 def linear_index(line_lengths, lineno, col_offset):
@@ -18,16 +20,24 @@ def linear_index(line_lengths, lineno, col_offset):
 @Walker
 def indexer(tree, collect, **kw):
     try:
+        # print('Indexer: %s' % ast.dump(tree), file=sys.stderr)
         unparse(tree)
         collect((tree.lineno, tree.col_offset))
-    except Exception, e:
+    except (AttributeError, KeyError):
         pass
+        # TODO: This originally just ignored all errors here,
+        # presumably to simply catch all errors from source code that
+        # can't be unparsed, but I can't say for sure.
+
+        # print("Failure in exact_src.py", e, file=sys.stderr)
+
+        # raise
 
 _transforms = {
-    GeneratorExp: "(%s)",
-    ListComp: "[%s]",
-    SetComp: "{%s}",
-    DictComp: "{%s}"
+    ast.GeneratorExp: "(%s)",
+    ast.ListComp: "[%s]",
+    ast.SetComp: "{%s}",
+    ast.DictComp: "{%s}"
 }
 
 
@@ -48,18 +58,17 @@ def exact_src(tree, src, **kw):
             prelim = _transforms.get(type(tree), "%s") % prelim
 
 
-            if isinstance(tree, stmt):
+            if isinstance(tree, ast.stmt):
                 prelim = prelim.replace("\n" + " " * tree.col_offset, "\n")
 
             if isinstance(tree, list):
                 prelim = prelim.replace("\n" + " " * tree[0].col_offset, "\n")
 
             try:
-                if isinstance(tree, expr):
+                if isinstance(tree, ast.expr):
                     x = "(" + prelim + ")"
                 else:
                     x = prelim
-                import ast
                 parsed = ast.parse(x)
                 if unparse(parsed).strip() == unparse(tree).strip():
                     return prelim
@@ -69,8 +78,9 @@ def exact_src(tree, src, **kw):
         raise ExactSrcException()
 
     positions = Lazy(lambda: indexer.collect(tree))
-    line_lengths = Lazy(lambda: map(len, src.split("\n")))
+    line_lengths = Lazy(lambda: list(map(len, src.split("\n"))))
     indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)]))
     return lambda t: exact_src_imp(t, src, indexes, line_lengths)
+
 class ExactSrcException(Exception):
     pass

@@ -1,9 +1,10 @@
-from macropy.core.macros import *
+import macropy.core
+import macropy.core.macros
 
-macros = Macros()
+macros = macropy.core.macros.Macros()
 
 @macros.block
 def my_macro(tree, target, **kw):
-    assert unparse(target) == "y"
-    assert unparse(tree).strip() == "x = (x + 1)", unparse(tree)
+    assert macropy.core.unparse(target) == "y"
+    assert macropy.core.unparse(tree).strip() == "x = (x + 1)", macropy.core.unparse(tree)
     return tree * 3

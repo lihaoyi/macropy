@@ -1,6 +1,9 @@
-from macropy.core.macros import *
+import ast
+
+import macropy.core.macros
+
 from macropy.core.quotes import macros, q
-macros = Macros()
+macros = macropy.core.macros.Macros()
 
 @macros.block
 def my_macro(tree, **kw):

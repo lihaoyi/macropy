@@ -1,7 +1,9 @@
+import ast
 import unittest
 
-from macropy.core.macros import *
+import macropy.core
 from macropy.core.quotes import macros, q, u
+from macropy.core import ast_repr
 
 class Tests(unittest.TestCase):
 
@@ -12,11 +14,11 @@ class Tests(unittest.TestCase):
         data1 = q[1 + u[a + b]]
         data2 = q[1 + (a + b)]
 
-        assert eval(unparse(data1)) == 13
-        assert eval(unparse(data2)) == 13
+        assert eval(macropy.core.unparse(data1)) == 13
+        assert eval(macropy.core.unparse(data2)) == 13
         a = 1
-        assert eval(unparse(data1)) == 13
-        assert eval(unparse(data2)) == 4
+        assert eval(macropy.core.unparse(data1)) == 13
+        assert eval(macropy.core.unparse(data2)) == 4
 
 
     def test_structured(self):
@@ -25,9 +27,9 @@ class Tests(unittest.TestCase):
         b = ["wtf", "bbq"]
         data1 = q[[x for x in u[a + b]]]
 
-        assert(eval(unparse(data1)) == [1, 2, "omg", "wtf", "bbq"])
+        assert(eval(macropy.core.unparse(data1)) == [1, 2, "omg", "wtf", "bbq"])
         b = []
-        assert(eval(unparse(data1)) == [1, 2, "omg", "wtf", "bbq"])
+        assert(eval(macropy.core.unparse(data1)) == [1, 2, "omg", "wtf", "bbq"])
 
 
     def test_quote_unquote(self):
@@ -35,10 +37,10 @@ class Tests(unittest.TestCase):
         x = 1
         y = 2
         a = q[u[x + y]]
-        assert(eval(unparse(a)) == 3)
+        assert(eval(macropy.core.unparse(a)) == 3)
         x = 0
         y = 0
-        assert(eval(unparse(a)) == 3)
+        assert(eval(macropy.core.unparse(a)) == 3)
 
 
     def test_unquote_name(self):
@@ -46,17 +48,19 @@ class Tests(unittest.TestCase):
         x = 1
         y = q[name[n] + name[n]]
 
-        assert(eval(unparse(y)) == 2)
+        assert(eval(macropy.core.unparse(y)) == 2)
 
     def test_quote_unquote_ast(self):
 
         a = q[x + y]
-        b = q[ast[a] + z]
+        # TODO: This is almost certainly broken but I don't know what
+        # it's supposed to do.
+        b = q[ast_literal[a] + z]
 
         x, y, z = 1, 2, 3
-        assert(eval(unparse(b)) == 6)
+        assert(eval(macropy.core.unparse(b)) == 6)
         x, y, z = 1, 3, 9
-        assert(eval(unparse(b)) == 13)
+        assert(eval(macropy.core.unparse(b)) == 13)
 
 
     def test_quote_unquote_block(self):
@@ -69,18 +73,18 @@ class Tests(unittest.TestCase):
             c.append(u[a])
             c.extend(u[b])
 
-        exec(unparse(code))
+        exec(macropy.core.unparse(code))
         assert(c == [10, 10, 'a', 'b', 'c'])
         c = []
         a, b = None, None
-        exec(unparse(code))
+        exec(macropy.core.unparse(code))
         assert(c == [None, 10, 'a', 'b', 'c'])
 
     def test_bad_unquote_error(self):
         with self.assertRaises(TypeError) as ce:
             x = u[10]
 
-        assert ce.exception.message == (
+        assert str(ce.exception) == (
             "Stub `u` illegally invoked at runtime; "
             "is it used properly within a macro?"
         )

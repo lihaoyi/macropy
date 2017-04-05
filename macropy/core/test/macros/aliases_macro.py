@@ -1,15 +1,17 @@
-from macropy.core.macros import *
+import ast
+
+import macropy.core.macros
 from macropy.core.quotes import macros, q
-macros = Macros()
+macros = macropy.core.macros.Macros()
 
 @macros.expr
 def e(tree, exact_src, **kw):
-    return Str("omg")
+    return ast.Str("omg")
 
 @macros.expr
 def f(tree, exact_src, **kw):
-    return Str("wtf")
+    return ast.Str("wtf")
 
 @macros.expr
 def g(tree, exact_src, **kw):
-    return Str("bbq")
+    return ast.Str("bbq")

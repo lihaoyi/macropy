@@ -3,25 +3,31 @@
 Exposes this functionality as the `gen_sym` function.
 """
 
-from macropy.core.macros import *
+import ast
 
-@register(injected_vars)
+import macropy.core.macros
+import macropy.core.util
+import macropy.core.walkers
+
+
+
+@macropy.core.util.register(macropy.core.macros.injected_vars)
 def gen_sym(tree, **kw):
     """Create a generator that creates symbols which are not used in the given
     `tree`. This means they will be hygienic, i.e. it guarantees that they will
     not cause accidental shadowing, as long as the scope of the new symbol is
     limited to `tree` e.g. by a lambda expression or a function body"""
-    @Walker
+    @macropy.core.walkers.Walker
     def name_finder(tree, collect, **kw):
-        if type(tree) is Name:
+        if type(tree) is ast.Name:
             collect(tree.id)
-        if type(tree) is Import:
+        if type(tree) is ast.Import:
             names = [x.asname or x.name for x in tree.names]
-            map(collect, names)
-        if type(tree) is ImportFrom:
+            for name in names: collect(name)
+        if type(tree) is ast.ImportFrom:
             names = [x.asname or x.name for x in tree.names]
-            map(collect, names)
-        if type(tree) in (FunctionDef, ClassDef):
+            for name in names: collect(name)
+        if type(tree) in (ast.FunctionDef, ast.ClassDef):
             collect(tree.name)
 
     found_names = set(name_finder.collect(tree))

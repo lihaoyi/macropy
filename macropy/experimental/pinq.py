@@ -1,11 +1,13 @@
-from ast import Call
+import ast
 
-from macropy.core.macros import *
-from macropy.core.hquotes import macros, hq, ast, name, ast_list
+import macropy.core.macros
+import macropy.core.walkers
+
+from macropy.core.hquotes import macros, hq, ast_literal, name, ast_list
 from macropy.quick_lambda import macros, f, _
 import sqlalchemy
 
-macros = Macros()
+macros = macropy.core.macros.Macros()
 
 # workaround for inability to pickle modules
 
@@ -24,38 +26,38 @@ def query(tree, gen_sym, **kw):
     x = expand_let_bindings.recurse(x)
     sym = gen_sym()
     # return q[(lambda query: query.bind.execute(query).fetchall())(ast[x])]
-    new_tree = hq[(lambda query: name[sym].bind.execute(name[sym]).fetchall())(ast[x])]
-    new_tree.func.args = arguments([Name(id=sym)], None, None, [])
+    new_tree = hq[(lambda query: name[sym].bind.execute(name[sym]).fetchall())(ast_literal[x])]
+    new_tree.func.args = ast.arguments([ast.Name(id=sym)], None, None, [])
     return new_tree
 
 
 def process(tree):
-    @Walker
+    @macropy.core.walkers.Walker
     def recurse(tree, **kw):
-        if type(tree) is Compare and type(tree.ops[0]) is In:
-            return hq[(ast[tree.left]).in_(ast[tree.comparators[0]])]
+        if type(tree) is ast.Compare and type(tree.ops[0]) is ast.In:
+            return hq[(ast_literal[tree.left]).in_(ast_literal[tree.comparators[0]])]
 
-        elif type(tree) is GeneratorExp:
+        elif type(tree) is ast.GeneratorExp:
 
-            aliases = map(f[_.target], tree.generators)
+            aliases = list(map(f[_.target], tree.generators))
             tables = map(f[_.iter], tree.generators)
 
-            aliased_tables = map(lambda x: hq[(ast[x]).alias().c], tables)
+            aliased_tables = list(map(lambda x: hq[(ast_literal[x]).alias().c], tables))
 
             elt = tree.elt
-            if type(elt) is Tuple:
+            if type(elt) is ast.Tuple:
                 sel = hq[ast_list[elt.elts]]
             else:
-                sel = hq[[ast[elt]]]
+                sel = hq[[ast_literal[elt]]]
 
-            out = hq[sqlalchemy.select(ast[sel])]
+            out = hq[sqlalchemy.select(ast_literal[sel])]
 
             for gen in tree.generators:
                 for cond in gen.ifs:
-                    out = hq[ast[out].where(ast[cond])]
+                    out = hq[ast_literal[out].where(ast_literal[cond])]
 
 
-            out = hq[(lambda x: ast[out])()]
+            out = hq[(lambda x: ast_literal[out])()]
             out.func.args.args = aliases
             out.args = aliased_tables
             return out
@@ -71,18 +73,18 @@ def generate_schema(engine):
     return db
 
 
-@Walker
+@macropy.core.walkers.Walker
 def _find_let_bindings(tree, ctx, stop, collect, **kw):
-    if type(tree) is Call and type(tree.func) is Lambda:
+    if type(tree) is ast.Call and type(tree.func) is ast.Lambda:
         stop()
         collect(tree)
         return tree.func.body
 
-    elif type(tree) in [Lambda, GeneratorExp, ListComp, SetComp, DictComp]:
+    elif type(tree) in [ast.Lambda, ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp]:
         stop()
         return tree
 
-@Walker
+@macropy.core.walkers.Walker
 def expand_let_bindings(tree, **kw):
     tree, chunks = _find_let_bindings.recurse_collect(tree)
     for v in chunks:

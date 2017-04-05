@@ -1,9 +1,14 @@
+import ast
 import re
 
-from macropy.core.macros import *
-from macropy.core.hquotes import macros, hq, u, ast_list
+import macropy.core
+import macropy.core.macros
 
-macros = Macros()
+from macropy.core.quotes import u, ast_list
+from macropy.core.hquotes import macros, hq
+from macropy.core import ast_repr, Captured
+
+macros = macropy.core.macros.Macros()
 
 @macros.expr
 def s(tree, **kw):
@@ -18,6 +23,6 @@ def s(tree, **kw):
             new_string += "%s"
             captured += [chunks[i]]
 
-    result = hq[u[new_string] % tuple(ast_list[map(parse_expr, captured)])]
+    result = hq[u[new_string] % tuple(ast_list[list(map(macropy.core.parse_expr, captured))])]
 
     return result

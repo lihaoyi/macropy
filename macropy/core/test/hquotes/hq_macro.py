@@ -1,7 +1,10 @@
-from macropy.core.macros import *
-from macropy.core.hquotes import macros, hq, unhygienic
+import ast
 
-macros = Macros()
+import macropy.core.macros
+from macropy.core.hquotes import macros, hq, unhygienic
+from macropy.core import Captured
+
+macros = macropy.core.macros.Macros()
 
 value = 2
 
@@ -10,7 +13,7 @@ def double(x):
 
 @macros.expr
 def expand(tree, gen_sym, **kw):
-    tree = hq[str(value) + "x: " + double(ast[tree])]
+    tree = hq[str(value) + "x: " + double(ast_literal[tree])]
     return tree
 
 @macros.block

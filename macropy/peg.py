@@ -1,7 +1,13 @@
 """Macro to easily define recursive-descent PEG parsers"""
+
+import ast
+
 import re
 
-from macropy.core.macros import *
+import macropy.core.macros
+import macropy.core.util
+import macropy.core.walkers
+
 from macropy.core.hquotes import macros, hq, u
 from macropy.quick_lambda import macros, f
 from macropy.case_classes import macros, case
@@ -21,7 +27,7 @@ And-predicate: &e           &       And
 Not-predicate: !e           -       Not
 """
 
-macros = Macros()
+macros = macropy.core.macros.Macros()
 
 
 @macros.block
@@ -29,15 +35,15 @@ def peg(tree, gen_sym, **kw):
     """Macro to easily define recursive-descent PEG parsers"""
     potential_targets = [
         target.id for stmt in tree
-        if type(stmt) is Assign
+        if type(stmt) is ast.Assign
         for target in stmt.targets
     ]
 
     for statement in tree:
-        if type(statement) is Assign:
+        if type(statement) is ast.Assign:
             new_tree = process(statement.value, potential_targets, gen_sym)
             statement.value = hq[
-                Parser.Named(lambda: ast[new_tree], [u[statement.targets[0].id]])
+                Parser.Named(lambda: ast_literal[new_tree], [u[statement.targets[0].id]])
             ]
 
     return tree
@@ -50,31 +56,31 @@ def peg(tree, gen_sym, **kw):
 
 
 def process(tree, potential_targets, gen_sym):
-    @Walker
+    @macropy.core.walkers.Walker
     def PegWalker(tree, stop, collect, **kw):
-        if type(tree) is Str:
+        if type(tree) is ast.Str:
             stop()
-            return hq[Parser.Raw(ast[tree])]
-        if type(tree) is Name and tree.id in potential_targets:
+            return hq[Parser.Raw(ast_literal[tree])]
+        if type(tree) is ast.Name and tree.id in potential_targets:
             collect(tree.id)
-        if type(tree) is BinOp and type(tree.op) is RShift:
+        if type(tree) is ast.BinOp and type(tree.op) is ast.RShift:
             tree.left, b_left = PegWalker.recurse_collect(tree.left)
-            tree.right = hq[lambda bindings: ast[tree.right]]
-            names = distinct(flatten(b_left))
-            tree.right.args.args = map(f[Name(id = _)], names)
+            tree.right = hq[lambda bindings: ast_literal[tree.right]]
+            names = macropy.core.util.distinct(macropy.core.util.flatten(b_left))
+            tree.right.args.args = list(map(f[ast.Name(id = _)], names))
             tree.right.args.defaults = [hq[[]]] * len(names)
             tree.right.args.kwarg = gen_sym("kw")
             stop()
 
             return tree
 
-        if type(tree) is BinOp and type(tree.op) is FloorDiv:
+        if type(tree) is ast.BinOp and type(tree.op) is ast.FloorDiv:
             tree.left, b_left = PegWalker.recurse_collect(tree.left)
             stop()
             collect(b_left)
             return tree
 
-        if type(tree) is Tuple:
+        if type(tree) is ast.Tuple:
             result = hq[Parser.Seq([])]
 
             result.args[0].elts = tree.elts
@@ -86,9 +92,9 @@ def process(tree, potential_targets, gen_sym):
             collect(all_bindings)
             return result
 
-        if type(tree) is Compare and type(tree.ops[0]) is Is:
+        if type(tree) is ast.Compare and type(tree.ops[0]) is ast.Is:
             left_tree, bindings = PegWalker.recurse_collect(tree.left)
-            new_tree = hq[ast[left_tree].bind_to(u[tree.comparators[0].id])]
+            new_tree = hq[ast_literal[left_tree].bind_to(u[tree.comparators[0].id])]
             stop()
             collect(bindings + [tree.comparators[0].id])
             return new_tree

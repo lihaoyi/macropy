@@ -193,7 +193,7 @@ class Tests(unittest.TestCase):
             import json
             try:
                 assert parser.parse(string) == json.loads(string)
-            except Exception, e:
+            except Exception as e:
                 print(parser.parse_string(string))
                 print(json.loads(string))
                 raise e
@@ -202,7 +202,8 @@ class Tests(unittest.TestCase):
             x = x.decode('unicode-escape')
             try:
                 return str(x)
-            except:
+            except Exception as e:
+                print("PEG test failure", e, file=sys.stderr) # TODO
                 return x
         escape_map = {
             '"': '"',

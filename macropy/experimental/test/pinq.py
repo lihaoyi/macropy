@@ -245,7 +245,7 @@ class Tests(unittest.TestCase):
                     if tt.country_code == t.country_code
                 )
             )],
-            lambda x: sorted(map(str, x))
+            lambda x: list(sorted(map(str, x)))
         )
 
     def test_order_group(self):

@@ -1,19 +1,28 @@
-from macropy.core.macros import *
+
+
+# Imports added by remove_from_imports.
+
+import macropy.core.macros
+import ast
+import _ast
+import macropy.core.util
+import macropy.core.walkers
+
 from macropy.experimental.pattern import macros, switch, _matching, ClassMatcher, NameMatcher
 
 from macropy.core.hquotes import macros, hq
 
 __all__ = ['tco']
 
-macros = Macros()
+macros = macropy.core.macros.Macros()
 
 in_tc_stack = [False]
 
-@singleton
+@macropy.core.util.singleton
 class TcoIgnore:
     pass
 
-@singleton
+@macropy.core.util.singleton
 class TcoCall:
     pass
 
@@ -68,11 +77,11 @@ def trampoline_decorator(func):
 @macros.decorator
 def tco(tree, **kw):
 
-    @Walker
+    @macropy.core.walkers.Walker
     # Replace returns of calls
     def return_replacer(tree, **kw):
         with switch(tree):
-            if Return(value=Call(
+            if _ast.Return(value=_ast.Call(
                     func=func, 
                     args=args, 
                     starargs=starargs, 
@@ -81,15 +90,15 @@ def tco(tree, **kw):
                     with hq as code:
                     # get rid of starargs
                         return (TcoCall,
-                                ast[func],
-                                ast[List(args, Load())] + list(ast[starargs]),
-                                ast[kwargs or Dict([],[])])
+                                ast_literal[func],
+                                ast_literal[_ast.List(args, _ast.Load())] + list(ast_literal[starargs]),
+                                ast_literal[kwargs or _ast.Dict([],[])])
                 else:
                     with hq as code:
                         return (TcoCall,
-                                ast[func],
-                                ast[List(args, Load())],
-                                ast[kwargs or Dict([], [])])
+                                ast_literal[func],
+                                ast_literal[_ast.List(args, _ast.Load())],
+                                ast_literal[kwargs or _ast.Dict([], [])])
 
                 return code
             else:
@@ -99,7 +108,7 @@ def tco(tree, **kw):
     # position
     def replace_tc_pos(node):
         with switch(node):
-            if Expr(value=Call(
+            if _ast.Expr(value=_ast.Call(
                     func=func,
                     args=args,
                     starargs=starargs,
@@ -108,21 +117,21 @@ def tco(tree, **kw):
                     with hq as code:
                     # get rid of starargs
                         return (TcoIgnore,
-                                ast[func],
-                                ast[List(args, Load())] + list(ast[starargs]),
-                                ast[kwargs or Dict([],[])])
+                                ast_literal[func],
+                                ast_literal[_ast.List(args, _ast.Load())] + list(ast_literal[starargs]),
+                                ast_literal[kwargs or _ast.Dict([],[])])
                 else:
                     with hq as code:
                         return (TcoIgnore,
-                                ast[func],
-                                ast[List(args, Load())],
-                                ast[kwargs or Dict([], [])])
+                                ast_literal[func],
+                                ast_literal[_ast.List(args, _ast.Load())],
+                                ast_literal[kwargs or _ast.Dict([], [])])
                 return code
-            elif If(test=test, body=body, orelse=orelse):
+            elif _ast.If(test=test, body=body, orelse=orelse):
                 body[-1] = replace_tc_pos(body[-1])
                 if orelse:
                     orelse[-1] = replace_tc_pos(orelse[-1])
-                return If(test, body, orelse)
+                return _ast.If(test, body, orelse)
             else:
                 return node
 

@@ -1,8 +1,11 @@
-from macropy.core.macros import *
+import ast
+
+import macropy.core.macros
 from macropy.core.hquotes import macros, hq, unhygienic
 from macropy.tracing import macros, show_expanded
+from macropy.core import Captured
 
-macros = Macros()
+macros = macropy.core.macros.Macros()
 
 value = 2
 
@@ -11,7 +14,7 @@ def double(x):
 
 @macros.expr
 def expand(tree, **kw):
-    tree = hq[(lambda cow, prefix: prefix + "x: " + cow(ast[tree]))(double, str(value))]
+    tree = hq[(lambda cow, prefix: prefix + "x: " + cow(ast_literal[tree]))(double, str(value))]
     return tree
 
 

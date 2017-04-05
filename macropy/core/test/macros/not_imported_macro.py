@@ -1,11 +1,13 @@
-from macropy.core.macros import *
+import ast
 
-macros = Macros()
+import macropy.core.macros
+
+macros = macropy.core.macros.Macros()
 
 @macros.expr
 def g(tree, **kw):
-    return Num(n = 0)
+    return ast.Num(n = 0)
 
 @macros.expr
 def f(tree, **kw):
-    return Num(n = 0)
+    return ast.Num(n = 0)
