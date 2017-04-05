@@ -71,11 +71,14 @@ setup(
     author_email='haoyi.sg@gmail.com, justin.holmgren@gmail.com',
     url='https://github.com/lihaoyi/macropy',
     packages=find_packages(exclude=["*.test", "*.test.*"]),
-    extras_require = {
+    extras_require={
         'pyxl':  ["pyxl"],
         'pinq': ["SQLAlchemy"],
         'js_snippets': ["selenium", "pjs"],
 
     },
+    install_requires=[
+        'six'
+    ],
     classifiers=['Programming Language :: Python :: 2.7']
 )

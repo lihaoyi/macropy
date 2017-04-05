@@ -27,7 +27,15 @@ real_repr |     |    eval        _v________|_
 import ast
 import sys
 
-from six import PY3, string_types
+try:
+    # this is just to let setup.py read the __version__
+    from six import PY3, string_types
+except:
+    PY3 = sys.version_info[:1] >= (3,)
+    if PY3:
+        string_types = (str,)
+    else:
+        string_types = (str, unicode)
 
 import macropy.core.util
 
