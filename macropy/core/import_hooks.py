@@ -14,7 +14,8 @@ from . import compat
 
 if compat.PY3:
     from importlib.machinery import PathFinder
-
+if compat.PY34:
+    from importlib.machinery import ModuleSpec
 
 import macropy.core.macros
 
@@ -107,26 +108,23 @@ class MacroFinder(object):
             # can't import external modules.
             # print('Failed to get source', e, file=sys.stderr)
             return
-        try:
-            # try to find already exported module
-            # TODO: are these the right arguments?
-            module = macropy.core.exporters.NullExporter().find(
-                file_path, file_path, "", module_name, package_path)
-            if module:
-                return _MacroLoader(ast.mod)
-            code, tree = self.expand_macros(source_code, file_path)
-            if not code: # no macros!
-                return
-            module = self.construct_module(module_name, file_path)
-            exec(code, module.__dict__)
-            self.export(code, tree, module_name, file_path)
+        # try to find already exported module
+        # TODO: are these the right arguments?
+        # NOTE: This is a noop
+        module = macropy.core.exporters.NullExporter().find(
+            file_path, file_path, "", module_name, package_path)
+        if module:
+            return _MacroLoader(ast.mod)
+        code, tree = self.expand_macros(source_code, file_path)
+        if not code: # no macros!
+            return
+        module = self.construct_module(module_name, file_path)
+        exec(code, module.__dict__)
+        self.export(code, tree, module_name, file_path)
+        if compat.PY34:
+            return ModuleSpec(module.__name__, module.__loader__)
+        else:
             return module.__loader__
-        except Exception as e:
-            # print(
-            #     "import_hooks.MacroFinder raised %s at line %s" %
-            #     (e, e.__traceback__.tb_lineno),
-            #     file=sys.stderr)
-            # origin = inspect.trace()[-1][0]
-            # print(origin.f_locals, origin.f_lineno, file=sys.stderr)
-            # traceback.print_exc()
-            raise
+
+    def find_spec(self, module_name, package_path, target=None):
+        return self.find_module(module_name, package_path)
