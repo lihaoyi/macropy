@@ -60,10 +60,7 @@ def ast_repr(x):
     elif type(x) is set:             return ast.Set(elts=list(map(ast_repr, x)))
     elif type(x) is Literal:         return x.body
     elif type(x) is Captured:
-        return ast.Call(
-            ast.Name(id="Captured"),
-            [x.val, ast_repr(x.name)], [], None, None
-        )
+        return ast.Call(ast.Name(id="Captured"), [x.val, ast_repr(x.name)], [])
     elif type(x) in (bool, type(None)):
         if PY34:  return ast.NameConstant(value=x)
         else:                           return ast.Name(id=str(x))
@@ -78,13 +75,9 @@ def ast_repr(x):
         # classes would be imported into the global namespace.  This
         # hard-codes an expectation that ast classes will be bound to
         # the name `ast`.  There must be a better way.
-        return ast.Call(
-            ast.Attribute(
-                value=ast.Name(id='ast', ctx=ast.Load()),
-                attr=x.__class__.__name__,
-                ctx=ast.Load()),
-            [], fields, None, None
-        )
+        return ast.Call(ast.Attribute(
+            value=ast.Name(id='ast', ctx=ast.Load()),
+            attr=x.__class__.__name__, ctx=ast.Load()), [], fields)
     raise Exception("Don't know how to ast_repr this: ", x)
 
 def parse_expr(x):

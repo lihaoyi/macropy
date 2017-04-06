@@ -53,7 +53,7 @@ def q(tree, target, **kw):
 def u(tree):
     """Splices a value into the quoted code snippet, converting it into an AST
     via ast_repr"""
-    return Literal(ast.Call(ast.Name(id="ast_repr"), [tree], [], None, None))
+    return Literal(ast.Call(ast.Name(id="ast_repr"), [tree], []))
 
 
 @macropy.core.macros.macro_stub
@@ -61,9 +61,8 @@ def name(tree):
     "Splices a string value into the quoted code snippet as a Name"
     # TODO: another hard-coded call now assuming `ast.Name`
     return Literal(ast.Call(ast.Attribute(
-                value=ast.Name(id='ast', ctx=ast.Load()),
-                attr='Name',
-                ctx=ast.Load()), [], [ast.keyword("id", tree)], None, None))
+        value=ast.Name(id='ast', ctx=ast.Load()),
+        attr='Name', ctx=ast.Load()), [], [ast.keyword("id", tree)]))
 
 
 @macropy.core.macros.macro_stub
@@ -77,7 +76,6 @@ def ast_list(tree):
     """Splices a list of ASTs into the quoted code snippet as a List node"""
      # TODO: another hard-coded call now assuming `ast.Name`
     return Literal(ast.Call(ast.Attribute(
-                value=ast.Name(id='ast', ctx=ast.Load()),
-                attr='List',
-                ctx=ast.Load()), [], [ast.keyword("elts", tree)], None, None))
+        value=ast.Name(id='ast', ctx=ast.Load()),
+        attr='List', ctx=ast.Load()), [], [ast.keyword("elts", tree)]))
 
