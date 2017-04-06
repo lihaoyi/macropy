@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This package contains all the infrastructure required for MacroPy itself to
 function, separate from the individual implementation of cool macros. It
@@ -195,13 +196,6 @@ trec = {
     ast.Compare:    lambda tree, i: "(" + rec(tree.left, i) + jmap("", lambda op, c: " " + cmpops[op.__class__] + " " + rec(c, i), tree.ops, tree.comparators) + ")",
     ast.BoolOp:     lambda tree, i: "(" + jmap(" " + boolops[tree.op.__class__] + " ", lambda t: rec(t, i), tree.values) + ")",
     ast.Attribute:  lambda tree, i: rec(tree.value, i) + (" " if isinstance(tree.value, ast.Num) and isinstance(tree.value.n, int) else "") + "." + tree.attr,
-    ast.Call:       lambda tree, i: rec(tree.func, i) + "(" +
-                                ", ".join(
-                                    [rec(t, i) for t in tree.args] +
-                                    [rec(t, i) for t in tree.keywords] +
-                                    macropy.core.util.box(mix("*", rec(tree.starargs, i))) +
-                                    macropy.core.util.box(mix("**", rec(tree.kwargs, i)))
-                                ) + ")",
     ast.Subscript:  lambda tree, i: rec(tree.value, i) + "[" + rec(tree.slice, i) + "]",
     ast.Ellipsis:   lambda tree, i: "...",
     ast.Index:      lambda tree, i: rec(tree.value, i),
@@ -299,6 +293,21 @@ else:
                                         macropy.core.util.box(mix("**", tree.kwarg))
                                     ),
     })
+
+if PY35:
+    trec[ast.Call] = (lambda tree, i: rec(tree.func, i) + "(" +
+                      ", ".join(
+                          [rec(t, i) for t in tree.args] +
+                          [rec(t, i) for t in tree.keywords]) + ")")
+else:
+    trec[ast.Call] = (lambda tree, i: rec(tree.func, i) + "(" +
+                      ", ".join(
+                          [rec(t, i) for t in tree.args] +
+                          [rec(t, i) for t in tree.keywords] +
+                          macropy.core.util.box(mix("*", rec(tree.starargs, i))) +
+                          macropy.core.util.box(mix("**", rec(tree.kwargs, i)))
+                      ) + ")")
+
 
 def mix(*x):
     """Join everything together if none of them are empty"""
