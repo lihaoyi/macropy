@@ -27,7 +27,8 @@ class CaseClass(object):
         return self.__class__(**dict(old + new))
 
     def __str__(self):
-        return self.__class__.__name__ + "(" + ", ".join(str(getattr(self, x)) for x in self.__class__._fields) + ")"
+        return self.__class__.__name__ + "(" + ", ".join(str(getattr(self, x))
+                for x in self.__class__._fields) + ")"
 
     def __repr__(self):
         return self.__str__()
@@ -35,7 +36,8 @@ class CaseClass(object):
     def __eq__(self, other):
         try:
             return self.__class__ == other.__class__ \
-                and all(getattr(self, x) == getattr(other, x) for x in self.__class__._fields)
+                and all(getattr(self, x) == getattr(other, x)
+                        for x in self.__class__._fields)
         except AttributeError:
             return False
 
@@ -75,7 +77,8 @@ class Enum(object):
 
 def enum_new(cls, **kw):
     if len(kw) != 1:
-        raise TypeError("Enum selection can only take exactly 1 named argument: " + len(kw) + " found.")
+        raise TypeError("Enum selection can only take exactly 1 named "
+                        "argument: %d found." %  len(kw))
 
     [(k, v)] = kw.items()
 
@@ -107,7 +110,8 @@ def extract_args(bases):
             args.append(base.left.id)
             defaults.append(base.right)
         else:
-            assert False, "Illegal expression in case class signature: " + macropy.core.unparse(base)
+            assert False, ("Illegal expression in case class signature: " +
+                           macropy.core.unparse(base))
 
     all_args = args[:]
     if vararg:
@@ -141,7 +145,8 @@ def split_body(tree, gen_sym):
         init_body = []
         for statement in tree.body:
             if type(statement) is ast.ClassDef:
-                outer.append(case_transform(statement, gen_sym, [ast.Name(id=tree.name)]))
+                outer.append(case_transform(statement, gen_sym,
+                                            [ast.Name(id=tree.name)]))
                 with hq as a:
                     name[tree.name].b = name[statement.name]
                 a_old = a[0]
@@ -239,6 +244,7 @@ def case_transform(tree, gen_sym, parents):
         )
     return [tree] + ([assign] if len(outer) > 0 else [])
 
+
 @macros.decorator
 def case(tree, gen_sym, **kw):
     """Macro providing an extremely concise way of declaring classes"""
@@ -265,7 +271,8 @@ def enum(tree, gen_sym, exact_src, **kw):
 
         elif type(expr) is ast.Call:
             assert type(expr.func) is ast.Name
-            self_ref = ast.Attribute(value=ast.Name(id=tree.name), attr=expr.func.id)
+            self_ref = ast.Attribute(value=ast.Name(id=tree.name),
+                                     attr=expr.func.id)
             id = expr.func.id
             expr.func = ast.Name(id=tree.name)
 
@@ -278,7 +285,7 @@ def enum(tree, gen_sym, exact_src, **kw):
             if type(stmt) is ast.Expr:
                 assert type(stmt.value) in (ast.Tuple, ast.Name, ast.Call)
                 if type(stmt.value) is ast.Tuple:
-                    for el in stmt.value.elts: 
+                    for el in stmt.value.elts:
                         handle(el)
                 else:
                     handle(stmt.value)
@@ -288,7 +295,8 @@ def enum(tree, gen_sym, exact_src, **kw):
                 assert False
 
         except AssertionError as e:
-            assert False, "Can't have `%s` in body of enum" % macropy.core.unparse(stmt).strip("\n")
+            assert False, ("Can't have `%s` in body of enum" %
+                           macropy.core.unparse(stmt).strip("\n"))
 
     tree.body = new_body + [ast.Pass()]
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Plumbing related to hooking into the import process, unrelated to MacroPy"""
 
 from __future__ import print_function

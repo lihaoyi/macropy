@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import ast
 import copy
 
@@ -44,7 +45,7 @@ def literal_eval(node_or_string):
              isinstance(node.right, ast.Num) and \
              isinstance(node.right.n, complex) and \
              isinstance(node.left, ast.Num) and \
-             isinstance(node.left.n, (int, float)): # TODO: long, 
+             isinstance(node.left.n, (int, float)): # TODO: long,
             left = node.left.n
             right = node.right.n
             if isinstance(node.op, ast.Add):
@@ -80,7 +81,9 @@ def show_expanded(tree, expand_macros,  **kw):
     """Prints out the expanded version of the wrapped source code, after all
     macros inside it have been expanded"""
     expanded_tree = expand_macros(tree)
-    new_tree = hq[wrap_simple(unhygienic[log], u[macropy.core.unparse(expanded_tree)], ast_literal[expanded_tree])]
+    new_tree = hq[wrap_simple(
+        unhygienic[log], u[macropy.core.unparse(expanded_tree)],
+        ast_literal[expanded_tree])]
     return new_tree
 
 

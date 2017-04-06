@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Macro to easily define recursive-descent PEG parsers"""
 
 import ast
@@ -44,7 +45,8 @@ def peg(tree, gen_sym, **kw):
         if type(statement) is ast.Assign:
             new_tree = process(statement.value, potential_targets, gen_sym)
             statement.value = hq[
-                Parser.Named(lambda: ast_literal[new_tree], [u[statement.targets[0].id]])
+                Parser.Named(lambda: ast_literal[new_tree],
+                             [u[statement.targets[0].id]])
             ]
 
     return tree
