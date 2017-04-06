@@ -27,15 +27,7 @@ real_repr |     |    eval        _v________|_
 import ast
 import sys
 
-try:
-    # this is just to let setup.py read the __version__
-    from six import PY3, string_types
-except:
-    PY3 = sys.version_info[:1] >= (3,)
-    if PY3:
-        string_types = (str,)
-    else:
-        string_types = (str, unicode)
+from .compat import PY3, PY34, PY35, string_types
 
 import macropy.core.util
 
@@ -73,7 +65,7 @@ def ast_repr(x):
             [x.val, ast_repr(x.name)], [], None, None
         )
     elif type(x) in (bool, type(None)):
-        if sys.version_info >= (3, 4):  return ast.NameConstant(value=x)
+        if PY34:  return ast.NameConstant(value=x)
         else:                           return ast.Name(id=str(x))
     elif isinstance(x, ast.AST):
         fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
@@ -274,7 +266,7 @@ if PY3:
                                         macropy.core.util.box(mix("**", rec(tree.kwarg, i)))
                                     ),
     })
-    if sys.version_info >= (3, 4):
+    if PY34:
         trec[ast.NameConstant] = lambda tree, i: str(tree.value)
 else:
     trec.update({

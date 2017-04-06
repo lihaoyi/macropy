@@ -3,6 +3,7 @@
 import ast
 
 import macropy.core
+from macropy.core import compat
 import macropy.core.macros
 import macropy.core.walkers
 from macropy.core import ast_repr, Captured
@@ -10,7 +11,6 @@ from macropy.core.hquotes import macros, hq, unhygienic, u
 from macropy.core.quotes import name
 from macropy.core.analysis import Scoped
 
-import six
 
 macros = macropy.core.macros.Macros()
 
@@ -222,7 +222,7 @@ def case_transform(tree, gen_sym, parents):
     outer = shared_transform(tree, gen_sym)
 
     tree.bases = parents
-    if six.PY3:
+    if compat.PY3:
         assign = ast.FunctionDef(
             gen_sym("prepare_"+tree.name),
             ast.arguments([], None, [], [], None, []),

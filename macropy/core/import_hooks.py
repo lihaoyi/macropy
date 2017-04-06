@@ -9,9 +9,9 @@ import sys
 import traceback
 import types
 
-import six
+from . import compat
 
-if six.PY3:
+if compat.PY3:
     from importlib.machinery import PathFinder
 
 
@@ -74,7 +74,7 @@ class MacroFinder(object):
             raise
 
     def get_source(self, module_name, package_path):
-        if six.PY3:
+        if compat.PY3:
             # try to get the module using a "normal" loader.
             # if we fail here, just let python handle the rest
             original_loader = (PathFinder.find_module(module_name, package_path))
