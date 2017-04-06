@@ -163,12 +163,20 @@ def split_body(tree, gen_sym):
 
 def prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args):
 
-    init_fun.args = ast.arguments(
-        args = [ast.Name(id="self")] + [ast.Name(id = id) for id in args],
-        vararg = vararg,
-        kwarg = kwarg,
-        defaults = defaults
-    )
+    kws = {'vararg': vararg, 'kwarg': kwarg, 'defaults': defaults}
+    if compat.PY3:
+        kws.update({
+            'kwonlyargs': [],
+            'kw_defaults': [],
+            'args': [ast.arg('self', None)] + [ast.arg(id, None) for id
+                                               in args]
+        })
+    else:
+        kws.update({
+            'args': [ast.Name(id="self")] + [ast.Name(id = id) for id in args]
+        })
+
+    init_fun.args = ast.arguments(**kws)
 
     for x in all_args:
         with hq as a:
@@ -202,11 +210,11 @@ def shared_transform(tree, gen_sym, additional_args=[]):
         set_kwargs.value = ast.Str(kwarg)
 
     nested = [
-        n
-        for f in tree.body
+        n for f in tree.body
         if type(f) is ast.FunctionDef
         if len(f.args.args) > 0
-        for n in find_members(f.body, f.args.args[0].id)
+        for n in find_members(f.body, f.args.args[0].arg if compat.PY3 else
+                              f.args.args[0].id)
     ]
 
     additional_members = find_members(tree.body, "self") + nested
