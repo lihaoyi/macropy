@@ -1,6 +1,8 @@
 import unittest
 
-from macropy.experimental.pattern import macros, _matching, switch, patterns, LiteralMatcher, TupleMatcher, PatternMatchException, NameMatcher, ListMatcher, PatternVarConflict, ClassMatcher, WildcardMatcher
+from macropy.experimental.pattern import (macros, _matching, switch, patterns,
+    LiteralMatcher, TupleMatcher, PatternMatchException, NameMatcher,
+    ListMatcher, PatternVarConflict, ClassMatcher, WildcardMatcher)
 from ast import BinOp
 
 class Foo(object):
