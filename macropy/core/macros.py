@@ -9,14 +9,11 @@ import inspect
 import sys
 import traceback
 
-from six import PY3
-
-import macropy.core
-import macropy.core.walkers
+from . import real_repr, walkers, compat
 
 
 # TODO: How do we do this in py3?
-if not PY3:
+if not compat.PY3:
     # Monkey Patching pickle to pickle module objects properly
     import pickle
     pickle.Pickler.dispatch[type(pickle)] = pickle.Pickler.save_global
@@ -166,8 +163,8 @@ def expand_entire_ast(tree, src, bindings):
         def macro_expand(tree):
             """Tail Recursively expands all macros in a single AST node"""
             if isinstance(tree, ast.With):
-                assert isinstance(tree.body, list), macropy.core.real_repr(tree.body)
-                if PY3:
+                assert isinstance(tree.body, list), real_repr(tree.body)
+                if compat.PY33:
                     new_tree = tree.body
                     for withitem in tree.items:
                         new_tree = expand_if_in_registry(
@@ -228,7 +225,7 @@ def expand_entire_ast(tree, src, bindings):
 
             return tree
 
-        @macropy.core.walkers.Walker
+        @walkers.Walker
         def macro_searcher(tree, **kw):
             x = macro_expand(tree)
             return x

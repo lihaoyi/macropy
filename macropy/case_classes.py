@@ -163,12 +163,23 @@ def split_body(tree, gen_sym):
 def prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args):
 
     kws = {'vararg': vararg, 'kwarg': kwarg, 'defaults': defaults}
-    if compat.PY3:
+    if compat.PY34:
         kws.update({
             'kwonlyargs': [],
             'kw_defaults': [],
             'args': [ast.arg('self', None)] + [ast.arg(id, None) for id
-                                               in args]
+                                               in args],
+            'vararg': ast.arg(vararg, None) if vararg is not None else None,
+            'kwarg': ast.arg(kwarg, None) if kwarg is not None else None,
+        })
+    elif compat.PY3 and not compat.PY34:
+        kws.update({
+            'kwonlyargs': [],
+            'kw_defaults': [],
+            'args': [ast.arg('self', None)] + [ast.arg(id, None) for id
+                                               in args],
+            'varargannotation': None,
+            'kwargannotation': None
         })
     else:
         kws.update({

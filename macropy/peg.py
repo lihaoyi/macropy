@@ -11,6 +11,7 @@ import macropy.core.walkers
 
 from macropy.core import ast_repr, Captured
 from macropy.core.hquotes import macros, hq, u
+from macropy.core import compat
 from macropy.quick_lambda import macros, f
 from macropy.case_classes import macros, case
 
@@ -68,9 +69,13 @@ def process(tree, potential_targets, gen_sym):
             tree.left, b_left = PegWalker.recurse_collect(tree.left)
             tree.right = hq[lambda bindings: ast_literal[tree.right]]
             names = macropy.core.util.distinct(macropy.core.util.flatten(b_left))
-            tree.right.args.args = list(map(f[ast.Name(id = _)], names))
             tree.right.args.defaults = [hq[[]]] * len(names)
-            tree.right.args.kwarg = gen_sym("kw")
+            if compat.PY35:
+                tree.right.args.args = list(map(f[ast.arg(_, None)], names))
+                tree.right.args.kwarg = ast.arg(gen_sym("kw"), None)
+            else:
+                tree.right.args.args = list(map(f[ast.Name(id = _)], names))
+                tree.right.args.kwarg = gen_sym("kw")
             stop()
             return tree
 

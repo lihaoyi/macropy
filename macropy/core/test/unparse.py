@@ -1,9 +1,7 @@
 import unittest
 
-from six import PY3
-
 import macropy.core
-import macropy.core.macros
+from macropy.core import compat
 
 def convert(code):
     " string -> ast -> string "
@@ -33,7 +31,7 @@ assert foo, bar
 del foo
 global foo, bar, baz
 (yield foo)"""
-        if macropy.core.macros.PY3:
+        if compat.PY3:
             test += """
 print('hello', 'world')
 nonlocal foo, bar, baz"""
@@ -43,11 +41,11 @@ print 'hello', 'world'"""
         self.convert_test(test)
 
     def test_Exec(self):
-        if macropy.core.macros.PY3:
+        if compat.PY3:
             self.convert_test("""
 exec('foo')
 exec('foo', bar)
-exec('foo', bar, {})""")          
+exec('foo', bar, {})""")
         else:
             self.convert_test("""
 exec 'foo'
@@ -55,7 +53,7 @@ exec 'foo' in bar
 exec 'foo' in bar, {}""")
 
     def test_Raise(self):
-        if macropy.core.macros.PY3:
+        if compat.PY3:
             self.convert_test("""
 raise
 raise Exception(e)
@@ -162,7 +160,7 @@ with a as b:
 {1:2, 5:8}
 (1, 2, 3)
 """)
-        if macropy.core.macros.PY3: self.convert_test("\n[1, 5.0, [(-(6))]]")
+        if compat.PY3: self.convert_test("\n[1, 5.0, [(-(6))]]")
         else:   self.convert_test("\n[1, 5.0, [(-6)]]")
         self.convert_test("\n'abcd'")
 
