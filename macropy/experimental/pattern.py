@@ -84,7 +84,7 @@ class TupleMatcher(Matcher):
 
     def match(self, matchee):
         updates = []
-        if (not isinstance(matchee, tuple) or 
+        if (not isinstance(matchee, tuple) or
                 len(matchee) != len(self.matchers)):
             raise PatternMatchException("Expected tuple of %d elements" %
                     (len(self.matchers),))
@@ -150,7 +150,7 @@ class NameMatcher(Matcher):
 
 
 class WildcardMatcher(Matcher):
-    
+
     def __init__(self):
         pass
 
@@ -174,7 +174,7 @@ class ClassMatcher(Matcher):
             raise PatternVarConflict()
 
     def var_names(self):
-        return (util.flatten([matcher.var_names() 
+        return (util.flatten([matcher.var_names()
             for matcher in self.positionalMatchers + self.kwMatchers.values()]))
 
     def default_unapply(self, matchee, kw_keys):

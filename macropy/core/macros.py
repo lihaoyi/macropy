@@ -153,7 +153,7 @@ def expand_entire_ast(tree, src, bindings):
             def run(tree):
                 pos = (tree.lineno, tree.col_offset) if hasattr(tree, "lineno") and hasattr(tree, "col_offset") else None
                 new_tree = func(tree)
-                
+
                 if pos:
                     t = new_tree
                     while type(t) is list:
@@ -165,28 +165,24 @@ def expand_entire_ast(tree, src, bindings):
         @preserve_line_numbers
         def macro_expand(tree):
             """Tail Recursively expands all macros in a single AST node"""
-            #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             if isinstance(tree, ast.With):
                 assert isinstance(tree.body, list), macropy.core.real_repr(tree.body)
                 if PY3:
                     new_tree = tree.body
                     for withitem in tree.items:
                         new_tree = expand_if_in_registry(
-                                        withitem.context_expr, 
-                                        new_tree, 
-                                        [], 
-                                        block_registry, 
+                                        withitem.context_expr,
+                                        new_tree,
+                                        [],
+                                        block_registry,
                                         target=withitem.optional_vars)
                 else:
                     new_tree = expand_if_in_registry(
-                                        tree.context_expr, 
-                                        tree.body, 
-                                        [], 
-                                        block_registry, 
+                                        tree.context_expr,
+                                        tree.body,
+                                        [],
+                                        block_registry,
                                         target=tree.optional_vars)
-                
-
-
 
                 if new_tree:
                     if isinstance(new_tree, ast.expr):
@@ -337,4 +333,3 @@ def check_annotated(tree):
                     type(tree.slice) is ast.Index and \
                     type(tree.value) is ast.Name:
         return tree.value.id, tree.slice.value
-

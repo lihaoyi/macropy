@@ -117,7 +117,6 @@ def extract_args(bases):
     if vararg:
         all_args.append(vararg)
     if kwarg:
-
         all_args.append(kwarg)
     return args, vararg, kwarg, defaults, all_args
 

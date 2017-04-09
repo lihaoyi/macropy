@@ -2,7 +2,7 @@
 """Macro to easily define recursive-descent PEG parsers"""
 
 import ast
-
+from collections import defaultdict
 import re
 
 import macropy.core.macros
@@ -14,8 +14,6 @@ from macropy.core.hquotes import macros, hq, u
 from macropy.quick_lambda import macros, f
 from macropy.case_classes import macros, case
 
-
-from collections import defaultdict
 
 """
 PEG Parser Atoms
@@ -74,7 +72,6 @@ def process(tree, potential_targets, gen_sym):
             tree.right.args.defaults = [hq[[]]] * len(names)
             tree.right.args.kwarg = gen_sym("kw")
             stop()
-
             return tree
 
         if type(tree) is ast.BinOp and type(tree.op) is ast.FloorDiv:
