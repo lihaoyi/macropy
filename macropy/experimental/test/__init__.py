@@ -3,7 +3,7 @@ from macropy.test import test_suite
 # pinq and tco are definitively broken.  I haven't tested
 # pyxl_snippets.
 # import js_snippets
-import pattern
+from . import pattern
 # import pinq
 # import pyxl_snippets
 # import tco
