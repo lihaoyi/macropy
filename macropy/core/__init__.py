@@ -209,7 +209,7 @@ trec = {
                                     macropy.core.util.box(mix("*", tree.vararg)) +
                                     macropy.core.util.box(mix("**", tree.kwarg))
                                 ),
-    ast.keyword:    lambda tree, i: tree.arg + "=" + rec(tree.value, i),
+    ast.keyword:    lambda tree, i: (tree.arg + "=" if tree.arg else '**') + rec(tree.value, i),
     ast.Lambda:     lambda tree, i: "(lambda" + mix(" ", rec(tree.args, i)) + ": "+ rec(tree.body, i) + ")",
     ast.alias:      lambda tree, i: tree.name + mix(" as ", tree.asname),
     str:        lambda tree, i: tree
@@ -228,18 +228,15 @@ if PY3:
                             mix(tabs(i), "finally:", rec(tree.finalbody, i+1)),
         ast.ClassDef:   lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
                             tabs(i) + "class " + tree.name +
-                            mix("(", ", ".join(
-                                [rec(t, i) for t in tree.bases + tree.keywords] +
-                                ["*" + rec(t, i) for t in macropy.core.util.box(tree.starargs)] +
-                                ["**" + rec(t, i) for t in macropy.core.util.box(tree.kwargs)]
-                            ), ")") + ":" + rec(tree.body, i+1),
+                            mix("(", ", ".join([rec(t, i) for t in tree.bases + tree.keywords]), ")") +
+                            ":" + rec(tree.body, i+1),
         ast.FunctionDef:lambda tree, i: "\n" + "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
                                     tabs(i) + "def " + tree.name + "(" + rec(tree.args, i) + ")" +
                                     mix(" -> ", rec(tree.returns, i)) +  ":" + rec(tree.body, i+1),
         ast.With:       lambda tree, i: tabs(i) + "with " + jmap(", ", lambda x: rec(x,i), tree.items) + ":" +
                                     rec(tree.body, i+1),
         ast.Bytes:      lambda tree, i: repr(tree.s),
-        ast.Starred:    lambda tree, i: "*" + rec(tree.value),
+        ast.Starred:    lambda tree, i: "*" + rec(tree.value, i),
         ast.arg:        lambda tree, i: tree.arg + mix(":", tree.annotation),
         ast.withitem:   lambda tree, i: rec(tree.context_expr, i) + mix(" as ", rec(tree.optional_vars, i)),
         ast.arguments:  lambda tree, i: ", ".join(

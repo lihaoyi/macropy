@@ -24,6 +24,8 @@ class CaseClass(object):
     def copy(self, **kwargs):
         old = list(map(lambda a: (a, getattr(self, a)), self._fields))
         new = kwargs.items()
+        if compat.PY3:
+            new = list(new)
         return self.__class__(**dict(old + new))
 
     def __str__(self):
@@ -53,7 +55,7 @@ class Enum(object):
     def __new__(cls, *args, **kw):
         if not hasattr(cls, "all"):
             cls.all = []
-        thing = object.__new__(cls, *args, **kw)
+        thing = super(Enum, cls).__new__(cls)
         cls.all.append(thing)
         return thing
 

@@ -168,14 +168,24 @@ class ClassMatcher(Matcher):
         self.positionalMatchers = positionalMatchers
         self.kwMatchers = kwMatchers
 
-        # This stores which fields of the object we will need to look at.
-        if not _vars_are_disjoint(util.flatten([m.var_names() for m in
-            positionalMatchers + kwMatchers.values()])):
-            raise PatternVarConflict()
+        # This stores which fields of the object we will need to look
+        # at.
+        if compat.PY3:
+            if not _vars_are_disjoint(util.flatten([m.var_names() for m in
+                positionalMatchers + list(kwMatchers.values())])):
+                raise PatternVarConflict()
+        else:
+            if not _vars_are_disjoint(util.flatten([m.var_names() for m in
+                positionalMatchers + kwMatchers.values()])):
+                raise PatternVarConflict()
 
     def var_names(self):
+        if compat.PY3:
+            matchers = self.positionalMatchers + list(self.kwMatchers.values())
+        else:
+            matchers = self.positionalMatchers + self.kwMatchers.values()
         return (util.flatten([matcher.var_names()
-            for matcher in self.positionalMatchers + self.kwMatchers.values()]))
+                              for matcher in matchers]))
 
     def default_unapply(self, matchee, kw_keys):
         if not isinstance(matchee, self.clazz):
