@@ -247,7 +247,7 @@ print Point(3, 4).length() # 5.0
 
 or class variables. The only restrictions are that only the `__init__`, `__repr__`, `___str__`, `__eq__` methods will be set for you, and the initializer/class body and inheritance are treated specially.
 
-###Body Initializer
+### Body Initializer
 ```python
 @case
 class Point(x, y):
@@ -262,7 +262,7 @@ Any additional assignments to `self.XXX` in the body of the class scope are dete
 
 The body initializer also means you cannot set *class* members on a case class, as it any bare assignments `XXX = ...` will get treated as a local variable assignment in the scope of the class' `__init__` method. This is one of [several limitations](#limitations).
 
-###Defaults, `*args` and `**kwargs`
+### Defaults, `*args` and `**kwargs`
 
 Case classes also provide a syntax for default values:
 
@@ -296,7 +296,7 @@ print PointKwargs(1, 2, a=1, b=2).rest # {'a': 1, 'b': 2}
 
 All these behave as you would expect, and can be combined in all the normal ways. The strange syntax (rather than the normal `x=0`, `*args` or `**kwargs`) is due to limitations in the Python 2.7 grammar, which are removed in Python 3.3.
 
-###Inheritance
+### Inheritance
 Instead of manual inheritance, inheritance for case classes is defined by _nesting_, as shown below:
 
 ```python
@@ -339,7 +339,7 @@ This is an implementation of a singly linked [cons list](http://en.wikipedia.org
 
 As the classes `Nil` are `Cons` are nested within `List`, both of them get transformed into case  classes which inherit from it. This nesting can go arbitrarily deep.
 
-###Overriding
+### Overriding
 
 Except for the `__init__` method, all the methods provided by case classes are inherited from `macropy.case_classes.CaseClass`, and can thus be overriden, with the overriden method still accessible via the normal mechanisms:
 
@@ -369,7 +369,7 @@ print Point(1) # mooo Point(1, 1)
 
 You cannot access the replaced `__init__` method, due to fact that it's generated, not inherited. Nevertheless, this provides additional flexibility in the case where you really need it.
 
-###Limitations
+### Limitations
 Case classes provide a lot of functionality to the user, but come with their own set of limitations:
 
 - **No class members**: a consequence of the [body initializer](#body-initializer), you cannot assign class variables in the body of a class via the `foo = ...` syntax. However, `@static` and `@class` methods work fine
@@ -415,7 +415,7 @@ MacroPy also provides an implementation of [Enumerations](http://en.wikipedia.or
 
 Note that instances of an Enum cannot be created manually: calls such as `Direction(name="North")` or `Direction(id=2)` attempt to retrieve an existing Enum with that property, throwing an exception if there is none. This means that reference equality is always used to compare instances of Enums for equality, allowing for much faster equality checks than if you had used [Case Classes](#case-classes).
 
-###Definition of Instances
+### Definition of Instances
 The instances of an Enum can be declared on a single line, as in the example above, or they can be declared on subsequent lines:
 
 ```python
@@ -438,7 +438,7 @@ class Direction:
 
 The basic rule here is that the body of an Enum can only contain bare names, function calls (show below), tuples of these, or function defs: no other statements are allowed. In turn the bare names and function calls are turned into instances of the Enum, while function defs (shown later) are turned into their methods. This also means that unlike [Case Classes](#case-classes), Enums cannot have [body initializers](#body-initializer).
 
-###Complex Enums
+### Complex Enums
 ```python
 @enum
 class Direction(alignment, continents):
@@ -697,7 +697,7 @@ The tracer uses whatever `log()` function it finds, falling back on printing onl
 
 We think that tracing is an extremely useful macro. For debugging what is happening, for teaching newbies how evaluation of expressions works, or for a myriad of other purposes, it is a powerful tool. The fact that it can be written as a [<100 line macro](macropy/tracing.py) is a bonus.
 
-###Smart Asserts
+### Smart Asserts
 ```python
 from macropy.tracing import macros, require
 require[3**2 + 4**2 != 5**2]
@@ -736,7 +736,7 @@ with require:
 
 This requires every statement in the block to be a boolean expression. Each expression will then be wrapped in a `require()`, throwing an `AssertionError` with a nice trace when a condition fails.
 
-###`show_expanded`
+### `show_expanded`
 
 ```python
 from ast import *
@@ -854,7 +854,7 @@ In addition to `.parse(input)`, a Parser also contains:
 - `parse_string(input)`, a more program-friendly version of `parse` that returns successes and failures as boxed values (with metadata).
 - a `parse_partial(input)` method, which is identical to `parse_string`, but does not require the entire `input` to be consumed, as long as some prefix of the `input` string matches. The `remaining` attribute of the `Success` indicates how far into the `input` string parsing proceeded.
 
-###Basic Combinators
+### Basic Combinators
 
 Parsers are generally built up from a few common building blocks. The fundamental atoms include:
 
@@ -874,7 +874,7 @@ Apart from the fundamental atoms, MacroPeg also provides combinators which are n
 - `parser.opt` matches the `parser` 0 or 1 times, returning either `[]` or `[result]` where `result` is the result of `parser`. Equivalent to `parser | Succeed([])`
 - `parser.join` takes a parser that returns a list of strings (e.g. tuples, `rep`, `rep1`, etc.) and returns a parser which returns the strings concatenated together. Equivalent to `parser // "".join`.
 
-###Transforming values using `//`
+### Transforming values using `//`
 
 So far, these building blocks all return the raw parse tree: all the things like whitespace, curly-braces, etc. will still be there. Often, you want to take a parser e.g.
 
@@ -912,7 +912,7 @@ print laughs2.parse("lollollol") # lollollol
 
 Where the function `"".join"` is used to join together the list of results from `laughs1` into a single string. As mentioned earlier, `laughs2` can also be written as `laughs2 = laughs1.join`.
 
-###Binding Values using `>>`
+### Binding Values using `>>`
 
 Although `//` is sufficient for everyone's needs, it is not always convenient. In the example above, a `value` is defined to be:
 
@@ -964,7 +964,7 @@ array = ('[', json_exp.rep_with(',') >> arr, space.opt, ']') >> arr
 
 Which arguably looks the cleanest of all!
 
-###Cut
+### Cut
 
 ```python
 from macropy.peg import macros, peg, cut
@@ -985,11 +985,11 @@ print expr2.parse("1bc")
 
 The purpose of `cut` is two-fold:
 
-####Increasing performance by removing unnecessary backtracking
+#### Increasing performance by removing unnecessary backtracking
 
 Using JSON as an example: if your parser sees a `{`, begins parsing a JSON object, but some time later it fails, it does not need to both backtracking and attempting to parse an Array (`[...`), or a String (`"...`), or a Number. None of those could possibly succeed, so cutting the backtracking and failing fast prevents this unnecessary computation.
 
-####Better error reporting.
+#### Better error reporting.
 
 For example, if you try to parse the JSON String;
 
@@ -1037,7 +1037,7 @@ obj = '{', cut, pair.rep_with(",") , space, '}'
 
 Once the first `{` is parsed, the parser is committed to that alternative. Thus, when it fails to parse `string`, it knows it cannot backtrack and can immediately end the parsing. It can now give a much more specific source location (character 10) as well as better information on what it was trying to parse (`json / object / string`)
 
-###Full Example
+### Full Example
 MacroPEG is not limited to toy problems, like the arithmetic expression parser above. Below is the full source of a JSON parser, provided in the [unit tests](macropy/experimental/test/peg.py):
 
 ```python
@@ -1320,7 +1320,7 @@ print area(Line(Point(1, 1), Point(3, 3)))
 # macropy.macros.pattern.PatternMatchException: Matchee should be of type <class 'scratch.Rect'>
 ```
 
-###Class Matching Details
+### Class Matching Details
 
 When you pattern match `Foo(x, y)` against a value `Foo(3, 4)`, what happens behind the
 scenes is that the constructor of `Foo` is inspected.  We may find that it takes
@@ -1349,7 +1349,7 @@ equivalent to the above which doesn't rely on the specific implementation of th 
 `x` with a more complex pattern, as in `Foo(a=Bar(z), b=y) << Foo(Bar(2), 4)`.
 
 
-###Custom Patterns
+### Custom Patterns
 It is also possible to completely override the way in which a pattern is matched
 by defining an `__unapply__` class method of the class which you are pattern
 matching.  The 'class' need not actually be the type of the matched object, as
@@ -1422,7 +1422,7 @@ print Example().even(100000)  # No stack overflow
 Note that both `odd` and `even` were both decorated with `@tco`.  All functions
 which would ordinarily use too many stack frames must be decorated.
 
-###Trampolining
+### Trampolining
 How is tail recursion implemented?  The idea is that if a function `f` would
 return the result of a recursive call to some function `g`, it could instead
 return `g`, along with whatever arguments it would have passed to `g`.  Then
@@ -1902,7 +1902,7 @@ def expand(tree, **kw):
 
 This will replace the expression `(1 + 2)` with `((1 + 2) * (1 + 2))`; you can similarly print out newtree via `unparse` or `real_repr` to see what's it looks like.
 
-###Using Quasiquotes
+### Using Quasiquotes
 
 Building up the new tree manually, as shown above, works reasonably well. However, it can quickly get unwieldy, particularly for more complex expressions. For example, let's say we wanted to make `expand` wrap the expression `(1 + 2)` in a lambda, like `lambda x: x * (1 + 2) + 10`. Ignore, for the moment, that this transform is not very useful. Doing so manually is quite a pain:
 
@@ -1986,7 +1986,7 @@ def expand(tree, **kw):
 
 If you run this, it will also print `25`.
 
-###Walking the AST
+### Walking the AST
 
 Quasiquotes make it much easier for you to manipulate sections of code, allowing you to quickly put together snippets that look however you want. However, they do not provide any support for a very common use case: that of recursively traversing the AST and replacing sections of it at a time.
 
@@ -2085,7 +2085,7 @@ NameError: name 'arg0' is not defined
 
 At runtime, because the names we put into the tree (`arg0` and `arg1`) haven't actually been defined in `target.py`! We will see how we can fix that.
 
-###More Walking
+### More Walking
 
 The function being passed to the Walker can return a variety of things. In this case, let's say we want to collect the names we extracted from the `names` generator, so we can use them to populate the arguments of the `lambda`.
 
@@ -2213,7 +2213,7 @@ print func(1)
 
 It does not behave as we may expect; we probably want it to produce `11`. this is because the `arg0` identifier introduced by the `f` macro shadows the `arg0` in our enclosing scope. These bugs could be hard to find, since renaming variables could make them appear or disappear. Try executing the code in [docs/examples/hygiene/hygiene_failures](docs/examples/hygiene/hygiene_failures) and to see this for your self.
 
-###gen_sym
+### gen_sym
 
 There is a way out of this: if you create a new variable, but use an identifier that has not been used before, you don't stand the risk of accidentally shadowing something you didn't intend to. To help with this, MacroPy provides the `gen_sym` function, which you can acquire by adding an extra parameter named `gen_sym` to your macro definition:
 
@@ -2227,7 +2227,7 @@ def f(tree, gen_sym, **kw):
 
 `gen_sym` is a function which produce a new identifier (as a string) every time it is called. This is guaranteed to produce a identifier that does not appear anywhere in the original source code, or have been produced by an earlier call to `gen_sym`. You can thus use these identifiers without worrying about shadowing an identifier someone was using; the full code for this is given in [docs/examples/hygiene/gen_sym](docs/examples/hygiene/gen_sym), so check it out and try executing it to see it working
 
-###Hygienic Quasiquotes
+### Hygienic Quasiquotes
 Let's look at another use case: the implementation of the various [tracing](#tracing) macros. These macros generally can't rely solely on AST transforms, but also require runtime support in order to operate. Consider a simple `log` macro:
 
 ```python
@@ -2267,7 +2267,7 @@ log[1 + 2 + 3]
 
 This is because although `wrap` is available in `macro_module.py`, it is not available in `test.py`. Hence the expanded code fails when it tries to reference `wrap`.There are several ways which this can be accomplished:
 
-###Manual Imports
+### Manual Imports
 
 ```python
 # test.py
@@ -2301,7 +2301,7 @@ log[1 + 1]
 
 which gives a rather confusing error message: `wrap` is not defined? From the programmer's perspective, `wrap` isn't used at all! These very common pitfalls mean you should probably avoid this approach in favor of the latter two.
 
-###`hq`
+### `hq`
 
 ```python
 # macro_module.py
@@ -2360,7 +2360,7 @@ print run() # prints 5
 
 In this case, the value of `v` is captured by the `hq`, such that even when `expand` has returned, it can still be used to return `5` to the caller of the `run()` function.
 
-###Breaking Hygiene
+### Breaking Hygiene
 By default, all top-level names in the `hq[...]` expression (this excludes things like the contents of `u[]` `name[]` `ast[]` unquotes) are hygienic, and are bound to the variable of that name at the macro definition point. This means that if you want a name to bind to some variable *at the macro expansion point*, you can always manually break hygiene by using the `name[]` or `ast[]` unquotes. The `hq` macro also provides an `unhygienic[...]` unquote just to streamline this common requirement:
 
 ```python
@@ -2378,7 +2378,7 @@ def expand(tree, gen_sym, **kw):
 
 Although all these do the same thing, you should prefer to use `unhygienic[...]` as it makes the intention clearer than using `name[...]` or `ast[...]` with hard-coded strings.
 
-###`expose_unhygienic`
+### `expose_unhygienic`
 Going back to the `log` example:
 
 ```python
@@ -2453,7 +2453,7 @@ MacroPy allows you to hook into the macro-expansion process via the `macropy.exp
 - [SaveExporter(target, root)](#saveexportertarget-root): this saves a copy of your code tree (rooted at `root`), with macros expanded, in the `target` directory. This is a convenient way of exporting the entire source tree with macros expanded
 - [PycExporter()](#PycExporter): this emulates the normal `.pyc` compilation and caching based on file `mtime`s. This is a convenient transparent-ish cache to avoid needlessly performing macro-expansion repeatedly.
 
-###NullExporter()
+### NullExporter()
 This is the default Exporter, and although it does not do anything, it illustrates the general contract of what an Exporter must look like:
 
 ```python
@@ -2472,7 +2472,7 @@ In short, it has two methods: `find` and `export_transformed`.
 
 The arguments to these methods are relatively self explanatory, but feel free to inject `print` statements into `NullExporter` if you want to see what's what.
 
-###SaveExporter(target, root)
+### SaveExporter(target, root)
 
 This exporter is activated immediately after the initial `import macropy.activate` statement, via:
 
@@ -2516,7 +2516,7 @@ Note that *only macros in files which get expanded in the execution of the progr
 
 In most cases, activating the `SaveExporter` and executing your test suite should cause all files necessary to be imported, expanded and saved. If you need more customization, you could easily create a script that performs exactly the imports you need, or [imports all modules in a folder](http://stackoverflow.com/questions/1057431/loading-all-modules-in-a-folder-in-python), or any other behavior your want.
 
-###Pre-expanding the MacroPy Test Suite
+### Pre-expanding the MacroPy Test Suite
 
 The following example can be used to expand-and-save MacroPy's own test suite, such that it can be run without macros:
 
@@ -2594,7 +2594,7 @@ class in [macropy/experimental/peg.py](macropy/experimental/peg.py)) it won't
 need any of MacroPy's import-code-intercepting AST-transforming capabilities at
 run-time.
 
-###PycExporter()
+### PycExporter()
 The PycExporter makes MacroPy perform the same `*.pc -> *.pyc` caching that the
 normal Python import process does. This can be activated via:
 
@@ -2650,12 +2650,12 @@ the code which is being run), you would use the `unparse()` method. These
 transformations will be used throughout this documentation, to convert from one
 form to another or to print out the AST for inspection.
 
-###`parse_stmt(src)` & `parse_expr(src)`
+### `parse_stmt(src)` & `parse_expr(src)`
 Thin wrappers around [ast.parse](...), these functions simplify the common case
 where you want to convert a code snippet into a list of `stmt`s or a single
 `expr`.
 
-###`unparse(tree)`
+### `unparse(tree)`
 This function performs the conversion of the Python AST back into semantically
 equivalent source code; using `parse_stmt` or `parse_expr` on the generated
 should return the original AST.
@@ -2667,7 +2667,7 @@ The code is not obfuscated (It's typically straightforward to see what its
 doing, even with the syntactic changes) but you will not get back the exact
 original source.
 
-###`exact_src(tree)`
+### `exact_src(tree)`
 This function differs from `unparse` in that instead of generating source code
 from the AST, it searches the original source of the file being macro-expanded
 for the exact original source code which generated this AST, using the `lineno`
@@ -2677,13 +2677,13 @@ for the exact original source code which generated this AST, using the `lineno`
   are global, `exact_src` is provided to your macro as an [argument](#argument)
   as the `exact_src` for the same AST could vary between macro expansions.
 
-###`real_repr`
+### `real_repr`
 A combination of `repr` and `ast.dump`, this function generally does the right thing in converting arbitrary values into Python source code which can be evaluated to re-create those values.
 
-###`ast_repr`
+### `ast_repr`
 Similar to `real_repr`, `ast_repr` directly generates a Python AST instead of generating strings. This AST can be unparsed and `eval`ed, or just directly `eval`ed, to re-create the original value
 
-###`eval`
+### `eval`
 Unlike the rest of the functions listed here, `eval` is the standard Python function provided as a builtin. It evaluates either source code or an AST to produce a value.
 
 Arguments
@@ -2710,7 +2710,7 @@ directly, otherwise it gets chucked into the `**kw` dict at the end of the
 macro's parameter list. This section details what each argument means and why
 it is useful.
 
-###`tree`
+### `tree`
 This is, the AST provided to the macro, which it can transform/replace. It contains the code captured by the macro, which varies depending on the macro used:
 
 - The right hand side of an **expression macro**: `my_macro(A + B)` captures the tree for `(A + B)`.
@@ -2744,7 +2744,7 @@ class Cls():
     blah
 ```
 
-###`args`
+### `args`
 
 Macros can take addition arguments when invoked, apart from the primary tree
 that it receives. For example a macro can be invoked as follows:
@@ -2766,7 +2766,7 @@ although named arguments, `*args* and `**kwargs` are not supported. This is
 used in [pattern matching](#pattern-matching)'s switch macro to indicate what
 value to switch on.
 
-###`gen_sym`
+### `gen_sym`
 
 As [described below](#hygiene), `gen_sym` provides a mechanism for creating
 identifiers that are guaranteed not to clash with any other identifier in the
@@ -2780,7 +2780,7 @@ Will produce a new identifier (as a string) which does not exist in the source
 code, and has not been provided before. This is used in the (quick lambda
 macro)[#quick-lambda) to ensure that the new arguments do not collide.
 
-###`target`
+### `target`
 
 This argument is only provided for **block macros**. It provides a way to
 capture the bound name in the `with` statement:
@@ -2793,7 +2793,7 @@ with my_macro as blah:
 `target` will contain the AST for `blah`. This is used in the
 [quasiquotes](#quasiquotes) macro.
 
-###`exact_src`
+### `exact_src`
 
 This is a function that attempts to retrieve the source code of the target AST,
 exactly as written in the source code. This is in contrast to `unparse`, which
@@ -2820,7 +2820,7 @@ originates from and making a best-effort attempt to extract the corresponding
 snippet of code. This obviously only really works on ASTs that originated
 directly from the source code, and will fail on ASTs you synthesized manually.
 
-###`expand_macros`
+### `expand_macros`
 
 `expand_macros` is a function that can be called by a macro to expand any
 macros in the target AST. For example, the `tracing` module's `show_expanded`
@@ -2884,7 +2884,7 @@ the expression `(a + b)` is unquoted. Hence `a + b` gets evaluated to the value 
 
 Apart from interpolating values in the AST, you can also interpolate:
 
-###Other ASTs
+### Other ASTs
 
 ```python
 a = q[1 + 2]
@@ -2895,7 +2895,7 @@ print ast.dump(b)
 
 This is necessary to join together ASTs directly, without converting the interpolated AST into its `repr`. If we had used the `u` interpolator, it fails with an error
 
-###Names
+### Names
 ```python
 n = "x"
 x = 1
@@ -2942,7 +2942,7 @@ def transform(tree, ctx, set_ctx, **kw):
 
 This section documents what each one does.
 
-###`ctx`
+### `ctx`
 
 The Walker allows the programmer to provide a *context*:
 
@@ -2958,7 +2958,7 @@ new_tree = transform.recurse(old_tree, init_ctx)
 
 If the `transform` function takes an additional argument, it will be given the `init_ctx` that is passed in as the second argument to the `.recurse()` method (default `None`).
 
-###`set_ctx`
+### `set_ctx`
 Apart from using the `ctx` passed in to the `recurse` method, `transform` can request for the `set_ctx` function:
 
 ```python
@@ -2970,7 +2970,7 @@ def transform(tree, ctx, set_ctx, **kw):
 ```
 This will cause all children of the current `tree` to receive `new_ctx` as their `ctx` argument.
 
-###`collect`
+### `collect`
 
 The Walker provides an easy way for  the programmer to aggregate data as it recurses over the AST. This is done by requesting the `collect` argument:
 
@@ -2987,7 +2987,7 @@ collected = transform.collect(old_tree)
 
 Using the `recurse_collect` instead of the `recurse` method to return both the new `tree` as well as the collected data, as a list. This is a simple way of aggregating values as you traverse the AST.
 
-###`stop`
+### `stop`
 
 Lastly, the Walker provides a way to end the recursion, via the `stop` functionm:
 
@@ -3003,7 +3003,7 @@ def transform(tree, stop, **kw):
 
 Calling `stop` prevents the `Walker` from recursing over the children of the current node. This is useful, for example, if you know that the current node's AST subtree does not contain anything of interest to you and wish to save some computation. Another use case would be if you wish to delimit your transformation: if you want any code within a certain construct to be passed over by `transform`, you can simply have `transform` return `stop` when it sees that construct.
 
-###A Flexible Tool
+### A Flexible Tool
 The `transform` function can take any combination of the above arguments. For example, you could have a walker such as:
 
 ```python
@@ -3023,7 +3023,7 @@ Hygiene
 
 MacroPy provides a number of tools for writing Hygienic macros:
 
-###`gen_sym`
+### `gen_sym`
 `gen_sym` is a function MacroPy provides to your macro as an [argument](#arguments) that generates a new, un-used name every time it is called:
 
 ```python
@@ -3083,7 +3083,7 @@ Again, due to the nature of `import *`, `module_c` can rely on `sym0` being pres
 
 These edge cases are unavoidable, but luckily this sort of code is frowned upon in general (not just in Python!). Although Python's philosophy of "We're all adults" means that it's always possible to go out of your way and cause `gen_sym` to fail, this is the case for other code too, and in practice this should not be a problem.
 
-###Hygienic Quasiquotes
+### Hygienic Quasiquotes
 Hygienic quasiquotes, created using the `hq[...]` macro, are quasiquotes who automatically bind identifiers from the lexical scope of the macro definition, rather than from that of the macro expansion point. Thus, in the following `log` macro:
 
 ```python
@@ -3133,7 +3133,7 @@ One thing to note is that `hq` pickles all captured names and saves them in the 
 
 Although this behavior is slightly unintuitive, in general they should only affect you in the edge cases. In the vast majority of use cases, you will not bump into these issues at all, and when you do, they are easy enough to work around.
 
-###`expose_unhygienic`
+### `expose_unhygienic`
 Annotating something with `@expose_unhygienic` simply synthesizes an import in the macro-expanded module to pull in the name from the macro's own module. E.g. in the case of the `log` macro, it converts
 
 ```python
@@ -3222,7 +3222,7 @@ Traceback (most recent call last):
 Exception: i am a cow
 ```
 
-###Implementation of Failures
+### Implementation of Failures
 MacroPy accomplishes this by performing a wrapping a catch-all block around every macro invocation. This block intercepts the exception, and rather than allowing it to terminate the import process, serializes and returns a snippet in place of the expanded AST (the expansion failed afterall) that will re-raise the exception at run-time. This is what allows the magical transfer of exceptions from expansion-time to run-time, so they can be dealt with by normal means at the macro call-site instead of bubbling up from the import-site of the error-inducing file.
 
 MacroPy also appends the expansion-time stack-trace of the exception onto the exception's `message`, providing much more information to help the programmer debug the problem. In order to avoid swamping the programmer with irrelevant details when the macro's failure is expected, MacroPy special cases macros of the form:
@@ -3372,7 +3372,7 @@ This [stackoverflow question](http://stackoverflow.com/questions/764412/python-m
 
 The last three examples are completely banal: they really don't add anything, don't make anything easier, and add a lot of indirection to no real gain. The first two suggestions, on the other hand, sound impressive, but are actually entirely implementable without Macros.
 
-###Function Advice
+### Function Advice
 Function advice, part of [AOP](http://en.wikipedia.org/wiki/Aspect-oriented_programming), is a technique of register code snippets to run before or after function calls occur. These could be used for debugging (printing whenever a function is run), caching (intercepting the arguments and returning the value from a cache if it already exists), authentication (checking permissions before the function runs) and a host of other use cases.
 
 Although in the Java world, such a technique requires high-sorcery with [AspectJ](http://www.eclipse.org/aspectj/) and other tools, in Python these are as simple as defining a decorator. For example, here is a decorator that logs invocations and returns of a generic python function:
@@ -3393,7 +3393,7 @@ my_func(arg0, arg1):
 
 Similar things could be done for the other use cases mentioned. This is not a complete example (it would need a `functools.wraps` or similar to preserve the `argspec` etc.) but the point is that writing such a decorator really is not very difficult. No macros necessary!
 
-###Auto-Parallelization
+### Auto-Parallelization
 Another suggestion was to make a decorator macro that ships the code within the function into a separate process to execute. While this sounds pretty extreme, it really is not that difficult, for in Python you can easily introspect a function object and retrieve it's `code` attribute. This can pretty easily [be pickled and sent to a child process](http://stackoverflow.com/questions/1253528/is-there-an-easy-way-to-pickle-a-python-function-or-otherwise-serialize-its-cod) to be executed there. Perhaps you may want some sort of Future container to hold the result, or some nice helpers for fork-join style code, but these are all just normal python functions: no macros necessary!
 
 --------------------------------------
@@ -3410,7 +3410,7 @@ Where basic language constructs are at **0** in the scale of magic, functions an
 
 I would place MacroPy about on par with Metaclasses in terms of their magic-level: pretty knotty, but still ok. Past that, you are in the realm of `stack.inspect()`, where your function call can look at *what files are in the call stack* and do different things depending on what it sees! And finally, at the **Beyond 9000** level of magic, is the act of piecing together code via string-interpolation or concatenation and just calling `eval` or `exec` on the whole blob, maybe at import time, maybe at run-time.
 
-###Skeletons in the Closet
+### Skeletons in the Closet
 Many profess to shun the higher levels of magic "I would *never* do textual code generation!" you hear them say. "I will do things the simple, Pythonic way, with minimal magic!". But if you dig a little deeper, and see the code they use on a regular basis, you may notice some `namedtuple`s in their code base. Looking up the [implementation of namedtuple](http://hg.python.org/cpython/file/2.7/Lib/collections.py#l234) brings up this:
 
 ```python
@@ -3437,12 +3437,12 @@ When, then, do you need macros? We believe that the macros shown above are a com
 - [Source Reflection](#source-reflection)
 - [Mobile Code](#mobile-code)
 
-###Boilerplate Shaving
+### Boilerplate Shaving
 [Parser Combinators](#parser-combinators), [Quick Lambdas](#quick-lambdas) and [Case Classes](#case-classes) are examples _of boilerplate shaving_, where macros are used to reduce the amount of boilerplate necessary to perform some logic below the level that can be achieved by traditional means of abstraction (methods, operator overloading, etc.). With the Parser Combinators, for example, the macro transform that is performed is [extremely simple and superficial](#minimize-macro-magic). This is also the case with the other boilerplate shaving macros.
 
 In these macros, the boilerplate that the macro removes is trivial but extremely important. Looking again at the [Parser Combinator](#minimize-macro-magic) transformation, it is clear that removing the boilerplate is a huge improvement: rather than having to dig through the code to figure out what happens, the PEG-like structure of the code jumps right out at you making it far easier to see, at a glance, what is going on.
 
-###Source Reflection
+### Source Reflection
 Source reflection is the use of macros to take the source code of the program and making it available for inspection at run-time. For example, if we re-examine the error-reporting example from [MacroPEG](macropeg-parser-combinators):
 
 ```python
@@ -3477,7 +3477,7 @@ By doing this, now you are able to get sensible error messages when using your p
 
 Apart from MacroPEG, the [Tracing](#tracing) macros also operates on the same principle, capturing the source code of each snippet as a string that is passed to the code at run-time for printing. This is something which is impossible to do using normal Python code, and the only answer is the repetitive definition of each variable, statement or expression together with its string representation, a task which is extremely tedious to perform by hand.
 
-###Mobile Code
+### Mobile Code
 Macros such as [PINQ](#pinq-to-sqlalchemy), [JS Snippets](#js-snippets), [Tracing](#tracing) and potential extensions such as the [Fork-Join](issues/25) macros are all about using macros to shuttle code between domains, while still allowing it to be written together in a single code base. PINQ and JS Snippets are all about taking sections of a Python program and executing it either on a remote database or in a browser, while the Tracing macro ships sections of code into the console for debugging purposes and the Fork-Join macro would shuttle sections of code between Python processes in order to run them in parallel.
 
 This idea of _mobile code_ is not commonly seen in most domains; more often, code written in a single file is run in a single place, and if you want to write a distributed system, you'll need to manually break up your code even though conceptually it all belongs together. Allowing you to have a single code-base and semi-transparently (translucently?) ship the code to somewhere else to run would be a big step forward.
