@@ -20,7 +20,7 @@ def find_names(tree, collect, stop, **kw):
 
 @Walker
 def find_assignments(tree, collect, stop, **kw):
-    if isinstance(tree, (ast.ClassDef, ast.FunctionDef)):
+    if isinstance(tree, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
         collect((tree.name, tree))
         stop()
     if isinstance(tree, ast.Assign):
@@ -95,7 +95,7 @@ class Scoped(Walker):
             else:
                 extend_scope(tree.elt, iterator_vars)
 
-        if isinstance(tree, ast.FunctionDef):
+        if isinstance(tree, (ast.AsyncFunctionDef, ast.FunctionDef)):
 
             extend_scope(tree.args, {tree.name: tree})
             extend_scope(
