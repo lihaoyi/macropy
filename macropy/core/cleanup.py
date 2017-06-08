@@ -23,13 +23,8 @@ def ast_ctx_fixer(tree, stop, set_ctx, set_ctx_for, **kw):
         (not hasattr(tree, "ctx") or tree.ctx is None)):
         tree.ctx = ctx
 
-    if type(tree) is ast.arguments:
-        set_ctx_for(tree.args, ctx=ast.Param())
-        set_ctx_for(tree.defaults, ctx=ast.Load())
-
     if type(tree) is ast.AugAssign:
         set_ctx_for(tree.target, ctx=ast.AugStore())
-        set_ctx_for(tree.value, ctx=ast.AugLoad())
 
     if type(tree) is ast.Attribute:
         set_ctx_for(tree.value, ctx=ast.Load())
