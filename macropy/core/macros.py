@@ -9,11 +9,11 @@ import sys
 from . import real_repr, walkers, compat
 
 
-# TODO: How do we do this in py3?
-if not compat.PY3:
-    # Monkey Patching pickle to pickle module objects properly
-    import pickle
-    pickle.Pickler.dispatch[type(pickle)] = pickle.Pickler.save_global
+# WARN: this was old code that it's not working anymore in py3 and
+# don't know if it's still needed.
+# # Monkey Patching pickle to pickle module objects properly
+# # import pickle
+# # pickle.Pickler.dispatch[type(pickle)] = pickle.Pickler.save_global
 
 
 class WrappedFunction(object):

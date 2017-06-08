@@ -4,17 +4,13 @@ MacroPy"""
 
 import ast
 import imp
+from importlib.machinery import PathFinder
+from importlib.machinery import ModuleSpec
 import inspect
 import sys
 import traceback
 import types
 
-from . import compat
-
-if compat.PY3:
-    from importlib.machinery import PathFinder
-if compat.PY34:
-    from importlib.machinery import ModuleSpec
 import macropy.activate
 
 from . import macros
@@ -79,23 +75,11 @@ class MacroFinder(object):
             raise
 
     def get_source(self, module_name, package_path):
-        if compat.PY3:
-            # try to get the module using a "normal" loader.
-            # if we fail here, just let python handle the rest
-            original_loader = (PathFinder.find_module(module_name, package_path))
-            source_code = original_loader.get_source(module_name)
-            file_path = original_loader.path
-        else:
-            # When this is a package, imp.find_module(...)[0] will be
-            # None, and this will raise an AttributeError.
-            (file, pathname, description) = imp.find_module(
-                module_name.split('.')[-1],
-                package_path
-            )
-            # print('Get source: %s %s %s' % (file, pathname, description))
-            source_code = file.read()
-            file.close()
-            file_path = file.name
+        # try to get the module using a "normal" loader.
+        # if we fail here, just let python handle the rest
+        original_loader = (PathFinder.find_module(module_name, package_path))
+        source_code = original_loader.get_source(module_name)
+        file_path = original_loader.path
         return source_code, file_path
 
     def find_module(self, module_name, package_path):
@@ -124,10 +108,7 @@ class MacroFinder(object):
         module = self.construct_module(module_name, file_path)
         exec(code, module.__dict__)
         self.export(code, tree, module_name, file_path)
-        if compat.PY34:
-            return ModuleSpec(module.__name__, module.__loader__)
-        else:
-            return module.__loader__
+        return ModuleSpec(module.__name__, module.__loader__)
 
     def find_spec(self, module_name, package_path, target=None):
         return self.find_module(module_name, package_path)

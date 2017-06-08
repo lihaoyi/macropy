@@ -3,7 +3,6 @@
 
 import ast
 
-from six import PY3
 from .util import merge_dicts
 from .walkers import Walker
 

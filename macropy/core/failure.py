@@ -3,13 +3,7 @@
 stack traces.
 """
 
-from __future__ import print_function
-
-import ast
-import sys
 import traceback
-
-from six import PY3
 
 from .macros import filters
 from .hquotes import hq
@@ -28,10 +22,9 @@ def raise_error(ex):
 @register(filters)
 def clear_errors(tree, **kw):
     if isinstance(tree, Exception):
-        # print(macropy.core.macros.filters, file=sys.stderr)
-        if PY3: tb = "".join(traceback.format_tb(tree.__traceback__))
-        else:   tb = traceback.format_exc()
-        #msg = tree.message
+        # print(filters, file=sys.stderr)
+        tb = "".join(traceback.format_tb(tree.__traceback__))
+        # msg = tree.message
         msg = str(tree)
         if type(tree) is not AssertionError or tree.args == ():
             msg = ("".join(tree.args) + "\nCaused by Macro-Expansion Error:\n" +
