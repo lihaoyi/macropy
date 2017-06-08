@@ -1,9 +1,14 @@
-"""Ways of dealing with macro-expanded code, e.g. caching or re-serializing it."""
+# -*- coding: utf-8 -*-
+"""Ways of dealing with macro-expanded code, e.g. caching or
+re-serializing it."""
+
+import imp
+import marshal
 import os
 import shutil
-from macropy.core import unparse
-import marshal
-import imp
+
+from . import unparse
+
 
 def wr_long(f, x):
     """Internal; write a 32-bit int to a file in little-endian order."""
@@ -12,12 +17,15 @@ def wr_long(f, x):
     f.write(chr((x >> 16) & 0xff))
     f.write(chr((x >> 24) & 0xff))
 
+
 class NullExporter(object):
     def export_transformed(self, code, tree, module_name, file_name):
         pass
 
-    def find(self, file_path, pathname, description, module_name, package_path):
+    def find(self, file_path, pathname, description, module_name,
+             package_path):
         pass
+
 
 class SaveExporter(object):
     def __init__(self, directory="exported", root=os.getcwd()):
@@ -40,14 +48,17 @@ class SaveExporter(object):
     def find(self, file_path, pathname, description, module_name, package_path):
         pass
 
+
 suffix = __debug__ and 'c' or 'o'
+
+
 class PycExporter(object):
     def __init__(self, root=os.getcwd()):
         self.root = root
 
     def export_transformed(self, code, tree, module_name, file_name):
         """TODO: this needs to be updated, look into py_compile.compile, the
-        following code was copied verbatim from there on pyhon2"""
+        following code was copied verbatim from there on python2"""
         f = open(file_name + suffix , 'wb')
         f.write('\0\0\0\0')
         timestamp = long(os.fstat(f.fileno()).st_mtime)
@@ -58,7 +69,6 @@ class PycExporter(object):
         f.write(imp.get_magic())
 
     def find(self, file_path, pathname, description, module_name, package_path):
-
         try:
             file = open(file_path, 'rb')
             f = open(file.name + suffix, 'rb')

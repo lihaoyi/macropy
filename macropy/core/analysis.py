@@ -1,22 +1,25 @@
+# -*- coding: utf-8 -*-
 """Walker that performs simple name-binding analysis as it traverses the AST"""
 
 import ast
 
 from six import PY3
+from .util import merge_dicts
+from .walkers import Walker
 
-import macropy.core.walkers
-from macropy.core.util import merge_dicts
 
 __all__ = ['Scoped']
 
-@macropy.core.walkers.Walker
+
+@Walker
 def find_names(tree, collect, stop, **kw):
     if isinstance(tree, (ast.Attribute, ast.Subscript)):
         stop()
     if isinstance(tree, ast.Name):
         collect((tree.id, tree))
 
-@macropy.core.walkers.Walker
+
+@Walker
 def find_assignments(tree, collect, stop, **kw):
     if isinstance(tree, (ast.ClassDef, ast.FunctionDef)):
         collect((tree.name, tree))
@@ -40,9 +43,9 @@ def extract_arg_names(args):
             [pair for x in args.args for pair in find_names.collect(x)]
         )
 
-class Scoped(macropy.core.walkers.Walker):
-    """
-    Used in conjunction with `@Walker`, via
+
+class Scoped(Walker):
+    """Used in conjunction with `@Walker`, via
 
     @Scoped
     @Walker
@@ -65,7 +68,7 @@ class Scoped(macropy.core.walkers.Walker):
     def recurse_collect(self, tree, sub_kw=[], **kw):
 
         kw['scope'] = kw.get('scope', dict(find_assignments.collect(tree)))
-        return macropy.core.walkers.Walker.recurse_collect(self, tree, sub_kw, **kw)
+        return Walker.recurse_collect(self, tree, sub_kw, **kw)
 
     def func(self, tree, set_ctx_for, scope, **kw):
         def extend_scope(tree, *dicts, **kw):
@@ -78,7 +81,8 @@ class Scoped(macropy.core.walkers.Walker):
         if isinstance(tree, ast.Lambda):
             extend_scope(tree.body, extract_arg_names(tree.args))
 
-        if isinstance(tree, (ast.GeneratorExp, ast.ListComp, ast.SetComp, ast.DictComp)):
+        if isinstance(tree, (ast.GeneratorExp, ast.ListComp, ast.SetComp,
+                             ast.DictComp)):
             iterator_vars = {}
             for gen in tree.generators:
                 extend_scope(gen.target, iterator_vars)
@@ -104,7 +108,8 @@ class Scoped(macropy.core.walkers.Walker):
 
         if isinstance(tree, ast.ClassDef):
             extend_scope(tree.bases, remove=[tree.name])
-            extend_scope(tree.body, dict(find_assignments.collect(tree.body)), remove=[tree.name])
+            extend_scope(tree.body, dict(find_assignments.collect(tree.body)),
+                         remove=[tree.name])
 
         if isinstance(tree, ast.ExceptHandler):
             if PY3:

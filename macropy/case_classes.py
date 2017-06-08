@@ -140,6 +140,7 @@ def find_members(tree, name):
                 collect(assign)
     return find_member_assignments.collect(tree)
 
+
 def split_body(tree, gen_sym):
         new_body = []
         outer = []

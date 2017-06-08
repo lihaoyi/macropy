@@ -1,13 +1,10 @@
+# -*- coding: utf-8 -*-
 """The main source of all things MacroPy"""
 
-from __future__ import print_function
 
 import ast
-import dis
 import functools
-import inspect
 import sys
-import traceback
 
 from . import real_repr, walkers, compat
 
@@ -20,8 +17,10 @@ if not compat.PY3:
 
 
 class WrappedFunction(object):
-    """Wraps a function which is meant to be handled (and removed) by macro
-    expansion, and never called directly with square brackets."""
+    """Wraps a function which is meant to be handled (and removed) by
+    macro expansion, and never called directly with square
+    brackets.
+    """
 
     def __init__(self, func, msg):
         self.func = func
@@ -38,7 +37,7 @@ class WrappedFunction(object):
 
 def macro_function(func):
     """Wraps a function, to provide nicer error-messages in the common
-    case where the macro is imported but macro-expansion isn't triggered"""
+    case where the macro is imported but macro-expansion isn't triggered."""
     return WrappedFunction(
         func,
         "Macro `%s` illegally invoked at runtime; did you import it "
@@ -47,8 +46,10 @@ def macro_function(func):
 
 
 def macro_stub(func):
-    """Wraps a function that is a stub meant to be used by macros but never
-    called directly."""
+    """Wraps a function that is a stub meant to be used by macros but
+    never called directly.
+    """
+
     return WrappedFunction(
         func,
         "Stub `%s` illegally invoked at runtime; is it used "
@@ -67,11 +68,12 @@ class Macros(object):
         ...
     ```
 
-    Where the decorators are used to register functions as macros belonging
-    to that module.
+    Where the decorators are used to register functions as macros
+    belonging to that module.
     """
 
     class Registry(object):
+
         def __init__(self, wrap = lambda x: x):
             self.registry = {}
             self.wrap = wrap
@@ -80,8 +82,6 @@ class Macros(object):
 
             if name is not None:
                 self.registry[name] = self.wrap(f)
-            #if hasattr(f, "func_name"):
-            #    self.registry[f.func_name] = self.wrap(f)
             if hasattr(f, "__name__"):
                 self.registry[f.__name__] = self.wrap(f)
 
@@ -103,18 +103,23 @@ filters = []            # functions to call on every macro-expanded snippet
 post_processing = []    # functions to call on every macro-expanded file
 
 def expand_entire_ast(tree, src, bindings):
+
     def expand_macros(tree):
         """Go through an AST, hunting for macro invocations and expanding any that
-        are found"""
+        are found."""
 
         def expand_if_in_registry(macro_tree, body_tree, args, registry, **kwargs):
-            """check if `tree` is a macro in `registry`, and if so use it to expand `args`"""
+            """Check if `tree` is a macro in `registry`, and if so use it to
+            expand `args`."""
+
             # print(registry, file=sys.stderr)
             if isinstance(macro_tree, ast.Name) and macro_tree.id in registry:
 
                 (the_macro, the_module) = registry[macro_tree.id]
-                # print('Macro, module: %s, %s' % (the_macro.func.__doc__, the_module), file=sys.stderr)
-                # print('expand if in registry', body_tree, args, src, expand_macros, kwargs, file_vars, sep='\n', file=sys.stderr)
+                # print('Macro, module: %s, %s' % \
+                #       (the_macro.func.__doc__, the_module), file=sys.stderr)
+                # print('expand if in registry', body_tree, args, src,
+                #       expand_macros, kwargs, file_vars, sep='\n', file=sys.stderr)
                 try:
                     new_tree = the_macro(
                         tree=body_tree,
@@ -148,7 +153,10 @@ def expand_entire_ast(tree, src, bindings):
             """Decorates a tree-transformer function to stick the original line
             numbers onto the transformed tree"""
             def run(tree):
-                pos = (tree.lineno, tree.col_offset) if hasattr(tree, "lineno") and hasattr(tree, "col_offset") else None
+                pos = ((tree.lineno, tree.col_offset)
+                       if (hasattr(tree, "lineno") and
+                           hasattr(tree, "col_offset"))
+                       else None)
                 new_tree = func(tree)
 
                 if pos:
@@ -190,7 +198,8 @@ def expand_entire_ast(tree, src, bindings):
 
             if isinstance(tree, ast.Subscript) and type(tree.slice) is ast.Index:
 
-                new_tree = expand_if_in_registry(tree.value, tree.slice.value, [], expr_registry)
+                new_tree = expand_if_in_registry(tree.value, tree.slice.value,
+                                                 [], expr_registry)
 
                 if new_tree:
                     assert isinstance(new_tree, ast.expr), type(new_tree)
@@ -203,7 +212,8 @@ def expand_entire_ast(tree, src, bindings):
                     dec = tree.decorator_list[0]
                     tree.decorator_list = tree.decorator_list[1:]
 
-                    new_tree = expand_if_in_registry(dec, tree, [], decorator_registry)
+                    new_tree = expand_if_in_registry(dec, tree, [],
+                                                     decorator_registry)
 
                     if new_tree is None:
                         seen_decs.append(dec)
@@ -234,13 +244,10 @@ def expand_entire_ast(tree, src, bindings):
 
         return tree
 
-
     file_vars = {}
-
 
     for v in injected_vars:
         file_vars[v.__name__] = v(tree=tree, src=src, expand_macros=expand_macros, **file_vars)
-
 
     allnames = [
         (m, name, asname)
@@ -270,9 +277,12 @@ def expand_entire_ast(tree, src, bindings):
     # currently moves docstrings, either.
     preamble = None
     if isinstance(tree, ast.Module) and tree.body:
-        if isinstance(tree.body[0], ast.ImportFrom) and tree.body[0].module == '__future__':
+        if (isinstance(tree.body[0], ast.ImportFrom) and
+            tree.body[0].module == '__future__'):
             preamble = [tree.body.pop(0)]
-        elif isinstance(tree.body[0], ast.Expr) and isinstance(tree.body[1], ast.ImportFrom) and tree.body[1].module == '__future__':
+        elif (isinstance(tree.body[0], ast.Expr) and
+              isinstance(tree.body[1], ast.ImportFrom) and
+              tree.body[1].module == '__future__'):
             preamble = tree.body[0:1]
             del tree.body[0:1]
 
@@ -324,8 +334,9 @@ def detect_macros(tree):
 
     return bindings
 
+
 def check_annotated(tree):
-    """Shorthand for checking if an AST is of the form something[...]"""
+    """Shorthand for checking if an AST is of the form something[...]."""
     if isinstance(tree, ast.Subscript) and \
                     type(tree.slice) is ast.Index and \
                     type(tree.value) is ast.Name:

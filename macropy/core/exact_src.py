@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Logic related to lazily performing the computation necessary to finding
 the source extent of an AST.
 
@@ -6,9 +7,9 @@ Exposed to each macro as an `exact_src` funciton."""
 import ast
 import sys
 
-from macropy.core import unparse
-from macropy.core.macros import injected_vars
-from macropy.core.util import Lazy, distinct, register
+from . import unparse
+from .macros import injected_vars
+from .util import Lazy, distinct, register
 from .walkers import Walker
 
 
@@ -16,6 +17,7 @@ def linear_index(line_lengths, lineno, col_offset):
     prev_length = sum(line_lengths[:lineno-1]) + lineno-2
     out = prev_length + col_offset + 1
     return out
+
 
 @Walker
 def indexer(tree, collect, **kw):

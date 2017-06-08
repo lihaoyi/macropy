@@ -1,5 +1,7 @@
-"""Transform macro expansion errors into runtime errors with nice stack traces.
-T"""
+# -*- coding: utf-8 -*-
+"""Transform macro expansion errors into runtime errors with nice
+stack traces.
+"""
 
 from __future__ import print_function
 
@@ -9,9 +11,9 @@ import traceback
 
 from six import PY3
 
-import macropy.core.macros
-from macropy.core.hquotes import macros, hq
-from macropy.core.util import register
+from .macros import filters
+from .hquotes import hq
+from .util import register
 
 
 class MacroExpansionError(Exception):
@@ -22,7 +24,8 @@ class MacroExpansionError(Exception):
 def raise_error(ex):
     raise ex
 
-@register(macropy.core.macros.filters)
+
+@register(filters)
 def clear_errors(tree, **kw):
     if isinstance(tree, Exception):
         # print(macropy.core.macros.filters, file=sys.stderr)
@@ -31,7 +34,8 @@ def clear_errors(tree, **kw):
         #msg = tree.message
         msg = str(tree)
         if type(tree) is not AssertionError or tree.args == ():
-            msg = "".join(tree.args) + "\nCaused by Macro-Expansion Error:\n" + tb
+            msg = ("".join(tree.args) + "\nCaused by Macro-Expansion Error:\n" +
+                   tb)
         return hq[raise_error(MacroExpansionError(msg))]
     else:
         return tree

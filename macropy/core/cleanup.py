@@ -1,10 +1,10 @@
+# -*- coding: utf-8 -*-
 """Filters used to touch up the not-quite-perfect ASTs that we allow macros
 to return."""
 
-
 import ast
 
-from macropy.core.util import register
+from .util import register
 from .macros import filters
 from .walkers import Walker
 
@@ -19,7 +19,8 @@ def ast_ctx_fixer(tree, stop, set_ctx, set_ctx_for, **kw):
     ctx = kw.get("ctx", None)
     """Fix any missing `ctx` attributes within an AST; allows you to build
     your ASTs without caring about that stuff and just filling it in later."""
-    if "ctx" in type(tree)._fields and (not hasattr(tree, "ctx") or tree.ctx is None):
+    if ("ctx" in type(tree)._fields and
+        (not hasattr(tree, "ctx") or tree.ctx is None)):
         tree.ctx = ctx
 
     if type(tree) is ast.arguments:
@@ -39,7 +40,6 @@ def ast_ctx_fixer(tree, stop, set_ctx, set_ctx_for, **kw):
 
     if type(tree) is ast.Delete:
         set_ctx_for(tree.targets, ctx=ast.Del())
-
 
 
 @register(filters)
@@ -67,4 +67,3 @@ def fill_line_numbers(tree, lineno, col_offset, **kw):
             fill_line_numbers(sub, tree.lineno, tree.col_offset)
 
     return tree
-

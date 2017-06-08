@@ -1,14 +1,12 @@
-
 """Implementation of Walkers, a nice way of transforming and traversing ASTs."""
 
 import ast
 
-import macropy.core
-from .util import box
+from . import Captured, Literal
+
 
 class Walker(object):
-    """
-    @Walker decorates a function of the form:
+    """@Walker decorates a function of the form:
 
     @Walker
     def transform(tree, **kw):
@@ -29,17 +27,19 @@ class Walker(object):
     a set of `**kw` which provides additional functionality:
 
 
-    - `set_ctx`: this is a function, used via `set_ctx(name=value)` anywhere in
-      `transform`, which will cause any children of `tree` to receive `name` as
-      an argument with a value `value.
-    - `set_ctx_for`: this is similar to `set_ctx`, but takes an additional
-      parameter `tree` (i.e. `set_ctx_for(tree, name=value)`) and `name` is
-      only injected into the parameter list of `transform` when `tree` is the
-      AST snippet being transformed.
-    - `collect`: this is a function used via `collect(thing)`, which adds
-      `thing` to the `collected` list returned by `recurse_collect`.
-    - `stop`: when called via `stop()`, this prevents recursion on children
-      of the current tree.
+    - `set_ctx`: this is a function, used via `set_ctx(name=value)`
+      anywhere in `transform`, which will cause any children of `tree`
+      to receive `name` as an argument with a value `value.
+    - `set_ctx_for`: this is similar to `set_ctx`, but takes an
+      additional parameter `tree` (i.e. `set_ctx_for(tree,
+      name=value)`) and `name` is only injected into the parameter
+      list of `transform` when `tree` is the AST snippet being
+      transformed.
+    - `collect`: this is a function used via `collect(thing)`, which
+      adds `thing` to the `collected` list returned by
+      `recurse_collect`.
+    - `stop`: when called via `stop()`, this prevents recursion on
+      children of the current tree.
 
     These additional arguments can be declared in the signature, e.g.:
 
@@ -50,6 +50,7 @@ class Walker(object):
         return new_tree
 
     for ease of use.
+
     """
     def __init__(self, func):
         self.func = func
@@ -67,7 +68,9 @@ class Walker(object):
                     if item is old_value
                     for k, v in kws.items()
                 ]
-                new_value, new_aggregate = self.recurse_collect(old_value, sub_kw, **dict(list(kw.items()) + specific_sub_kw))
+                new_value, new_aggregate = self.recurse_collect(
+                    old_value, sub_kw,
+                    **dict(list(kw.items()) + specific_sub_kw))
                 aggregates.extend(new_aggregate)
                 setattr(tree, field, new_value)
 
@@ -103,7 +106,8 @@ class Walker(object):
         """Traverse the given AST and return the transformed tree together
         with any values which were collected along with way."""
 
-        if isinstance(tree, ast.AST) or type(tree) is macropy.core.Literal or type(tree) is macropy.core.Captured:
+        if (isinstance(tree, ast.AST) or type(tree) is Literal or
+            type(tree) is Captured):
             aggregates = []
             stop_now = [False]
 
@@ -135,11 +139,10 @@ class Walker(object):
                 tree = new_tree
 
             if not stop_now[0]:
-                aggregates.extend(self.walk_children(tree, new_ctx_for, **new_ctx))
+                aggregates.extend(self.walk_children(tree, new_ctx_for,
+                                                     **new_ctx))
 
         else:
             aggregates = self.walk_children(tree, sub_kw, **kw)
 
         return tree, aggregates
-
-

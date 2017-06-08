@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Plumbing related to hooking into the import process, unrelated to MacroPy"""
-
-from __future__ import print_function
+"""Plumbing related to hooking into the import process, unrelated to
+MacroPy"""
 
 import ast
 import imp
@@ -16,15 +15,16 @@ if compat.PY3:
     from importlib.machinery import PathFinder
 if compat.PY34:
     from importlib.machinery import ModuleSpec
-
-import macropy.core.macros
-
 import macropy.activate
-import macropy.core.exporters
-from macropy.core.util import singleton
+
+from . import macros
+from . import exporters
+from .util import singleton
+
 
 class _MacroLoader(object):
     """Performs the loading of a module with macro expansion."""
+
     def __init__(self, module_name, mod):
         self.mod = mod
         sys.modules[module_name] = mod
@@ -35,8 +35,10 @@ class _MacroLoader(object):
 
 @singleton
 class MacroFinder(object):
-    """Loads a module and looks for macros inside, only providing a loader if
-    it finds some."""
+    """Loads a module and looks for macros inside, only providing a loader
+    if it finds some.
+    """
+
     def expand_macros(self, source_code, filename):
         """ Parses the source_code and expands the resulting ast.
         Returns both the compiled ast and new ast.
@@ -56,7 +58,8 @@ class MacroFinder(object):
             __import__(p)
 
         modules = [(sys.modules[p], bind) for (p, bind) in bindings]
-        new_tree = macropy.core.macros.expand_entire_ast(tree, source_code, modules)
+        new_tree = macropy.core.macros.expand_entire_ast(tree, source_code,
+                                                         modules)
         # print('Compiling', ast.dump(tree), ast.dump(new_tree), sep='\n')
         return compile(tree, filename, "exec"), new_tree
 
@@ -116,7 +119,7 @@ class MacroFinder(object):
         if module:
             return _MacroLoader(ast.mod)
         code, tree = self.expand_macros(source_code, file_path)
-        if not code: # no macros!
+        if not code:  # no macros!
             return
         module = self.construct_module(module_name, file_path)
         exec(code, module.__dict__)

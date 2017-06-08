@@ -30,9 +30,11 @@ import sys
 
 from .compat import PY3, PY34, PY35, string_types
 
-import macropy.core.util
+from . import util
 
-__all__ = ['Literal', 'Captured', 'ast_repr', 'parse_expr', 'parse_stmt', 'real_repr', 'unparse'] # , 'box']
+
+__all__ = ['Literal', 'Captured', 'ast_repr', 'parse_expr', 'parse_stmt',
+           'real_repr', 'unparse'] # , 'box']
 
 class Literal(object):
     """Used to wrap sections of an AST which must remain intact when
@@ -81,6 +83,7 @@ def ast_repr(x):
             attr=x.__class__.__name__, ctx=ast.Load()), [], fields)
     raise Exception("Don't know how to ast_repr this: ", x)
 
+
 def parse_expr(x):
     """Parses a string into an `expr` AST"""
     return ast.parse(x).body[0].value
@@ -101,6 +104,7 @@ def real_repr(thing):
     elif isinstance(thing, list):
         return '[%s]' % ', '.join(map(real_repr, thing))
     return repr(thing)
+
 
 INFSTR = "1e" + repr(sys.float_info.max_10_exp + 1)
 
@@ -131,6 +135,7 @@ def else_rec(tree, i):
         return tabs(i) + "elif " + rec(tree[0].test, i) + ":" + \
                 rec(tree[0].body, i+1) + else_rec(tree[0].orelse, i)
     return tabs(i) + "else:" + rec(tree, i+1)
+
 
 
 trec = {

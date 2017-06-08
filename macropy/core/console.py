@@ -1,17 +1,18 @@
+# -*- coding: utf-8 -*-
 """Implementation and activation of a basic macro-powered REPL."""
-import code
-import ast
 
+import ast
+import code
 import sys
 
-from macropy.core.macros import expand_entire_ast, detect_macros
+from .macros import expand_entire_ast, detect_macros
 
 
 class MacroConsole(code.InteractiveConsole):
+
     def __init__(self, locals=None, filename="<console>"):
         code.InteractiveConsole.__init__(self, locals, filename)
         self.bindings = []
-
 
     def runsource(self, source, filename="<input>", symbol="single"):
         try:
@@ -31,12 +32,14 @@ class MacroConsole(code.InteractiveConsole):
             for p, names in bindings:
                 __import__(p)
 
-            self.bindings.extend([(sys.modules[p], bindings) for (p, bindings) in bindings])
+            self.bindings.extend([(sys.modules[p], bindings) for
+                                  (p, bindings) in bindings])
 
             tree = expand_entire_ast(tree, source, self.bindings)
 
             tree = ast.Interactive(tree.body)
-            code = compile(tree, filename, symbol, self.compile.compiler.flags, 1)
+            code = compile(tree, filename, symbol,
+                           self.compile.compiler.flags, 1)
         except (OverflowError, SyntaxError, ValueError):
             # Case 1
             self.showsyntaxerror(filename)
@@ -47,4 +50,3 @@ class MacroConsole(code.InteractiveConsole):
         # This means it was successfully compiled; `runcode` takes care of
         # any runtime failures
         return False
-
