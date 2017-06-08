@@ -22,15 +22,20 @@ def gen_sym(tree, **kw):
     """
     @walkers.Walker
     def name_finder(tree, collect, **kw):
-        if type(tree) is ast.Name:
+        ttree = type(tree)
+        if ttree is ast.Name:
             collect(tree.id)
-        if type(tree) is ast.Import:
+        elif ttree is ast.arg:
+            collect(tree.arg)
+        elif ttree is ast.Import:
             names = [x.asname or x.name for x in tree.names]
-            for name in names: collect(name)
-        if type(tree) is ast.ImportFrom:
+            for name in names:
+                collect(name)
+        elif ttree is ast.ImportFrom:
             names = [x.asname or x.name for x in tree.names]
-            for name in names: collect(name)
-        if type(tree) in (ast.FunctionDef, ast.ClassDef):
+            for name in names:
+                collect(name)
+        elif ttree in (ast.AsyncFunctionDef, ast.FunctionDef, ast.ClassDef):
             collect(tree.name)
 
     found_names = set(name_finder.collect(tree))
