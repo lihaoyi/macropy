@@ -29,18 +29,12 @@ def find_assignments(tree, collect, stop, **kw):
 
 
 def extract_arg_names(args):
-    if PY3:
-        return dict(
-            ([(args.vararg.arg, args.vararg)] if args.vararg else []) +
-            ([(args.kwarg.arg, args.kwarg)] if args.kwarg else []) +
-            [(arg.arg, ast.Name(id=arg.arg, ctx=ast.Param())) for arg in args.args]
-        )
-    else:
-        return dict(
-            ([(args.vararg, args.vararg)] if args.vararg else []) +
-            ([(args.kwarg, args.kwarg)] if args.kwarg else []) +
-            [pair for x in args.args for pair in find_names.collect(x)]
-        )
+    return dict(
+        ([(args.vararg.arg, args.vararg)] if args.vararg else []) +
+        ([(args.kwarg.arg, args.kwarg)] if args.kwarg else []) +
+        [(arg.arg, arg) for arg in args.args] +
+        [(arg.arg, arg) for arg in args.kwonlyargs]
+    )
 
 
 class Scoped(Walker):
