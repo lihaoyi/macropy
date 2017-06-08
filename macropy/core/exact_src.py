@@ -25,15 +25,14 @@ def indexer(tree, collect, **kw):
         # print('Indexer: %s' % ast.dump(tree), file=sys.stderr)
         unparse(tree)
         collect((tree.lineno, tree.col_offset))
-    except (AttributeError, KeyError):
-        pass
+    except (AttributeError, KeyError) as e:
         # TODO: This originally just ignored all errors here,
         # presumably to simply catch all errors from source code that
         # can't be unparsed, but I can't say for sure.
 
-        # print("Failure in exact_src.py", e, file=sys.stderr)
+        print("Failure in exact_src.py", e, file=sys.stderr)
+        raise
 
-        # raise
 
 _transforms = {
     ast.GeneratorExp: "(%s)",
