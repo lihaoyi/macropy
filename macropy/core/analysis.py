@@ -105,11 +105,7 @@ class Scoped(Walker):
                          remove=[tree.name])
 
         if isinstance(tree, ast.ExceptHandler):
-            if PY3:
-                extend_scope(tree.body, {tree.name: ast.Name(id=tree.name, ctx=ast.Param())})
-            else:
-                extend_scope(tree.body, {tree.name.id: tree.name})
-            
+            extend_scope(tree.body, {tree.name: tree.name})
 
         if isinstance(tree, ast.For):
             extend_scope(tree.body, dict(find_names.collect(tree.target)))
