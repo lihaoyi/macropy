@@ -2,30 +2,28 @@
 
 import ast
 
-import macropy.core
-from macropy.core import compat
-import macropy.core.macros
-import macropy.core.walkers
-from macropy.core import ast_repr, Captured
-from macropy.core.hquotes import macros, hq, unhygienic, u
-from macropy.core.quotes import name
-from macropy.core.analysis import Scoped
+from .core import parse_stmt, unparse
+from .core.macros import Macros
+from .core.walkers import Walker
+from .core.hquotes import macros, hq, unhygienic, u
+from .core.quotes import ast_literal, name
+from .core.analysis import Scoped
 
 
-macros = macropy.core.macros.Macros()
+macros = Macros()
+
 
 def apply(f):
     return f()
 
 
 class CaseClass(object):
+
     __slots__ = []
 
     def copy(self, **kwargs):
         old = list(map(lambda a: (a, getattr(self, a)), self._fields))
-        new = kwargs.items()
-        if compat.PY3:
-            new = list(new)
+        new = list(kwargs.items())
         return self.__class__(**dict(old + new))
 
     def __str__(self):
@@ -52,6 +50,7 @@ class CaseClass(object):
 
 
 class Enum(object):
+
     def __new__(cls, *args, **kw):
         if not hasattr(cls, "all"):
             cls.all = []
@@ -76,6 +75,7 @@ class Enum(object):
     def __iter__(self):
         for x in self.__class__._fields:
             yield getattr(self, x)
+
 
 def enum_new(cls, **kw):
     if len(kw) != 1:
@@ -113,7 +113,7 @@ def extract_args(bases):
             defaults.append(base.right)
         else:
             assert False, ("Illegal expression in case class signature: " +
-                           macropy.core.unparse(base))
+                           unparse(base))
 
     all_args = args[:]
     if vararg:
@@ -125,7 +125,7 @@ def extract_args(bases):
 
 def find_members(tree, name):
     @Scoped
-    @macropy.core.walkers.Walker
+    @Walker
     def find_member_assignments(tree, collect, stop, scope, **kw):
         if name in scope.keys():
             stop()
@@ -154,7 +154,7 @@ def split_body(tree, gen_sym):
                 a_old = a[0]
                 a_old.targets[0].attr = statement.name
 
-                a_new = macropy.core.parse_stmt(macropy.core.unparse(a[0]))[0]
+                a_new = parse_stmt(unparse(a[0]))[0]
                 outer.append(a_new)
             elif type(statement) is ast.FunctionDef:
                 new_body.append(statement)
@@ -166,28 +166,14 @@ def split_body(tree, gen_sym):
 def prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args):
 
     kws = {'vararg': vararg, 'kwarg': kwarg, 'defaults': defaults}
-    if compat.PY34:
-        kws.update({
-            'kwonlyargs': [],
-            'kw_defaults': [],
-            'args': [ast.arg('self', None)] + [ast.arg(id, None) for id
-                                               in args],
-            'vararg': ast.arg(vararg, None) if vararg is not None else None,
-            'kwarg': ast.arg(kwarg, None) if kwarg is not None else None,
-        })
-    elif compat.PY3 and not compat.PY34:
-        kws.update({
-            'kwonlyargs': [],
-            'kw_defaults': [],
-            'args': [ast.arg('self', None)] + [ast.arg(id, None) for id
-                                               in args],
-            'varargannotation': None,
-            'kwargannotation': None
-        })
-    else:
-        kws.update({
-            'args': [ast.Name(id="self")] + [ast.Name(id = id) for id in args]
-        })
+    kws.update({
+        'kwonlyargs': [],
+        'kw_defaults': [],
+        'args': [ast.arg('self', None)] + [ast.arg(id, None) for id
+                                           in args],
+        'vararg': ast.arg(vararg, None) if vararg is not None else None,
+        'kwarg': ast.arg(kwarg, None) if kwarg is not None else None,
+    })
 
     init_fun.args = ast.arguments(**kws)
 
@@ -226,8 +212,7 @@ def shared_transform(tree, gen_sym, additional_args=[]):
         n for f in tree.body
         if type(f) is ast.FunctionDef
         if len(f.args.args) > 0
-        for n in find_members(f.body, f.args.args[0].arg if compat.PY3 else
-                              f.args.args[0].id)
+        for n in find_members(f.body, f.args.args[0].arg)
     ]
 
     additional_members = find_members(tree.body, "self") + nested
@@ -244,25 +229,15 @@ def shared_transform(tree, gen_sym, additional_args=[]):
 
 
 def case_transform(tree, gen_sym, parents):
-
     outer = shared_transform(tree, gen_sym)
-
     tree.bases = parents
-    if compat.PY3:
-        assign = ast.FunctionDef(
-            gen_sym("prepare_"+tree.name),
-            ast.arguments([], None, [], [], None, []),
-            outer,
-            [hq[apply]],
-            None
-        )
-    else:
-        assign = ast.FunctionDef(
-            gen_sym("prepare_"+tree.name),
-            ast.arguments([], None, None, []),
-            outer,
-            [hq[apply]]
-        )
+    assign = ast.FunctionDef(
+        gen_sym("prepare_"+tree.name),
+        ast.arguments([], None, [], [], None, []),
+        outer,
+        [hq[apply]],
+        None
+    )
     return [tree] + ([assign] if len(outer) > 0 else [])
 
 
@@ -317,7 +292,7 @@ def enum(tree, gen_sym, exact_src, **kw):
 
         except AssertionError as e:
             assert False, ("Can't have `%s` in body of enum" %
-                           macropy.core.unparse(stmt).strip("\n"))
+                           unparse(stmt).strip("\n"))
 
     tree.body = new_body + [ast.Pass()]
 

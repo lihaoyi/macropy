@@ -1,19 +1,17 @@
-from __future__ import print_function
-
+# -*- coding: utf-8 -*-
 import ast
 import sys
 
-from six import PY3
-
-import macropy.core.macros
-from macropy.core.util import Lazy, register
-from macropy.core.quotes import macros, name, q, ast_literal, u
-from macropy.core.hquotes import macros, hq, u
-from macropy.core.cleanup import ast_ctx_fixer
-from macropy.core import ast_repr, Captured
-from macropy.core.walkers import Walker
+from .core.macros import Macros, injected_vars, post_processing
+from .core.util import Lazy, register
+from .core.quotes import macros, name, q, ast_literal, u
+from .core.hquotes import macros, hq, u
+from .core.cleanup import ast_ctx_fixer
+from .core import ast_repr, Captured
+from .core.walkers import Walker
 
 macros = macropy.core.macros.Macros()
+
 
 def _():
     """Placeholder for a function argument in the `f` macro."""
@@ -33,11 +31,8 @@ def f(tree, gen_sym, **kw):
 
     tree, used_names = underscore_search.recurse_collect(tree)
 
-    # print(q[lambda: ast_literal[tree]], file=sys.stderr)
     new_tree = q[lambda: ast_literal[tree]]
-    if PY3: new_tree.args.args = [ast.arg(arg = x) for x in used_names]
-    else:   new_tree.args.args = [ast.Name(id = x) for x in used_names]
-    # print('f macro %s' % ast.dump(new_tree) if isinstance(tree, ast.AST) else new_tree, file=sys.stderr)
+    new_tree.args.args = [ast.arg(arg = x) for x in used_names]
     return new_tree
 
 
@@ -51,22 +46,22 @@ def lazy(tree, **kw):
 
 
 def get_interned(store, index, thunk):
-
     if store[index] is None:
         store[index] = [thunk()]
-
     return store[index][0]
 
 
-@register(macropy.core.macros.injected_vars)
+@register(injected_vars)
 def interned_count(**kw):
     return [0]
 
-@register(macropy.core.macros.injected_vars)
+
+@register(injected_vars)
 def interned_name(gen_sym, **kw):
     return gen_sym()
 
-@register(macropy.core.macros.post_processing)
+
+@register(post_processing)
 def interned_processing(tree, gen_sym, interned_count, interned_name, **kw):
 
     if interned_count[0] != 0:
@@ -79,7 +74,6 @@ def interned_processing(tree, gen_sym, interned_count, interned_name, **kw):
         tree.body = code + tree.body
 
     return tree
-
 
 
 @macros.expr

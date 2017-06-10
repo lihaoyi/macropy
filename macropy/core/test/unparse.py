@@ -1,11 +1,13 @@
+# -*- coding: utf-8 -*-
 import unittest
 
 import macropy.core
-from macropy.core import compat
+
 
 def convert(code):
     " string -> ast -> string "
     return macropy.core.unparse(macropy.core.parse_stmt(code))
+
 
 class Tests(unittest.TestCase):
 
@@ -30,40 +32,22 @@ del a, b, c
 assert foo, bar
 del foo
 global foo, bar, baz
-(yield foo)"""
-        if compat.PY3:
-            test += """
+(yield foo)
 print('hello', 'world')
 nonlocal foo, bar, baz"""
-        else:
-            test += """
-print 'hello', 'world'"""
         self.convert_test(test)
 
     def test_Exec(self):
-        if compat.PY3:
-            self.convert_test("""
+        self.convert_test("""
 exec('foo')
 exec('foo', bar)
 exec('foo', bar, {})""")
-        else:
-            self.convert_test("""
-exec 'foo'
-exec 'foo' in bar
-exec 'foo' in bar, {}""")
 
     def test_Raise(self):
-        if compat.PY3:
-            self.convert_test("""
+        self.convert_test("""
 raise
 raise Exception(e)
 raise Exception from init_arg""")
-        else:
-            self.convert_test("""
-raise
-raise Exception(e)
-raise Exception, init_arg
-raise Exception, init_arg, traceback""")
 
     def test_Try(self):
         self.convert_test("""
@@ -160,8 +144,7 @@ with a as b:
 {1:2, 5:8}
 (1, 2, 3)
 """)
-        if compat.PY3: self.convert_test("\n[1, 5.0, [(-(6))]]")
-        else:   self.convert_test("\n[1, 5.0, [(-6)]]")
+        self.convert_test("\n[1, 5.0, [(-(6))]]")
         self.convert_test("\n'abcd'")
 
     def test_comprehension(self):
@@ -187,14 +170,9 @@ with a as b:
 
     def test_misc(self):
         self.convert_test("\na.attr") # Attribute
-        if compat.PY3:
-            self.convert_test("""
+        self.convert_test("""
 f()
 f(a, *b, k=8, e=9, **c)""") # Call
-        else:
-            self.convert_test("""
-f()
-f(a, k=8, e=9, *b, **c)""") # Call
         #self.convert_test("\n...") # Ellipsis
         self.convert_test("""
 a[1]
