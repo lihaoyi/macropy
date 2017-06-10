@@ -125,3 +125,8 @@ def hygienator(tree, stop, scope, **kw):
             stop()
             tree.slice.value.ctx = None
             return tree.slice.value
+
+
+macros.expose_unhygienic(ast)
+macros.expose_unhygienic(Captured)
+macros.expose_unhygienic(Literal)

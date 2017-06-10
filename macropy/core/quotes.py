@@ -81,3 +81,8 @@ def ast_list(tree):
     return Literal(ast.Call(ast.Attribute(
         value=ast.Name(id='ast', ctx=ast.Load()),
         attr='List', ctx=ast.Load()), [], [ast.keyword("elts", tree)]))
+
+
+macros.expose_unhygienic(ast)
+macros.expose_unhygienic(ast_repr)
+macros.expose_unhygienic(Literal)
