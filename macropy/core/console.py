@@ -3,6 +3,7 @@
 
 import ast
 import code
+import importlib
 import sys
 
 from .macros import expand_entire_ast, detect_macros
@@ -27,13 +28,10 @@ class MacroConsole(code.InteractiveConsole):
 
         try:
             tree = ast.parse(source)
-            bindings = detect_macros(tree)
+            bindings = detect_macros(tree, '__main__')
 
-            for p, names in bindings:
-                __import__(p)
-
-            self.bindings.extend([(sys.modules[p], bindings) for
-                                  (p, bindings) in bindings])
+            for mod, bind in bindings:
+                self.bindings.append((importlib.import_module(mod), bind))
 
             tree = expand_entire_ast(tree, source, self.bindings)
 
