@@ -64,6 +64,7 @@ class Scoped(Walker):
         return Walker.recurse_collect(self, tree, sub_kw, **kw)
 
     def func(self, tree, set_ctx_for, scope, **kw):
+
         def extend_scope(tree, *dicts, **kw):
             new_scope = merge_dicts(*([scope] + list(dicts)))
             if "remove" in kw:

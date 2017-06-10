@@ -51,13 +51,13 @@ def exact_src(tree, src, **kw):
 
         last_child_index = linear_index(line_lengths(), *all_child_pos[-1])
 
-        first_successor_index = indexes()[min(indexes().index(last_child_index)+1, len(indexes())-1)]
+        first_successor_index = indexes()[min(indexes().index(last_child_index)+1,
+                                              len(indexes())-1)]
 
         for end_index in range(last_child_index, first_successor_index+1):
 
             prelim = src[start_index:end_index]
             prelim = _transforms.get(type(tree), "%s") % prelim
-
 
             if isinstance(tree, ast.stmt):
                 prelim = prelim.replace("\n" + " " * tree.col_offset, "\n")
@@ -80,8 +80,10 @@ def exact_src(tree, src, **kw):
 
     positions = Lazy(lambda: indexer.collect(tree))
     line_lengths = Lazy(lambda: list(map(len, src.split("\n"))))
-    indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c) for (l, c) in positions()] + [len(src)]))
+    indexes = Lazy(lambda: distinct([linear_index(line_lengths(), l, c)
+                                     for (l, c) in positions()] + [len(src)]))
     return lambda t: exact_src_imp(t, src, indexes, line_lengths)
+
 
 class ExactSrcException(Exception):
     pass

@@ -4,8 +4,6 @@
 interpolate things into a quoted section.
 """
 
-from __future__ import print_function
-
 import ast
 import sys
 
@@ -27,7 +25,6 @@ def unquote_search(tree, **kw):
             # print('Unquote search %s' % f, file=sys.stderr)
             if f.__name__ == func:
                 return f(right)
-
 
 
 @macros.expr

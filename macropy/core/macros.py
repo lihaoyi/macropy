@@ -21,7 +21,6 @@ class WrappedFunction(object):
     macro expansion, and never called directly with square
     brackets.
     """
-
     def __init__(self, func, msg):
         self.func = func
         self.msg = msg
@@ -60,13 +59,12 @@ def macro_stub(func):
 class Macros(object):
     """A registry of macros belonging to a module; used via
 
-    ```python
-    macros = Macros()
+    .. code:: python
+      macros = Macros()
 
-    @macros.expr
-    def my_macro(tree):
-        ...
-    ```
+      @macros.expr
+      def my_macro(tree):
+          ...
 
     Where the decorators are used to register functions as macros
     belonging to that module.
@@ -79,7 +77,6 @@ class Macros(object):
             self.wrap = wrap
 
         def __call__(self, f, name=None):
-
             if name is not None:
                 self.registry[name] = self.wrap(f)
             if hasattr(f, "__name__"):
@@ -98,17 +95,20 @@ class Macros(object):
 
 # For other modules to hook into MacroPy's workflow while
 # keeping this module itself unaware of their presence.
-injected_vars = []      # functions to inject values throughout each files macros
+injected_vars = []      # functions to inject values throughout each
+                        # files macros
 filters = []            # functions to call on every macro-expanded snippet
 post_processing = []    # functions to call on every macro-expanded file
 
 def expand_entire_ast(tree, src, bindings):
 
     def expand_macros(tree):
-        """Go through an AST, hunting for macro invocations and expanding any that
-        are found."""
+        """Go through an AST, hunting for macro invocations and expanding any
+        that are found.
+        """
 
-        def expand_if_in_registry(macro_tree, body_tree, args, registry, **kwargs):
+        def expand_if_in_registry(macro_tree, body_tree, args, registry,
+                                  **kwargs):
             """Check if `tree` is a macro in `registry`, and if so use it to
             expand `args`."""
 
@@ -119,7 +119,8 @@ def expand_entire_ast(tree, src, bindings):
                 # print('Macro, module: %s, %s' % \
                 #       (the_macro.func.__doc__, the_module), file=sys.stderr)
                 # print('expand if in registry', body_tree, args, src,
-                #       expand_macros, kwargs, file_vars, sep='\n', file=sys.stderr)
+                #       expand_macros, kwargs, file_vars, sep='\n',
+                #       file=sys.stderr)
                 try:
                     new_tree = the_macro(
                         tree=body_tree,
@@ -147,11 +148,13 @@ def expand_entire_ast(tree, src, bindings):
                 return new_tree
             elif isinstance(macro_tree, ast.Call):
                 args.extend(macro_tree.args)
-                return expand_if_in_registry(macro_tree.func, body_tree, args, registry)
+                return expand_if_in_registry(macro_tree.func, body_tree, args,
+                                             registry)
 
         def preserve_line_numbers(func):
             """Decorates a tree-transformer function to stick the original line
-            numbers onto the transformed tree"""
+            numbers onto the transformed tree.
+            """
             def run(tree):
                 pos = ((tree.lineno, tree.col_offset)
                        if (hasattr(tree, "lineno") and
@@ -169,7 +172,7 @@ def expand_entire_ast(tree, src, bindings):
 
         @preserve_line_numbers
         def macro_expand(tree):
-            """Tail Recursively expands all macros in a single AST node"""
+            """Tail Recursively expands all macros in a single AST node."""
             if isinstance(tree, ast.With):
                 assert isinstance(tree.body, list), real_repr(tree.body)
                 if compat.PY33:

@@ -2,7 +2,6 @@
 """Transform macro expansion errors into runtime errors with nice
 stack traces.
 """
-
 import traceback
 
 from .macros import filters
@@ -22,9 +21,7 @@ def raise_error(ex):
 @register(filters)
 def clear_errors(tree, **kw):
     if isinstance(tree, Exception):
-        # print(filters, file=sys.stderr)
         tb = "".join(traceback.format_tb(tree.__traceback__))
-        # msg = tree.message
         msg = str(tree)
         if type(tree) is not AssertionError or tree.args == ():
             msg = ("".join(tree.args) + "\nCaused by Macro-Expansion Error:\n" +

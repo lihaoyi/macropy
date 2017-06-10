@@ -89,10 +89,11 @@ def hq(tree, target, **kw):
 
 @macros.expr
 def hq(tree, **kw):
-    """Hygienic Quasiquote macro, used to quote sections of code while ensuring
-    that names within the quoted code will refer to the value bound to that name
-    when the code was quoted. Used together with the `u`, `name`, `ast`,
-    `ast_list`, `unhygienic` unquotes."""
+    """Hygienic Quasiquote macro, used to quote sections of code while
+    ensuring that names within the quoted code will refer to the value
+    bound to that name when the code was quoted. Used together with
+    the `u`, `name`, `ast`, `ast_list`, `unhygienic` unquotes.
+    """
     tree = unquote_search.recurse(tree)
     # print('Hquote after search %s' % ast.dump(tree)
     #       if isinstance(tree, ast.AST) else tree, file=sys.stderr)

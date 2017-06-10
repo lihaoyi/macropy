@@ -33,7 +33,7 @@ from . import util
 
 
 __all__ = ['Literal', 'Captured', 'ast_repr', 'parse_expr', 'parse_stmt',
-           'real_repr', 'unparse'] # , 'box']
+           'real_repr', 'unparse']
 
 class Literal(object):
     """Used to wrap sections of an AST which must remain intact when

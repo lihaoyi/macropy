@@ -114,7 +114,6 @@ class Walker(object):
             def stop():
                 stop_now[0] = True
 
-
             new_ctx = dict(**kw)
             new_ctx_for = sub_kw[:]
 

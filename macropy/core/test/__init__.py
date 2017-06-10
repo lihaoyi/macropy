@@ -1,7 +1,7 @@
+# -*- coding: utf-8 -*-
+
 import unittest
 from macropy.test import test_suite
-
-
 
 
 class Cases:
