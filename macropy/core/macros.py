@@ -195,6 +195,7 @@ def expand_entire_ast(tree, src, bindings):
                     assert isinstance(new_tree, list), type(new_tree)
                     return macro_expand(new_tree)
 
+            # this detects a possible macro with syntax mname[...]
             if isinstance(tree, ast.Subscript) and type(tree.slice) is ast.Index:
 
                 new_tree = expand_if_in_registry(tree.value, tree.slice.value,
@@ -249,7 +250,8 @@ def expand_entire_ast(tree, src, bindings):
     file_vars = {}
 
     for v in injected_vars:
-        file_vars[v.__name__] = v(tree=tree, src=src, expand_macros=expand_macros, **file_vars)
+        file_vars[v.__name__] = v(tree=tree, src=src,
+                                  expand_macros=expand_macros, **file_vars)
 
     allnames = [
         (m, name, asname)
@@ -344,7 +346,6 @@ def detect_macros(tree, from_fullname, from_package=None):
 
 def check_annotated(tree):
     """Shorthand for checking if an AST is of the form something[...]."""
-    if isinstance(tree, ast.Subscript) and \
-                    type(tree.slice) is ast.Index and \
-                    type(tree.value) is ast.Name:
+    if (isinstance(tree, ast.Subscript) and type(tree.slice) is ast.Index and
+        type(tree.value) is ast.Name):
         return tree.value.id, tree.slice.value
