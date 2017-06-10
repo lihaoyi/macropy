@@ -129,9 +129,13 @@ def expand_entire_ast(tree, src, bindings):
                         **dict(list(kwargs.items()) + list(file_vars.items()))
                     )
                 except Exception as e:
-                    # traceback.print_exc()
-                    # new_tree = e
-                    raise
+                    # here this exception is raised during macro
+                    # expansion, at import time. If we come here, it
+                    # means that the macro expanded to "raise
+                    # Exception()" or something like that. This will
+                    # be fixed in the failure filter, see failure.py
+                    new_tree = e
+
                 # print('Pre filters: %s' % new_tree, file=sys.stderr)
 
                 for function in reversed(filters):
