@@ -109,8 +109,7 @@ def hq(tree, **kw):
 @Scoped
 @Walker
 def hygienator(tree, stop, scope, **kw):
-    if (type(tree) is ast.Name and
-        type(tree.ctx) is ast.Load and
+    if (type(tree) is ast.Name and type(tree.ctx) is ast.Load and
         tree.id not in scope.keys()):
         stop()
         return Captured(tree, tree.id)
