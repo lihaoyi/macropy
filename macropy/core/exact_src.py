@@ -26,12 +26,15 @@ def indexer(tree, collect, **kw):
         unparse(tree)
         collect((tree.lineno, tree.col_offset))
     except (AttributeError, KeyError) as e:
-        # TODO: This originally just ignored all errors here,
-        # presumably to simply catch all errors from source code that
-        # can't be unparsed, but I can't say for sure.
-
-        print("Failure in exact_src.py", e, file=sys.stderr)
-        raise
+        # If this handler gets executed it's because unparse() has
+        # failed (it's being uses as a poor man's syntax
+        # checker). It's important to remember that unparse cannot
+        # unparse *any* tree fragment. There are certain fragments,
+        # (like an ast.Add without its parent ast.BinOp) that cannot
+        # be unparsed alone
+        pass
+        # print("Failure in exact_src.py", e, file=sys.stderr)
+        # raise
 
 
 _transforms = {
