@@ -5,7 +5,7 @@ stack traces.
 import traceback
 
 from .macros import filters
-from .hquotes import hq
+from .hquotes import macros, hq
 from .util import register
 
 
