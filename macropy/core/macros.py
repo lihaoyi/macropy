@@ -178,22 +178,15 @@ def expand_entire_ast(tree, src, bindings):
             """Tail Recursively expands all macros in a single AST node."""
             if isinstance(tree, ast.With):
                 assert isinstance(tree.body, list), real_repr(tree.body)
-                if compat.PY33:
-                    new_tree = tree.body
-                    for withitem in tree.items:
-                        new_tree = expand_if_in_registry(
-                                        withitem.context_expr,
-                                        new_tree,
-                                        [],
-                                        block_registry,
-                                        target=withitem.optional_vars)
-                else:
+                new_tree = tree.body
+                for withitem in tree.items:
+                    # TODO: this manages only one with block level??
                     new_tree = expand_if_in_registry(
-                                        tree.context_expr,
-                                        tree.body,
-                                        [],
-                                        block_registry,
-                                        target=tree.optional_vars)
+                        withitem.context_expr,
+                        new_tree,
+                        [],
+                        block_registry,
+                        target=withitem.optional_vars)
 
                 if new_tree:
                     if isinstance(new_tree, ast.expr):
