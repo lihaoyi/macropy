@@ -5,6 +5,7 @@
 import ast
 import functools
 import sys
+import importlib
 
 from . import real_repr, walkers, compat
 
@@ -305,21 +306,26 @@ def expand_entire_ast(tree, src, bindings):
     return tree
 
 
-def detect_macros(tree):
+def detect_macros(tree, from_fullname, from_package=None):
     """Look for macros imports within an AST, transforming them and extracting
     the list of macro modules."""
     bindings = []
 
     for stmt in tree.body:
-        if isinstance(stmt, ast.ImportFrom) \
-                and stmt.module \
-                and stmt.names[0].name == 'macros' \
-                and stmt.names[0].asname is None:
-            __import__(stmt.module)
-            mod = sys.modules[stmt.module]
+        # if the name is something like "from foo.bar import macros"
+        if (isinstance(stmt, ast.ImportFrom) and
+            stmt.module and stmt.names[0].name == 'macros' and
+            stmt.names[0].asname is None):
+            fullname = importlib.util.resolve_name(
+                '.' * stmt.level + stmt.module, from_package)
+
+            if fullname == __name__:
+                continue
+
+            mod = importlib.import_module(fullname)
 
             bindings.append((
-                stmt.module,
+                fullname,
                 [(t.name, t.asname or t.name) for t in stmt.names[1:]]
             ))
 
