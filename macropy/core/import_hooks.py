@@ -5,6 +5,7 @@ MacroPy"""
 import ast
 import importlib
 from importlib.util import spec_from_loader
+import logging
 import sys
 
 import macropy.activate
@@ -12,6 +13,9 @@ import macropy.activate
 from . import macros
 from . import exporters
 from .util import singleton
+
+
+logger = logging.getLogger(__name__)
 
 
 class _MacroLoader(object):
@@ -81,7 +85,7 @@ class MacroFinder(object):
         if not source_code or "macros" not in source_code:
             return None, None
 
-        print('Expand macros in %s' % filename, file=sys.stderr)
+        logger.info('Expand macros in %s', filename)
 
         tree = ast.parse(source_code)
         bindings = macropy.core.macros.detect_macros(tree, spec.name,

@@ -4,8 +4,12 @@
 import ast
 import functools
 import importlib
+import logging
 
 from . import real_repr, walkers
+
+
+logger = logging.getLogger(__name__)
 
 
 # WARN: this was old code that it's not working anymore in py3 and
@@ -311,6 +315,7 @@ def detect_macros(tree, from_fullname, from_package=None):
     the list of macro modules."""
     bindings = []
 
+    logger.info("Finding macros in %r", from_fullname)
     for stmt in tree.body:
         # if the name is something like "from foo.bar import macros"
         if (isinstance(stmt, ast.ImportFrom) and
@@ -322,6 +327,7 @@ def detect_macros(tree, from_fullname, from_package=None):
             if fullname == __name__:
                 continue
 
+            logger.info("Importing %r", fullname)
             mod = importlib.import_module(fullname)
 
             bindings.append((
