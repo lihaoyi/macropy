@@ -3,13 +3,9 @@
 MacroPy"""
 
 import ast
-import imp
-from importlib.machinery import PathFinder
-from importlib.machinery import ModuleSpec
-import inspect
+import importlib
+from importlib.util import spec_from_loader
 import sys
-import traceback
-import types
 
 import macropy.activate
 
@@ -29,13 +25,56 @@ class _MacroLoader(object):
         return self.mod
 
 
+class MacroLoader:
+    """Performs the real module loading in Python 3. the other is still
+    there until the export stuff is fixed.
+    """
+
+    def __init__(self, nomacro_spec, code, tree):
+        self.nomacro_spec = nomacro_spec
+        self.code = code
+        self.tree = tree
+
+    def create_module(self, spec):
+        pass
+
+    def exec_module(self, module):
+        exec(self.code, module.__dict__)
+        self.export()
+
+    def export(self):
+        try:
+            macropy.core.exporters.NullExporter().export_transformed(
+                self.code, self.tree, self.nomacro_spec.name,
+                self.nomacro_spec.origin)
+        except Exception as e:
+            raise
+
+    def get_filename(self, fullname):
+        return self.nomacro_spec.loader.get_filename(fullname)
+
+    def is_package(self, fullname):
+        return self.nomacro_spec.loader.is_package(fullname)
+
+
 @singleton
 class MacroFinder(object):
     """Loads a module and looks for macros inside, only providing a loader
     if it finds some.
     """
 
-    def expand_macros(self, source_code, filename):
+    def _find_spec_nomacro(self, fullname, path, target=None):
+        """Try to find the original, non macro-expanded module using all the
+        remaining meta_path finders. This one is installed by
+        ``macropy.activate`` at index 0."""
+        spec = None
+        for finder in sys.meta_path[1:]:
+            spec = finder.find_spec(fullname, path, target=target)
+            if spec is not None:
+                break
+        return spec
+
+    def expand_macros(self, source_code, filename, spec):
         """ Parses the source_code and expands the resulting ast.
         Returns both the compiled ast and new ast.
         If no macros are found, returns None, None."""
@@ -45,70 +84,40 @@ class MacroFinder(object):
         print('Expand macros in %s' % filename, file=sys.stderr)
 
         tree = ast.parse(source_code)
-        bindings = macropy.core.macros.detect_macros(tree)
+        bindings = macropy.core.macros.detect_macros(tree, spec.name,
+                                                     spec.parent)
 
         if not bindings:
             return None, None
 
-        for (p, _) in bindings:
-            __import__(p)
-
-        modules = [(sys.modules[p], bind) for (p, bind) in bindings]
+        modules = []
+        for mod, bind in bindings:
+            modules.append((importlib.import_module(mod), bind))
         new_tree = macropy.core.macros.expand_entire_ast(tree, source_code,
                                                          modules)
         # print('Compiling', ast.dump(tree), ast.dump(new_tree), sep='\n')
         return compile(tree, filename, "exec"), new_tree
 
-    def construct_module(self, module_name, file_path):
-        mod = types.ModuleType(module_name)
-        mod.__package__ = module_name.rpartition('.')[0]
-        mod.__file__ = file_path
-        mod.__loader__ = _MacroLoader(module_name, mod)
-        return mod
-
-    def export(self, code, tree, module_name, file_path):
-        try:
-            macropy.core.exporters.NullExporter().export_transformed(
-                code, tree, module_name, file_path)
-        except Exception as e:
-            # print("Export failure", e, file=sys.stderr) # TODO
-            raise
-
-    def get_source(self, module_name, package_path):
-        # try to get the module using a "normal" loader.
-        # if we fail here, just let python handle the rest
-        original_loader = (PathFinder.find_module(module_name, package_path))
-        source_code = original_loader.get_source(module_name)
-        file_path = original_loader.path
-        return source_code, file_path
-
-    def find_module(self, module_name, package_path):
-        try:
-            source_code, file_path = self.get_source(module_name, package_path)
-        except (AttributeError, ImportError) as e:
-            # When trying to find a package, get_source() will raise
-            # an AttributeError, which apparently this try-except is
-            # designed to catch.  I don't know what happens after
-            # that.  TODO: This seems to be intercepting many imports
-            # unrelated to MacroPy.  Unfortunately, it's also
-            # swallowing real ImportErrors when modules inside MacroPy
-            # can't import external modules.
-            # print('Failed to get source', e, file=sys.stderr)
+    def find_spec(self, fullname, path, target=None):
+        spec = self._find_spec_nomacro(fullname, path, target)
+        if spec is None:
             return
-        # try to find already exported module
-        # TODO: are these the right arguments?
-        # NOTE: This is a noop
-        module = macropy.core.exporters.NullExporter().find(
-            file_path, file_path, "", module_name, package_path)
-        if module:
-            return _MacroLoader(ast.mod)
-        code, tree = self.expand_macros(source_code, file_path)
+        if not (hasattr(spec.loader, 'get_source') and
+            callable(spec.loader.get_source)):
+            return
+        origin = spec.origin
+        if origin == 'builtin':
+            return
+        # # try to find already exported module
+        # # TODO: are these the right arguments?
+        # # NOTE: This is a noop
+        # module = macropy.core.exporters.NullExporter().find(
+        #     file_path, file_path, "", module_name, package_path)
+        # if module:
+        #     return _MacroLoader(ast.mod)
+        source = spec.loader.get_source(fullname)
+        code, tree = self.expand_macros(source, origin, spec)
         if not code:  # no macros!
             return
-        module = self.construct_module(module_name, file_path)
-        exec(code, module.__dict__)
-        self.export(code, tree, module_name, file_path)
-        return ModuleSpec(module.__name__, module.__loader__)
-
-    def find_spec(self, module_name, package_path, target=None):
-        return self.find_module(module_name, package_path)
+        loader = MacroLoader(spec, code, tree)
+        return spec_from_loader(fullname, loader)
