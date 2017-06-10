@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 """The main source of all things MacroPy"""
 
-
 import ast
 import functools
-import sys
 import importlib
 
-from . import real_repr, walkers, compat
+from . import real_repr, walkers
 
 
 # WARN: this was old code that it's not working anymore in py3 and
