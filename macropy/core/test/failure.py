@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from macropy.core.test.failure_macro import macros, f, g, h, i
 
 def run1():

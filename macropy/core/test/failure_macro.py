@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import macropy.core.macros
 
 from macropy.core.failure import MacroExpansionError

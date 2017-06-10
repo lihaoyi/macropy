@@ -4,10 +4,12 @@ import sys
 import unittest
 
 from macropy.peg import macros, peg, Success, cut, ParseError
-
 from macropy.tracing import macros, require
 from macropy.quick_lambda import macros, f, _
+
+
 class Tests(unittest.TestCase):
+
     def test_basic(self):
         parse1 = peg["Hello World"]
         with require:
@@ -25,8 +27,10 @@ class Tests(unittest.TestCase):
 
         parse2 = peg[(parse1, "!".rep1)]
         with require:
-            parse2.parse_string("Hello World!!!").output == ['Hello World', ['!', '!', '!']]
-            parse2.parse_string("Hello World!").output  == ['Hello World', ['!']]
+            parse2.parse_string("Hello World!!!").output == ['Hello World',
+                                                             ['!', '!', '!']]
+            parse2.parse_string("Hello World!").output  == ['Hello World',
+                                                            ['!']]
             parse2.parse_string("Hello World").index == 11
 
         parse3 = peg[(parse1, ("!" | "?"))]
@@ -39,26 +43,29 @@ class Tests(unittest.TestCase):
         parse4 = peg[(parse1, "!".rep & "!!!")]
 
         with require:
-            parse4.parse_string("Hello World!!!").output == ['Hello World', ['!', '!', '!']]
+            parse4.parse_string("Hello World!!!").output == ['Hello World',
+                                                             ['!', '!', '!']]
             parse4.parse_string("Hello World!!").index == 11
 
         parse4 = peg[(parse1, "!".rep & "!!!")]
 
         with require:
-            parse4.parse_string("Hello World!!!").output == ["Hello World", ["!", "!", "!"]]
+            parse4.parse_string("Hello World!!!").output == ["Hello World",
+                                                             ["!", "!", "!"]]
 
         parse5 = peg[(parse1, "!".rep & -"!!!")]
         with require:
-            parse5.parse_string("Hello World!!").output == ["Hello World", ['!', '!']]
+            parse5.parse_string("Hello World!!").output == ["Hello World",
+                                                            ['!', '!']]
             parse5.parse_string("Hello World!!!").index == 11
 
         parse6 = peg[(parse1, "!" * 3)]
         with require:
             parse6.parse_string("Hello World!").index == 12
             parse6.parse_string("Hello World!!").index == 13
-            parse6.parse_string("Hello World!!!").output == ["Hello World", ['!', '!', '!']]
+            parse6.parse_string("Hello World!!!").output == ["Hello World",
+                                                             ['!', '!', '!']]
             parse6.parse_string("Hello World!!!!").index == 14
-
 
     def test_conversion(self):
         parse1 = peg[("Hello World", "!".rep1) // f[_[1]]]
@@ -253,13 +260,16 @@ class Tests(unittest.TestCase):
         """
         with peg:
             json_doc = (space, (obj | array), space) // f[_[1]]
-            json_exp = (space, (obj | array | string | true | false | null | number), space) // f[_[1]]
+            json_exp = (space, (obj | array | string | true | false | null |
+                                number), space) // f[_[1]]
 
             pair = (string is k, space, ':', cut, json_exp is v) >> (k, v)
             obj = ('{', cut, pair.rep_with(",") // dict, space, '}') // f[_[1]]
             array = ('[', cut, json_exp.rep_with(","), space, ']') // f[_[1]]
 
-            string = (space, '"', (r'[^"\\\t\n]'.r | escape | unicode_escape).rep.join is body, '"') >> "".join(body)
+            string = (space, '"',
+                      (r'[^"\\\t\n]'.r | escape | unicode_escape).rep.join is
+                      body, '"') >> "".join(body)
             escape = ('\\', ('"' | '/' | '\\' | 'b' | 'f' | 'n' | 'r' | 't') // escape_map.get) // f[_[1]]
             unicode_escape = ('\\', 'u', ('[0-9A-Fa-f]'.r * 4).join).join // decode
 
