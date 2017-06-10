@@ -204,7 +204,8 @@ def expand_entire_ast(tree, src, bindings):
                     assert isinstance(new_tree, ast.expr), type(new_tree)
                     return macro_expand(new_tree)
 
-            if isinstance(tree, ast.ClassDef) or isinstance(tree, ast.FunctionDef):
+            if isinstance(tree, (ast.AsyncFunctionDef, ast.ClassDef,
+                                 ast.FunctionDef)):
                 seen_decs = []
                 additions = []
                 while tree.decorator_list != []:
@@ -225,7 +226,9 @@ def expand_entire_ast(tree, src, bindings):
                         elif isinstance(tree, ast.expr):
                             tree = [ast.Expr(tree)]
                             break
-                if type(tree) is ast.ClassDef or type(tree) is ast.FunctionDef:
+
+                if isinstance(tree, (ast.AsyncFunctionDef, ast.ClassDef,
+                                     ast.FunctionDef)):
                     tree.decorator_list = seen_decs
                 if len(additions) == 0:
                     return tree
