@@ -1,14 +1,17 @@
+# -*- coding: utf-8 -*-
+from abc import ABCMeta, abstractmethod
 import ast
 import inspect
-from abc import ABCMeta, abstractmethod
 
-from macropy.core import ast_repr, Captured, util, compat
-import macropy.core.macros
-import macropy.core.walkers
+from ..core import ast_repr, Captured, util
+from ..core.macros import Macros
+from ..core.walkers import Walker
 
-from macropy.core.quotes import macros, q
-from macropy.core.hquotes import macros, hq
-macros = macropy.core.macros.Macros()
+from ..core.quotes import macros, q
+from ..core.hquotes import macros, hq
+
+
+macros = Macros()
 
 
 class PatternMatchException(Exception):
@@ -170,20 +173,12 @@ class ClassMatcher(Matcher):
 
         # This stores which fields of the object we will need to look
         # at.
-        if compat.PY3:
-            if not _vars_are_disjoint(util.flatten([m.var_names() for m in
-                positionalMatchers + list(kwMatchers.values())])):
+        if not _vars_are_disjoint(util.flatten(
+                [m.var_names() for m in positionalMatchers +
+                 list(kwMatchers.values())])):
                 raise PatternVarConflict()
-        else:
-            if not _vars_are_disjoint(util.flatten([m.var_names() for m in
-                positionalMatchers + kwMatchers.values()])):
-                raise PatternVarConflict()
-
     def var_names(self):
-        if compat.PY3:
-            matchers = self.positionalMatchers + list(self.kwMatchers.values())
-        else:
-            matchers = self.positionalMatchers + self.kwMatchers.values()
+        matchers = self.positionalMatchers + list(self.kwMatchers.values())
         return (util.flatten([matcher.var_names()
                               for matcher in matchers]))
 
@@ -229,22 +224,13 @@ def build_matcher(tree, modified):
         return hq[LiteralMatcher(u[tree.n])]
     if isinstance(tree, ast.Str):
         return hq[LiteralMatcher(u[tree.s])]
-    if compat.PY34:
-        if isinstance(tree, ast.NameConstant):
-            return hq[LiteralMatcher(ast_literal[tree])]
-        if isinstance(tree, ast.Name):
-            if tree.id in ['_']:
-                return hq[WildcardMatcher()]
-            modified.add(tree.id)
-            return hq[NameMatcher(u[tree.id])]
-    else:
-        if isinstance(tree, ast.Name):
-            if tree.id in ['True', 'False', 'None']:
-                return hq[LiteralMatcher(ast_literal[tree])]
-            elif tree.id in ['_']:
-                return hq[WildcardMatcher()]
-            modified.add(tree.id)
-            return hq[NameMatcher(u[tree.id])]
+    if isinstance(tree, ast.NameConstant):
+        return hq[LiteralMatcher(ast_literal[tree])]
+    if isinstance(tree, ast.Name):
+        if tree.id in ['_']:
+            return hq[WildcardMatcher()]
+        modified.add(tree.id)
+        return hq[NameMatcher(u[tree.id])]
     if isinstance(tree, ast.List):
         sub_matchers = []
         for child in tree.elts:
@@ -291,7 +277,7 @@ def _matching(tree, gen_sym, **kw):
     This macro will enable non-refutable pattern matching.  If a pattern match
     fails, an exception will be thrown.
     """
-    @macropy.core.walkers.Walker
+    @Walker
     def func(tree, **kw):
         if _is_pattern_match_stmt(tree):
             modified = set()
@@ -349,18 +335,11 @@ def _rewrite_if(tree, var_name=None, **kw_args):
         return tree
 
     handler = ast.ExceptHandler(hq[PatternMatchException], None, tree.orelse)
-    if compat.PY33:
-        try_stmt = ast.Try(tree.body, [handler], [], [])
-    else:
-        try_stmt = ast.TryExcept(tree.body, [handler], [])
+    try_stmt = ast.Try(tree.body, [handler], [], [])
 
-    if compat.PY33:
-        macroed_match = ast.With([ast.withitem(
-            ast.Name('_matching', ast.Load()), None)],
-                                 [ast.Expr(tree.test)])
-    else:
-        macroed_match = ast.With(ast.Name('_matching', ast.Load()), None,
-                                 [ast.Expr(tree.test)])
+    macroed_match = ast.With([ast.withitem(
+        ast.Name('_matching', ast.Load()), None)],
+                             [ast.Expr(tree.test)])
     try_stmt.body = [macroed_match] + try_stmt.body
 
     if len(handler.body) == 1: # (== tree.orelse)
@@ -382,7 +361,7 @@ def switch(tree, args, gen_sym, **kw):
     limited reach ensures less interference with existing code.
     """
     new_id = gen_sym()
-    for i in compat.xrange(len(tree)):
+    for i in xrange(len(tree)):
         tree[i] = _rewrite_if(tree[i], new_id)
     tree = [ast.Assign([ast.Name(new_id, ast.Store())], args[0])] + tree
     return tree
@@ -398,7 +377,7 @@ def patterns(tree, **kw):
         with _matching:
             None
 
-    new[0].body = macropy.core.walkers.Walker(
+    new[0].body = Walker(
         lambda tree, **kw: _rewrite_if(tree)).recurse(tree)
 
     return new
