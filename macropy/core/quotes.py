@@ -78,7 +78,6 @@ def ast_literal(tree):
 @macro_stub
 def ast_list(tree):
     """Splices a list of ASTs into the quoted code snippet as a List node."""
-     # TODO: another hard-coded call now assuming `ast.Name`
     return Literal(ast.Call(ast.Attribute(
         value=ast.Name(id='ast', ctx=ast.Load()),
         attr='List', ctx=ast.Load()), [], [ast.keyword("elts", tree)]))
