@@ -1,22 +1,25 @@
+# -*- coding: utf-8 -*-
+import os
 import unittest
 
 from sqlalchemy import create_engine, func
+
 from macropy.experimental.pinq import macros, sql, query, generate_schema
-import os
 
 
 engine = create_engine("sqlite://")
 
-for line in open(__file__ + "/../world.sql").read().split(";"):
+for line in open(os.path.join(os.path.dirname(__file__), 'world.sql')).read().split(";"):
     engine.execute(line.strip())
 db = generate_schema(engine)
+
 
 def compare_queries(query1, query2, post_process=lambda x: x):
     res1 = engine.execute(query1).fetchall()
     res2 = engine.execute(query2).fetchall()
     try:
         assert post_process(res1) == post_process(res2)
-    except Exception, e:
+    except Exception as e:
         print ("FAILURE")
         print (e)
         print (query1)
@@ -24,6 +27,7 @@ def compare_queries(query1, query2, post_process=lambda x: x):
         print (query2)
         print ("\n".join(map(str, post_process(res2))))
         raise (e)
+
 
 class Tests(unittest.TestCase):
 
@@ -170,7 +174,7 @@ class Tests(unittest.TestCase):
             if (
                 func.sum(w.population) for w in db.country
                 if w.continent == x.continent
-            ) > 100000000
+            ).as_scalar() > 100000000
         )]
         sql_results = engine.execute(query).fetchall()
         query_macro_results = query[(
@@ -178,10 +182,9 @@ class Tests(unittest.TestCase):
             if (
                 func.sum(w.population) for w in db.country
                 if w.continent == x.continent
-            ) > 100000000
+            ).as_scalar() > 100000000
         )]
         assert sql_results == query_macro_results
-
 
     def test_join(self):
         # number of cities in Asia
@@ -300,5 +303,3 @@ class Tests(unittest.TestCase):
                 .limit(10)
             ]
         )
-
-
