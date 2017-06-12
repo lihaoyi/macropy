@@ -78,8 +78,9 @@ setup(
         'js_snippets': ["selenium", "pjs"],
 
     },
-    install_requires=[
-        'six'
-    ],
-    classifiers=['Programming Language :: Python :: 2.7']
+    install_requires=[],
+    classifiers=[
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6'
+    ]
 )
