@@ -1,8 +1,9 @@
-from __future__ import absolute_import
-
+# -*- coding: utf-8 -*-
+import logging
 import macropy.activate
 import unittest
 
+logging.basicConfig(level=logging.INFO)
 
 def test_suite(suites=[], cases=[]):
     new_suites = [x.Tests for x in suites]
