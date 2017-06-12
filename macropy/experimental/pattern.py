@@ -28,8 +28,7 @@ def _vars_are_disjoint(var_names):
     return len(var_names)== len(set(var_names))
 
 
-class Matcher(object):
-    __metaclass__ = ABCMeta
+class Matcher(object, metaclass=ABCMeta):
 
     @abstractmethod
     def var_names(self):
