@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Implementation of the Quasiquotes macro.
 
 `u`, `name`, `ast_literal` and `ast_list` are the unquote delimiters, used to
@@ -17,8 +18,8 @@ macros = Macros()
 
 @walkers.Walker
 def unquote_search(tree, **kw):
-
-    res = check_annotated(tree)
+    "Get the values from the helper stubs."
+    res = check_annotated(tree) #  returns something if tree == 'foo[...]'
     if res:
         func, right = res
         for f in [u, name, ast_literal, ast_list]:

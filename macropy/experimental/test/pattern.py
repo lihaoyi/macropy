@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
+from ast import BinOp
 import unittest
 
 from macropy.experimental.pattern import (macros, _matching, switch, patterns,
     LiteralMatcher, TupleMatcher, PatternMatchException, NameMatcher,
     ListMatcher, PatternVarConflict, ClassMatcher, WildcardMatcher)
-from ast import BinOp
+
 
 class Foo(object):
     def __init__(self, x, y):

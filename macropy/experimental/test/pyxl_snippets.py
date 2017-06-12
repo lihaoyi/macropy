@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 from macropy.case_classes import macros, case
 from macropy.experimental.pyxl_strings import macros, p
 from macropy.tracing import macros, require

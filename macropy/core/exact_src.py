@@ -2,7 +2,7 @@
 """Logic related to lazily performing the computation necessary to finding
 the source extent of an AST.
 
-Exposed to each macro as an `exact_src` funciton."""
+Exposed to each macro as an `exact_src` function."""
 
 import ast
 import sys
@@ -27,7 +27,7 @@ def indexer(tree, collect, **kw):
         collect((tree.lineno, tree.col_offset))
     except (AttributeError, KeyError) as e:
         # If this handler gets executed it's because unparse() has
-        # failed (it's being uses as a poor man's syntax
+        # failed (it's being used as a poor man's syntax
         # checker). It's important to remember that unparse cannot
         # unparse *any* tree fragment. There are certain fragments,
         # (like an ast.Add without its parent ast.BinOp) that cannot

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from macropy.test import test_suite
 # Everything here but pyxl_snippets is commented out in Python 2.7.
 # pinq and tco are definitively broken.  I haven't tested

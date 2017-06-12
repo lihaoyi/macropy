@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
+import unittest
+
 from macropy.case_classes import macros, case, enum, enum_new
 from macropy.core.failure import MacroExpansionError
 from macropy.tracing import macros, show_expanded
-import unittest
 
 class Tests(unittest.TestCase):
 
