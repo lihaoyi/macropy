@@ -213,12 +213,10 @@ class Tests(unittest.TestCase):
                 raise e
 
         def decode(x):
-            x = x.decode('unicode-escape')
-            try:
-                return str(x)
-            except Exception as e:
-                print("PEG test failure", e, file=sys.stderr) # TODO
-                return x
+            # x is already a str, encode it to bytes and back
+            x =  x.encode().decode('unicode-escape')
+            return x
+
         escape_map = {
             '"': '"',
             '/': '/',
