@@ -1,15 +1,14 @@
-"""
-
-MacroPy is an implementation of Macros in the Python Programming Language.
-MacroPy provides a mechanism for user-defined functions (macros) to perform
-transformations on the abstract syntax tree(AST) of Python code at module
-import time. This is an easy way to modify the semantics of a python program
+"""MacroPy is an implementation of Macros in the Python Programming
+Language.  MacroPy provides a mechanism for user-defined functions
+(macros) to perform transformations on the abstract syntax tree(AST)
+of Python code at module import time. This is an easy way to modify
+the semantics of a python program
 
 Python like you've never seen before
 ------------------------------------
 
-MacroPy allows you to create constructs which are impossible to have in normal
-python code, such as:
+MacroPy allows you to create constructs which are impossible to have
+in normal python code, such as:
 
 Tracing
 ```````
@@ -52,9 +51,11 @@ Case Classes
     print p.y       #2
     print Point(1, 2) == Point(1, 2) # True
 
-And more! All this runs perfectly on vanilla Python 2.7 or PyPy 2.0. For more
-details, see the `GitHub page <https://github.com/lihaoyi/macropy#macropy>`_.
-or ask in the `Google Group <https://groups.google.com/forum/#!forum/macropy>`_.
+And more! All this runs perfectly on vanilla Python 3.5+ (an maybe on
+pypy, untested). For more details, see the `GitHub page
+<https://github.com/lihaoyi/macropy#macropy>`_.  or ask in the `Google
+Group <https://groups.google.com/forum/#!forum/macropy>`_.
+
 """
 
 
