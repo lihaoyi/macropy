@@ -12,13 +12,6 @@ from . import real_repr, walkers
 logger = logging.getLogger(__name__)
 
 
-# WARN: this was old code that it's not working anymore in py3 and
-# don't know if it's still needed.
-# # Monkey Patching pickle to pickle module objects properly
-# # import pickle
-# # pickle.Pickler.dispatch[type(pickle)] = pickle.Pickler.save_global
-
-
 class WrappedFunction(object):
     """Wraps a function which is meant to be handled (and removed) by
     macro expansion, and never called directly with square

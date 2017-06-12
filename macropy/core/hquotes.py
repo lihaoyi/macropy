@@ -4,6 +4,7 @@ scope rather than their expansion scope.
 """
 
 import ast
+import pickle
 import sys
 
 from .macros import (Macros, check_annotated, filters, injected_vars,
@@ -15,6 +16,13 @@ from .analysis import Scoped
 from . import ast_repr, Captured, Literal
 from .util import register
 from .walkers import Walker
+
+
+# Monkey Patching pickle to pickle module objects properly See if
+# there is a way to do a better job with the dispatch tables, in the
+# meantime the code in post_proc() will use non-accelerated
+# pickler/unpickler.
+pickle._Pickler.dispatch[type(pickle)] = pickle._Pickler.save_global
 
 
 macros = Macros()
@@ -38,7 +46,7 @@ def post_proc(tree, captured_registry, gen_sym, **kw):
 
     unpickle_name = gen_sym("unpickled")
     with q as pickle_import:
-        from pickle import loads as x
+        from pickle import _loads as x
 
     pickle_import[0].names[0].asname = unpickle_name
 
@@ -47,8 +55,11 @@ def post_proc(tree, captured_registry, gen_sym, **kw):
     syms = [ast.Name(id=sym) for val, sym in captured_registry]
     vals = [val for val, sym in captured_registry]
 
-    with q as stored:
-        ast_list[syms] = name[unpickle_name](u[pickle.dumps(vals)])
+    try:
+        with q as stored:
+            ast_list[syms] = name[unpickle_name](u[pickle._dumps(vals)])
+    except TypeError:
+        import pdb; pdb.set_trace()
 
     from .cleanup import ast_ctx_fixer
     stored = ast_ctx_fixer.recurse(stored)
