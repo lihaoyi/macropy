@@ -380,3 +380,6 @@ def patterns(tree, **kw):
         lambda tree, **kw: _rewrite_if(tree)).recurse(tree)
 
     return new
+
+
+macros.expose_unhygienic(ast)
