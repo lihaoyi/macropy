@@ -99,8 +99,11 @@ class MacroFinder(object):
             modules.append((importlib.import_module(mod), bind))
         new_tree = macropy.core.macros.expand_entire_ast(tree, source_code,
                                                          modules)
-        # print('Compiling', ast.dump(tree), ast.dump(new_tree), sep='\n')
-        return compile(tree, filename, "exec"), new_tree
+        try:
+            return compile(tree, filename, "exec"), new_tree
+        except:
+            logger.exception("Error while compiling file %s", filename)
+            raise
 
     def find_spec(self, fullname, path, target=None):
         spec = self._find_spec_nomacro(fullname, path, target)
