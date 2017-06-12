@@ -55,11 +55,8 @@ def post_proc(tree, captured_registry, gen_sym, **kw):
     syms = [ast.Name(id=sym) for val, sym in captured_registry]
     vals = [val for val, sym in captured_registry]
 
-    try:
-        with q as stored:
-            ast_list[syms] = name[unpickle_name](u[pickle._dumps(vals)])
-    except TypeError:
-        import pdb; pdb.set_trace()
+    with q as stored:
+        ast_list[syms] = name[unpickle_name](u[pickle._dumps(vals)])
 
     from .cleanup import ast_ctx_fixer
     stored = ast_ctx_fixer.recurse(stored)
