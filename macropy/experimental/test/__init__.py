@@ -9,10 +9,15 @@ from . import pattern
 # import pyxl_snippets
 # import tco
 
-Tests = test_suite(cases = [
-    # js_snippets,
-    pattern,
-    # pinq,
-    # pyxl_snippets,
-    # tco
-])
+
+cases = [pattern]
+
+try:
+    import sqlalchemy
+    from . import pinq
+    cases.append(pinq)
+except ImportError:
+    print('Excluding pinq tests')
+
+
+Tests = test_suite(cases = cases)
