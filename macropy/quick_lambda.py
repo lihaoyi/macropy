@@ -10,7 +10,7 @@ from .core.cleanup import ast_ctx_fixer
 from .core import ast_repr, Captured
 from .core.walkers import Walker
 
-macros = macropy.core.macros.Macros()
+macros = Macros()
 
 
 def _():
