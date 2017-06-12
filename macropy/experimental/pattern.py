@@ -361,7 +361,7 @@ def switch(tree, args, gen_sym, **kw):
     limited reach ensures less interference with existing code.
     """
     new_id = gen_sym()
-    for i in xrange(len(tree)):
+    for i in range(len(tree)):
         tree[i] = _rewrite_if(tree[i], new_id)
     tree = [ast.Assign([ast.Name(new_id, ast.Store())], args[0])] + tree
     return tree
