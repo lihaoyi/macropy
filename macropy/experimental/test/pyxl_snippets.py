@@ -94,6 +94,3 @@ class Tests(unittest.TestCase):
 
         with require:
             normalize(pyxl_blob.to_string()) == normalize(target_blob)
-
-
-
