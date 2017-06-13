@@ -4,17 +4,12 @@ language: python
 cache: pip
 python:
   - '2.7'
-  - '3.4'
-  - '3.5'
-  - '3.6'
-  - pypy-5.7.1
 
 install: pip install .[pinq,js_snippets]
 
 script: python run_tests.py
 matrix:
-  allow_failures:
-    - python: 3.4
-    - python: 3.5
-    - python: 3.6
+  include:
+    python: pypy-5.7.1
+    script: python --jit disable_unrolling=0
   fast_finish: true
