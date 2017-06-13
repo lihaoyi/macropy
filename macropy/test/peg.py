@@ -370,7 +370,7 @@ expected: '}'
             if i not in [18]: # skipping the "too much nesting" failure test
 
                 with self.assertRaises(ParseError):
-                    json_doc.parse(open(os.path.join(__file__, "/../peg_json/fail%s.json" % i)).read())
+                    json_doc.parse(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "peg_json/fail%s.json" % i)).read())
 
         for i in [1, 2, 3]:
-            test(json_exp, open(os.path.join(__file__, "/../peg_json/pass%s.json" % i)).read())
+            test(json_exp, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "peg_json/pass%s.json" % i)).read())
