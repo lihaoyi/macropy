@@ -10,6 +10,6 @@ install: pip install .[pinq,js_snippets]
 script: python run_tests.py
 matrix:
   include:
-    python: pypy-5.7.1
+  - python: pypy-5.7.1
     script: python --jit disable_unrolling=0
   fast_finish: true
