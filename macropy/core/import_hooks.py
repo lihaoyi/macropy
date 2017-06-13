@@ -98,7 +98,8 @@ class MacroFinder(object):
 
         tree = ast.parse(source_code)
         bindings = macropy.core.macros.detect_macros(tree, spec.name,
-                                                     spec.parent)
+                                                     spec.parent,
+                                                     spec.name)
 
         if not bindings:
             return None, None

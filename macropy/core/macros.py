@@ -303,7 +303,7 @@ def expand_entire_ast(tree, src, bindings):
     return tree
 
 
-def detect_macros(tree, from_fullname, from_package=None):
+def detect_macros(tree, from_fullname, from_package=None, from_module=None):
     """Look for macros imports within an AST, transforming them and extracting
     the list of macro modules."""
     bindings = []
@@ -320,7 +320,8 @@ def detect_macros(tree, from_fullname, from_package=None):
             if fullname == __name__:
                 continue
 
-            logger.info("Importing %r", fullname)
+            logger.info("Importing macros from %r into %r", fullname,
+                        from_module)
             mod = importlib.import_module(fullname)
 
             bindings.append((
