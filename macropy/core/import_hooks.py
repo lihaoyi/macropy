@@ -73,6 +73,12 @@ class MacroFinder(object):
         ``macropy.activate`` at index 0."""
         spec = None
         for finder in sys.meta_path[1:]:
+            # when testing with pytest, it installs a finder that for
+            # some yet unknown reasons makes macros expansion
+            # fail. For now it will just avoid using it and pass to
+            # the next one
+            if 'pytest' in finder.__module__:
+                continue
             if hasattr(finder, 'find_spec'):
                 spec = finder.find_spec(fullname, path, target=target)
             elif hasattr(finder, 'load_module'):
