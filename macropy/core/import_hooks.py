@@ -110,10 +110,9 @@ class MacroFinder(object):
 
     def find_spec(self, fullname, path, target=None):
         spec = self._find_spec_nomacro(fullname, path, target)
-        if spec is None:
-            return
-        if not (hasattr(spec.loader, 'get_source') and
+        if spec is None or not (hasattr(spec.loader, 'get_source') and
             callable(spec.loader.get_source)):
+            logging.debug('Failed finding spec for %s', fullname)
             return
         origin = spec.origin
         if origin == 'builtin':
