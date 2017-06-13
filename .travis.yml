@@ -9,7 +9,7 @@ python:
   - '3.6'
   - pypy-5.7.1
 
-install: pip install .[pyxl,pinq,js_snippets]
+install: pip install .[pinq,js_snippets]
 
 script: python run_tests.py
 matrix:
