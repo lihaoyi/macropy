@@ -188,12 +188,13 @@ class ClassMatcher(Matcher):
         pos_values = []
         kw_dict = {}
 
-# We don't get the argspec unless there are actually positional matchers
+        # We don't get the argspec unless there are actually positional matchers
         def genPosValues():
             arg_spec = inspect.getargspec(self.clazz.__init__)
             for arg in arg_spec.args:
                 if arg != 'self':
                     yield(getattr(matchee, arg, None))
+
         pos_values = genPosValues()
         for kw_key in kw_keys:
             if not hasattr(matchee, kw_key):
