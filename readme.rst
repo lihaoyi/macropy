@@ -1,8 +1,21 @@
 .. -*- coding: utf-8 -*-
 
-===============
- MacroPy 1.0.3
-===============
+================
+ MacroPy 1.0.4a
+================
+
+.. warning::
+
+   This is a customized version of the original `MacroPy`__
+   updated to work only with Python 3.5+. PyPy is untested.
+
+   As of now the original tests pass but some language features have
+   yet to be implemented.
+
+   What follows is an ongoing update of the original documentation and
+   therefore may be inaccurate.
+
+__ https://github.com/lihaoyi/macropy
 
 **MacroPy** is an implementation of `Syntactic Macros
 <http://tinyurl.com/cmlls8v>`_ in the `Python Programming Language
