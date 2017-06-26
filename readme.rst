@@ -4,6 +4,9 @@
  MacroPy 1.0.4a
 ================
 
+.. image:: https://travis-ci.org/azazel75/macropy.svg?branch=master
+  :target: https://travis-ci.org/azazel75/macropy
+
 .. warning::
 
    This is a customized version of the original `MacroPy`__
