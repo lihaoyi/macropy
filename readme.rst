@@ -1378,9 +1378,9 @@ name. Hence the above is equivalent to:
   value = ... | ('(', expr, ')') >> expr
 
 
-The ``expr`` on the left refers to the parser named ``expr`` in the `with
-peg:` block, while the ``expr`` on the right refers to the *results of
-the parser named ``expr`` in case of a successful parse*. The parser on
+The ``expr`` on the left refers to the parser named ``expr`` in the ``with
+peg:`` block, while the ``expr`` on the right refers to the *results of
+the parser named* ``expr`` *in case of a successful parse*. The parser on
 the left has to be outside any ``is`` expressions for it to be captured
 as above, and so in this line in the above parser:
 
@@ -1421,7 +1421,7 @@ difficult to write correctly and equally difficult to read. Using the
 
 Now, it is clear that we are only interested in the result of the two
 ``json_exp`` parsers. The ``>>`` operator allows us to use those, while
-the rest of the parse tree (`[`s, `,`s, etc.) are conveniently
+the rest of the parse tree (``[``, ``,``, etc.) are conveniently
 discarded. Of course, one could go a step further and us the
 ``rep_with`` method which is intended for exactly this purpose:
 
@@ -2816,7 +2816,7 @@ and wrap it in a lambda to give:
 
 
 Let's accomplish the first transform first: we need to replace all the
-``_``s with variables ``arg0``, ``arg1``, etc.. To do this, we need to
+``_`` with variables ``arg0``, ``arg1``, etc.. To do this, we need to
 recurse over the AST in order to search for the uses of ``_``. A simple
 attempt may be:
 
@@ -3715,7 +3715,7 @@ AST for inspection.
 
 Thin wrappers around `ast.parse <...>`_, these functions simplify the
 common case where you want to convert a code snippet into a list of
-``stmt``s or a single ``expr``.
+``stmt`` or a single ``expr``.
 
 ``unparse(tree)``
 ~~~~~~~~~~~~~~~~~
@@ -3864,11 +3864,10 @@ follows:
 
 
 In these cases, ``args`` contains a list of additional arguments, a
-length-1 list containing the AST for ``a``. Multiple arguments works as
-you would expect, although named arguments, ``*args* and ``**kwargs`` are
-not supported. This is used in `pattern matching
-<#pattern-matching>`_'s switch macro to indicate what value to switch
-on.
+length-1 list containing the AST for ``a``. Multiple arguments works
+as you would expect, although named arguments, ``*args`` and
+``**kwargs`` are not supported. This is used in `pattern matching`_'s
+switch macro to indicate what value to switch on.
 
 ``gen_sym``
 ~~~~~~~~~~~
@@ -4557,7 +4556,7 @@ expected, MacroPy special cases macros of the form:
   AssertionError("...")
 
 
-That is, ``AssertionError``s with a non-empty ``message``, to ignore the
+That is, ``AssertionError`` with a non-empty ``message``, to ignore the
 expansion-time stack trace and only provide the run-time stack trace
 when the exception is finally thrown. This means that the macro-writer
 can use statements like:
@@ -4726,13 +4725,13 @@ transform from the above code into:
 
 
 That's the extent of the macro! It just wraps the raw strings in
-``Raw``s, tuples in ``Seq``s, converts the ``a is b`` syntax into
-``a.bind_to("b")`` and wraps each assignement in a named, lazy parser to
-facilitate error reporting and to allow circular references between
-them. The rest, all the operators ``|`` ``//`` ``>>``, the ``.r`` syntax for
-regexes and ``.rep`` syntax for repetitions, that's all just implemented
-on the ``Raw`` objects using plain-old operator overloading and
-properties.
+``Raw``, tuples in ``Seq`` instances, converts the ``a is b`` syntax
+into ``a.bind_to("b")`` and wraps each assignement in a named, lazy
+parser to facilitate error reporting and to allow circular references
+between them. The rest, all the operators ``|`` ``//`` ``>>``, the
+``.r`` syntax for regexes and ``.rep`` syntax for repetitions, that's
+all just implemented on the ``Raw`` objects using plain-old operator
+overloading and properties.
 
 Why do this, instead of simply implementing the behavior of ``|``
 ``//`` and friends as macros? There are a few reasons
