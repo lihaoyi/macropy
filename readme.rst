@@ -4,7 +4,7 @@
  MacroPy 1.0.4a
 ================
 
-.. note::
+.. warning::
 
    This is a customized version of the original `MacroPy`__
    updated to work only with Python 3.5+. PyPy is untested.
