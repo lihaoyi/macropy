@@ -3697,7 +3697,7 @@ take:
 
 This map maps out how to convert from form to form:
 
-.. image:: docs/media/Transforms.png>
+.. image:: docs/media/Transforms.png
 
 Except for ``eval``, these are all functions defined in the
 `macropy/core/__init__.py <macropy/core/__init__.py>`_. For instance,
