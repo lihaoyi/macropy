@@ -1,0 +1,16 @@
+language: python
+python:
+  - '3.4'
+  - '3.5'
+  - '3.6'
+  - pypy3
+
+install: pip install .[pinq]
+
+script:
+  - |
+      if [[ "${TRAVIS_PYTHON_VERSION}" == "pypy"* ]]; then
+        python --jit disable_unrolling=0 run_tests.py
+      else
+        python run_tests.py
+      fi
