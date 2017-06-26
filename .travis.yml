@@ -1,9 +1,10 @@
 language: python
 python:
-  - '3.4'
   - '3.5'
   - '3.6'
-  - pypy3
+  # - '3.4'
+  # - pypy3
+
 
 install: pip install .[pinq]
 
