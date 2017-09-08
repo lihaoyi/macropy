@@ -72,8 +72,9 @@ Case Classes
 
 And more! All this runs perfectly on vanilla Python 3.5+ (an maybe on
 pypy, untested). For more details, see the `GitHub page
-<https://github.com/lihaoyi/macropy#macropy>`_.  or ask in the `Google
-Group <https://groups.google.com/forum/#!forum/macropy>`_.
+<https://github.com/azazel75/macropy#macropy>`_.  or ask in the
+`Gitter channel <https://gitter.im/lihaoyi/macropy>`_ or the `Google
+group <https://groups.google.com/forum/#!forum/macropy>`_ .
 
 """
 
