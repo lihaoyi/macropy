@@ -176,6 +176,7 @@ class ClassMatcher(Matcher):
                 [m.var_names() for m in positionalMatchers +
                  list(kwMatchers.values())])):
                 raise PatternVarConflict()
+
     def var_names(self):
         matchers = self.positionalMatchers + list(self.kwMatchers.values())
         return (util.flatten([matcher.var_names()
@@ -360,6 +361,7 @@ def switch(tree, args, gen_sym, **kw):
     Pattern matches elsewhere are ignored.  The advantage of this is the
     limited reach ensures less interference with existing code.
     """
+
     new_id = gen_sym()
     for i in range(len(tree)):
         tree[i] = _rewrite_if(tree[i], new_id)
