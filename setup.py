@@ -80,11 +80,12 @@ group <https://groups.google.com/forum/#!forum/macropy>`_ .
 
 from pathlib import Path
 from setuptools import find_packages, setup
-from . import __version__
+from macropy import __version__
 
 here = Path(__file__).absolute().parent
 with (here / 'CHANGES.rst').open(encoding='utf-8') as f:
     CHANGES = f.read()
+
 
 setup(
     name='macropy3',
