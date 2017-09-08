@@ -23,5 +23,5 @@ def console():
 
 from .core import exporters
 
-__version__ = "1.0.4.dev1"
+__version__ = "1.0.4.dev2"
 exporter = exporters.NullExporter()

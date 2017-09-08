@@ -1,0 +1,2 @@
+exclude .git .travis.yml
+include *.cfg *.py *.rst *.txt
