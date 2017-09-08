@@ -4,7 +4,8 @@ import unittest
 
 from macropy.experimental.pattern import (macros, _matching, switch, patterns,
     LiteralMatcher, TupleMatcher, PatternMatchException, NameMatcher,
-    ListMatcher, PatternVarConflict, ClassMatcher, WildcardMatcher)
+    ListMatcher, ParallelMatcher, PatternVarConflict, ClassMatcher,
+    WildcardMatcher)
 
 
 class Foo(object):
@@ -188,3 +189,44 @@ class Tests(unittest.TestCase):
         self.assertEquals(3, x)
         self.assertEquals(4, op)
         self.assertEquals(5, y)
+
+    def test_unapply_matching(self):
+        class Even:
+            @classmethod
+            def __unapply__(clazz, val, kw_args):
+                if val % 2 != 0:
+                    raise PatternMatchException()
+                return ([], {})
+
+        class Twice:
+            @classmethod
+            def __unapply__(clazz, val, kw_args):
+                if val % 2 != 0:
+                    raise PatternMatchException()
+                return ([val / 2], {})
+
+        with patterns:
+            if Even() << 4:
+                Twice(n) << 4
+                self.assertEquals(2, n)
+            else:
+                self.assertTrue(False)
+
+    def test_parallel_matching(self):
+        with _matching:
+            (x&(a,b)) << (4, 5)
+            self.assertEquals((4, 5), x)
+            self.assertEquals(4, a)
+            self.assertEquals(5, b)
+
+    # this doesn't work yet
+    # def test_wildcard_matching_multiple(self):
+    #     with _matching:
+    #         (_, _,  x) << (3, 4, 5)
+    #         self.assertEquals(5, x)
+
+    def keyword_only_matching(self):
+        with _matching:
+            Screwy(x=x, y=y) << Screwy(4, 5)
+            self.assertEquals(4, x)
+            self.assertEquals(5, y)
