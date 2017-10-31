@@ -2721,21 +2721,21 @@ dynamically. Quasiquotes let us turn the above code into:
 
   # macro_module.py
   from macropy.core.macros import *
-  from macropy.core.quotes import macros, q, ast
+  from macropy.core.quotes import macros, q, ast_literal
 
   macros = Macros()
 
   @macros.expr
   def expand(tree, **kw):
-      return q[lambda x: x * ast[tree] + 10]
+      return q[lambda x: x * ast_literal[tree] + 10]
 
 
 the ``q[...]`` syntax means that the section following it is quoted as
-an AST, while the unquote ``ast[...]`` syntax means to place the *value*
-of ``tree`` into that part of the quoted AST, rather than simply the
-node ``Name("tree")``. Running ``run.py``, this also prints ``25``. See
-[docs/examples/quasiquote <docs/examples/quasiquote>`_ for the
-self-contained code for this example.
+an AST, while the unquote ``ast_literal[...]`` syntax means to place
+the *value* of ``tree`` into that part of the quoted AST, rather than
+simply the node ``Name("tree")``. Running ``run.py``, this also prints
+``25``. See [docs/examples/quasiquote <docs/examples/quasiquote>`_ for
+the self-contained code for this example.
 
 Another unquote ``u`` allow us to dynamically include the value ``10``
 in the AST at run time:
@@ -2744,14 +2744,14 @@ in the AST at run time:
 
   # macro_module.py
   from macropy.core.macros import *
-  from macropy.core.quotes import macros, q, ast, u
+  from macropy.core.quotes import macros, q, ast_literal, u
 
   macros = Macros()
 
   @macros.expr
   def expand(tree, **kw):
       addition = 10
-      return q[lambda x: x * ast[tree] + u[addition]]
+      return q[lambda x: x * ast_literal[tree] + u[addition]]
 
 
 This will insert the a literal representing the value of ``addition``
@@ -2760,8 +2760,8 @@ prints 25. For a more detailed description of how quoting and
 unquoting works, and what more you can do with it, check out the
 documentation for [Quaasiquotes <#quasiquotes>`_.
 
-Apart from using the ``u`` and ``ast`` unquotes to put things into the
-AST, good old fashioned assignment works too:
+Apart from using the ``u`` and ``ast_literal`` unquotes to put things
+into the AST, good old fashioned assignment works too:
 
 .. code:: python
 
@@ -2956,7 +2956,7 @@ everything in a ``lambda``, set the arguments properly:
 .. code:: python
 
   from macropy.core.macros import *
-  from macropy.core.quotes import macros, q, u
+  from macropy.core.quotes import macros, q, u, ast_literal
 
   _ = None  # makes IDE happy
 
@@ -2975,7 +2975,7 @@ everything in a ``lambda``, set the arguments properly:
 
       tree, used_names = underscore_search.recurse_collect(tree)
 
-      new_tree = q[lambda: ast[tree]]
+      new_tree = q[lambda: ast_literal[tree]]
       new_tree.args.args = [Name(id = x) for x in used_names]
       print unparse(new_tree) # (lambda arg0, arg1: (arg0 + (1 * arg1)))
       return new_tree
@@ -3119,13 +3119,13 @@ operate. Consider a simple ``log`` macro:
 
   # macro_module.py
   from macropy.core.macros import *
-  from macropy.core.quotes import macros, q, u
+  from macropy.core.quotes import macros, q, u, ast_literal
 
   macros = Macros()
 
   @macros.expr
   def log(tree, exact_src, **kw):
-      new_tree = q[wrap(u[exact_src(tree)], ast[tree])]
+      new_tree = q[wrap(u[exact_src(tree)], ast_literal[tree])]
       return new_tree
 
   def wrap(txt, x):
@@ -3215,13 +3215,14 @@ favor of the latter two.
 
   # macro_module.py
   from macropy.core.macros import *
+  from macropy.core.quotes import macros, ast_literal
   from macropy.core.hquotes import macros, hq, u
 
   macros = Macros()
 
   @macros.expr
   def log(tree, exact_src, **kw):
-      new_tree = hq[wrap(u[exact_src(tree)], ast[tree])]
+      new_tree = hq[wrap(u[exact_src(tree)], ast_literal[tree])]
       return new_tree
 
   def wrap(txt, x):
@@ -3291,12 +3292,13 @@ Breaking Hygiene
 ~~~~~~~~~~~~~~~~
 
 By default, all top-level names in the ``hq[...]`` expression (this
-excludes things like the contents of ``u[]`` ``name[]`` ``ast[]`` unquotes)
-are hygienic, and are bound to the variable of that name at the macro
-definition point. This means that if you want a name to bind to some
-variable *at the macro expansion point*, you can always manually break
-hygiene by using the ``name[]`` or ``ast[]`` unquotes. The ``hq`` macro also
-provides an ``unhygienic[...]`` unquote just to streamline this common
+excludes things like the contents of ``u[]`` ``name[]``
+``ast_literal[]`` unquotes) are hygienic, and are bound to the
+variable of that name at the macro definition point. This means that
+if you want a name to bind to some variable *at the macro expansion
+point*, you can always manually break hygiene by using the ``name[]``
+or ``ast_literal[]`` unquotes. The ``hq`` macro also provides an
+``unhygienic[...]`` unquote just to streamline this common
 requirement:
 
 .. code:: python
@@ -3308,14 +3310,14 @@ requirement:
           # all these do the same thing, and will refer to the variable named
           # 'v' whereever the macro is expanded
           return name["v"]
-          return ast[Name(id="v")]
+          return ast_literal[Name(id="v")]
           return unhygienic[v]
       return new_tree
 
 
 Although all these do the same thing, you should prefer to use
 ``unhygienic[...]`` as it makes the intention clearer than using
-``name[...]`` or ``ast[...]`` with hard-coded strings.
+``name[...]`` or ``ast_literal[...]`` with hard-coded strings.
 
 ``expose_unhygienic``
 ~~~~~~~~~~~~~~~~~~~~~
@@ -3326,13 +3328,14 @@ Going back to the ``log`` example:
 
   # macro_module.py
   from macropy.core.macros import *
+  from macropy.core.quotes import macros, ast_literal
   from macropy.core.hquotes import macros, hq, u, unhygienic
 
   macros = Macros()
 
   @macros.expr
   def log(tree, exact_src, **kw):
-      new_tree = hq[wrap(unhygienic[log_func], u[exact_src(tree)], ast[tree])]
+      new_tree = hq[wrap(unhygienic[log_func], u[exact_src(tree)], ast_literal[tree])]
       return new_tree
 
 
@@ -3947,7 +3950,7 @@ captured AST looks like after expansion:
   @macros.expr
   def show_expanded(tree, expand_macros, **kw):
       expanded_tree = expand_macros(tree)
-      new_tree = q[wrap_simple(log, u[unparse(expanded_tree)], ast[expanded_tree])]
+      new_tree = q[wrap_simple(log, u[unparse(expanded_tree)], ast_literal[expanded_tree])]
       return new_tree
 
 
@@ -4026,7 +4029,7 @@ Other ASTs
 .. code:: python
 
   a = q[1 + 2]
-  b = q[ast[a] + 3]
+  b = q[ast_literal[a] + 3]
   print ast.dump(b)
   #BinOp(BinOp(Num(1), Add(), Num(2)), Add(), Num(3))
 
@@ -4327,13 +4330,14 @@ point. Thus, in the following ``log`` macro:
 
   # macro_module.py
   from macropy.core.macros import *
+  from macropy.core.quotes import macros, ast_literal
   from macropy.core.hquotes import macros, hq, u
 
   macros = Macros()
 
   @macros.expr
   def log(tree, exact_src, **kw):
-      new_tree = hq[wrap(u[exact_src(tree)], ast[tree])]
+      new_tree = hq[wrap(u[exact_src(tree)], ast_literal[tree])]
       return new_tree
 
   def wrap(txt, x):
@@ -4609,7 +4613,7 @@ macro can then do what it needs to do. The implementation of the
   @macros.expr
   def show_expanded(tree, expand_macros,  **kw):
       expanded_tree = expand_macros(tree)
-      new_tree = hq[wrap_simple(unhygienic[log], u[unparse(expanded_tree)], ast[expanded_tree])]
+      new_tree = hq[wrap_simple(unhygienic[log], u[unparse(expanded_tree)], ast_literal[expanded_tree])]
       return new_tree
 
 
