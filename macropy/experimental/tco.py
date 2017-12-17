@@ -77,7 +77,7 @@ def tco(tree, **kw):
                     args=args, 
                     starargs=starargs, 
                     kwargs=kwargs)):
-                if starargs:
+                if starargs and sys.version_info < (3, 5):
                     with hq as code:
                     # get rid of starargs
                         return (TcoCall,
@@ -104,7 +104,7 @@ def tco(tree, **kw):
                     args=args,
                     starargs=starargs,
                     kwargs=kwargs)):
-                if starargs:
+                if starargs and sys.version_info < (3, 5):
                     with hq as code:
                     # get rid of starargs
                         return (TcoIgnore,
