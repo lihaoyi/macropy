@@ -44,13 +44,19 @@ def q(tree, target, **kw):
 def u(tree):
     """Splices a value into the quoted code snippet, converting it into an AST
     via ast_repr"""
-    return Literal(Call(Name(id="ast_repr"), [tree], [], None, None))
+    if sys.version_info >= (3, 5):
+        return Literal(Call(Name(id="ast_repr"), [tree], []))
+    else:
+        return Literal(Call(Name(id="ast_repr"), [tree], [], None, None))
 
 
 @macro_stub
 def name(tree):
     "Splices a string value into the quoted code snippet as a Name"
-    return Literal(Call(Name(id="Name"), [], [keyword("id", tree)], None, None))
+    if sys.version_info >= (3, 5):
+        return Literal(Call(Name(id="Name"), [], [keyword("id", tree)]))
+    else:
+        return Literal(Call(Name(id="Name"), [], [keyword("id", tree)], None, None))
 
 
 @macro_stub
@@ -62,5 +68,8 @@ def ast(tree):
 @macro_stub
 def ast_list(tree):
     """Splices a list of ASTs into the quoted code snippet as a List node"""
-    return Literal(Call(Name(id="List"), [], [keyword("elts", tree)], None, None))
+    if sys.version_info >= (3, 5):
+        return Literal(Call(Name(id="List"), [], [keyword("elts", tree)]))
+    else:
+        return Literal(Call(Name(id="List"), [], [keyword("elts", tree)], None, None))
 

@@ -189,7 +189,7 @@ with a as b:
         self.convert_test("\na.attr") # Attribute
         self.convert_test("""
 f()
-f(a, k=8, e=9, *b, **c)""") # Call
+f(a, *b, k=8, e=9, **c)""") # Call
         #self.convert_test("\n...") # Ellipsis
         self.convert_test("""
 a[1]

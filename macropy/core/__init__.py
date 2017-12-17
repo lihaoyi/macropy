@@ -56,19 +56,31 @@ def ast_repr(x):
     elif type(x) is set:             return ast.Set(elts=list(map(ast_repr, x)))
     elif type(x) is Literal:         return x.body
     elif type(x) is Captured:
-        return ast.Call(
-            ast.Name(id="Captured"),
-            [x.val, ast_repr(x.name)], [], None, None
-        )
+        if sys.version_info >= (3, 5):
+            return ast.Call(
+                ast.Name(id="Captured"),
+                [x.val, ast_repr(x.name)], []
+            )
+        else:
+            return ast.Call(
+                ast.Name(id="Captured"),
+                [x.val, ast_repr(x.name)], [], None, None
+            )
     elif type(x) in (bool, type(None)):
         if sys.version_info >= (3, 4):  return ast.NameConstant(value=x)
         else:                           return ast.Name(id=str(x))
     elif isinstance(x, ast.AST):
         fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
-        return ast.Call(
-            ast.Name(id=x.__class__.__name__),
-            [], fields, None, None
-        )
+        if sys.version_info >= (3, 5):
+            return ast.Call(
+                ast.Name(id=x.__class__.__name__),
+                [], fields
+            )
+        else:
+            return ast.Call(
+                ast.Name(id=x.__class__.__name__),
+                [], fields, None, None
+            )
     raise Exception("Don't know how to ast_repr this: ", x)
 
 def parse_expr(x):
@@ -237,7 +249,7 @@ if PY3:
         With:       lambda tree, i: tabs(i) + "with " + jmap(", ", lambda x: rec(x,i), tree.items) + ":" + 
                                     rec(tree.body, i+1),
         Bytes:      lambda tree, i: repr(tree.s),
-        Starred:    lambda tree, i: "*" + rec(tree.value),
+        Starred:    lambda tree, i: "*" + rec(tree.value, i),
         arg:        lambda tree, i: tree.arg + mix(":", tree.annotation),
         withitem:   lambda tree, i: rec(tree.context_expr, i) + mix(" as ", rec(tree.optional_vars, i)),
         arguments:  lambda tree, i: ", ".join(
@@ -253,6 +265,22 @@ if PY3:
     })
     if sys.version_info >= (3, 4):
         trec[NameConstant] = lambda tree, i: str(tree.value)
+
+    if sys.version_info >= (3, 5):
+        trec[ClassDef] = (lambda tree, i: "\n" + "".join(tabs(i) + "@" +
+                            rec(dec, i) for dec in tree.decorator_list) +
+                            tabs(i) + "class " + tree.name +
+                            mix("(", ", ".join(
+                                [rec(t, i) for t in tree.bases + tree.keywords]
+                            ), ")") + ":" + rec(tree.body, i+1))
+
+        trec[Call] = (lambda tree, i: rec(tree.func, i) + "(" +
+                                    ", ".join(
+                                        [rec(t, i) for t in tree.args] +
+                                        [rec(t, i) if t.arg is not None else "**" + rec(t.value, i) for t in tree.keywords]
+                                    ) + ")")
+
+
 else:
     trec.update({
         Exec:       lambda tree, i: tabs(i) + "exec " + rec(tree.body, i) +
