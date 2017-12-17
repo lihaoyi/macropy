@@ -11,6 +11,7 @@ from six import PY3
 if PY3:
     from importlib.machinery import PathFinder
     from types import ModuleType
+    import importlib.util
 
 
 class _MacroLoader(object):
@@ -79,6 +80,13 @@ it finds some."""
             file.close()
             file_path = file.name
         return source_code, file_path
+
+    def find_spec(self, module_name, package_path, target=None):
+        loader = self.find_module(module_name, package_path)
+        if loader:
+            return importlib.util.spec_from_loader(module_name, loader)
+        else:
+            return None
 
     def find_module(self, module_name, package_path):
         try:
