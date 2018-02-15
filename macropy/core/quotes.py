@@ -39,7 +39,7 @@ def q(tree, **kw):
     return tree
 
 
-@macros.block
+@macros.block  # noqa: F811
 def q(tree, target, **kw):
     """Quasiquote macro, used to lift sections of code into their AST
     representation which can be manipulated at runtime. Used together with
