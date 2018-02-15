@@ -35,6 +35,7 @@ from . import util
 __all__ = ['Literal', 'Captured', 'ast_repr', 'parse_expr', 'parse_stmt',
            'real_repr', 'unparse']
 
+
 class Literal(object):
     """Used to wrap sections of an AST which must remain intact when
     `ast_repr`ed or `real_repr`ed."""
@@ -135,6 +136,7 @@ boolops = {
     ast.And: 'and',     ast.Or: 'or'
 }
 
+
 def else_rec(tree, i):
     if not tree:
         return ""
@@ -144,9 +146,8 @@ def else_rec(tree, i):
     return tabs(i) + "else:" + rec(tree, i+1)
 
 
-
 trec = {
-    #Misc
+    # Misc
     type(None):     lambda tree, i: "",
     Literal:        lambda tree, i: "$Literal(%s)" % rec(tree.body, i),
     Captured:       lambda tree, i: "$Captured(%s)" % tree.name,

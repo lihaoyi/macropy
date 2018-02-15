@@ -1,6 +1,8 @@
-"""This is the root directory of the project, and directly contains a bunch of
-stable, useful and well-tested macros. It also sets up the import hooks that are
-required for macros to run properly"""
+# -*- coding: utf-8 -*-
+"""This is the root directory of the project, and directly contains a
+bunch of stable, useful and well-tested macros. It also sets up the
+import hooks that are required for macros to run properly.
+"""
 
 
 def activate():

@@ -68,7 +68,7 @@ class Macros(object):
 
     class Registry(object):
 
-        def __init__(self, wrap = lambda x: x):
+        def __init__(self, wrap=lambda x: x):
             self.registry = {}
             self.wrap = wrap
 
@@ -95,6 +95,7 @@ injected_vars = []      # functions to inject values throughout each
                         # files macros
 filters = []            # functions to call on every macro-expanded snippet
 post_processing = []    # functions to call on every macro-expanded file
+
 
 def expand_entire_ast(tree, src, bindings):
 
