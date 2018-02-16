@@ -280,49 +280,55 @@ def _is_pattern_match_expr(tree):
             isinstance(tree.op, ast.LShift))
 
 
+@Walker
+def _matching_walker(tree, gen_sym, **kw):
+    if _is_pattern_match_stmt(tree):
+        modified = set()
+        matcher = build_matcher(tree.value.left, modified)
+        temp = gen_sym()
+        # lol random names for hax
+        with hq as assignment:
+            name[temp] = ast_literal[matcher]
+
+        statements = [assignment, ast.Expr(hq[name[temp]._match_value(
+            ast_literal[tree.value.right])])]
+
+        for var_name in modified:
+            statements.append(ast.Assign(
+                [ast.Name(var_name, ast.Store())],
+                hq[name[temp].get_var(u[var_name])]))
+
+        return statements
+    else:
+        return tree
+
+
 @macros.block
 def _matching(tree, gen_sym, **kw):
     """
     This macro will enable non-refutable pattern matching.  If a pattern match
     fails, an exception will be thrown.
     """
-    @Walker
-    def func(tree, **kw):
-        if _is_pattern_match_stmt(tree):
-            modified = set()
-            matcher = build_matcher(tree.value.left, modified)
-            temp = gen_sym()
-            # lol random names for hax
-            with hq as assignment:
-                name[temp] = ast_literal[matcher]
-
-            statements = [assignment, ast.Expr(hq[name[temp]._match_value(
-                ast_literal[tree.value.right])])]
-
-            for var_name in modified:
-                statements.append(ast.Assign([ast.Name(var_name, ast.Store())],
-                                        hq[name[temp].get_var(u[var_name])]))
-
-            return statements
-        else:
-            return tree
-
-    func.recurse(tree)
+    _matching_walker.recurse(tree, gen_sym=gen_sym)
     return [tree]
 
 
-def _rewrite_if(tree, var_name=None, **kw_args):
+def _rewrite_if(tree, var_name=None, gen_sym=None, **kw_args):
     # TODO refactor into a _rewrite_switch and a _rewrite_if
     """
-    Rewrite if statements to treat pattern matches as boolean expressions.
+    Rewrite if statements to treat pattern matches as boolean
+    expressions.
 
-    Recall that normally a pattern match is a statement which will throw a
-    PatternMatchException if the match fails.  We can therefore use try-blocks
-    to produce the desired branching behavior.
+    Recall that normally a pattern match is a statement which will
+    throw a PatternMatchException if the match fails.  We can
+    therefore use try-blocks to produce the desired branching
+    behavior.
 
-    var_name is an optional parameter used for rewriting switch statements.  If
-    present, it will transform predicates which are expressions into pattern
-    matches.
+    var_name is an optional parameter used for rewriting switch
+    statements.
+
+    If present, it will transform predicates which are expressions
+    into pattern matches.
     """
 
     # with q as rewritten:
@@ -346,14 +352,14 @@ def _rewrite_if(tree, var_name=None, **kw_args):
     handler = ast.ExceptHandler(hq[PatternMatchException], None, tree.orelse)
     try_stmt = ast.Try(tree.body, [handler], [], [])
 
-    macroed_match = ast.With([ast.withitem(
-        ast.Name('_matching', ast.Load()), None)],
-                             [ast.Expr(tree.test)])
-    try_stmt.body = [macroed_match] + try_stmt.body
+    match = [ast.Expr(tree.test)]
 
     if len(handler.body) == 1: # (== tree.orelse)
+    _matching_walker.recurse(match, gen_sym=gen_sym)
+    try_stmt.body = match + try_stmt.body
+
         # Might be an elif
-        handler.body = [_rewrite_if(handler.body[0], var_name)]
+        handler.body = [_rewrite_if(handler.body[0], var_name, gen_sym)]
     elif not handler.body:
         handler.body = [ast.Pass()]
 
@@ -372,25 +378,25 @@ def switch(tree, args, gen_sym, **kw):
 
     new_id = gen_sym()
     for i in range(len(tree)):
-        tree[i] = _rewrite_if(tree[i], new_id)
+        tree[i] = _rewrite_if(tree[i], new_id, gen_sym)
     tree = [ast.Assign([ast.Name(new_id, ast.Store())], args[0])] + tree
     return tree
 
 
 @macros.block
-def patterns(tree, **kw):
+def patterns(tree, gen_sym, **kw):
     """
     This enables patterns everywhere!  NB if you use this macro, you will not be
     able to use real left shifts anywhere.
     """
-    with q as new:
-        with _matching:
-            None
 
-    new[0].body = Walker(
-        lambda tree, **kw: _rewrite_if(tree)).recurse(tree)
+    new_tree = Walker(
+        lambda tree, gen_sym, **kw: _rewrite_if(tree, gen_sym=gen_sym)
+    ).recurse(tree, gen_sym=gen_sym)
 
-    return new
+    new_tree = _matching_walker.recurse(new_tree, gen_sym=gen_sym)
+
+    return new_tree
 
 
 macros.expose_unhygienic(ast)
