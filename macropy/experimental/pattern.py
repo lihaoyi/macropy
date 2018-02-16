@@ -11,7 +11,7 @@ from ..core.quotes import macros, q
 from ..core.hquotes import macros, hq
 
 
-macros = Macros()
+macros = Macros()  # noqa F811
 
 
 class PatternMatchException(Exception):

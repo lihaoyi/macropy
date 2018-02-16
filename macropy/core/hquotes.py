@@ -25,7 +25,7 @@ from .walkers import Walker
 pickle._Pickler.dispatch[type(pickle)] = pickle._Pickler.save_global
 
 
-macros = Macros()
+macros = Macros()  # noqa F811
 
 
 @macro_stub
@@ -46,7 +46,7 @@ def post_proc(tree, captured_registry, gen_sym, **kw):
 
     unpickle_name = gen_sym("unpickled")
     with q as pickle_import:
-        from pickle import _loads as x
+        from pickle import _loads as x  # noqa: F401
 
     pickle_import[0].names[0].asname = unpickle_name
 
@@ -95,7 +95,7 @@ def hq(tree, target, **kw):
     return [ast.Assign([target], tree)]
 
 
-@macros.expr
+@macros.expr  # noqa: F811
 def hq(tree, **kw):
     """Hygienic Quasiquote macro, used to quote sections of code while
     ensuring that names within the quoted code will refer to the value
@@ -118,7 +118,7 @@ def hq(tree, **kw):
 @Walker
 def hygienator(tree, stop, scope, **kw):
     if (type(tree) is ast.Name and type(tree.ctx) is ast.Load and
-        tree.id not in scope.keys()):
+        tree.id not in scope.keys()):  # noqa E129
         stop()
         return Captured(tree, tree.id)
 

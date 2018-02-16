@@ -107,7 +107,7 @@ class Walker(object):
         with any values which were collected along with way."""
 
         if (isinstance(tree, ast.AST) or type(tree) is Literal or
-            type(tree) is Captured):
+            type(tree) is Captured):  # noqa: #E129
             aggregates = []
             stop_now = [False]
 

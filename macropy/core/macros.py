@@ -280,7 +280,7 @@ def expand_entire_ast(tree, src, bindings):
     preamble = None
     if isinstance(tree, ast.Module) and tree.body:
         if (isinstance(tree.body[0], ast.ImportFrom) and
-            tree.body[0].module == '__future__'):
+            tree.body[0].module == '__future__'):  # noqa: E129
             preamble = [tree.body.pop(0)]
         elif (len(tree.body) > 1 and isinstance(tree.body[0], ast.Expr) and
               isinstance(tree.body[1], ast.ImportFrom) and
