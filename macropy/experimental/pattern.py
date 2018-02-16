@@ -238,12 +238,16 @@ def build_matcher(tree, modified):
         sub_matchers = []
         for child in tree.elts:
             sub_matchers.append(build_matcher(child, modified))
-        return ast.Call(ast.Name('ListMatcher', ast.Load()), sub_matchers, [])
+        res = hq[ListMatcher()]
+        res.args = sub_matchers
+        return res
     if isinstance(tree, ast.Tuple):
         sub_matchers = []
         for child in tree.elts:
             sub_matchers.append(build_matcher(child, modified))
-        return ast.Call(ast.Name('TupleMatcher', ast.Load()), sub_matchers, [])
+        res = hq[TupleMatcher()]
+        res.args = sub_matchers
+        return res
     if isinstance(tree, ast.Call):
         sub_matchers = []
         for child in tree.args:
@@ -253,13 +257,15 @@ def build_matcher(tree, modified):
         for kw in tree.keywords:
             kw_matchers.append(
                     ast.keyword(kw.arg, build_matcher(kw.value, modified)))
-        return ast.Call(ast.Name('ClassMatcher', ast.Load()), [tree.func,
-            positional_matchers], kw_matchers)
+        res = hq[ClassMatcher()]
+        res.args, res.keywords = [tree.func, positional_matchers], kw_matchers
+        return res
     if (isinstance(tree, ast.BinOp) and isinstance(tree.op, ast.BitAnd)):
         sub1 = build_matcher(tree.left, modified)
         sub2 = build_matcher(tree.right, modified)
-        return ast.Call(ast.Name('ParallelMatcher', ast.Load()), [sub1, sub2],
-                        [])
+        res = hq[ParallelMatcher()]
+        res.args = [sub1, sub2]
+        return res
 
     raise Exception("Unrecognized tree " + repr(tree))
 

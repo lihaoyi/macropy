@@ -4,8 +4,7 @@ import unittest
 
 from macropy.experimental.pattern import (macros, _matching, switch, patterns,
     LiteralMatcher, TupleMatcher, PatternMatchException, NameMatcher,
-    ListMatcher, ParallelMatcher, PatternVarConflict, ClassMatcher,
-    WildcardMatcher)
+    ListMatcher, PatternVarConflict, ClassMatcher)
 
 
 class Foo(object):
