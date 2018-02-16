@@ -3,12 +3,12 @@ from abc import ABCMeta, abstractmethod
 import ast
 import inspect
 
-from ..core import ast_repr, Captured, util
+from ..core import util
 from ..core.macros import Macros
 from ..core.walkers import Walker
 
-from ..core.quotes import macros, q
-from ..core.hquotes import macros, hq
+from ..core.quotes import macros, q, u, ast_literal, name
+from ..core.hquotes import macros, hq  # noqa F811
 
 
 macros = Macros()  # noqa F811

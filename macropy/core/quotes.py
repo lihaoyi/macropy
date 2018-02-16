@@ -6,7 +6,6 @@ interpolate things into a quoted section.
 """
 
 import ast
-import sys
 
 from . import ast_repr, Literal
 from .macros import Macros, check_annotated, macro_stub

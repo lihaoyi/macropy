@@ -5,12 +5,11 @@ scope rather than their expansion scope.
 
 import ast
 import pickle
-import sys
 
 from .macros import (Macros, check_annotated, filters, injected_vars,
                      macro_stub, post_processing)
 
-from .quotes import macros, q, unquote_search, u, ast_list, name
+from .quotes import macros, q, unquote_search, u, ast_list, name, ast_literal
 from .analysis import Scoped
 
 from . import ast_repr, Captured, Literal
