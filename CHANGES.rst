@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.0.4.dev3 (unreleased)
+-----------------------
+
+- Re-enable the ``SaveExporter()`` class.
+
+- Fix some issues with pattern matching module requiring non obvious
+  imports from user's side.
+
+
 1.0.4.dev2 (2017-09-08)
 -----------------------
 
