@@ -345,7 +345,7 @@ def _rewrite_if(tree, var_name=None, gen_sym=None, **kw_args):
     if var_name:
         tree.test = ast.BinOp(tree.test, ast.LShift(),
                               ast.Name(var_name, ast.Load()))
-    elif not (isinstance(tree.test, ast.BinOp) and \
+    elif not (isinstance(tree.test, ast.BinOp) and
               isinstance(tree.test.op, ast.LShift)):
         return tree
 
@@ -354,10 +354,10 @@ def _rewrite_if(tree, var_name=None, gen_sym=None, **kw_args):
 
     match = [ast.Expr(tree.test)]
 
-    if len(handler.body) == 1: # (== tree.orelse)
     _matching_walker.recurse(match, gen_sym=gen_sym)
     try_stmt.body = match + try_stmt.body
 
+    if len(handler.body) == 1:  # (== tree.orelse)
         # Might be an elif
         handler.body = [_rewrite_if(handler.body[0], var_name, gen_sym)]
     elif not handler.body:
@@ -386,8 +386,8 @@ def switch(tree, args, gen_sym, **kw):
 @macros.block
 def patterns(tree, gen_sym, **kw):
     """
-    This enables patterns everywhere!  NB if you use this macro, you will not be
-    able to use real left shifts anywhere.
+    This enables patterns everywhere!  NB if you use this macro, you
+    will not be able to use real left shifts anywhere.
     """
 
     new_tree = Walker(
