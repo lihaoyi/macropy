@@ -48,7 +48,7 @@ class MacroLoader:
 
     def export(self):
         try:
-            macropy.core.exporters.NullExporter().export_transformed(
+            macropy.exporter.export_transformed(
                 self.code, self.tree, self.nomacro_spec.name,
                 self.nomacro_spec.origin)
         except Exception as e:

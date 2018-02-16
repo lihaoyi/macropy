@@ -3,11 +3,15 @@
 re-serializing it."""
 
 import imp
+import logging
 import marshal
 import os
 import shutil
 
 from . import unparse
+
+
+logger = logging.getLogger(__name__)
 
 
 def wr_long(f, x):
@@ -29,21 +33,26 @@ class NullExporter(object):
 
 class SaveExporter(object):
     def __init__(self, directory="exported", root=os.getcwd()):
-        self.root = root
-        self.directory = directory
-        shutil.rmtree(directory, ignore_errors=True)
-        shutil.copytree(root, directory)
+        self.root = os.path.abspath(root)
+        self.directory = os.path.abspath(directory)
+        shutil.rmtree(self.directory, ignore_errors=True)
+        shutil.copytree(self.root, directory)
 
     def export_transformed(self, code, tree, module_name, file_name):
 
-        new_path = os.path.join(
-            self.root,
-            self.directory,
-            os.path.relpath(file_name, self.root)
-        )
+        # do the export only if module's file_name is a subpath of the
+        # root
+        logger.debug('Asked to export module %r', file_name)
+        if os.path.commonprefix([self.root, file_name]) == self.root:
 
-        with open(new_path, "w") as f:
-            f.write(unparse(tree))
+            new_path = os.path.join(
+                self.directory,
+                os.path.relpath(file_name, self.root)
+            )
+
+            with open(new_path, "w") as f:
+                f.write(unparse(tree))
+            logger.debug('Exported module %r to %r', file_name, new_path)
 
     def find(self, file_path, pathname, description, module_name, package_path):
         pass
