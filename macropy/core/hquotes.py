@@ -74,7 +74,8 @@ def hygienate(tree, captured_registry, gen_sym, **kw):
     @Walker
     def hygienator(tree, stop, **kw):
         if type(tree) is Captured:
-            new_sym = [sym for val, sym in captured_registry if val is tree.val]
+            new_sym = [sym for val, sym in captured_registry
+                       if val is tree.val]
             if not new_sym:
                 new_sym = gen_sym(tree.name)
                 captured_registry.append((tree.val, new_sym))

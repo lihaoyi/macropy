@@ -25,7 +25,7 @@ class PatternVarConflict(Exception):
 
 
 def _vars_are_disjoint(var_names):
-    return len(var_names)== len(set(var_names))
+    return len(var_names) == len(set(var_names))
 
 
 class Matcher(object, metaclass=ABCMeta):
@@ -78,7 +78,7 @@ class TupleMatcher(Matcher):
     def __init__(self, *matchers):
         self.matchers = matchers
         if not _vars_are_disjoint(util.flatten([m.var_names() for m in
-            matchers])):
+                                                matchers])):
             raise PatternVarConflict()
 
     def var_names(self):
@@ -89,7 +89,7 @@ class TupleMatcher(Matcher):
         if (not isinstance(matchee, tuple) or
                 len(matchee) != len(self.matchers)):
             raise PatternMatchException("Expected tuple of %d elements" %
-                    (len(self.matchers),))
+                                        (len(self.matchers),))
         for (matcher, sub_matchee) in zip(self.matchers, matchee):
             match = matcher.match(sub_matchee)
             updates.extend(match)
@@ -102,12 +102,12 @@ class ParallelMatcher(Matcher):
         self.matcher1 = matcher1
         self.matcher2 = matcher2
         if not _vars_are_disjoint(util.flatten([matcher1.var_names(),
-            matcher2.var_names()])):
+                                                matcher2.var_names()])):
             raise PatternVarConflict()
 
     def var_names(self):
         return util.flatten([self.matcher1.var_names(),
-            self.matcher2.var_names()])
+                             self.matcher2.var_names()])
 
     def match(self, matchee):
         updates = []
@@ -122,7 +122,7 @@ class ListMatcher(Matcher):
     def __init__(self, *matchers):
         self.matchers = matchers
         if not _vars_are_disjoint(util.flatten([m.var_names() for m in
-            matchers])):
+                                                matchers])):
             raise PatternVarConflict()
 
     def var_names(self):
@@ -130,9 +130,10 @@ class ListMatcher(Matcher):
 
     def match(self, matchee):
         updates = []
-        if (not isinstance(matchee, list) or len(matchee) != len(self.matchers)):
+        if (not isinstance(matchee, list) or
+            len(matchee) != len(self.matchers)):  # noqa E128
             raise PatternMatchException("Expected list of length %d" %
-                    (len(self.matchers),))
+                                        (len(self.matchers),))
         for (matcher, sub_matchee) in zip(self.matchers, matchee):
             match = matcher.match(sub_matchee)
             updates.extend(match)
@@ -185,11 +186,12 @@ class ClassMatcher(Matcher):
     def default_unapply(self, matchee, kw_keys):
         if not isinstance(matchee, self.clazz):
             raise PatternMatchException("Matchee should be of type %r" %
-                    (self.clazz,))
+                                        (self.clazz,))
         pos_values = []
         kw_dict = {}
 
-        # We don't get the argspec unless there are actually positional matchers
+        # We don't get the argspec unless there are actually
+        # positional matchers
         def genPosValues():
             arg_spec = inspect.getargspec(self.clazz.__init__)
             for arg in arg_spec.args:
@@ -200,7 +202,7 @@ class ClassMatcher(Matcher):
         for kw_key in kw_keys:
             if not hasattr(matchee, kw_key):
                 raise PatternMatchException("Keyword argument match failed: no"
-                        + " attribute %r" % (kw_key,))
+                                            " attribute %r" % (kw_key,))
             kw_dict[kw_key] = getattr(matchee, kw_key)
         return pos_values, kw_dict
 
@@ -208,12 +210,12 @@ class ClassMatcher(Matcher):
         updates = []
         if hasattr(self.clazz, '__unapply__'):
             pos_vals, kw_dict = self.clazz.__unapply__(matchee,
-                    self.kwMatchers.keys())
+                                                       self.kwMatchers.keys())
         else:
             pos_vals, kw_dict = self.default_unapply(matchee,
-                    self.kwMatchers.keys())
+                                                     self.kwMatchers.keys())
         for (matcher, sub_matchee) in zip(self.positionalMatchers,
-                pos_vals):
+                                          pos_vals):
             updates.extend(matcher.match(sub_matchee))
         for key, val in kw_dict.items():
             updates.extend(self.kwMatchers[key].match(val))

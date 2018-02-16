@@ -1,4 +1,6 @@
-"""Implementation of Walkers, a nice way of transforming and traversing ASTs."""
+# -*- coding: utf-8 -*-
+"""Implementation of Walkers, a nice way of transforming and
+traversing ASTs."""
 
 import ast
 
