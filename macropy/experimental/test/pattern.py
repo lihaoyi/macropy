@@ -2,25 +2,31 @@
 from ast import BinOp
 import unittest
 
-from macropy.experimental.pattern import (macros, _matching, switch, patterns,
-    LiteralMatcher, TupleMatcher, PatternMatchException, NameMatcher,
-    ListMatcher, PatternVarConflict, ClassMatcher)
+from macropy.experimental.pattern import (  # noqa: F401
+    macros, _matching, switch, patterns, LiteralMatcher, TupleMatcher,
+    PatternMatchException, NameMatcher, ListMatcher, PatternVarConflict,
+    ClassMatcher, PatternVarMismatch)
 
 
 class Foo(object):
     def __init__(self, x, y):
-          self.x = x
-          self.y = y
+        self.x = x
+        self.y = y
 
 
 class Bar(object):
     def __init__(self, a):
-          self.a = a
+        self.a = a
 
 
 class Baz(object):
     def __init__(self, b):
         self.b = b
+
+
+class Bob(object):
+    def __init__(self, c):
+        self.c = c
 
 
 class Screwy(object):
@@ -213,7 +219,7 @@ class Tests(unittest.TestCase):
 
     def test_parallel_matching(self):
         with _matching:
-            (x&(a,b)) << (4, 5)
+            (x & (a,b)) << (4, 5)
             self.assertEquals((4, 5), x)
             self.assertEquals(4, a)
             self.assertEquals(5, b)
@@ -229,3 +235,18 @@ class Tests(unittest.TestCase):
             Screwy(x=x, y=y) << Screwy(4, 5)
             self.assertEquals(4, x)
             self.assertEquals(5, y)
+
+    def test_optional_matching(self):
+        with _matching:
+            (Bar(x) | Baz(x)) << Baz(5)
+            self.assertEquals(x, 5)
+            (Bar(r) | Baz(r))  << Bar(4)
+            self.assertEquals(r, 4)
+
+        with self.assertRaises(PatternMatchException):
+            with _matching:
+                (Bar(x) | Baz(x)) << Bob(4)
+
+        with self.assertRaises(PatternVarMismatch):
+            with _matching:
+                (Bar(x) | Baz(y)) << Bob(4)

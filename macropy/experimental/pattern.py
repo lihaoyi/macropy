@@ -7,21 +7,27 @@ from ..core import util
 from ..core.macros import Macros
 from ..core.walkers import Walker
 
-from ..core.quotes import macros, q, u, ast_literal, name
+from ..core.quotes import macros, u, ast_literal, name
 from ..core.hquotes import macros, hq  # noqa F811
 
 
 macros = Macros()  # noqa F811
 
 
-class PatternMatchException(Exception):
-    """Thrown when a nonrefutable pattern match fails"""
-    pass
+class PatternException(Exception):
+    """Base pattern error"""
 
 
-class PatternVarConflict(Exception):
+class PatternMatchException(PatternException):
+    """Thrown when a nonrefutable pattern match fails."""
+
+
+class PatternVarConflict(PatternException):
     """Thrown when a pattern attempts to match a variable more than once."""
-    pass
+
+
+class PatternVarMismatch(PatternException):
+    """Raised when two matchers don't have the same vars."""
 
 
 def _vars_are_disjoint(var_names):
@@ -222,6 +228,38 @@ class ClassMatcher(Matcher):
         return updates
 
 
+class OptionalMatcher(Matcher):
+
+    def __init__(self, *matchers):
+        self.matchers = matchers
+        if len(matchers) < 2:
+            raise PatternException("OptionalMatcher should be initialized "
+                                   "with at least two sub-matchers")
+
+        first_var_set = None
+        for m in matchers:
+            var_set = set(m.var_names())
+            if first_var_set is not None and first_var_set != var_set:
+                raise PatternVarMismatch()
+            else:
+                first_var_set = var_set
+
+    def match(self, matchee):
+        for ix, m in enumerate(self.matchers):
+            res = None
+            try:
+                res = m.match(matchee)
+            except PatternMatchException as e:
+                if ix + 1 == len(self.matchers):
+                    raise e
+            if res is not None and len(res):
+                return res
+        return []
+
+    def var_names(self):
+        return self.matchers[0].var_names()
+
+
 def build_matcher(tree, modified):
     if isinstance(tree, ast.Num):
         return hq[LiteralMatcher(u[tree.n])]
@@ -260,13 +298,17 @@ def build_matcher(tree, modified):
         res = hq[ClassMatcher()]
         res.args, res.keywords = [tree.func, positional_matchers], kw_matchers
         return res
-    if (isinstance(tree, ast.BinOp) and isinstance(tree.op, ast.BitAnd)):
+    if (isinstance(tree, ast.BinOp) and
+        isinstance(tree.op, (ast.BitAnd, ast.BitOr))):  # noqa: E129
+
         sub1 = build_matcher(tree.left, modified)
         sub2 = build_matcher(tree.right, modified)
-        res = hq[ParallelMatcher()]
+        if isinstance(tree.op, ast.BitAnd):
+            res = hq[ParallelMatcher()]
+        else:
+            res = hq[OptionalMatcher()]
         res.args = [sub1, sub2]
         return res
-
     raise Exception("Unrecognized tree " + repr(tree))
 
 
