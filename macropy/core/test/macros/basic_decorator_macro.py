@@ -23,10 +23,12 @@ def my_macro(tree, **kw):
 def my_macro2(tree, **kw):
     assert macropy.core.unparse(tree).strip() == "\n".join([
     "@middle",
-    "@my_macro",
     "@inner",
     "def run():",
     "    x = 10",
+    "    x = (x + 1)",
+    "    x = (x + 1)",
+    "    x = (x + 1)",
     "    x = (x + 1)",
     "    return x"]), macropy.core.unparse(tree)
 
