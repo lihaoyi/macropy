@@ -6,7 +6,7 @@ import code
 import importlib
 import sys
 
-from .macros import expand_entire_ast, detect_macros
+from .macros import ModuleExpansionContext, detect_macros
 
 
 class MacroConsole(code.InteractiveConsole):
@@ -33,7 +33,7 @@ class MacroConsole(code.InteractiveConsole):
             for mod, bind in bindings:
                 self.bindings.append((importlib.import_module(mod), bind))
 
-            tree = expand_entire_ast(tree, source, self.bindings)
+            tree = ModuleExpansionContext(tree, source, self.bindings).expand_macros()
 
             tree = ast.Interactive(tree.body)
             code = compile(tree, filename, symbol,
