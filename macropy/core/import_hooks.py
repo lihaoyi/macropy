@@ -107,8 +107,8 @@ class MacroFinder(object):
         modules = []
         for mod, bind in bindings:
             modules.append((importlib.import_module(mod), bind))
-        new_tree = macropy.core.macros.expand_entire_ast(tree, source_code,
-                                                         modules)
+        new_tree = macropy.core.macros.ModuleExpansionContext(
+            tree, source_code, modules).expand_macros()
         try:
             return compile(tree, filename, "exec"), new_tree
         except:

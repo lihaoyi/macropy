@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """The main source of all things MacroPy"""
 
+from abc import ABC, abstractmethod
 import ast
+import collections
 import functools
 import importlib
 import logging
 
-from . import real_repr, walkers
+from . import real_repr, Captured, Literal
 
 
 logger = logging.getLogger(__name__)
@@ -23,7 +25,6 @@ class WrappedFunction(object):
         functools.update_wrapper(self, func)
 
     def __call__(self, *args, **kwargs):
-        # print('Wrapped Function', dis.dis(self.func.__code__))
         return self.func(*args, **kwargs)
 
     def __getitem__(self, i):
@@ -52,7 +53,147 @@ def macro_stub(func):
     )
 
 
-class Macros(object):
+MacroData = collections.namedtuple('MacroData', ['macro', 'macro_tree',
+                                                 'body_tree', 'call_args',
+                                                 'kwargs'])
+
+
+class MacroType(ABC):
+    """Base class for the macro types. Each macro type has a name that
+    will be used as the name of its registry (lowered). Each type
+    should implement `detect_macro`:meth:.
+
+    :param registry: A `Macros.Registry`:class: instance
+    """
+
+    def __init__(self, registry):
+        self.registry = registry
+
+    def get_macro_details(self, macro_tree):
+        if isinstance(macro_tree, ast.Call):
+            call_args = tuple(macro_tree.args)
+            macro_tree = macro_tree.func
+        else:
+            call_args = ()
+        if isinstance(macro_tree, ast.Name):
+            return macro_tree.id, macro_tree, call_args
+        else:
+            return None, macro_tree, call_args
+
+    @abstractmethod
+    def detect_macro(self, in_tree):
+        """This is a coroutine (a synchronous one) that should test
+        ``in_tree`` and find out if it's a macro "call". If that's the
+        case. It will yield a `MacroData`:class: object containing the
+        details of the macro. The calling logic will "send" in a tree
+        corresponding with the ``MacroData.body_tree`` value but with
+        the macros expanded. At that point the coroutine has the
+        chance to yield the next macro found (if the definition allows
+        that, like with *block* or *decorator* macros) and the process
+        repeats. If no other macro is found the sent-in tree can be
+        modified/checked before returning it with the normal ``return``
+        statement.
+
+        :param in_tree: an AST tree
+        :returns: an AST tree or None
+        """
+
+
+class Expr(MacroType):
+    """Handles macros of the expression type, defined by using square
+    brackets, like ``amacro[foo]``."""
+
+    def detect_macro(self, in_tree):
+        if (isinstance(in_tree, ast.Subscript) and
+            type(in_tree.slice) is ast.Index):  # noqa: E129
+            body_tree = in_tree.slice.value
+            name, macro_tree, call_args = self.get_macro_details(in_tree.value)
+            if name is not None and name in self.registry:
+                new_tree = yield MacroData(self.registry[name], macro_tree,
+                                           body_tree, call_args, {})
+                assert isinstance(new_tree, ast.expr), ('Wrong type %r' %
+                                                        type(new_tree))
+                new_tree = ast.Expr(new_tree)
+
+
+class Block(MacroType):
+    """Handles block macros, defined by using a ``with`` statement, like:
+
+    .. code:: python
+
+      with amacro:
+          do_something
+
+    """
+
+    def detect_macro(self, in_tree):
+        if isinstance(in_tree, ast.With):
+            assert isinstance(in_tree.body, list), real_repr(in_tree.body)
+            new_tree = None
+            for wi in in_tree.items:
+                name, macro_tree, call_args = self.get_macro_details(
+                    wi.context_expr)
+                if name is not None and name in self.registry:
+                    new_tree = yield MacroData(self.registry[name], macro_tree,
+                                               in_tree.body, call_args,
+                                               {'target': wi.optional_vars})
+
+            if new_tree:
+                if isinstance(new_tree, ast.expr):
+                    new_tree = [ast.Expr(new_tree)]
+                if isinstance(new_tree, Exception):
+                    raise new_tree
+                assert isinstance(new_tree, list), type(new_tree)
+            return new_tree
+
+
+class Decorator(MacroType):
+    """Handles macros defined as decorators, like:
+
+    .. code:: python
+
+      @amacro
+      @anothermacro
+      def foo():
+          ...
+
+    The macros will be expanded with an inside-out order, thus
+    executing ``anothermacro`` first and then ``amacro``.
+    """
+
+    def detect_macro(self, in_tree):
+        if (isinstance(in_tree, (ast.AsyncFunctionDef, ast.ClassDef,
+                              ast.FunctionDef)) and
+            len(in_tree.decorator_list)):  # noqa: E129
+            rev_decs = list(reversed(in_tree.decorator_list))
+            tree = in_tree
+            seen_decs = []
+            additions = []
+            for dec in rev_decs:
+                name, macro_tree, call_args = self.get_macro_details(dec)
+                if name is None or name not in self.registry:
+                    seen_decs.append(dec)
+                    continue
+                in_tree.decorator_list = list(reversed(seen_decs))
+                tree = yield MacroData(self.registry[name], macro_tree, tree,
+                                       call_args, {})
+                if type(tree) is list:
+                    additions = tree[1:]
+                    tree = tree[0]
+                elif isinstance(tree, ast.expr):
+                    tree = [ast.Expr(tree)]
+                    break
+
+            if isinstance(tree, (ast.AsyncFunctionDef, ast.ClassDef,
+                                 ast.FunctionDef)):
+                tree.decorator_list = list(reversed(seen_decs))
+            if len(additions) == 0:
+                return tree
+            else:
+                return [tree] + additions
+
+
+class Macros:
     """A registry of macros belonging to a module; used via
 
     .. code:: python
@@ -66,7 +207,13 @@ class Macros(object):
     belonging to that module.
     """
 
-    class Registry(object):
+    class Registry:
+        """a map between names and functions defined as macros. To be used as
+        decorator on the macro function, it takes a a wrapper function.
+
+        :param wrap: A function that will be called with the
+          registering macro function as parameter
+        """
 
         def __init__(self, wrap=lambda x: x):
             self.registry = {}
@@ -80,228 +227,309 @@ class Macros(object):
 
             return self.wrap(f)
 
+    """The types of macros that will be handled by the registry."""
+    macro_types = (Expr, Block, Decorator)
+
     def __init__(self):
         # Different kinds of macros
-        self.expr = Macros.Registry(macro_function)
-        self.block = Macros.Registry(macro_function)
-        self.decorator = Macros.Registry(macro_function)
+        self.macro_registries = []
+        for cls in self.macro_types:
+            self.add_macro_type(cls, macro_function)
 
         self.expose_unhygienic = Macros.Registry()
+
+    def add_macro_type(self, macrotype_cls, wrap_func):
+        """For the given ``macrotype_cls``, creates a new
+        `Macros.Registry`:class: and registers it with the type name
+        (lowercased)."""
+        assert issubclass(macrotype_cls, MacroType), "Invalid macro type class"
+        reg = Macros.Registry(wrap_func)
+        setattr(self, macrotype_cls.__name__.lower(), reg)
+        self.macro_registries.append(reg.registry)
 
 
 # For other modules to hook into MacroPy's workflow while
 # keeping this module itself unaware of their presence.
-injected_vars = []      # functions to inject values throughout each
-                        # files macros
-filters = []            # functions to call on every macro-expanded snippet
-post_processing = []    # functions to call on every macro-expanded file
+"""Functions to inject values throughout each files macros."""
+injected_vars = []
+"""Functions to call on every macro-expanded snippet."""
+filters = []
+"""Functions to call on every macro-expanded file."""
+post_processing = []
 
 
-def expand_entire_ast(tree, src, bindings):
+def preserve_line_numbers(tree, new_tree):
+    """Decorates a tree-transformer function to stick the original line
+    numbers onto the transformed tree.
+    """
+    pos = ((tree.lineno, tree.col_offset)
+           if (hasattr(tree, "lineno") and
+               hasattr(tree, "col_offset"))
+           else None)
+    if pos:
+        t = new_tree
+        while type(t) is list:
+            t = t[0]
+        (t.lineno, t.col_offset) = pos
 
-    def expand_macros(tree):
-        """Go through an AST, hunting for macro invocations and expanding any
-        that are found.
+
+class ExpansionContext:
+    """Knows how to walk over AST nodes and some other utility classes and
+    at each level tries to expand the macros, if present.
+
+    Differenty from the previous implementation this allows for macros
+    to be defined inside the body of other macros, where it's
+    permitted by the syntax. This means that trees like:
+
+    .. code:: python
+
+      foo[bar[...]]
+
+    or
+
+    .. code:: python
+
+      with foo:
+          bar[...]
+          ...
+
+    (other combinations avoided for brevity)
+
+    are now permitted. In such cases ``bar`` is expanded first and
+    ``foo`` will be expanded after, not with the original *unexpanded*
+    tree but with the version that contains the modifications made by
+    ``bar``.
+
+    :param tree: an AST tree
+    :param parent: an optional `ExpansionContext`:class: instance to be used
+      as parent
+
+    """
+
+    """An optional `ExtensionContext`:class: instance that will be used as
+    source for the values of the other members, except ``tree``."""
+    parent = None
+
+    """A mapping containing the *realization* of the `~.injected_vars`,
+    which are calculated per-module."""
+    file_vars = {}
+
+    """A list containing one or more instances of `MacroType`:class:
+    subclasses, usually defined as per-module level."""
+    macro_types = []
+
+    def __init__(self, tree, parent=None):
+        self.tree = tree
+        if parent is not None:
+            assert isinstance(parent, ExpansionContext)
+            self.parent = parent
+            self.file_vars = parent.file_vars
+            self.macro_types = parent.macro_types
+
+    def expand_macros(self, tree=None):
+        """Basic expansion function, It just calls `~.walk_tree`:meth: with
+        the ``tree`` passed in at instantiation time if it's not passed as
+        parameter.
+
+        :param tree: an AST tree
+        :returns: an AST tree
         """
+        if tree is None:
+            tree = self.tree
+        return self.walk_tree(tree)
 
-        def expand_if_in_registry(macro_tree, body_tree, args, registry,
-                                  **kwargs):
-            """Check if `tree` is a macro in `registry`, and if so use it to
-            expand `args`."""
+    def macro_expand(self, tree):
+        """This is a coroutine that expands found macros, and yields back
+        transformed AST tree for the calling "walking" logic to transform.
 
-            # print(registry, file=sys.stderr)
-            if isinstance(macro_tree, ast.Name) and macro_tree.id in registry:
+        :param tree: an AST tree
+        :returns: an AST tree or ``None``
+        """
+        new_tree = None
+        found_macro = False
+        for mtype in self.macro_types:
+            new_tree = None
+            type_it = mtype.detect_macro(tree)
+            try:
+                while True:
+                    mdata = type_it.send(new_tree)
+                    found_macro = True
+                    new_tree = yield mdata.body_tree
+                    mfunc, mmod = mdata.macro
+                    try:
+                        new_tree = mfunc(
+                            tree=new_tree,
+                            args=mdata.call_args,
+                            src=self.src,
+                            expand_macros=self.expand_macros,
+                            **dict((*mdata.kwargs.items(),
+                                    *self.file_vars.items()))
+                        )
+                    except Exception as e:
+                        # here this exception is raised during macro
+                        # expansion, at import time. If we come here,
+                        # it means that the macro expanded to "raise
+                        # Exception()" or something like that. This
+                        # will be fixed in the failure filter, see
+                        # failure.py
+                        new_tree = e
+                    for function in reversed(filters):
+                        new_tree = function(
+                            tree=new_tree,
+                            args=mdata.call_args,
+                            src=self.src,
+                            expand_macros=self.expand_macros,
+                            lineno=mdata.macro_tree.lineno,
+                            col_offset=mdata.macro_tree.col_offset,
+                            **dict((*mdata.kwargs.items(),
+                                    *self.file_vars.items()))
+                        )
+                    new_tree = yield new_tree
+            except StopIteration as final:
+                if final.value is not None:
+                    new_tree = final.value
+                if found_macro:
+                    break
+        return new_tree
 
-                (the_macro, the_module) = registry[macro_tree.id]
-                # print('Macro, module: %s, %s' % \
-                #       (the_macro.func.__doc__, the_module), file=sys.stderr)
-                # print('expand if in registry', body_tree, args, src,
-                #       expand_macros, kwargs, file_vars, sep='\n',
-                #       file=sys.stderr)
-                try:
-                    new_tree = the_macro(
-                        tree=body_tree,
-                        args=args,
-                        src=src,
-                        expand_macros=expand_macros,
-                        **dict(list(kwargs.items()) + list(file_vars.items()))
-                    )
-                except Exception as e:
-                    # here this exception is raised during macro
-                    # expansion, at import time. If we come here, it
-                    # means that the macro expanded to "raise
-                    # Exception()" or something like that. This will
-                    # be fixed in the failure filter, see failure.py
-                    new_tree = e
+    def walk_children(self, tree):
+        """Walks each field of an AST instance or a list containing AST
+        instances and calls ``~.walk_tree``:meth: on them.
 
-                # print('Pre filters: %s' % new_tree, file=sys.stderr)
-
-                for function in reversed(filters):
-                    new_tree = function(
-                        tree=new_tree,
-                        args=args,
-                        src=src,
-                        expand_macros=expand_macros,
-                        lineno=macro_tree.lineno,
-                        col_offset=macro_tree.col_offset,
-                        **dict(list(kwargs.items()) + list(file_vars.items()))
-                    )
-                return new_tree
-            elif isinstance(macro_tree, ast.Call):
-                args.extend(macro_tree.args)
-                return expand_if_in_registry(macro_tree.func, body_tree, args,
-                                             registry)
-
-        def preserve_line_numbers(func):
-            """Decorates a tree-transformer function to stick the original line
-            numbers onto the transformed tree.
-            """
-            def run(tree):
-                pos = ((tree.lineno, tree.col_offset)
-                       if (hasattr(tree, "lineno") and
-                           hasattr(tree, "col_offset"))
-                       else None)
-                new_tree = func(tree)
-
-                if pos:
-                    t = new_tree
-                    while type(t) is list:
-                        t = t[0]
-                    (t.lineno, t.col_offset) = pos
-                return new_tree
-            return run
-
-        @preserve_line_numbers
-        def macro_expand(tree):
-            """Tail Recursively expands all macros in a single AST node."""
-            if isinstance(tree, ast.With):
-                assert isinstance(tree.body, list), real_repr(tree.body)
-                new_tree = tree.body
-                for withitem in tree.items:
-                    # TODO: this manages only one with block level??
-                    new_tree = expand_if_in_registry(
-                        withitem.context_expr,
-                        new_tree,
-                        [],
-                        block_registry,
-                        target=withitem.optional_vars)
-
-                if new_tree:
-                    if isinstance(new_tree, ast.expr):
-                        new_tree = [ast.Expr(new_tree)]
-                    if isinstance(new_tree, Exception): raise new_tree
-                    assert isinstance(new_tree, list), type(new_tree)
-                    return macro_expand(new_tree)
-
-            # this detects a possible macro with syntax mname[...]
-            if isinstance(tree, ast.Subscript) and type(tree.slice) is ast.Index:
-
-                new_tree = expand_if_in_registry(tree.value, tree.slice.value,
-                                                 [], expr_registry)
-
-                if new_tree:
-                    assert isinstance(new_tree, ast.expr), type(new_tree)
-                    return macro_expand(new_tree)
-
-            if isinstance(tree, (ast.AsyncFunctionDef, ast.ClassDef,
-                                 ast.FunctionDef)):
-                seen_decs = []
-                additions = []
-                while tree.decorator_list != []:
-                    dec = tree.decorator_list[0]
-                    tree.decorator_list = tree.decorator_list[1:]
-
-                    new_tree = expand_if_in_registry(dec, tree, [],
-                                                     decorator_registry)
-
-                    if new_tree is None:
-                        seen_decs.append(dec)
-                    else:
-                        tree = new_tree
-                        tree = macro_expand(tree)
-                        if type(tree) is list:
-                            additions = tree[1:]
-                            tree = tree[0]
-                        elif isinstance(tree, ast.expr):
-                            tree = [ast.Expr(tree)]
-                            break
-
-                if isinstance(tree, (ast.AsyncFunctionDef, ast.ClassDef,
-                                     ast.FunctionDef)):
-                    tree.decorator_list = seen_decs
-                if len(additions) == 0:
-                    return tree
+        :param tree: an AST tree
+        :returns: None
+        """
+        if isinstance(tree, ast.AST):
+            for field, old_value in ast.iter_fields(tree):
+                old_value = getattr(tree, field, None)
+                new_value = self.walk_tree(old_value)
+                setattr(tree, field, new_value)
+        elif isinstance(tree, list) and len(tree) > 0:
+            new_tree = []
+            for t in tree:
+                new_t = self.walk_tree(t)
+                if type(new_t) is list:
+                    new_tree.extend(new_t)
                 else:
-                    return [tree] + additions
+                    new_tree.append(new_t)
+            tree[:] = new_tree
 
-            return tree
+    def walk_tree(self, tree):
+        """Calls `~.macro_expand`:meth: and walks each tree yielded by it,
+        one time **before** the transformation and one time **after**
+        it.
 
-        @walkers.Walker
-        def macro_searcher(tree, **kw):
-            x = macro_expand(tree)
-            return x
+        :param tree: an AST tree
+        :returns: an AST tree
+        """
+        if (isinstance(tree, ast.AST) or type(tree) is Literal or
+            type(tree) is Captured):  # noqa: #E129
+            expand_it = self.macro_expand(tree)
+            new_tree = None
+            try:
+                while True:
+                    new_tree = self.walk_tree(expand_it.send(new_tree))
+            except StopIteration as final:
+                # accept the return value from ``macro_expand`` only
+                # if at least one macro was found
+                if final.value is not None and new_tree is not None:
+                    new_tree = self.walk_tree(final.value)
+            if new_tree is not None:
+                preserve_line_numbers(tree, new_tree)
+                tree = new_tree
+        self.walk_children(tree)
+        return tree
 
-        tree = macro_searcher.recurse(tree)
+
+class ModuleExpansionContext(ExpansionContext):
+    """A subclass of the `ExpansionContext`:class: tailored to be
+    instantiatiated per-module (directly by the import-level hooks, when
+    they are active).
+
+    :param tree: an AST tree
+    :param src: the source string of the ``tree``
+    :param bindings: a mapping between each imported macro module and its used
+      macro names
+    """
+
+    def __init__(self, tree, src, bindings):
+        super().__init__(tree)
+        self.src = src
+        self.file_vars = {}
+        for v in injected_vars:
+            self.file_vars[v.__name__] = v(tree=tree, src=src,
+                                           expand_macros=self.expand_macros,
+                                           **self.file_vars)
+
+        allnames = [
+            (mod, name, asname)
+            for mod, names in bindings
+            for name, asname in names
+        ]
+
+        self.macro_types = [cls({
+            asname: (registry[name], mod)
+            for mod, name, asname in allnames
+            for registry in [mod.macros.macro_registries[ix]]
+            if name in registry.keys()
+        }) for ix, cls in enumerate(Macros.macro_types)]
+
+    def expand_macros(self, tree=None):
+        if tree is None:
+            tree = self.tree
+        else:
+            return super().expand_macros(tree)
+
+        preamble = self.pre_process(tree)
+        tree = super().expand_macros(tree)
+        tree = self.post_process(tree)
+
+        if preamble:
+            tree.body = preamble + tree.body
 
         return tree
 
-    file_vars = {}
+    def pre_process(self, tree):
+        """Removes ``from __future__`` imports from the tree's body and
+        returns them.
 
-    for v in injected_vars:
-        file_vars[v.__name__] = v(tree=tree, src=src,
-                                  expand_macros=expand_macros, **file_vars)
+        :param tree: an AST tree
+        :returns: an AST tree or ``None``
+        """
+        # This is kind of a crude modification to handle from __future__
+        # imports, simply removing them (and maybe a docstring) from the
+        # front of the ast.Module.body list and sticking them back on
+        # after all the macro processing.  It assumes that all trees at
+        # this point are ast.Modules.  It might be better to make the
+        # macro processors themselves ignore docstrings and __future__
+        # imports.  For that matter, I don't know if macro processing
+        # currently moves docstrings, either.
+        preamble = None
+        if isinstance(tree, ast.Module) and tree.body:
+            if (isinstance(tree.body[0], ast.ImportFrom) and
+                tree.body[0].module == '__future__'):  # noqa: E129
+                preamble = [tree.body.pop(0)]
+            elif (len(tree.body) > 1 and isinstance(tree.body[0], ast.Expr) and
+                  isinstance(tree.body[1], ast.ImportFrom) and
+                  tree.body[1].module == '__future__'):
+                preamble = tree.body[0:1]
+                del tree.body[0:1]
+        return preamble
 
-    allnames = [
-        (m, name, asname)
-        for m, names in bindings
-        for name, asname in names
-    ]
+    def post_process(self, tree):
+        """Executes the functions added to the `~.post_processing` list.
 
-    def extract_macros(pick_registry):
-        return {
-            asname: (registry[name], ma)
-            for ma, name, asname in allnames
-            for registry in [pick_registry(ma.macros).registry]
-            if name in registry.keys()
-        }
-
-    block_registry = extract_macros(lambda x: x.block)
-    expr_registry = extract_macros(lambda x: x.expr)
-    decorator_registry = extract_macros(lambda x: x.decorator)
-
-    # This is kind of a crude modification to handle from __future__
-    # imports, simply removing them (and maybe a docstring) from the
-    # front of the ast.Module.body list and sticking them back on
-    # after all the macro processing.  It assumes that all trees at
-    # this point are ast.Modules.  It might be better to make the
-    # macro processors themselves ignore docstrings and __future__
-    # imports.  For that matter, I don't know if macro processing
-    # currently moves docstrings, either.
-    preamble = None
-    if isinstance(tree, ast.Module) and tree.body:
-        if (isinstance(tree.body[0], ast.ImportFrom) and
-            tree.body[0].module == '__future__'):  # noqa: E129
-            preamble = [tree.body.pop(0)]
-        elif (len(tree.body) > 1 and isinstance(tree.body[0], ast.Expr) and
-              isinstance(tree.body[1], ast.ImportFrom) and
-              tree.body[1].module == '__future__'):
-            preamble = tree.body[0:1]
-            del tree.body[0:1]
-
-    tree = expand_macros(tree)
-
-    for post in post_processing:
-        tree = post(
-            tree=tree,
-            src=src,
-            expand_macros=expand_macros,
-            **file_vars
-        )
-
-    if preamble:
-        tree.body = preamble + tree.body
-
-    return tree
+        :param tree: an AST tree
+        :returns: an AST tree
+        """
+        for post in post_processing:
+            tree = post(
+                tree=tree,
+                src=self.src,
+                expand_macros=self.expand_macros,
+                **self.file_vars
+            )
+        return tree
 
 
 def detect_macros(tree, from_fullname, from_package=None, from_module=None):
@@ -314,7 +542,7 @@ def detect_macros(tree, from_fullname, from_package=None, from_module=None):
         # if the name is something like "from foo.bar import macros"
         if (isinstance(stmt, ast.ImportFrom) and
             stmt.module and stmt.names[0].name == 'macros' and
-            stmt.names[0].asname is None):
+            stmt.names[0].asname is None):  # noqa: E129
             fullname = importlib.util.resolve_name(
                 '.' * stmt.level + stmt.module, from_package)
 
@@ -348,5 +576,5 @@ def detect_macros(tree, from_fullname, from_package=None, from_module=None):
 def check_annotated(tree):
     """Shorthand for checking if an AST is of the form something[...]."""
     if (isinstance(tree, ast.Subscript) and type(tree.slice) is ast.Index and
-        type(tree.value) is ast.Name):
+        type(tree.value) is ast.Name):  # noqa: E129
         return tree.value.id, tree.slice.value
