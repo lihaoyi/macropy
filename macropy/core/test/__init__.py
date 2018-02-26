@@ -25,8 +25,9 @@ else:
             gen_sym.run() == 10
 
         def test_failure(self):
+            from macropy.core.failure import MacroExpansionError
             from . import failure
-            with self.assertRaises(Exception) as ce:
+            with self.assertRaises(MacroExpansionError) as ce:
                 failure.run1()
             msg = str(ce.exception)
             # TODO: changed the behavior of this test by improving
@@ -37,18 +38,18 @@ else:
             assert len(msg.splitlines()) >= 8, msg
             assert msg.rfind("i am a cow") != msg.find("i am a cow")
 
-            with self.assertRaises(Exception) as ce:
             # this one should only cotain the "i am a cow" message and
             # nothing else
+            with self.assertRaises(MacroExpansionError) as ce:
                 failure.run2()
             assert str(ce.exception) == "i am a cow"
 
-            with self.assertRaises(Exception):
             # with self.assertRaises(Exception) as ce:
+            with self.assertRaises(MacroExpansionError):
                 failure.run3()
 
-            with self.assertRaises(Exception):
             # with self.assertRaises(Exception) as ce:
+            with self.assertRaises(MacroExpansionError):
                 failure.run4()
 
 
