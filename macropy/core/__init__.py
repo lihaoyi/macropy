@@ -312,7 +312,8 @@ trec = {
                                      ":"  + rec(tree.body, i+1)),
     ast.Bytes:      lambda tree, i: repr(tree.s),
     ast.Starred:    lambda tree, i: "*" + rec(tree.value, i),
-    ast.arg:        lambda tree, i: tree.arg + mix(":", tree.annotation),
+    ast.arg:        lambda tree, i: tree.arg + mix(":", getattr(tree,
+                                                           'annotation', '')),
     ast.withitem:   lambda tree, i: (rec(tree.context_expr, i) +
                                      mix(" as ", rec(tree.optional_vars, i))),
     ast.arguments:  lambda tree, i: (", ".join(list(map(
