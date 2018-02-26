@@ -10,7 +10,7 @@ from macropy.core.quotes import ast_literal, u
 from macropy.core.hquotes import macros, hq, unhygienic
 
 
-macros = macropy.core.macros.Macros()
+macros = macropy.core.macros.Macros()  # noqa: F811
 
 
 def literal_eval(node_or_string):
@@ -87,7 +87,7 @@ def show_expanded(tree, expand_macros,  **kw):
     return new_tree
 
 
-@macros.block
+@macros.block   # noqa: F811
 def show_expanded(tree, expand_macros, **kw):
     """Prints out the expanded version of the wrapped source code, after all
     macros inside it have been expanded"""
@@ -107,7 +107,7 @@ def trace_walk_func(tree, exact_src):
 
         if (isinstance(tree, ast.expr) and
             tree._fields != () and
-            type(tree) is not ast.Name):
+            type(tree) is not ast.Name):  # noqa: E129
 
             try:
                 literal_eval(tree)
@@ -139,7 +139,7 @@ def trace(tree, exact_src, **kw):
     yield ret
 
 
-@macros.block
+@macros.block  # noqa: F811
 def trace(tree, exact_src, **kw):
     """Traces the wrapped code, printing out the source code and evaluated
     result of every statement and expression contained within it"""
@@ -168,7 +168,7 @@ def require(tree, exact_src, **kw):
     yield require_transform(tree, exact_src)
 
 
-@macros.block
+@macros.block  # noqa: F811
 def require(tree, exact_src, **kw):
     """A version of assert that traces the expression's evaluation in the
     case of failure. If used as a block, performs this on every expression
@@ -179,6 +179,6 @@ def require(tree, exact_src, **kw):
     yield tree
 
 
-@macros.expose_unhygienic
+@macros.expose_unhygienic  # noqa: F811
 def log(x):
     print(x)
