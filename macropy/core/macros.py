@@ -14,7 +14,7 @@ from . import real_repr, Captured, Literal
 logger = logging.getLogger(__name__)
 
 
-class WrappedFunction(object):
+class WrappedFunction:
     """Wraps a function which is meant to be handled (and removed) by
     macro expansion, and never called directly with square
     brackets.

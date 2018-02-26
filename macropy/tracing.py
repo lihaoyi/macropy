@@ -10,21 +10,23 @@ from macropy.core.quotes import ast_literal, u
 from macropy.core.hquotes import macros, hq, unhygienic
 from macropy.core import ast_repr, Captured
 
+
 macros = macropy.core.macros.Macros()
 
 
 def literal_eval(node_or_string):
     """
     Safely evaluate an expression node or a string containing a Python
-    expression.  The string or node provided may only consist of the following
-    Python literal structures: strings, numbers, tuples, lists, dicts, booleans,
-    and None.
+    expression.  The string or node provided may only consist of the
+    following Python literal structures: strings, numbers, tuples,
+    lists, dicts, booleans, and None.
     """
     _safe_names = {'None': None, 'True': True, 'False': False}
     if isinstance(node_or_string, str):
         node_or_string = ast.parse(node_or_string, mode='eval')
     if isinstance(node_or_string, ast.Expression):
         node_or_string = node_or_string.body
+
     def _convert(node):
         if isinstance(node, ast.Str):
             return node.s
@@ -40,12 +42,12 @@ def literal_eval(node_or_string):
         elif isinstance(node, ast.Name):
             if node.id in _safe_names:
                 return _safe_names[node.id]
-        elif isinstance(node, ast.BinOp) and \
-             isinstance(node.op, (ast.Add, ast.Sub)) and \
-             isinstance(node.right, ast.Num) and \
-             isinstance(node.right.n, complex) and \
-             isinstance(node.left, ast.Num) and \
-             isinstance(node.left.n, (int, float)): # TODO: long,
+        elif (isinstance(node, ast.BinOp) and
+              isinstance(node.op, (ast.Add, ast.Sub)) and
+              isinstance(node.right, ast.Num) and
+              isinstance(node.right.n, complex) and
+              isinstance(node.left, ast.Num) and
+              isinstance(node.left.n, (int, float))):  # TODO: long,
             left = node.left.n
             right = node.right.n
             if isinstance(node.op, ast.Add):
@@ -107,9 +109,9 @@ def trace_walk_func(tree, exact_src):
     @macropy.core.walkers.Walker
     def trace_walk(tree, stop, **kw):
 
-        if isinstance(tree, ast.expr) and \
-                tree._fields != () and \
-                type(tree) is not ast.Name:
+        if (isinstance(tree, ast.expr) and
+            tree._fields != () and
+            type(tree) is not ast.Name):
 
             try:
                 literal_eval(tree)
