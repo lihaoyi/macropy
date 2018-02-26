@@ -74,17 +74,16 @@ def log(tree, exact_src, **kw):
     """Prints out source code of the wrapped expression and the value it
     evaluates to"""
     new_tree = hq[wrap(unhygienic[log], u[exact_src(tree)], ast_literal[tree])]
-    return new_tree
+    yield new_tree
 
 
 @macros.expr
 def show_expanded(tree, expand_macros,  **kw):
     """Prints out the expanded version of the wrapped source code, after all
     macros inside it have been expanded"""
-    expanded_tree = expand_macros(tree)
     new_tree = hq[wrap_simple(
-        unhygienic[log], u[macropy.core.unparse(expanded_tree)],
-        ast_literal[expanded_tree])]
+        unhygienic[log], u[macropy.core.unparse(tree)],
+        ast_literal[tree])]
     return new_tree
 
 
@@ -94,12 +93,10 @@ def show_expanded(tree, expand_macros, **kw):
     macros inside it have been expanded"""
     new_tree = []
     for stmt in tree:
-        new_stmt = expand_macros(stmt)
-
         with hq as code:
-            unhygienic[log](u[macropy.core.unparse(new_stmt)])
+            unhygienic[log](u[macropy.core.unparse(stmt)])
         new_tree.append(code)
-        new_tree.append(new_stmt)
+        new_tree.append(stmt)
 
     return new_tree
 
@@ -139,7 +136,7 @@ def trace(tree, exact_src, **kw):
     """Traces the wrapped code, printing out the source code and evaluated
     result of every statement and expression contained within it"""
     ret = trace_walk_func(tree, exact_src)
-    return ret
+    yield ret
 
 
 @macros.block
@@ -147,8 +144,7 @@ def trace(tree, exact_src, **kw):
     """Traces the wrapped code, printing out the source code and evaluated
     result of every statement and expression contained within it"""
     ret = trace_walk_func(tree, exact_src)
-
-    return ret
+    yield ret
 
 
 def require_transform(tree, exact_src):
@@ -169,7 +165,7 @@ def require(tree, exact_src, **kw):
     """A version of assert that traces the expression's evaluation in the
     case of failure. If used as a block, performs this on every expression
     within the block"""
-    return require_transform(tree, exact_src)
+    yield require_transform(tree, exact_src)
 
 
 @macros.block
@@ -180,7 +176,7 @@ def require(tree, exact_src, **kw):
     for expr in tree:
         expr.value = require_transform(expr.value, exact_src)
 
-    return tree
+    yield tree
 
 
 @macros.expose_unhygienic
