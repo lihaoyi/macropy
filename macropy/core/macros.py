@@ -348,17 +348,27 @@ class ExpansionContext:
         """
         new_tree = None
         found_macro = False
+        # for every macro type
         for mtype in self.macro_types:
             new_tree = None
+            # its ``detect_macro()`` is a coro, start a pull/send cycle
             type_it = mtype.detect_macro(tree)
             try:
+                # each coro will yield a MacroData instance until
+                # exhausted, in which case it will raise a
+                # StopIteration with a possible final ``.value`` member
                 while True:
                     mdata = type_it.send(new_tree)
                     found_macro = True
                     mfunc, mmod = mdata.macro
+                    # if the macro function is itself a coro, give  it
+                    # control about when expand its body, if before or
+                    # after its own expansion, it's similar in spirit
+                    # to ``contextlib.contexmanager()`` decorator
                     if inspect.isgeneratorfunction(mfunc):
                         new_tree = mdata.body_tree
                     else:
+                        # if not yield it for a pre-execution walking
                         new_tree = yield mdata.body_tree
                     try:
                         new_tree = mfunc(
@@ -369,6 +379,8 @@ class ExpansionContext:
                             **dict((*mdata.kwargs.items(),
                                     *self.file_vars.items()))
                         )
+                        # the result is a generator, treat it like a
+                        # context manager
                         if inspect.isgenerator(new_tree):
                             m_it = new_tree
                             new_tree = None
@@ -386,6 +398,8 @@ class ExpansionContext:
                         # will be fixed in the failure filter, see
                         # failure.py
                         new_tree = e
+
+                    # apply the filters
                     for function in reversed(filters):
                         new_tree = function(
                             tree=new_tree,
@@ -397,8 +411,12 @@ class ExpansionContext:
                             **dict((*mdata.kwargs.items(),
                                     *self.file_vars.items()))
                         )
+                    # yield it for one more walking
                     new_tree = yield new_tree
             except StopIteration as final:
+                # if the ``detect_macro()`` function returns a final
+                # value, take it and ext as well, if it has found at
+                # least one macro
                 if final.value is not None:
                     new_tree = final.value
                 if found_macro:
