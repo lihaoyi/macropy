@@ -32,22 +32,25 @@ else:
             # TODO: changed the behavior of this test by improving
             # tracebacks for errors.
 
-            # this should contain at least two "i am a cow" and a bunch of stack trace
+            # this should contain at least two "i am a cow" and a
+            # bunch of stack trace
             assert len(msg.splitlines()) >= 8, msg
             assert msg.rfind("i am a cow") != msg.find("i am a cow")
 
-            # this one should only cotain the "i am a cow" message and nothing else
             with self.assertRaises(Exception) as ce:
+            # this one should only cotain the "i am a cow" message and
+            # nothing else
                 failure.run2()
             assert str(ce.exception) == "i am a cow"
 
-            #with self.assertRaises(Exception) as ce:
             with self.assertRaises(Exception):
+            # with self.assertRaises(Exception) as ce:
                 failure.run3()
 
-            #with self.assertRaises(Exception) as ce:
             with self.assertRaises(Exception):
+            # with self.assertRaises(Exception) as ce:
                 failure.run4()
+
 
 from . import quotes
 from . import unparse

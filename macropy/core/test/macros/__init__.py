@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 import unittest
 import sys
 
@@ -74,5 +74,3 @@ class Tests(unittest.TestCase):
         assert aliases.run_aliased() == "wtf"
         with self.assertRaises(Exception):
             aliases.run_ignored()
-
-

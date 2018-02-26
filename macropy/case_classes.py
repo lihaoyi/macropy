@@ -71,7 +71,6 @@ class Enum(object):
     def __repr__(self):
         return self.__str__()
 
-
     def __iter__(self):
         for x in self.__class__._fields:
             yield getattr(self, x)
@@ -80,7 +79,7 @@ class Enum(object):
 def enum_new(cls, **kw):
     if len(kw) != 1:
         raise TypeError("Enum selection can only take exactly 1 named "
-                        "argument: %d found." %  len(kw))
+                        "argument: %d found." % len(kw))
 
     [(k, v)] = kw.items()
 
@@ -90,8 +89,10 @@ def enum_new(cls, **kw):
 
     raise ValueError("No Enum found for %s=%s" % (k, v))
 
+
 def noop_init(*args, **kw):
     pass
+
 
 def extract_args(bases):
     args = []
