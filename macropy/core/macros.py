@@ -221,9 +221,9 @@ class Macros:
 
         def __call__(self, f, name=None):
             if name is not None:
-                self.registry[name] = self.wrap(f)
+                self.registry[name] = f
             if hasattr(f, "__name__"):
-                self.registry[f.__name__] = self.wrap(f)
+                self.registry[f.__name__] = f
 
             return self.wrap(f)
 
