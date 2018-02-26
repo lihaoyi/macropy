@@ -136,5 +136,6 @@ def hygienator(tree, stop, scope, **kw):
 
 
 macros.expose_unhygienic(ast)
+macros.expose_unhygienic(ast_repr)
 macros.expose_unhygienic(Captured)
 macros.expose_unhygienic(Literal)

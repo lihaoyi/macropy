@@ -8,7 +8,6 @@ import macropy.core.walkers
 
 from macropy.core.quotes import ast_literal, u
 from macropy.core.hquotes import macros, hq, unhygienic
-from macropy.core import ast_repr, Captured
 
 
 macros = macropy.core.macros.Macros()
