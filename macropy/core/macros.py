@@ -6,6 +6,7 @@ import ast
 import collections
 import functools
 import importlib
+import inspect
 import logging
 
 from . import real_repr, Captured, Literal
@@ -354,8 +355,11 @@ class ExpansionContext:
                 while True:
                     mdata = type_it.send(new_tree)
                     found_macro = True
-                    new_tree = yield mdata.body_tree
                     mfunc, mmod = mdata.macro
+                    if inspect.isgeneratorfunction(mfunc):
+                        new_tree = mdata.body_tree
+                    else:
+                        new_tree = yield mdata.body_tree
                     try:
                         new_tree = mfunc(
                             tree=new_tree,
@@ -365,6 +369,15 @@ class ExpansionContext:
                             **dict((*mdata.kwargs.items(),
                                     *self.file_vars.items()))
                         )
+                        if inspect.isgenerator(new_tree):
+                            m_it = new_tree
+                            new_tree = None
+                            try:
+                                while True:
+                                    new_tree = yield m_it.send(new_tree)
+                            except StopIteration as final:
+                                if final.value is not None:
+                                    new_tree = final.value
                     except Exception as e:
                         # here this exception is raised during macro
                         # expansion, at import time. If we come here,
