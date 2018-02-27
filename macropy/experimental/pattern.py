@@ -252,7 +252,8 @@ class OptionalMatcher(Matcher):
             except PatternMatchException as e:
                 if ix + 1 == len(self.matchers):
                     raise e
-            if res is not None and len(res):
+            if res is not None:
+                assert isinstance(res, list)
                 return res
         return []
 

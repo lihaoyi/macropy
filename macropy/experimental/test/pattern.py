@@ -243,6 +243,9 @@ class Tests(unittest.TestCase):
             (Bar(r) | Baz(r))  << Bar(4)
             self.assertEquals(r, 4)
 
+        with _matching:
+            (Bar(a='foo') | Baz(b='bar')) << Bar(a='foo')
+
         with self.assertRaises(PatternMatchException):
             with _matching:
                 (Bar(x) | Baz(x)) << Bob(4)
