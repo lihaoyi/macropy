@@ -77,15 +77,8 @@ def ast_repr(x):
         return ast.NameConstant(value=x)
     elif isinstance(x, ast.AST):
         fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
-        # return ast.Call(
-        #     ast.Name(id='ast.%s' % x.__class__.__name__),
-        #     [], fields, None, None
-        # )
-
-        # TODO: the original code hard-coded an expectation that ast
-        # classes would be imported into the global namespace.  This
-        # hard-codes an expectation that ast classes will be bound to
-        # the name `ast`.  There must be a better way.
+        # This hard-codes an expectation that ast classes will be
+        # bound to the name `ast`.  There must be a better way.
         return ast.Call(ast.Attribute(
             value=ast.Name(id='ast', ctx=ast.Load()),
             attr=x.__class__.__name__, ctx=ast.Load()), [], fields)
