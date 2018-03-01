@@ -72,21 +72,16 @@ def ast_repr(x):
     elif tx is Literal:
         return x.body
     elif tx is Captured:
-        return ast.Call(ast.Name(id="Captured"), [x.val, ast_repr(x.name)], [])
+        return compat.Call(ast.Name(id="Captured"), [x.val, ast_repr(x.name)], [])
     elif tx in (bool, type(None)):
         return ast.NameConstant(value=x)
     elif isinstance(x, ast.AST):
         fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
         # This hard-codes an expectation that ast classes will be
         # bound to the name `ast`.  There must be a better way.
-        if compat.PY35:
-            return ast.Call(ast.Attribute(
-                value=ast.Name(id='ast', ctx=ast.Load()),
-                attr=x.__class__.__name__, ctx=ast.Load()), [], fields)
-        else:
-            return ast.Call(ast.Attribute(
-                value=ast.Name(id='ast', ctx=ast.Load()),
-                attr=x.__class__.__name__, ctx=ast.Load()), [], fields, None, None)
+        return compat.Call(ast.Attribute(
+            value=ast.Name(id='ast', ctx=ast.Load()),
+            attr=x.__class__.__name__, ctx=ast.Load()), [], fields)
 
     raise Exception("Don't know how to ast_repr this: ", x)
 
