@@ -79,9 +79,9 @@ def tco(tree, **kw):
     def return_replacer(tree, **kw):
         with switch(tree):
             if ast.Return(value=ast.Call(
-                    func=func, 
-                    args=args, 
-                    starargs=starargs, 
+                    func=func,
+                    args=args,
+                    starargs=starargs,
                     kwargs=kwargs)):
                 if starargs:
                     with hq as code:
