@@ -26,14 +26,21 @@ def Call(func, args, keywords):
     if PY35:
         return ast.Call(func, args, keywords)
     else:
+        # see https://greentreesnakes.readthedocs.io/en/latest/nodes.html#Call
         starargs = [el.value for el in args if isinstance(el, ast.Starred)]
-        if len(starargs) > 1:
+        if len(starargs) == 0:
+            starargs = None
+        elif len(starargs) == 1:
+            starargs = starargs[0]
+        else:
             raise ValueError("No more than one starargs.")
-        starargs = starargs[0]
         kwargs = [el.value for el in keywords if el.arg is None]
-        if len(kwargs) > 1:
+        if len(kwargs) == 0:
+            kwargs = None
+        elif len(kwargs) == 1:
+            kwargs = kwargs[0]
+        else:
             raise ValueError("No more than one kwargs.")
-        kwargs = kwargs[0]
         args = [el for el in args if el.value is not starargs]
         keywords = [el for el in keywords if el.value is not kwargs]
         return ast.Call(func, args, keywords, starargs, kwargs)
