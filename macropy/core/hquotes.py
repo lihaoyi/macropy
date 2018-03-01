@@ -41,7 +41,7 @@ def captured_registry(**kw):
 
 @register(post_processing)
 def post_proc(tree, captured_registry, gen_sym, **kw):
-    if captured_registry == []:
+    if len(captured_registry) == 0:
         return tree
 
     unpickle_name = gen_sym("unpickled")
