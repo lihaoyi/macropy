@@ -376,8 +376,8 @@ class ExpansionContext:
                             args=mdata.call_args,
                             src=self.src,
                             expand_macros=self.expand_macros,
-                            **dict((*mdata.kwargs.items(),
-                                    *self.file_vars.items()))
+                            **dict(tuple(mdata.kwargs.items()) +
+                                   tuple(self.file_vars.items()))
                         )
                         # the result is a generator, treat it like a
                         # context manager
@@ -408,8 +408,8 @@ class ExpansionContext:
                             expand_macros=self.expand_macros,
                             lineno=mdata.macro_tree.lineno,
                             col_offset=mdata.macro_tree.col_offset,
-                            **dict((*mdata.kwargs.items(),
-                                    *self.file_vars.items()))
+                            **dict(tuple(mdata.kwargs.items()) +
+                                   tuple(self.file_vars.items()))
                         )
                     # yield it for one more walking
                     new_tree = yield new_tree
