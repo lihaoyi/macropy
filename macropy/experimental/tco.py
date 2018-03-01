@@ -103,6 +103,10 @@ def tco(tree, **kw):
 
     # Replace calls (that aren't returned) which happen to be in a tail-call
     # position
+
+    # WARN!!: This has to be fixed to support both Py3.4 and 3.5+, do
+    # not use, the problem is that ast.Call changed significantly
+    # between Py3.4 and 3.5
     def replace_tc_pos(node):
         with switch(node):
             if ast.Expr(value=ast.Call(
