@@ -2,6 +2,7 @@
 import unittest
 
 import macropy.core
+import macropy.core.compat as compat
 
 
 def convert(code):
@@ -80,7 +81,7 @@ finally:
 class Foo(bar, baz):
     pass
 
-class Bar:
+class Bar(metaclass=Meta):
     pass""")
 
     def test_FunctionDef(self):
@@ -92,7 +93,7 @@ class Bar:
 def foo():
     bar
 
-def foo(arg, arg2, kw=5, *args, **kwargs):
+def foo(arg, arg2, kw=5, *args, kwonly=4, **kwargs):
     pass""")
 
     def test_For(self):
@@ -182,4 +183,41 @@ a[(1,)]""") # subscript, Index, Slice, extslice
         self.convert_test("""
 (lambda k, f, a=6, *c, **kw: 7)
 (lambda: 7)
+""")
+
+    def test_ann_assign(self):
+        if not compat.PY36:
+            return
+        self.convert_test("""
+a: Int
+(b.c): Bool = False
+(d[1]): Int
+""")
+
+    def test_dict_star_star_expand(self):
+        if not compat.PY35:
+            return
+        self.convert_test("""
+{'a':1, **d}""")
+
+    def test_joined_str(self):
+        if not compat.PY36:
+            return
+        self.convert_test("""
+f'bar {grande!r:foo}   zoo'
+""")
+
+    def test_async(self):
+        if not compat.PY35:
+            return
+        self.convert_test("""
+
+async def foo(a: Int):
+    result = [i async for i in aiter() if (i % 2)]
+    result = [(await fun()) for fun in funcs if (await condition())]
+    async for foo in aiter:
+        pass
+    async with foo as bar:
+        passes
+    (await future)
 """)

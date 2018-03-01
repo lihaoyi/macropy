@@ -29,7 +29,7 @@ import ast
 import sys
 
 
-from . import util
+from . import util, compat
 
 
 __all__ = ['Literal', 'Captured', 'ast_repr', 'parse_expr', 'parse_stmt',
@@ -116,6 +116,12 @@ binop = {
     ast.RShift: ">>",    ast.BitOr: "|",      ast.BitXor: "^",
     ast.BitAnd: "&",     ast.FloorDiv: "//",  ast.Pow: "**"
 }
+
+if compat.PY35:
+    binop.update({
+        ast.MatMult: "@",
+    })
+
 unop = {
     ast.Invert: "~",     ast.Not: "not",     ast.UAdd: "+",   ast.USub: "-"
 }
@@ -285,15 +291,13 @@ trec = {
                                      mix(tabs(i), "finally:",
                                          rec(tree.finalbody, i+1))),
     ast.ClassDef:   lambda tree, i: ("\n" +
-                                     "".join(tabs(i) + "@" + rec(dec, i)
-                                             for dec in tree.decorator_list) +
-                                     tabs(i) + "class " + tree.name +
-                                     mix("(",
-                                         ", ".join([rec(t, i)
-                                                    for t in (tree.bases +
-                                                              tree.keywords)]),
-                                         ")") +
-                                     ":" + rec(tree.body, i+1)),
+                                "".join(tabs(i) + "@" + rec(dec, i) for dec in tree.decorator_list) +
+                                tabs(i) + "class " + tree.name +
+                            mix("(", ", ".join(
+                                [rec(t, i) for t in tree.bases + tree.keywords] +
+                                ["*" + rec(t, i) for t in box(tree.starargs)] +
+                                ["**" + rec(t, i) for t in box(tree.kwargs)]
+                            ), ")") + ":" + rec(tree.body, i+1)),
     ast.FunctionDef:lambda tree, i: ("\n" + "".join(tabs(i) + "@" + rec(dec, i)
                                                     for dec in tree.decorator_list) +
                                      tabs(i) + "def " + tree.name + "(" +
@@ -305,25 +309,99 @@ trec = {
                                      ":"  + rec(tree.body, i+1)),
     ast.Bytes:      lambda tree, i: repr(tree.s),
     ast.Starred:    lambda tree, i: "*" + rec(tree.value, i),
-    ast.arg:        lambda tree, i: tree.arg + mix(":", getattr(tree,
-                                                           'annotation', '')),
+    ast.arg:        lambda tree, i: (tree.arg + mix(": ", rec(
+        getattr(tree,
+                'annotation', None), i))),
     ast.withitem:   lambda tree, i: (rec(tree.context_expr, i) +
                                      mix(" as ", rec(tree.optional_vars, i))),
-    ast.arguments:  lambda tree, i: (", ".join(list(map(
-        lambda a, d: (rec(a, i) + mix("=", rec(d, i))),
-        tree.args,
-        [None] * (len(tree.args) - len(tree.defaults)) + tree.defaults
-    )) + util.box(mix("*", rec(tree.vararg, i))) +
-        # TODO:
-        #[rec(arg, i) + "=" + rec(d, i) for a, d in zip(tree.kwonlyargs, tree.kw_defaults)] +
+    ast.arguments:  lambda tree, i: (", ".join(
+        list(map(
+            lambda a, d: (rec(a, i) + mix("=", rec(d, i))),
+            tree.args,
+            [None] * (len(tree.args) - len(tree.defaults)) + tree.defaults
+        )) + util.box(
+            mix("*", rec(tree.vararg, i))) +
+        [rec(a, i) + "=" + rec(d, i)
+         for a, d in zip(tree.kwonlyargs, tree.kw_defaults)] +
         util.box(mix("**", rec(tree.kwarg, i))))),
-    ast.NameConstant: lambda tree, i: str(tree.value),
-    ast.Call:  lambda tree, i: (rec(tree.func, i) + "(" +
+    ast.Call:       lambda tree, i: (rec(tree.func, i) + "(" +
+                                ", ".join(
+                                    [rec(t, i) for t in tree.args] +
+                                    [rec(t, i) for t in tree.keywords] +
+                                    box(mix("*", rec(tree.starargs, i))) +
+                                    box(mix("**", rec(tree.kwargs, i)))
+                                ) + ")") ,
+}
+
+if compat.PY34:
+    trec.update({
+        ast.NameConstant: lambda tree, i: str(tree.value),
+        })
+
+if compat.PY35:
+    trec.update({
+        ast.AsyncFor: lambda tree, i: (tabs(i) + "async for " + rec(tree.target, i) +
+                                  " in " + rec(tree.iter, i) + ":" +
+                                  rec(tree.body, i+1) +
+                                  mix(tabs(i), "else:", rec(tree.orelse, i+1))),
+        ast.AsyncFunctionDef: lambda tree, i: ("\n" +
+                                          "".join(tabs(i) + "@" + rec(dec, i)
+                                                  for dec in tree.decorator_list) +
+                                          tabs(i) + "async def " + tree.name + "(" +
+                                          rec(tree.args, i) + ")" +
+                                          mix(" -> ", rec(tree.returns, i)) +  ":" +
+                                          rec(tree.body, i+1)),
+        ast.AsyncWith: lambda tree, i: (tabs(i) + "async with " +
+                                   jmap(", ", lambda x: rec(x,i), tree.items) +
+                                   ":"  + rec(tree.body, i+1)),
+        ast.Await: lambda tree, i: "(await " + rec(tree.value, i) + ")",
+        ast.Call: lambda tree, i: (rec(tree.func, i) + "(" +
                                 ", ".join(
                                     [rec(t, i) for t in tree.args] +
                                     [rec(t, i) for t in tree.keywords]) +
-                                ")")
-}
+                                ")"),
+        ast.ClassDef: lambda tree, i: ("\n" +
+                                  "".join(tabs(i) + "@" + rec(dec, i)
+                                          for dec in tree.decorator_list) +
+                                  tabs(i) + "class " + tree.name +
+                                  mix("(",
+                                      ", ".join([rec(t, i)
+                                                 for t in (tree.bases +
+                                                           tree.keywords)]),
+                                      ")") + ":" + rec(tree.body, i+1)),
+        # See https://greentreesnakes.readthedocs.io/en/latest/nodes.html#Dict
+        ast.Dict: lambda tree, i: ("{" + jmap(", ", lambda k, v: (((rec(k, i) + ":")
+                                                        if k is not None
+                                                        else "**")
+                                                        + rec(v, i)),
+                                         tree.keys, tree.values) + "}"),
+    })
+
+if compat.PY36:
+    trec.update({
+        ast.AnnAssign: lambda tree, i: (tabs(i) +
+                                   (rec(tree.target, i)
+                                    if tree.simple else
+                                    "(" + rec(tree.target, i) + ")") +
+                                   ": " + rec(tree.annotation, i) +
+                                   ((" = " + rec(tree.value, i) if tree.value
+                                     else ""))),
+        ast.comprehension: lambda tree, i: ((" async" if getattr(tree, 'is_async',
+                                                            False)
+                                        else "") + " for " + rec(tree.target, i) +
+                                       " in " + rec(tree.iter, i) +
+                                       jmap("", lambda x: " if " + rec(x, i),
+                                            tree.ifs)),
+        ast.FormattedValue: lambda tree, i: ("{" +  rec(tree.value, i) +
+                                        {-1: "", 115: "!s", 114: "!r",
+                                         115: "!a"}[tree.conversion] +
+                                        ((":" + tree.format_spec.values[0].s)
+                                         if tree.format_spec else "") +
+                                        "}"),
+        ast.JoinedStr: lambda tree, i: "f" + repr("".join(v.s
+            if isinstance(v, ast.Str) else rec(v, i) for v in tree.values)),
+    })
+
 
 def mix(*x):
     """Join everything together if none of them are empty"""
