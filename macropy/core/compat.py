@@ -41,6 +41,6 @@ def Call(func, args, keywords):
             kwargs = kwargs[0]
         else:
             raise ValueError("No more than one kwargs.")
-        args = [el for el in args if not isinstance(el.Starred)]
+        args = [el for el in args if not isinstance(el, ast.Starred)]
         keywords = [el for el in keywords if el.value is not kwargs]
         return ast.Call(func, args, keywords, starargs, kwargs)
