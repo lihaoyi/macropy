@@ -5,6 +5,7 @@ import ast
 
 from .util import merge_dicts
 from .walkers import Walker
+from . import compat
 
 
 __all__ = ['Scoped']
@@ -20,7 +21,7 @@ def find_names(tree, collect, stop, **kw):
 
 @Walker
 def find_assignments(tree, collect, stop, **kw):
-    if isinstance(tree, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+    if isinstance(tree, compat.scope_nodes):
         collect((tree.name, tree))
         stop()
     if isinstance(tree, ast.Assign):
@@ -90,7 +91,7 @@ class Scoped(Walker):
             else:
                 extend_scope(tree.elt, iterator_vars)
 
-        if isinstance(tree, (ast.AsyncFunctionDef, ast.FunctionDef)):
+        if isinstance(tree, compat.function_nodes):
 
             extend_scope(tree.args, {tree.name: tree})
             extend_scope(

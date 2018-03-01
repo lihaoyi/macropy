@@ -7,9 +7,7 @@ Exposes this functionality as the `gen_sym` function.
 
 import ast
 
-from . import macros
-from . import util
-from . import walkers
+from . import compat, macros, util, walkers
 
 
 @util.register(macros.injected_vars)
@@ -35,7 +33,7 @@ def gen_sym(tree, **kw):
             names = [x.asname or x.name for x in tree.names]
             for name in names:
                 collect(name)
-        elif ttree in (ast.AsyncFunctionDef, ast.FunctionDef, ast.ClassDef):
+        elif ttree in compat.scope_nodes:
             collect(tree.name)
 
     found_names = set(name_finder.collect(tree))

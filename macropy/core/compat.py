@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import ast
 import sys
 
 PY3 = sys.version_info >= (3,)
@@ -14,3 +15,10 @@ if PY3:
 else:
     string_types = (str, unicode)
     xrange = __builtins__['xrange']
+
+if PY34:
+    function_nodes = (ast.FunctionDef,)
+else:
+    function_nodes = (ast.AsyncFunctionDef, ast.FunctionDef)
+
+scope_nodes = function_nodes + (ast.ClassDef,)

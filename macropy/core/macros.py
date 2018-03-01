@@ -9,7 +9,7 @@ import importlib
 import inspect
 import logging
 
-from . import real_repr, Captured, Literal
+from . import compat, real_repr, Captured, Literal
 
 
 logger = logging.getLogger(__name__)
@@ -163,8 +163,7 @@ class Decorator(MacroType):
     """
 
     def detect_macro(self, in_tree):
-        if (isinstance(in_tree, (ast.AsyncFunctionDef, ast.ClassDef,
-                              ast.FunctionDef)) and
+        if (isinstance(in_tree, compat.scope_nodes) and
             len(in_tree.decorator_list)):  # noqa: E129
             rev_decs = list(reversed(in_tree.decorator_list))
             tree = in_tree
@@ -185,8 +184,7 @@ class Decorator(MacroType):
                     tree = [ast.Expr(tree)]
                     break
 
-            if isinstance(tree, (ast.AsyncFunctionDef, ast.ClassDef,
-                                 ast.FunctionDef)):
+            if isinstance(tree, compat.scope_nodes):
                 tree.decorator_list = list(reversed(seen_decs))
             if len(additions) == 0:
                 return tree
