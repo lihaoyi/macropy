@@ -79,9 +79,15 @@ def ast_repr(x):
         fields = [ast.keyword(a, ast_repr(b)) for a, b in ast.iter_fields(x)]
         # This hard-codes an expectation that ast classes will be
         # bound to the name `ast`.  There must be a better way.
-        return ast.Call(ast.Attribute(
-            value=ast.Name(id='ast', ctx=ast.Load()),
-            attr=x.__class__.__name__, ctx=ast.Load()), [], fields)
+        if compat.PY35:
+            return ast.Call(ast.Attribute(
+                value=ast.Name(id='ast', ctx=ast.Load()),
+                attr=x.__class__.__name__, ctx=ast.Load()), [], fields)
+        else:
+            return ast.Call(ast.Attribute(
+                value=ast.Name(id='ast', ctx=ast.Load()),
+                attr=x.__class__.__name__, ctx=ast.Load()), [], fields, None, None)
+
     raise Exception("Don't know how to ast_repr this: ", x)
 
 
