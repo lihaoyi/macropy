@@ -407,16 +407,20 @@ def mix(*x):
     """Join everything together if none of them are empty"""
     return "".join(x) if all(x) else ""
 
+
 def rec(tree, i):
     """Recurse with same indentation"""
     return trec[tree.__class__](tree, i)
+
 
 def jmap(s, f, *l):
     """Shorthand for the join+map operation"""
     return s.join(map(f, *l))
 
+
 def tabs(i):
     return "\n" + "    "*i
+
 
 def unparse(tree):
     """Converts an AST back into the source code from whence it came!"""
