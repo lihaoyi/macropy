@@ -221,3 +221,6 @@ async def foo(a: Int):
         passes
     (await future)
 """)
+
+    def test_leftovers(self):
+        self.assertEqual(macropy.core._ast_leftovers(), set())

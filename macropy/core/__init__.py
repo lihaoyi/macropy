@@ -421,3 +421,30 @@ def tabs(i):
 def unparse(tree):
     """Converts an AST back into the source code from whence it came!"""
     return trec[tree.__class__](tree, 0)
+
+
+def _ast_leftovers():
+    """Return a set of the AST nodes not yet covered by unparse"""
+    ast_classes = {v for v in vars(ast).values()
+                   if isinstance(v, type)
+                   if issubclass(v, ast.AST)
+                   if v is not ast.AST}
+
+    expr_ctxs = {ast.Load, ast.Store, ast.AugStore, ast.AugLoad, ast.Param}
+    top_nodes = {ast.Module, ast.Expression, ast.Interactive}
+    jython = {ast.Suite}
+    optimizations = {ast.Del, ast.Constant}
+
+    sups = set()
+    sups.update(*{v.__bases__ for v in ast_classes})
+
+    terms = ast_classes.difference(sups, expr_ctxs, top_nodes, jython,
+                                   optimizations)
+
+    remainder = {v for v in terms
+                 if v not in trec
+                 if v not in binop
+                 if v not in unop
+                 if v not in cmpops
+                 if v not in boolops}
+    return remainder
