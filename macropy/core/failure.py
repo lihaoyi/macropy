@@ -5,7 +5,7 @@ stack traces.
 import traceback
 
 from .macros import filters
-from .hquotes import macros, hq
+from .hquotes import macros, hq  # noqa: F401
 from .util import register
 
 

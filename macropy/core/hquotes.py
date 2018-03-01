@@ -9,7 +9,8 @@ import pickle
 from .macros import (Macros, check_annotated, filters, injected_vars,
                      macro_stub, post_processing)
 
-from .quotes import macros, q, unquote_search, u, ast_list, name, ast_literal
+from .quotes import (macros, q, unquote_search, u, ast_list,   # noqa: F401
+                     name, ast_literal)
 from .analysis import Scoped
 
 from . import ast_repr, Captured, Literal

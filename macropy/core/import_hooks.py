@@ -10,8 +10,8 @@ import sys
 
 import macropy.activate
 
-from . import macros
-from . import exporters
+from . import macros  # noqa: F401
+from . import exporters  # noqa: F401
 from .util import singleton
 
 
