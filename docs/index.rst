@@ -11,6 +11,7 @@ Welcome to MacroPy3's documentation!
    :caption: Contents:
 
    overview
+   demo
    reference
 
 
@@ -42,11 +43,8 @@ __ //en.wikipedia.org/wiki/Abstract_syntax_tree
 
 
 Try it out in the REPL, it should just work! You can also see the
-`docs/examples/using_macros`__ folder for a minimal example of using
+:repo:`docs/examples/using_macros` folder for a minimal example of using
 MacroPy's existing macros.
-
-__ //github.com/azazel75/macropy/tree/master/docs/examples/using_macros
-
 
 MacroPy has been used to implement features such as:
 

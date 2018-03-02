@@ -40,14 +40,12 @@ This map maps out how to convert from form to form:
 .. image:: _static/media/Transforms.png
 
 Except for ``eval``, these are all functions defined in the
-`macropy/core/__init__.py`__. For instance,
+:repo:`macropy/core/__init__.py`. For instance,
 in order to convert from a AST back into source code (for example if
 you want to print out the code which is being run), you would use the
 ``unparse()`` method. These transformations will be used throughout this
 documentation, to convert from one form to another or to print out the
 AST for inspection.
-
-__ https://github.com/azazel75/macropy/tree/master/macropy/core/__init__.py
 
 ``parse_stmt(src)`` & ``parse_expr(src)``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -295,9 +293,10 @@ captured AST looks like after expansion:
 Note that macro expansion *mutates the tree being expanded*. In the
 case of the ``show_expanded`` macro, it doesn't really matter (since
 the tree was going to get expanded anyway). However, if you want to
-preserve the original AST for any reason, you should `deepcopy
-<http://docs.python.org/3/library/copy.html#copy.deepcopy>`_ the
+preserve the original AST for any reason, you should `deepcopy`__ the
 original AST and do your expansion on the copy.
+
+__ http://docs.python.org/3/library/copy.html#copy.deepcopy
 
 .. _quasiquote:
 
@@ -395,9 +394,9 @@ case, I want the syntax tree for the expression ``x + x``, and not
 
 Overall, quasiquotes are an incredibly useful tool for assembling or
 manipulating the ASTs, and are used in the implementation in all of
-the following examples. See the `String Interpolation
-<macropy/string_interp.py>`_ or `Quick Lambda
-<macropy/quick_lambda.py>`_ macros for short, practical examples of
+the following examples. See the :repo:`String Interpolation
+<macropy/string_interp.py>` or :repo:`Quick Lambda
+<macropy/quick_lambda.py>` macros for short, practical examples of
 their usage.
 
 .. _walker:
@@ -406,11 +405,10 @@ Walkers
 -------
 
 The Walker is a uniform abstraction to use for recursively traversing
-a Python AST. Defined in `macropy/core/walkers.py`__, it is used
+a Python AST. Defined in :repo:`macropy/core/walkers.py`, it is used
 throughout MacroPy, both in the core logic as well as the
 implementation of most of the macros.
 
-__ //github.com/azazel75/macropy/tree/master/macropy/core/walkers.py
 
 In its most basic form, a Walker is used as follows:
 
@@ -555,12 +553,11 @@ arguments. For example, you could have a walker such as:
 This provides it a large amount of versatility, and lets you use the
 ``Walker`` to recursively traverse and transform Python ASTs in
 interesting ways. If you inspect the source code of the macros in the
-`macropy <macropy>`_ and `macropy/experimental
-<macropy/experimental>`_ folders, you will see most of them make
-extensive use of Walkers in order to concisely perform their
-transformations. If you find yourself needing a recursive traversal,
-you should think hard about why you cannot use a Walker before writing
-the recursion yourself.
+:repo:`macropy` and :repo:`macropy/experimental` folders, you will see
+most of them make extensive use of Walkers in order to concisely
+perform their transformations. If you find yourself needing a
+recursive traversal, you should think hard about why you cannot use a
+Walker before writing the recursion yourself.
 
 .. _described below:
 

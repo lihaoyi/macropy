@@ -41,12 +41,14 @@ providing macros, and the ``macros`` object then provides the methods
 functions to mark them out as the three different kinds of macros.
 
 Each macro function is passed a ``tree``.  The ``tree`` is an ``AST``
-object, the sort provided by Python's `ast module
-<http://docs.python.org/3/library/ast.html>`_. The macro is able to do
-whatever transformations it wants, and it returns a modified (or even
-an entirely new) ``AST`` object which MacroPy will use to replace the
-original macro invocation. The macro also takes ``**kw``, which
-contains :ref:`other useful things` which you may need.
+object, the sort provided by Python's `ast module`__. The macro is
+able to do whatever transformations it wants, and it returns a
+modified (or even an entirely new) ``AST`` object which MacroPy will
+use to replace the original macro invocation. The macro also takes
+``**kw``, which contains :ref:`other useful things` which you may
+need.
+
+__ http://docs.python.org/3/library/ast.html
 
 These three types of macros are called via:
 
@@ -77,8 +79,9 @@ the code above) is given to the respective macro to handle. The tree
 substituted into the original code in-place.
 
 MacroPy intercepts the module-loading workflow, via the functionality
-provided by `PEP 302: New Import Hooks
-<http://www.python.org/dev/peps/pep-0302/>`_. The workflow is roughly:
+provided by `PEP 302: New Import Hooks`__. The workflow is roughly:
+
+__ http://www.python.org/dev/peps/pep-0302/
 
 - Intercept an import
 - Parse the contents of the file into an AST
@@ -115,12 +118,12 @@ the minimum viable setup is:
 Where you run ``run.py`` instead of ``other.py``.  For the same
 reason, you cannot directly run MacroPy's own unit tests directly
 using ``unittest`` or ``nose``: you need to run the
-``macropy/run_tests.py`` file from the project root for the tests to
+:repo:`macropy/run_tests.py` file from the project root for the tests to
 run. See the `runnable, self-contained no-op example`__ to see exactly
 what this looks like, or the example for `using existing macros`__.
 
-__ //github.com/azazel75/macropy/tree/master/docs/examples/first_macro/nop
-__ //github.com/azazel75/macropy/tree/master/docs/examples/using_macros
+__ https://github.com/azazel75/macropy/tree/master/docs/examples/first_macro/nop
+__ https://github.com/azazel75/macropy/tree/master/docs/examples/using_macros
 
 
 MacroPy also works in the REPL:

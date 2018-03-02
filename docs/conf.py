@@ -41,7 +41,11 @@ release = '1.0.4.dev3'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
+    'sphinx.ext.extlinks',
 ]
+
+extlinks = {'repo': ('https://github.com/azazel75/macropy/tree/master/%s',
+                     '')}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
