@@ -78,6 +78,59 @@ Browse the :ref:`high-level overview <overview>`, or look at the
 - `hygienic_macro`:ref:
 - `exporting`:ref:
 
+Or just skip ahead to the `discussion`:ref: and
+`conclusion`:ref:. We're open to contributions, so send us your
+ideas/questions/issues/pull-requests and we'll do our best to
+accommodate you! You can ask questions on the `Google Group
+<https://groups.google.com/forum/#!forum/macropy>`_ or file bugs on
+thee issues page. See the `changelist <CHANGES.rst>`:repo: to see
+what's changed recently.
+
+MacroPy3 is tested to run on `CPython 3.4
+<http://en.wikipedia.org/wiki/CPython>`_ and no support for `Jython
+<http://www.jython.org/>`_ or and `PyPy <http://pypy.org/>`_. MacroPy3
+is also available on `PyPI <https://pypi.python.org/pypi/macropy3>`_,
+using a standard `setup.py`:repo: to manage dependencies, installation
+and other things. Check out `this gist
+<https://gist.github.com/lihaoyi/5577609>`_ for an example of setting
+it up on a clean system.
+
+.. _conclusion:
+
+MacroPy: Bringing Macros to Python
+==================================
+
+Macros are always a contentious issue. On one hand, we have the
+LISP community, which seems to using macros for everything. On the
+other hand, most mainstream programmers shy away from them, believing
+them to be extremely powerful and potentially confusing, not to
+mention extremely difficult to execute.
+
+With MacroPy, we believe that we have a powerful, flexible tool that
+makes it trivially easy to write AST-transforming macros with any
+level of complexity. We have a `compelling suite of use cases
+<#examples>`_ demonstrating the utility of such transforms.
+
+.. and all of it runs perfectly fine on alternative implementations of
+.. Python such as PyPy.
+
+Credits
+=======
+
+MacroPy was initially created as a final project for the `MIT
+<http://web.mit.edu/>`_ class `6.945: Adventures in Advanced Symbolic
+Programming <http://groups.csail.mit.edu/mac/users/gjs/6.945/>`_,
+taught by `Gerald Jay Sussman
+<http://groups.csail.mit.edu/mac/users/gjs/>`_ and `Pavel Panchekha
+<http://pavpanchekha.com/>`_. Inspiration was taken from project such
+as `Scala Macros <http://scalamacros.org/>`_, `Karnickel
+<https://pypi.python.org/pypi/karnickel>`_ and `Pyxl
+<https://github.com/dropbox/pyxl>`_.
+
+License
+=======
+
+MIT
 
 Indices and tables
 ==================
