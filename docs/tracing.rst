@@ -109,7 +109,9 @@ We think that tracing is an extremely useful macro. For debugging what
 is happening, for teaching newbies how evaluation of expressions
 works, or for a myriad of other purposes, it is a powerful tool. The
 fact that it can be written as a `100 line macro
-<macropy/tracing.py>`_ is a bonus.
+<macropy/tracing.py>`:repo: is a bonus.
+
+.. _asserts:
 
 Smart Asserts
 ~~~~~~~~~~~~~
@@ -161,6 +163,8 @@ This requires every statement in the block to be a boolean
 expression. Each expression will then be wrapped in a ``require()``,
 throwing an ``AssertionError`` with a nice trace when a condition fails.
 
+.. _show_expanded:
+
 show_expanded
 ~~~~~~~~~~~~~
 
@@ -196,12 +200,12 @@ is being expanded into. ``show_expanded`` also works in block form:
   # code = [Print(dest=None, values=[Name(id='a', ctx=Load())], nl=True)]
 
 
-These examples show how the `quasiquote`_ macro works:
-it turns an expression or block of code into its AST, assigning the
-AST to a variable at runtime for other code to use.
+These examples show how the `quasiquotes`:ref: macro works: it turns
+an expression or block of code into its AST, assigning the AST to a
+variable at runtime for other code to use.
 
-Here is a less trivial example: `case classes`_ are a
-pretty useful macro, which saves us the hassle of writing a pile of
+Here is a less trivial example: `case_classes`:ref: are a pretty
+useful macro, which saves us the hassle of writing a pile of
 boilerplate ourselves. By using ``show_expanded``, we can see what the
 case class definition expands into:
 
@@ -231,7 +235,6 @@ Pretty neat!
 ---------------------------------
 
 If you want to write your own custom logging, tracing or debugging
-macros, take a look at the `100 lines of code`__ that implements all
-the functionality shown above.
-
-__ macropy/tracing.py
+macros, take a look at the `100 lines of code
+<macropy/tracing.py>`:repo: that implements all the functionality
+shown above.

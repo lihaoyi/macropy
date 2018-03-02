@@ -11,7 +11,10 @@ Welcome to MacroPy3's documentation!
    :caption: Contents:
 
    overview
+   tutorials
    demo
+   experimental
+   discussion
    reference
 
 
@@ -48,32 +51,32 @@ MacroPy's existing macros.
 
 MacroPy has been used to implement features such as:
 
-- `Case Classes`_, easy Algebraic Data Types from Scala, and `Enums`_;
-- `Quick Lambdas`_ from Scala and Groovy, and the `Lazy`_ and
-  `Interned`_ utility macros;
-- `String Interpolation`_, a common feature in many programming
+- `case_classes`:ref:, easy Algebraic Data Types from Scala, and `enums`:ref:;
+- `quicklambda`:ref: from Scala and Groovy, and the `lazy`:ref: and
+  `interned`:ref: utility macros;
+- `interpolation`:ref:, a common feature in many programming
   languages;
-- `Tracing`_ and `Smart Asserts`_, and `show_expanded`_, to help in
-  the debugging effort;
-- `MacroPEG`_, Parser Combinators inspired by Scala's,
+- `tracing`:ref: and `asserts`:ref:, and `show_expanded`:ref:, to help
+  in the debugging effort;
+- `peg`:ref:, Parser Combinators inspired by Scala's,
 
 
 As well as a number of more experimental macros such as:
 
-- `Pattern Matching`_ from the Functional Programming world
-- `Tail-call Optimization`_, preventing unnecessary stack overflows
-- `PINQ to SQLAlchemy`_, a shameless clone of LINQ to SQL from C#
-- `Pyxl Snippets`_, XML interpolation within your Python code
-- `JS Snippets`_, cross compiling snippets of Python into equivalent
+- `pattern`:ref: from the Functional Programming world
+- `tco`:ref:, preventing unnecessary stack overflows
+- `pinq`:ref:, a shameless clone of LINQ to SQL from C#
+- `pyxl_snippets`:ref:, XML interpolation within your Python code
+- `js`:ref:, cross compiling snippets of Python into equivalent
   Javascript
 
 
 Browse the :ref:`high-level overview <overview>`, or look at the
-`Tutorials`_ will go into greater detail and walk you through
+`Tutorials`:ref: will go into greater detail and walk you through
 
-- `Writing your first macro`_
-- `Making your macros hygienic`_
-- `Exporting your Expanded Code`_
+- `first_macro`:ref:
+- `hygienic_macro`:ref:
+- `exporting`:ref:
 
 
 Indices and tables

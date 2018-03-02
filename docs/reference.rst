@@ -6,11 +6,15 @@
 .. :Copyright: © 2018 Alberto Berti
 ..
 
+.. _reference:
+
 Reference
 =========
 
 This section contains reference documentation on various facets of
 MacroPy:
+
+.. _data_model:
 
 Data Model
 ----------
@@ -205,7 +209,7 @@ follows:
 In these cases, ``args`` contains a list of additional arguments, a
 length-1 list containing the AST for ``a``. Multiple arguments works
 as you would expect, although named arguments, ``*args`` and
-``**kwargs`` are not supported. This is used in `pattern matching`_'s
+``**kwargs`` are not supported. This is used in `pattern`:ref:'s
 switch macro to indicate what value to switch on.
 
 ``gen_sym``
@@ -298,6 +302,7 @@ original AST and do your expansion on the copy.
 
 __ http://docs.python.org/3/library/copy.html#copy.deepcopy
 
+.. _quasiquotes:
 .. _quasiquote:
 
 Quasiquotes
@@ -319,7 +324,7 @@ found in `LISP`_. Quasiquotes save you from having to manually
 construct code trees from the nodes they are made of. For example, if
 you want the code tree for
 
-.. LISP: //en.wikipedia.org/wiki/LISP
+.. _LISP: //en.wikipedia.org/wiki/LISP
 
 .. code:: python
 
@@ -560,7 +565,7 @@ recursive traversal, you should think hard about why you cannot use a
 Walker before writing the recursion yourself.
 
 .. _described below:
-
+.. _hygiene:
 
 Hygiene
 -------
@@ -655,6 +660,8 @@ philosophy of "We're all adults" means that it's always possible to go
 out of your way and cause ``gen_sym`` to fail, this is the case for
 other code too, and in practice this should not be a problem.
 
+.. _hquotes:
+
 Hygienic Quasiquotes
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -709,8 +716,8 @@ injected in a way that is guaranteed to be secure or, we can say,
 
 One thing to note is that ``hq`` pickles all captured names and saves
 them in the expanded module, which unpickles them for usage. This is
-done in order to ensure consistency of behavior with `exported`_ code,
-but it comes with a small number of caveats:
+done in order to ensure consistency of behavior with `exported`:ref:
+code, but it comes with a small number of caveats:
 
 - unpickleable values (e.g. module objects, nested functions, lambdas)
   can't be captured in a ``hq``;
@@ -774,6 +781,7 @@ imports. These tools should be sufficient to make your macros
 hygienic, and are used throughout the suite of macros bundled with
 MacroPy.
 
+.. _expansion_failure:
 
 Expansion Failures
 ------------------
@@ -895,6 +903,8 @@ can use statements like:
 To provide friendly, custom error messages to the macro-user in the
 cases where the failure of the macro was anticipated.
 
+.. _expansion_order:
+
 Expansion Order
 ---------------
 
@@ -938,6 +948,7 @@ macro can then do what it needs to do. The implementation of the
       new_tree = hq[wrap_simple(unhygienic[log], u[unparse(expanded_tree)], ast_literal[expanded_tree])]
       return new_tree
 
+.. _line_numbers:
 
 Line Numbers
 ------------

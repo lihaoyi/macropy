@@ -146,7 +146,7 @@ MacroPy also works in the REPL:
   [0, 2, 4]
 
 
-This example demonstrates the usage of the `Tracing`_ macro, which
+This example demonstrates the usage of the `tracing`:ref: macro, which
 helps trace the evaluation of a Python expression. Although support
 for the REPL is still experimental, most examples on this page will
 work when copied and pasted into the REPL verbatim.
