@@ -2,7 +2,7 @@
 
 import ast
 
-from .core import parse_stmt, unparse, ast_repr
+from .core import parse_stmt, unparse, ast_repr, gen_sym
 from .core.macros import Macros
 from .core.walkers import Walker
 from .core.hquotes import macros, hq, unhygienic, u

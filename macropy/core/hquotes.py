@@ -13,7 +13,7 @@ from .quotes import (macros, q, unquote_search, u, ast_list,   # noqa: F401
                      name, ast_literal)
 from .analysis import Scoped
 
-from . import ast_repr, Captured, Literal
+from . import ast_repr, Captured, Literal, gen_sym  # noqa: F401
 from .util import register
 from .walkers import Walker
 
