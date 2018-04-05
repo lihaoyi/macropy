@@ -4,20 +4,21 @@ import ast
 from .core.macros import Macros, injected_vars, post_processing
 from .core.util import Lazy, register
 from .core.quotes import macros, name, q, ast_literal, u
-from .core.hquotes import macros, hq, u
+from .core.hquotes import macros, hq, u  # noqa: F811
 from .core.cleanup import ast_ctx_fixer
-from .core import ast_repr, Captured
+from .core import ast_repr, Captured  # noqa: F401
 from .core.walkers import Walker
 from .core import gen_sym  # noqa: F401
 
-macros = Macros()
+
+macros = Macros()  # noqa: F811
 
 
 def _():
     """Placeholder for a function argument in the `f` macro."""
 
 
-@macros.expr
+@macros.expr  # noqa: F811
 def f(tree, gen_sym, **kw):
     """Macro to concisely create function literals; any `_`s within the
     wrapped expression becomes an argument to the generated function."""
@@ -32,7 +33,7 @@ def f(tree, gen_sym, **kw):
     tree, used_names = underscore_search.recurse_collect(tree)
 
     new_tree = q[lambda: ast_literal[tree]]
-    new_tree.args.args = [ast.arg(arg = x) for x in used_names]
+    new_tree.args.args = [ast.arg(arg=x) for x in used_names]
     return new_tree
 
 
@@ -56,12 +57,12 @@ def interned_count(**kw):
     return [0]
 
 
-@register(injected_vars)
+@register(injected_vars)  # noqa: F811
 def interned_name(gen_sym, **kw):
     return gen_sym()
 
 
-@register(post_processing)
+@register(post_processing)  # noqa: F811
 def interned_processing(tree, gen_sym, interned_count, interned_name, **kw):
 
     if interned_count[0] != 0:

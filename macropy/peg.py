@@ -9,10 +9,10 @@ import macropy.core.macros
 import macropy.core.util
 import macropy.core.walkers
 
-from macropy.core.hquotes import macros, hq, u
-from macropy.quick_lambda import macros, f
-from macropy.case_classes import macros, case
 from macropy.core import ast_repr, Captured, gen_sym   # noqa: F401
+from macropy.core.hquotes import macros, hq, u, ast_literal
+from macropy.quick_lambda import macros, f  # noqa: F811
+from macropy.case_classes import macros, case  # noqa: F811
 
 
 """
@@ -27,10 +27,10 @@ And-predicate: &e           &       And
 Not-predicate: !e           -       Not
 """
 
-macros = macropy.core.macros.Macros()
+macros = macropy.core.macros.Macros()  # noqa: F811
 
 
-@macros.block
+@macros.block  # noqa: F811
 def peg(tree, gen_sym, **kw):
     """Macro to easily define recursive-descent PEG parsers"""
     potential_targets = [
@@ -50,13 +50,13 @@ def peg(tree, gen_sym, **kw):
     return tree
 
 
-@macros.expr
+@macros.expr  # noqa: F811
 def peg(tree, gen_sym, **kw):
     """Macro to easily define recursive-descent PEG parsers"""
     return process(tree, [], gen_sym)
 
 
-def process(tree, potential_targets, gen_sym):
+def process(tree, potential_targets, gen_sym):  # noqa: F811
     @macropy.core.walkers.Walker
     def PegWalker(tree, stop, collect, **kw):
         if type(tree) is ast.Str:
@@ -113,12 +113,12 @@ def cut():
 
 
 @case
-class Input(string, index):
+class Input(string, index):  # noqa: F821
     pass
 
 
 @case
-class Success(output, bindings, remaining):
+class Success(output, bindings, remaining):  # noqa: F821
     """
     output: the final value that was parsed
     bindings: named value bindings, created by the `is` keyword
@@ -128,7 +128,7 @@ class Success(output, bindings, remaining):
 
 
 @case
-class Failure(remaining, failed, fatal | False):
+class Failure(remaining, failed, fatal | False):  # noqa: F821
     """
     remaining: an Input representing the unread portion of the input
     failed: a List[Parser], containing the stack of parsers in
@@ -139,6 +139,7 @@ class Failure(remaining, failed, fatal | False):
     @property
     def index(self):
         return self.remaining.index
+
     @property
     def trace(self):
         return [x for f in self.failed for x in f.trace_name]
@@ -158,14 +159,16 @@ class Failure(remaining, failed, fatal | False):
 
         line_num = string.count('\n', 0, index)
 
-        offset = min(index - line_start , 40)
+        offset = min(index - line_start, 40)
 
-        msg = "index: " + str(self.index) + ", line: " + str(line_num + 1) + ", col: " + str(index - line_start) + "\n" + \
-              " / ".join(self.trace) + "\n" + \
-              string[line_start+1:line_end][index - offset - line_start:index+line_length-offset - line_start] + "\n" + \
-              (offset-1) * " " + "^" + "\n" +\
-              "expected: " + self.failed[-1].short_str()
+        msg = ("index: " + str(self.index) + ", line: " + str(line_num + 1) +
+               ", col: " + str(index - line_start) + "\n" +
+               " / ".join(self.trace) + "\n" +
+               string[line_start+1:line_end] [index - offset - line_start:index+line_length-offset - line_start] + "\n" +
+               (offset-1) * " " + "^" + "\n" +
+               "expected: " + self.failed[-1].short_str())
         return msg
+
 
 class ParseError(Exception):
     """An exception that wraps a Failure"""
@@ -202,11 +205,11 @@ class Parser:
     def bind_to(self, string):
         return Parser.Named(lambda: self, [string])
 
-    def __and__(self, other):   return Parser.And([self, other])
+    def __and__(self, other): return Parser.And([self, other])
 
-    def __or__(self, other):    return Parser.Or([self, other])
+    def __or__(self, other): return Parser.Or([self, other])
 
-    def __neg__(self):          return Parser.Not(self)
+    def __neg__(self): return Parser.Not(self)
 
     @property
     def join(self):
@@ -220,10 +223,12 @@ class Parser:
         return Parser.Rep(self)
 
     def rep1_with(self, other):
-        return Parser.Seq([self, Parser.Seq([other, self]).rep]) // (lambda x: [x[0]] + [y[1] for y in x[1]])
+        return (Parser.Seq([self, Parser.Seq([other, self]).rep]) //
+                (lambda x: [x[0]] + [y[1] for y in x[1]]))
 
     def rep_with(self, other):
         return self.rep1_with(other) | Parser.Succeed([])
+
     @property
     def opt(self):
         return Parser.Or([self, Parser.Raw("")])
@@ -232,15 +237,16 @@ class Parser:
     def r(self):
         """Creates a regex-matching parser from the given raw parser"""
         return Parser.Regex(self.string)
-    def __mul__(self, n):   return Parser.RepN(self, n)
 
-    def __floordiv__(self, other):   return Parser.Transform(self, other)
+    def __mul__(self, n): return Parser.RepN(self, n)
 
-    def __pow__(self, other):   return Parser.Transform(self, lambda x: other(*x))
+    def __floordiv__(self, other): return Parser.Transform(self, other)
+
+    def __pow__(self, other): return Parser.Transform(self, lambda x: other(*x))
 
     def __rshift__(self, other): return Parser.TransformBound(self, other)
 
-    class Full(parser):
+    class Full(parser):  # noqa: F821
         def parse_input(self, input):
             res = self.parser.parse_input(input)
             if type(res) is Success and res.remaining.index < len(input.string):
@@ -265,14 +271,15 @@ class Parser:
             match = re.match(self.regex_string, input.string[input.index:])
             if match:
                 group = match.group()
-                return Success(group, {}, input.copy(index = input.index + len(group)))
+                return Success(group, {},
+                               input.copy(index=input.index + len(group)))
             else:
                 return Failure(input, [self])
 
         def short_str(self):
             return repr(self.regex_string) + ".r"
 
-    class Seq(children):
+    class Seq(children):  # noqa: F821
         def parse_input(self, input):
             current_input = input
             results = []
@@ -299,7 +306,8 @@ class Parser:
 
         def short_str(self):
             return "(" + ", ".join(map(lambda x: x.short_str(), self.children)) + ")"
-    class Or(children):
+
+    class Or(children):  # noqa: F821
         def parse_input(self, input):
             for child in self.children:
                 res = child.parse_input(input)
@@ -309,16 +317,14 @@ class Parser:
                 elif res.fatal:
                     res.failed = [self] + res.failed
                     return res
-
-
             return Failure(input, [self])
 
-        def __or__(self, other):   return Parser.Or(self.children + [other])
+        def __or__(self, other): return Parser.Or(self.children + [other])
 
         def short_str(self):
             return "(" + " | ".join(map(lambda x: x.short_str(), self.children)) + ")"
 
-    class And(children):
+    class And(children):  # noqa: F821
         def parse_input(self, input):
             results = [child.parse_input(input) for child in self.children]
             failures = [res for res in results if type(res) is Failure]
@@ -328,12 +334,12 @@ class Parser:
                 failures[0].failed = [self] + failures[0].failed
                 return failures[0]
 
-        def __and__(self, other):   return Parser.And(self.children + [other])
+        def __and__(self, other): return Parser.And(self.children + [other])
 
         def short_str(self):
             return "(" + " & ".join(map(lambda x: x.short_str(), self.children)) + ")"
 
-    class Not(parser):
+    class Not(parser):  # noqa: F821
         def parse_input(self, input):
             if type(self.parser.parse_input(input)) is Success:
                 return Failure(input, [self])
@@ -343,7 +349,7 @@ class Parser:
         def short_str(self):
             return "-" + self.parser.short_str()
 
-    class Rep(parser):
+    class Rep(parser):  # noqa: F821
         def parse_input(self, input):
             current_input = input
             results = []
@@ -365,8 +371,7 @@ class Parser:
 
                 results.append(res.output)
 
-
-    class RepN(parser, n):
+    class RepN(parser, n):  # noqa: F821
         def parse_input(self, input):
             current_input = input
             results = []
@@ -390,7 +395,7 @@ class Parser:
         def short_str(self):
             return self.parser.short_str() + "*" + n
 
-    class Transform(parser, func):
+    class Transform(parser, func):  # noqa: F821
         def parse_input(self, input):
             res = self.parser.parse_input(input)
 
@@ -403,7 +408,7 @@ class Parser:
         def short_str(self):
             return self.parser.short_str()
 
-    class TransformBound(parser, func):
+    class TransformBound(parser, func):  # noqa: F821
         def parse_input(self, input):
             res = self.parser.parse_input(input)
             if type(res) is Success:
@@ -416,16 +421,16 @@ class Parser:
         def short_str(self):
             return self.parser.short_str()
 
-    class Named(parser_thunk, trace_name):
-        self.stored_parser = None
+    class Named(parser_thunk, trace_name):  # noqa: F821
+        self.stored_parser = None  # noqa: F821
+
         @property
         def parser(self):
             if not self.stored_parser:
                 self.stored_parser = self.parser_thunk()
-
             return self.stored_parser
-        def parse_input(self, input):
 
+        def parse_input(self, input):
             res = self.parser.parse_input(input)
             if type(res) is Success:
                 res.bindings = {self.trace_name[0]: res.output}
@@ -436,7 +441,7 @@ class Parser:
         def short_str(self):
             return self.trace_name[0]
 
-    class Succeed(string):
+    class Succeed(string):  # noqa: F821
         def parse_input(self, input):
             return Success(self.string, {}, input)
 

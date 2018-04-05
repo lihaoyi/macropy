@@ -39,7 +39,7 @@ def captured_registry(**kw):
     return []
 
 
-@register(post_processing)
+@register(post_processing)  # noqa: F811
 def post_proc(tree, captured_registry, gen_sym, **kw):
     if len(captured_registry) == 0:
         return tree
