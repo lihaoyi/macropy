@@ -5,7 +5,6 @@ the source extent of an AST.
 Exposed to each macro as an `exact_src` function."""
 
 import ast
-import sys
 
 from . import unparse
 from .macros import injected_vars

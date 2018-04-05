@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import ast
-import sys
 
 from .core.macros import Macros, injected_vars, post_processing
 from .core.util import Lazy, register
