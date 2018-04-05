@@ -10,7 +10,7 @@ from .core.quotes import ast_literal, name
 from .core.analysis import Scoped
 
 
-macros = Macros()
+macros = Macros()  # noqa: F811
 
 
 def apply(f):
@@ -27,8 +27,9 @@ class CaseClass(object):
         return self.__class__(**dict(old + new))
 
     def __str__(self):
-        return self.__class__.__name__ + "(" + ", ".join(str(getattr(self, x))
-                for x in self.__class__._fields) + ")"
+        return (self.__class__.__name__ + "(" +
+                ", ".join(str(getattr(self, x))
+                          for x in self.__class__._fields) + ")")
 
     def __repr__(self):
         return self.__str__()
@@ -180,7 +181,7 @@ def prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args):
 
     for x in all_args:
         with hq as a:
-            unhygienic[self.x] = name[x]
+            unhygienic[self.x] = name[x]  # noqa: F821
 
         a[0].targets[0].attr = x
 
@@ -192,10 +193,10 @@ def shared_transform(tree, gen_sym, additional_args=[]):
         def __init__(self, *args, **kwargs):
             pass
 
-        _fields = []
-        _varargs = None
-        _kwargs = None
-        __slots__ = []
+        _fields = []  # noqa: F841
+        _varargs = None  # noqa: F841
+        _kwargs = None  # noqa: F841
+        __slots__ = []  # noqa: F841
 
     init_fun, set_fields, set_varargs, set_kwargs, set_slots, = methods
 
@@ -256,6 +257,7 @@ def enum(tree, gen_sym, exact_src, **kw):
     count = [0]
     new_assigns = []
     new_body = []
+
     def handle(expr):
         assert type(expr) in (ast.Name, ast.Call), ast.stmt.value
         if type(expr) is ast.Name:
@@ -302,7 +304,6 @@ def enum(tree, gen_sym, exact_src, **kw):
     with hq as code:
         name[tree.name].__new__ = staticmethod(enum_new)
         name[tree.name].__init__ = noop_init
-
 
     tree.bases = [hq[Enum]]
 
