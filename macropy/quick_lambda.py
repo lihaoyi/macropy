@@ -8,7 +8,6 @@ from .core.hquotes import macros, hq, u  # noqa: F811
 from .core.cleanup import ast_ctx_fixer
 from .core import ast_repr, Captured  # noqa: F401
 from .core.walkers import Walker
-from .core import gen_sym  # noqa: F401
 
 
 macros = Macros()  # noqa: F811

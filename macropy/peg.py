@@ -9,7 +9,7 @@ import macropy.core.macros
 import macropy.core.util
 import macropy.core.walkers
 
-from macropy.core import ast_repr, Captured, gen_sym   # noqa: F401
+from macropy.core import ast_repr, Captured   # noqa: F401
 from macropy.core.hquotes import macros, hq, u, ast_literal
 from macropy.quick_lambda import macros, f  # noqa: F811
 from macropy.case_classes import macros, case  # noqa: F811
