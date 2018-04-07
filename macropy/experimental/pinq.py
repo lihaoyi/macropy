@@ -74,7 +74,9 @@ def process(tree):
 def generate_schema(engine):
     metadata = sqlalchemy.MetaData(engine)
     metadata.reflect()
-    class Db: pass
+
+    class Db:
+        pass
     db = Db()
     for table in metadata.sorted_tables:
         setattr(db, table.name, table)
