@@ -7,22 +7,6 @@
 .. image:: https://travis-ci.org/azazel75/macropy.svg?branch=master
   :target: https://travis-ci.org/azazel75/macropy
 
-.. warning::
-
-   This is a fork of the original `MacroPy`__ updated to work only
-   with Python 3.4+. PyPy and Jython are untested.
-
-   All the test have been updated to cover mothern Python 3.4+ syntax.
-
-   This package is published as ``macropy3`` on `pypi`__ and is
-   documented on `<http://macropy3.readthedocs.io/en/latest/>`_.
-
-   What follows is an ongoing update of the original documentation and
-   therefore may be inaccurate.
-
-__ https://github.com/lihaoyi/macropy
-__ https://pypi.python.org/pypi/macropy3
-
 **MacroPy** is an implementation of `Syntactic Macros
 <http://tinyurl.com/cmlls8v>`_ in the `Python Programming Language
 <http://python.org/>`_. MacroPy provides a mechanism for user-defined
@@ -32,22 +16,36 @@ Python program at *import time*. This is an easy way to enhance the
 semantics of a Python program in ways which are otherwise impossible,
 for example providing an extremely concise way of declaring classes:
 
+Requirements
+============
+
+MacroPy3 is tested to run on `CPython 3.4
+<http://en.wikipedia.org/wiki/CPython>`_ or newer  and  has no
+current support for `Jython
+<http://www.jython.org/>`_ or `PyPy <http://pypy.org/>`_. MacroPy3
+is also available on `PyPI <https://pypi.python.org/pypi/macropy3>`_.
+
+
+Installation
+============
+
+Just execute a:
+
+.. code:: console
+
+   $ pip install macropy3
+
+then have a look at the docs at `<http://macropy3.readthedocs.io/en/latest/>`_.
+
+How to contribute
+=================
+
 We're open to contributions, so send us your
 ideas/questions/issues/pull-requests and we'll do our best to
 accommodate you! You can ask questions on the `Google Group
 <https://groups.google.com/forum/#!forum/macropy>`_ or file bugs on
 thee `issues <issues>`_ page. See the `changelist <changes.md>`_ to
 see what's changed recently.
-
-MacroPy3 is tested to run on `CPython 3.4
-<http://en.wikipedia.org/wiki/CPython>`_ and no support for `Jython
-<http://www.jython.org/>`_ or and `PyPy <http://pypy.org/>`_. MacroPy3
-is also available on `PyPI <https://pypi.python.org/pypi/macropy3>`_,
-using a standard `setup.py <setup.py>`_ to manage dependencies,
-installation and other things. Check out `this gist
-<https://gist.github.com/lihaoyi/5577609>`_ for an example of setting
-it up on a clean system.
-
 
 Credits
 =======
@@ -64,8 +62,9 @@ as `Scala Macros <http://scalamacros.org/>`_, `Karnickel
 
 The MIT License (MIT)
 
-Copyright (c) 2013, `Li Haoyi <https://github.com/lihaoyi>`_, `Justin
-Holmgren <https://github.com/jnhnum1>`_
+Copyright (c) 2013-2018, `Li Haoyi <https://github.com/lihaoyi>`_, `Justin
+Holmgren <https://github.com/jnhnum1>`_, `Alberto Berti
+<https://github.com/azazel75>`_ and all the other contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
