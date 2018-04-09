@@ -1,6 +1,7 @@
+import sys
 import unittest
 import macropy.activate
 
 import macropy.test
 
-unittest.TextTestRunner().run(macropy.test.Tests)
+sys.exit(unittest.TextTestRunner().run(macropy.test.Tests))
