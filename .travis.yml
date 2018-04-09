@@ -11,7 +11,7 @@ install: pip install .[pinq]
 script:
   - |
       if [[ "${TRAVIS_PYTHON_VERSION}" == "pypy"* ]]; then
-        python --jit disable_unrolling=0 run_tests.py || exit 1
+        python --jit disable_unrolling=0 run_tests.py
       else
-        python run_tests.py || exit 1
-      fi
+        python run_tests.py
+      fi || exit 1
