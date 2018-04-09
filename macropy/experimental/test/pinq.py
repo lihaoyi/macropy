@@ -30,6 +30,12 @@ def compare_queries(query1, query2, post_process=lambda x: x):
 
 
 class Tests(unittest.TestCase):
+    def test_all(self):
+        """This tests the fact that you can select everything from a table."""
+        compare_queries(
+            "SELECT * FROM country",
+            sql[(x for x in db.country)]
+        )
 
     def test_expand_lets(self):
         """
