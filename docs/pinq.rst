@@ -245,7 +245,7 @@ Expression Language`__. See the `unit tests`__ for a fuller set of
 examples of what PINQ can do, or browse the SQLAlchemy docs mentioned
 earlier.
 
-__ http://docs.sqlalchemy.org/ru/latest/core/tutorial.html#ordering-grouping-limiting-offset-ing
+__ http://docs.sqlalchemy.org/en/latest/core/tutorial.html#ordering-grouping-limiting-offset-ing
 __ https://github.com/lihaoyi/macropy/blob/master/macropy/experimental/test/pinq.py
 
 PINQ demonstrates how easy it is to use macros to lift python snippets
