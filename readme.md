@@ -964,7 +964,7 @@ array = ('[', json_exp.rep_with(',') >> arr, space.opt, ']') >> arr
 
 Which arguably looks the cleanest of all!
 
-###Cut
+### Cut
 
 ```python
 from macropy.peg import macros, peg, cut
