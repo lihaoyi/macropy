@@ -4,4 +4,5 @@ import macropy.activate
 
 import macropy.test
 
-sys.exit(unittest.TextTestRunner().run(macropy.test.Tests))
+res = unittest.TextTestRunner().run(macropy.test.Tests)
+sys.exit(len(res.failures))
