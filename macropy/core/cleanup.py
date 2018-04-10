@@ -60,5 +60,9 @@ def fill_line_numbers(tree, lineno, col_offset, **kw):
             tree.col_offset = col_offset
         for name, sub in ast.iter_fields(tree):
             fill_line_numbers(sub, tree.lineno, tree.col_offset)
-
+    elif isinstance(tree, (str, int, float)) or tree is None:
+        pass
+    else:
+        raise TypeError("Invalid AST node '{!r}',  type: '{!r}' "
+                        "after expansion".format(tree, type(tree)))
     return tree
