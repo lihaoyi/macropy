@@ -44,16 +44,14 @@ class Tests(unittest.TestCase):
             assert exc_traceback.tb_next.tb_lineno == 8
 
     def test_expanded_line_numbers_should_match_source(self):
-        return # TODO: this test gives an assertionerror within cpython
         from . import line_number_error_source
         assert line_number_error_source.run(11) == 1
 
-
-        # this still doesn't give the correct line numbers
-        # in the stack trace
-
-        # line_number_error_source.run(10)
-
+        try:
+            line_number_error_source.run(10)
+        except Exception:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            assert exc_traceback.tb_next.tb_lineno == 9
 
     def test_quasiquote_expansion_line_numbers(self):
         from . import quote_source
