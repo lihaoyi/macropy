@@ -8,7 +8,7 @@ python:
   # - pypy3
 
 
-install: pip install .[pinq, pyxl]
+install: pip install .[pinq,pyxl]
 
 script: python run_tests.py
 # TODO: Re-enable pypy3.
