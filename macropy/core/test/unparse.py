@@ -210,16 +210,26 @@ f'bar {grande!r:foo}   zoo'
     def test_async(self):
         if not compat.PY35:
             return
+        # do not remove the empty line in the string, or the test will
+        # not pass
         self.convert_test("""
 
 async def foo(a: Int):
-    result = [i async for i in aiter() if (i % 2)]
-    result = [(await fun()) for fun in funcs if (await condition())]
     async for foo in aiter:
         pass
     async with foo as bar:
-        passes
+        pass
     (await future)
+""")
+
+    def test_async_comprehensions(self):
+        if not compat.PY36:
+            return
+        self.convert_test("""
+
+async def foo():
+    result = [i async for i in aiter() if (i % 2)]
+    result = [(await fun()) for fun in funcs if (await condition())]
 """)
 
     def test_leftovers(self):
