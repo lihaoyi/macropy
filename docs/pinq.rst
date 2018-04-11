@@ -236,6 +236,14 @@ As well as ``ORDER BY``, with ``LIMIT`` and ``OFFSET``:
   # (u'Japan',)
   # (u'Nigeria',)
 
+You can emulate a select like ``SELECT * FROM country`` by using::
+
+.. code:: python
+
+  query = sql[(row for row in db.country)]
+
+i.e. if you don't specify any column name, the comprehension will
+become equivalent to selecting all the columns.
 
 In general, apart from the translation of generator expressions (and
 their guards) into ``SELECT`` an ``WHERE`` clauses, the rest of the
