@@ -18,6 +18,11 @@ Welcome to MacroPy3's documentation!
    reference
 
 
+MacroPy3 is a port of the original MacroPy to Python 3. If you look for
+the Python 2 version see the `python2 branch`__
+
+__ https://github.com/lihaoyi/macropy/tree/python2
+
 **MacroPy** is an implementation of `Syntactic Macros`__ in the
 `Python Programming Language <http://python.org/>`_. MacroPy provides
 a mechanism for user-defined functions (macros) to perform
@@ -31,7 +36,7 @@ __ //en.wikipedia.org/wiki/Abstract_syntax_tree
 
 .. code:: python
 
-  >>> import macropy.consol)e
+  >>> import macropy.console
   0=[]=====> MacroPy Enabled <=====[]=0
   >>> from macropy.case_classes import macros, case
 
@@ -55,7 +60,7 @@ MacroPy has been used to implement features such as:
 - `quicklambda`:ref: from Scala and Groovy, and the `lazy`:ref: and
   `interned`:ref: utility macros;
 - `interpolation`:ref:, a common feature in many programming
-  languages;
+    languages;
 - `tracing`:ref: and `asserts`:ref:, and `show_expanded`:ref:, to help
   in the debugging effort;
 - `peg`:ref:, Parser Combinators inspired by Scala's,
@@ -86,7 +91,34 @@ accommodate you! You can ask questions on the `Google Group
 thee issues page. See the `changelist <CHANGES.rst>`:repo: to see
 what's changed recently.
 
+Requirements
+============
+
 MacroPy3 is tested to run on `CPython 3.4
+<http://en.wikipedia.org/wiki/CPython>`_ or newer and has no current
+support for `Jython <http://www.jython.org/>`_ or `PyPy
+<http://pypy.org/>`_. MacroPy3 is also available on `PyPI
+<https://pypi.python.org/pypi/macropy3>`_.
+
+Installation
+============
+
+Just execute a:
+
+.. code:: console
+
+   $ pip install macropy3
+
+if you want to use macros that require external libraries in order to
+work, you can automatically install those dependencies by installing
+one of the ``pinq`` or ``pyxl`` extras like this:
+
+.. code:: console
+
+   $ pip install macropy3[pinq,pyxl]
+
+
+then have a look at the docs at `<http://macropy3.readthedocs.io/en/latest/>`_.
 
 .. _conclusion:
 
