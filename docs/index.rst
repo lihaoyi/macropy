@@ -87,13 +87,6 @@ thee issues page. See the `changelist <CHANGES.rst>`:repo: to see
 what's changed recently.
 
 MacroPy3 is tested to run on `CPython 3.4
-<http://en.wikipedia.org/wiki/CPython>`_ and no support for `Jython
-<http://www.jython.org/>`_ or and `PyPy <http://pypy.org/>`_. MacroPy3
-is also available on `PyPI <https://pypi.python.org/pypi/macropy3>`_,
-using a standard `setup.py`:repo: to manage dependencies, installation
-and other things. Check out `this gist
-<https://gist.github.com/lihaoyi/5577609>`_ for an example of setting
-it up on a clean system.
 
 .. _conclusion:
 
