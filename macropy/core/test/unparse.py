@@ -171,9 +171,17 @@ with a as b:
 
     def test_misc(self):
         self.convert_test("\na.attr") # Attribute
-        self.convert_test("""
+        if compat.PY35:
+            self.convert_test("""
 f()
 f(a, *b, k=8, e=9, **c)""") # Call
+        else:
+            # Py3.4 version of ast.Call unparser doesn't deal with
+            # starargs before keywords
+            self.convert_test("""
+f()
+f(a, k=8, e=9, *b, **c)""") # Call
+
         #self.convert_test("\n...") # Ellipsis
         self.convert_test("""
 a[1]
