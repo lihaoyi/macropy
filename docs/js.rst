@@ -1,3 +1,9 @@
+.. warning::
+
+  Be aware that for what concerns MacroPy3 this macro hadn't been
+  updated due to the external dependency lacking compatibility with
+  Python 3.
+
 .. _js:
 
 JS Snippets

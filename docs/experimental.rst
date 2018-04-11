@@ -9,9 +9,9 @@ would be comfortable using them in production code.
 
 .. warning::
 
-  Be aware that for what concerns MacroPy3, only :ref:`pattern` and
-  :ref:`pinq` have received some love. If you like any of them please
-  to not hesitate to contribute PRs or bug reports!
+   Be aware that for what concerns MacroPy3 :ref:`js` hadn't been
+   updated due to the external dependency lacking compatibility with
+   Python 3.
 
 .. toctree::
    :maxdepth: 2
