@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
-from macropy.case_classes import macros, case
-from macropy.experimental.pyxl_strings import macros, p
-from macropy.tracing import macros, require
-
-
-from pyxl.html import *
 import re
 import unittest
 from xml.etree import ElementTree
+
+from macropy.case_classes import macros, case
+from macropy.experimental.pyxl_strings import macros, p  # noqa: F811
+from macropy.tracing import macros, require  # noqa: F811, F401
+
+from pyxl import html  # noqa: F401
+
 
 def normalize(string):
     return ElementTree.tostring(
         ElementTree.fromstring(
             re.sub("\n *", "", string)
-        )
-    , encoding='utf8', method='xml')
+        ),
+        encoding='utf8', method='xml')
+
 
 class Tests(unittest.TestCase):
     def test_inline_python(self):
@@ -30,7 +32,6 @@ class Tests(unittest.TestCase):
 
         with require:
             block2.to_string() == '<div><img src="/static/images/bolton.png" />Michael Bolton</div>'
-
 
     def test_dynamic(self):
         items = ['Puppies', 'Dragons']
@@ -49,7 +50,6 @@ class Tests(unittest.TestCase):
         with require:
             fruit.attr('data-text') == "clementine"
 
-
     def test_interpreter(self):
         safe_value = "<b>Puppies!</b>"
         unsafe_value = "<script>bad();</script>"
@@ -58,12 +58,13 @@ class Tests(unittest.TestCase):
                    {unsafe_value}
                    {rawhtml(safe_value)}
                </div>"""]
-        target_blob = '<div class="&quot;&gt;">&lt;script&gt;bad();&lt;/script&gt;<b>Puppies!</b></div>'
+        target_blob = '<div class="&quot;&gt;">&lt;script&gt;bad();&lt;/script&gt; <b>Puppies!</b></div>'
         with require:
             normalize(pyxl_blob.to_string()) == normalize(target_blob)
 
     def test_modules(self):
         from pyxl.element import x_element
+
         @case
         class User(name, profile_picture):
             pass
@@ -72,6 +73,7 @@ class Tests(unittest.TestCase):
             __attrs__ = {
                 'user': object,
             }
+
             def render(self):
                 return p["""
                     <div>
@@ -94,6 +96,3 @@ class Tests(unittest.TestCase):
 
         with require:
             normalize(pyxl_blob.to_string()) == normalize(target_blob)
-
-
-

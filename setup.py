@@ -100,7 +100,7 @@ setup(
     url='https://github.com/azazel75/macropy',
     packages=find_packages(exclude=["*.test", "*.test.*"]),
     extras_require={
-        'pyxl':  ["pyxl"],
+        'pyxl':  ["pyxl3"],
         'pinq': ["SQLAlchemy"],
         'js_snippets': ["selenium", "pjs"],
 

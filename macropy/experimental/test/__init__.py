@@ -27,3 +27,9 @@ else:
     print('Exluding tco tests')
 
 Tests = test_suite(cases = cases)
+try:
+    from . import pyxl_snippets
+    cases.append(pyxl_snippets)
+except RuntimeError:
+    print('Excluding pyxl tests')
+
