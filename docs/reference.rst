@@ -908,23 +908,67 @@ cases where the failure of the macro was anticipated.
 Expansion Order
 ---------------
 
-Macros are expanded in an outside-in order, with macros higher up in
-the AST being expanded before their children. Hence, if we have two
-macros inside each other, such as:
+Macros are expanded in an inside-out order by default, with an option
+for the macro writer to reverse the order.
+
+This behavior allows the macro user to use a macro inside another,
+without having the two interferring with each other, where the outer
+one will work on the modified tree returned by the inner one. Thanks
+to that you can for example use the `quasiquote`:ref: macro inside a
+`pattern`:ref: macro, if your need is to operate on AST classes::
+
+.. code:: python
+
+  import ast
+
+  from macropy.core.quotes import macros, ast_literal, ast_list, q, name
+  from macropy.experimental.pattern import macros, switch  # noqa: F811,F401
+
+  def _build_call_isinstance(tgt, cls_or_seq):
+      """Helper to build the translate the equivalence of ``isinstance(foo, Bar)``
+      to ``foo instanceof Bar`` and ``isinstance(Foo, (Bar, Zoo))`` to
+      ``foo instanceof Bar || foo instanceof Zoo``.
+      """
+      with switch(cls_or_seq):
+          if (ast.Tuple(elts=classes) | ast.List(elts=classes) |  # noqa: F821
+              ast.Set(elts=classes)):  # noqa: E129,F821
+              binops = [q[isinstance(ast_literal[tgt], ast_literal[c])]
+                        for c in classes]  # noqa: F821
+              return ast.BoolOp(op=ast.Or(), values=binops)
+          elif q[str]:
+              return q[typeof(ast_literal[tgt]) == 'string' or  # noqa: F821
+                       isinstance(ast_literal[tgt], String)]  # noqa: F821
+          elif q[int] | q[float]:
+              return q[typeof(ast_literal[tgt]) == 'number' or  # noqa: F821
+                       isinstance(ast_literal[tgt], Number)]  # noqa: F821
+          else:
+              return JSBinOp(tgt, JSOpInstanceof(), cls_or_seq)
+
+This code is taken from `Javascripthon`__ project that transforms
+Python AST into JavaScript. Here you can see that instead of defining
+the tests constructing AST trees by hand, a `quasiquote`:ref: macro is
+used to ease the job.
+
+__ https://github.com/metapensiero/metapensiero.pj/blob/macropy/src/metapensiero/pj/transformations/common.py
+
+Nevertheless, there are some cases where it's preferable to have the
+expansion order reversed, like when a macro is a *meta-macro* that
+needs to analyze the pristine tree to look for other macros. That's
+exactly what `tracing`:ref: macro needs to do:
 
 .. code:: python
 
   from macropy.quick_lambda import macros, f
   from macropy.tracing import macros, trace
+
   trace[map(f[_ + 1], [1, 2, 3])]
   # f[_ + 1] -> <function <lambda> at 0x00000000021F9128>
   # _ + 1 -> 2
   # _ + 1 -> 3
   # _ + 1 -> 4
-  print map(f[_ + 1], [1, 2, 3]) -> [2, 3, 4]
+  print(list(map(f[_ + 1], [1, 2, 3]))) -> [2, 3, 4]
   # [2, 3, 4]
   >>>
-
 
 As you can see, the ``trace`` macro is expanded first, and hence the
 when it prints out the expressions being executed, we see the
@@ -933,20 +977,42 @@ arg0 + 1)``. After the tracing is inserted, the ``f`` is finally
 expanded into a ``lambda`` and the final output of this expression is
 ``[2, 3, 4]``.
 
-If your macro needs to perform an operation *after* all macros in its
-sub-tree have been expanded, simply use the `expand_macros
-<#expand_macros>`_ function on the sub-tree. This recursively expands
-all the macros in that sub-tree before returning, after which your
-macro can then do what it needs to do. The implementation of the
-``show_expanded`` macro illustrates this:
+If you need more control over the expansion process for your macro,
+you can define it as a generator, in a similar way you have to do when
+using the `@contextlib.contextmanager`__ decorator from the standard
+lib. This allows you to control the expansion process:
+
+__ https://docs.python.org/3/library/contextlib.html#contextlib.contextmanager
 
 .. code:: python
 
-  @macros.expr
-  def show_expanded(tree, expand_macros,  **kw):
-      expanded_tree = expand_macros(tree)
-      new_tree = hq[wrap_simple(unhygienic[log], u[unparse(expanded_tree)], ast_literal[expanded_tree])]
-      return new_tree
+  from macropy.core.macros import Macros
+
+  macros = Macros()
+
+  @macros.block
+  def mymacro(tree, **kw):
+      # this code is executed before any inner macro
+      # `tree` contains the pristine tree
+      new_tree = yield my_tree
+      # this code is executed after any inner macro
+      # `new_tree` contains the possibly altered tree
+      # you can modify it and return it
+      return atree
+
+The code for the `tracing`:ref: shows a real-world usage:
+
+.. code:: python
+
+  @macros.block  # noqa: F811
+  def trace(tree, exact_src, **kw):
+      """Traces the wrapped code, printing out the source code and evaluated
+      result of every statement and expression contained within it"""
+      ret = trace_walk_func(tree, exact_src)
+      yield ret
+
+.. versionchanged:: 1.1.0
+  Before the expansion order was reversed, from outside-in.
 
 .. _line_numbers:
 
