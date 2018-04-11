@@ -167,15 +167,25 @@ class Decorator(MacroType):
         if (isinstance(in_tree, compat.scope_nodes) and
             len(in_tree.decorator_list)):  # noqa: E129
             rev_decs = list(reversed(in_tree.decorator_list))
+            in_tree.decorator_list = []
             tree = in_tree
             seen_decs = []
             additions = []
+            # process each decorator from the innermost outwards
             for dec in rev_decs:
                 name, macro_tree, call_args = self.get_macro_details(dec)
+                # if the decorator is not a macro, add it to a list
+                # for later re-insertion, either before executing an
+                # outer macro or at the end of the loop if no macro is found
                 if name is None or name not in self.registry:
                     seen_decs.append(dec)
                     continue
-                in_tree.decorator_list = list(reversed(seen_decs))
+                # if the node is still a scope node, re-insert skipped
+                # decorators together with those added by a previous cycle
+                if isinstance(tree, compat.scope_nodes) and len(seen_decs):
+                    tree.decorator_list = (list(reversed(seen_decs)) +
+                                           tree.decorator_list)
+                    seen_decs = []
                 tree = yield MacroData(self.registry[name], macro_tree, tree,
                                        call_args, {}, name)
                 if type(tree) is list:
@@ -184,9 +194,13 @@ class Decorator(MacroType):
                 elif isinstance(tree, ast.expr):
                     tree = [ast.Expr(tree)]
                     break
+            else:
+                # if the final tree is still a scope node (something
+                # decorable), add the remaining decorators
+                if isinstance(tree, compat.scope_nodes) and len(seen_decs):
+                    tree.decorator_list = (list(reversed(seen_decs)) +
+                                           tree.decorator_list)
 
-            if isinstance(tree, compat.scope_nodes):
-                tree.decorator_list = list(reversed(seen_decs))
             if len(additions) == 0:
                 return tree
             else:

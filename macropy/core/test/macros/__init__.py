@@ -14,6 +14,10 @@ class Tests(unittest.TestCase):
         from . import basic_decorator
         assert basic_decorator.run() == 14
 
+    def test_progammatically_added_decorator_is_evaluated(self):
+        from . import added_decorator
+        assert added_decorator.run() == 8
+
     def test_arguments(self):
         from . import argument
         argument.run() == 31
