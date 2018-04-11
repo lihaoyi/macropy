@@ -8,7 +8,7 @@ Tail-call Optimization
   from macropy.experimental.tco import macros, tco
 
   @tco
-  def fact(n, acc=0):
+  def fact(n, acc=1):
       if n == 0:
           return acc
       else:
