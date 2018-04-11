@@ -4,10 +4,29 @@ Changelog
 1.0.4.dev3 (unreleased)
 -----------------------
 
-- Re-enable the ``SaveExporter()`` class.
+- Fix and re-enable the ``SaveExporter()`` class.
 
 - Fix some issues with pattern matching module requiring non obvious
   imports from user's side.
+
+- Fix pattern matching macro need to import ``_matching`` symbol
+
+- Add an ``OptionalMatcher`` to pattern matching macro to support
+  exclusive or conditions.
+
+- Refactor documentation using sphinx.
+
+- Refactor the macro expansion core code. Now the macro expansion
+  order is from inside-out. This allows to use macros inside other
+  macro's body.
+
+- Added support for Python 3.4.
+
+- Added ``SELECT * FROM country`` emulation in `pinq` macro.
+
+- Update the examples.
+
+- Update tco and pyxl macros.
 
 
 1.0.4.dev2 (2017-09-08)
