@@ -4,7 +4,9 @@ from macropy.core.test.macros.basic_decorator_macro import (macros, my_macro,
 
 
 def outer(x):
-    return x
+    def wrapper():
+        return x() + 1
+    return wrapper
 
 
 def middle(x):

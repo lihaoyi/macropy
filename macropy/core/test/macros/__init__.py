@@ -12,7 +12,7 @@ class Tests(unittest.TestCase):
         assert basic_block.run() == 13
 
         from . import basic_decorator
-        assert basic_decorator.run() == 14
+        assert basic_decorator.run() == 15
 
     def test_progammatically_added_decorator_is_evaluated(self):
         from . import added_decorator
