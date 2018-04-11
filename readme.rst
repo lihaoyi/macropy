@@ -1,8 +1,8 @@
 .. -*- coding: utf-8 -*-
 
-================
- MacroPy3 1.0.4
-================
+=============================
+ MacroPy3 1.1.0 (unreleased)
+=============================
 
 .. image:: https://travis-ci.org/azazel75/macropy.svg?branch=master
   :target: https://travis-ci.org/azazel75/macropy

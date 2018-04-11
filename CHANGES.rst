@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.0.4.dev3 (unreleased)
+1.1.0 (unreleased)
 -----------------------
 
 - Fix and re-enable the ``SaveExporter()`` class.
