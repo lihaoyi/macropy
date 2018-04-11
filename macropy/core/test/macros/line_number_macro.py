@@ -1,6 +1,6 @@
-import macropy.core.macros
+from macropy.core.macros import Macros
 
-macros = macropy.core.macros.Macros()
+macros = Macros()
 
 @macros.block
 def expand(tree, **kw):

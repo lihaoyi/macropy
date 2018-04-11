@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from macropy.core.test.macros.basic_decorator_macro import (macros, my_macro,
-                                                            my_macro2)
+from .basic_decorator_macro import macros, my_macro, my_macro2  # noqa: F401
 
 
 def outer(x):
