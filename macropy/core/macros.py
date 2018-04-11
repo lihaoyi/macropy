@@ -236,9 +236,11 @@ class Macros:
         def __call__(self, f, name=None):
             if name is not None:
                 self.registry[name] = f
-            if hasattr(f, "__name__"):
-                self.registry[f.__name__] = f
-
+            else:
+                if hasattr(f, "__name__"):
+                    self.registry[f.__name__] = f
+                else:
+                    raise ValueError("You should specify a name")
             return self.wrap(f)
 
     """The types of macros that will be handled by the registry."""
