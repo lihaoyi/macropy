@@ -44,7 +44,9 @@ extensions = [
     'sphinx.ext.extlinks',
 ]
 
-extlinks = {'repo': ('https://github.com/azazel75/macropy/tree/master/%s',
+gitter = 'lihaoyi'
+
+extlinks = {'repo': ('https://github.com/' + gitter + '/macropy/tree/master/%s',
                      '')}
 
 # Add any paths that contain templates here, relative to this directory.
