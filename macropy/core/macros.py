@@ -56,7 +56,7 @@ def macro_stub(func):
 
 MacroData = collections.namedtuple('MacroData', ['macro', 'macro_tree',
                                                  'body_tree', 'call_args',
-                                                 'kwargs'])
+                                                 'kwargs', 'name'])
 
 
 class MacroType(ABC):
@@ -111,7 +111,7 @@ class Expr(MacroType):
             name, macro_tree, call_args = self.get_macro_details(in_tree.value)
             if name is not None and name in self.registry:
                 new_tree = yield MacroData(self.registry[name], macro_tree,
-                                           body_tree, call_args, {})
+                                           body_tree, call_args, {}, name)
                 assert isinstance(new_tree, ast.expr), ('Wrong type %r' %
                                                         type(new_tree))
                 new_tree = ast.Expr(new_tree)
@@ -137,7 +137,8 @@ class Block(MacroType):
                 if name is not None and name in self.registry:
                     new_tree = yield MacroData(self.registry[name], macro_tree,
                                                in_tree.body, call_args,
-                                               {'target': wi.optional_vars})
+                                               {'target': wi.optional_vars},
+                                               name)
 
             if new_tree:
                 if isinstance(new_tree, ast.expr):
@@ -176,7 +177,7 @@ class Decorator(MacroType):
                     continue
                 in_tree.decorator_list = list(reversed(seen_decs))
                 tree = yield MacroData(self.registry[name], macro_tree, tree,
-                                       call_args, {})
+                                       call_args, {}, name)
                 if type(tree) is list:
                     additions = tree[1:]
                     tree = tree[0]
@@ -357,6 +358,9 @@ class ExpansionContext:
                 # StopIteration with a possible final ``.value`` member
                 while True:
                     mdata = type_it.send(new_tree)
+                    logger.debug("Found macro %r, type %r, line %d",
+                                 mdata.name, mtype.__class__.__name__,
+                                 mdata.macro_tree.lineno)
                     found_macro = True
                     mfunc, mmod = mdata.macro
                     # if the macro function is itself a coro, give  it
