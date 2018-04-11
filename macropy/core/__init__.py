@@ -438,7 +438,9 @@ def _ast_leftovers():
     expr_ctxs = {ast.Load, ast.Store, ast.AugStore, ast.AugLoad, ast.Param}
     top_nodes = {ast.Module, ast.Expression, ast.Interactive}
     jython = {ast.Suite}
-    optimizations = {ast.Del, ast.Constant}
+    optimizations = {ast.Del}
+    if compat.PY36:
+        optimizations.add(ast.Constant)
 
     sups = set()
     sups.update(*{v.__bases__ for v in ast_classes})
