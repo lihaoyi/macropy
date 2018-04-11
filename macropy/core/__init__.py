@@ -296,8 +296,8 @@ trec = {
                                 tabs(i) + "class " + tree.name +
                             mix("(", ", ".join(
                                 [rec(t, i) for t in tree.bases + tree.keywords] +
-                                ["*" + rec(t, i) for t in box(tree.starargs)] +
-                                ["**" + rec(t, i) for t in box(tree.kwargs)]
+                                ["*" + rec(t, i) for t in util.box(tree.starargs)] +
+                                ["**" + rec(t, i) for t in util.box(tree.kwargs)]
                             ), ")") + ":" + rec(tree.body, i+1)),
     ast.FunctionDef:lambda tree, i: ("\n" + "".join(tabs(i) + "@" + rec(dec, i)
                                                     for dec in tree.decorator_list) +
@@ -329,8 +329,8 @@ trec = {
                                 ", ".join(
                                     [rec(t, i) for t in tree.args] +
                                     [rec(t, i) for t in tree.keywords] +
-                                    box(mix("*", rec(tree.starargs, i))) +
-                                    box(mix("**", rec(tree.kwargs, i)))
+                                    util.box(mix("*", rec(tree.starargs, i))) +
+                                    util.box(mix("**", rec(tree.kwargs, i)))
                                 ) + ")") ,
 }
 
