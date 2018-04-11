@@ -1,3 +1,3 @@
+# -*- coding: utf-8 -*-
 import macropy.activate
-import macro_module
 import target

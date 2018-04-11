@@ -1,4 +1,5 @@
-from docs.examples.first_macro.quasiquote.macro_module import macros, expand
+# -*- coding: utf-8 -*-
+from macro_module import macros, expand  # noqa: F401
 
 func = expand[1 + 2]
-print func(5)
+print(func(5))
