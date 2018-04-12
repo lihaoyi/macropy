@@ -20,13 +20,13 @@
 # -- Project information -----------------------------------------------------
 
 project = 'MacroPy3'
-copyright = '2018, Alberto Berti'
+copyright = '2013-2018 Li Haoyi, Justin Holmgren, Alberto Berti'
 author = 'Alberto Berti'
 
 # The short X.Y version
-version = '1.0.4'
+version = '1.1.0'
 # The full version, including alpha/beta/rc tags
-release = '1.0.4.dev3'
+release = '1.1.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -44,7 +44,9 @@ extensions = [
     'sphinx.ext.extlinks',
 ]
 
-extlinks = {'repo': ('https://github.com/azazel75/macropy/tree/master/%s',
+gitter = 'lihaoyi'
+
+extlinks = {'repo': ('https://github.com/' + gitter + '/macropy/tree/master/%s',
                      '')}
 
 # Add any paths that contain templates here, relative to this directory.

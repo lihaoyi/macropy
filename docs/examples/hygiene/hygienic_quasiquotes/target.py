@@ -1,6 +1,7 @@
-from docs.examples.hygiene.hygienic_quasiquotes.macro_module import macros, log
+# -*- coding: utf-8 -*-
+from macro_module import macros, log  # noqa: F401
 
-wrap = 3 # try to confuse it
+wrap = 3  # try to confuse it
 
 log[1 + 2 + 3]
 # 1 + 2 + 3 -> 6

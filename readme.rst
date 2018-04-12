@@ -1,8 +1,8 @@
 .. -*- coding: utf-8 -*-
 
-================
- MacroPy3 1.0.4
-================
+=============================
+ MacroPy3 1.1.0 (unreleased)
+=============================
 
 .. image:: https://travis-ci.org/azazel75/macropy.svg?branch=master
   :target: https://travis-ci.org/azazel75/macropy
@@ -20,11 +20,10 @@ Requirements
 ============
 
 MacroPy3 is tested to run on `CPython 3.4
-<http://en.wikipedia.org/wiki/CPython>`_ or newer  and  has no
-current support for `Jython
-<http://www.jython.org/>`_ or `PyPy <http://pypy.org/>`_. MacroPy3
-is also available on `PyPI <https://pypi.python.org/pypi/macropy3>`_.
-
+<http://en.wikipedia.org/wiki/CPython>`_ or newer and has no current
+support for `Jython <http://www.jython.org/>`_ or `PyPy
+<http://pypy.org/>`_. MacroPy3 is also available on `PyPI
+<https://pypi.python.org/pypi/macropy3>`_.
 
 Installation
 ============
@@ -34,6 +33,15 @@ Just execute a:
 .. code:: console
 
    $ pip install macropy3
+
+if you want to use macros that require external libraries in order to
+work, you can automatically install those dependencies by installing
+one of the ``pinq`` or ``pyxl`` extras like this:
+
+.. code:: console
+
+   $ pip install macropy3[pinq,pyxl]
+
 
 then have a look at the docs at `<http://macropy3.readthedocs.io/en/latest/>`_.
 

@@ -118,13 +118,11 @@ the minimum viable setup is:
 Where you run ``run.py`` instead of ``other.py``.  For the same
 reason, you cannot directly run MacroPy's own unit tests directly
 using ``unittest`` or ``nose``: you need to run the
-:repo:`macropy/run_tests.py` file from the project root for the tests to
-run. See the `runnable, self-contained no-op example`__ to see exactly
-what this looks like, or the example for `using existing macros`__.
-
-__ https://github.com/azazel75/macropy/tree/master/docs/examples/first_macro/nop
-__ https://github.com/azazel75/macropy/tree/master/docs/examples/using_macros
-
+:repo:`run_tests.py` file from the project root for the tests to
+run. See the `runnable, self-contained no-op example
+<docs/examples/first_macro/nop>`:repo: to see exactly what this looks
+like, or the example for `using existing macros
+<docs/examples/using_macros>`:repo:.
 
 MacroPy also works in the REPL:
 
