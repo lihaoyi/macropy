@@ -925,9 +925,9 @@ to that you can for example use the `quasiquote`:ref: macro inside a
   from macropy.experimental.pattern import macros, switch  # noqa: F811,F401
 
   def _build_call_isinstance(tgt, cls_or_seq):
-      """Helper to build the translate the equivalence of ``isinstance(foo, Bar)``
-      to ``foo instanceof Bar`` and ``isinstance(Foo, (Bar, Zoo))`` to
-      ``foo instanceof Bar || foo instanceof Zoo``.
+      """Helper to build the translate the equivalence of isinstance(foo, Bar)
+      to foo instanceof Bar and isinstance(Foo, (Bar, Zoo)) to
+      foo instanceof Bar || foo instanceof Zoo.
       """
       with switch(cls_or_seq):
           if (ast.Tuple(elts=classes) | ast.List(elts=classes) |  # noqa: F821
