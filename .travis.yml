@@ -5,16 +5,9 @@ python:
   - '3.4'
   - '3.5'
   - '3.6'
-  # - pypy3
+  - 'pypy3.5'
 
 
 install: pip install .[pinq,pyxl]
 
 script: python run_tests.py
-# TODO: Re-enable pypy3.
-#  - |
-#      if [[ "${TRAVIS_PYTHON_VERSION}" == "pypy"* ]]; then
-#        python --jit disable_unrolling=0 run_tests.py
-#      else
-#        python run_tests.py
-#      fi

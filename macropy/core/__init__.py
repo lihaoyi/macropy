@@ -392,7 +392,11 @@ if compat.PY36:
                                         else "") + " for " + rec(tree.target, i) +
                                        " in " + rec(tree.iter, i) +
                                        jmap("", lambda x: " if " + rec(x, i),
-                                            tree.ifs)),
+                                            tree.ifs))
+    })
+
+if compat.HAS_FSTRING:
+    trec.update({
         ast.FormattedValue: lambda tree, i: ("{" +  rec(tree.value, i) +
                                         {-1: "", 115: "!s", 114: "!r",
                                          115: "!a"}[tree.conversion] +
@@ -400,7 +404,7 @@ if compat.PY36:
                                          if tree.format_spec else "") +
                                         "}"),
         ast.JoinedStr: lambda tree, i: "f" + repr("".join(v.s
-            if isinstance(v, ast.Str) else rec(v, i) for v in tree.values)),
+            if isinstance(v, ast.Str) else rec(v, i) for v in tree.values))
     })
 
 
@@ -441,6 +445,8 @@ def _ast_leftovers():
     optimizations = {ast.Del}
     if compat.PY36:
         optimizations.add(ast.Constant)
+    if compat.PYPY:
+        optimizations.add(ast.Const)
 
     sups = set()
     sups.update(*{v.__bases__ for v in ast_classes})
