@@ -118,4 +118,7 @@ setup(
         'Topic :: Software Development :: Code Generators',
     ],
     python_requires='~=3.4',
+    project_urls={
+        'Documentation': 'http://macropy3.readthedocs.io/en/latest/index.html',
+    }
 )
