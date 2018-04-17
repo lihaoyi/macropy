@@ -102,9 +102,12 @@ How to contribute
 We're open to contributions, so send us your
 ideas/questions/issues/pull-requests and we'll do our best to
 accommodate you! You can ask questions on the `Google Group
-<https://groups.google.com/forum/#!forum/macropy>`_ or file bugs on
-thee `issues <issues>`_ page. See the `changelist <changes.md>`_ to
+<https://groups.google.com/forum/#!forum/macropy>`_  and on the
+`Gitter channel <https://gitter.im/lihaoyi/macropy>`_ or file bugs on
+thee `issues`__ page. See the `changelist <CHANGES.rst>`:repo: to
 see what's changed recently.
+
+__ https://github.com/lihaoyi/macropy/issues
 
 Credits
 =======

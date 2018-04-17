@@ -87,17 +87,20 @@ Or just skip ahead to the `discussion`:ref: and
 `conclusion`:ref:. We're open to contributions, so send us your
 ideas/questions/issues/pull-requests and we'll do our best to
 accommodate you! You can ask questions on the `Google Group
-<https://groups.google.com/forum/#!forum/macropy>`_ or file bugs on
-thee issues page. See the `changelist <CHANGES.rst>`:repo: to see
-what's changed recently.
+<https://groups.google.com/forum/#!forum/macropy>`_  and on the
+`Gitter channel <https://gitter.im/lihaoyi/macropy>`_ or file bugs on
+thee `issues`__ page. See the `changelist <CHANGES.rst>`:repo: to
+see what's changed recently.
+
+__ https://github.com/lihaoyi/macropy/issues
 
 Requirements
 ============
 
 MacroPy3 is tested to run on `CPython 3.4
-<http://en.wikipedia.org/wiki/CPython>`_ or newer and has no current
-support for `Jython <http://www.jython.org/>`_ or `PyPy
-<http://pypy.org/>`_. MacroPy3 is also available on `PyPI
+<http://en.wikipedia.org/wiki/CPython>`_ or newer and `PyPy
+<http://pypy.org/>`_ 3.5. I has no current support for `Jython
+<http://www.jython.org/>`_. MacroPy3 is also available on `PyPI
 <https://pypi.python.org/pypi/macropy3>`_.
 
 Installation
