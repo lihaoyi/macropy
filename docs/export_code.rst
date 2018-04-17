@@ -232,7 +232,7 @@ not supported (e.g. Jython).
 
 By using the ``SaveExporter``, the macro-using code is expanded into
 plain Python, and although it may rely on MacroPy as a library
-(e.g. the ``CaseClass`` class in `macropy/experimental/peg.py`:repo:)
+(e.g. the ``CaseClass`` class in `macropy/peg.py`:repo:)
 it won't need any of MacroPy's import-code-intercepting
 AST-transforming capabilities at run-time.
 

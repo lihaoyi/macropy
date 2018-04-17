@@ -1,3 +1,5 @@
+.. _demo:
+
 Demo Macros
 ===========
 

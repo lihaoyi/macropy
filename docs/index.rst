@@ -134,7 +134,7 @@ mention extremely difficult to execute.
 With MacroPy, we believe that we have a powerful, flexible tool that
 makes it trivially easy to write AST-transforming macros with any
 level of complexity. We have a `compelling suite of use cases
-<#examples>`_ demonstrating the utility of such transforms.
+<demo>`_ demonstrating the utility of such transforms.
 
 .. and all of it runs perfectly fine on alternative implementations of
 .. Python such as PyPy.
