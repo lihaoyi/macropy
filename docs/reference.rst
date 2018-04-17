@@ -915,32 +915,31 @@ This behavior allows the macro user to use a macro inside another,
 without having the two interferring with each other, where the outer
 one will work on the modified tree returned by the inner one. Thanks
 to that you can for example use the `quasiquote`:ref: macro inside a
-`pattern`:ref: macro, if your need is to operate on AST classes::
+`pattern`:ref: macro, if your need is to operate on AST classes:
 
 .. code:: python
 
   import ast
 
   from macropy.core.quotes import macros, ast_literal, ast_list, q, name
-  from macropy.experimental.pattern import macros, switch  # noqa: F811,F401
+  from macropy.experimental.pattern import macros, switch
 
   def _build_call_isinstance(tgt, cls_or_seq):
-      """Helper to build the translate the equivalence of isinstance(foo, Bar)
-      to foo instanceof Bar and isinstance(Foo, (Bar, Zoo)) to
-      foo instanceof Bar || foo instanceof Zoo.
+      """Helper to build the translate the equivalence of ``isinstance(foo, Bar)``
+      to ``foo instanceof Bar`` and ``isinstance(Foo, (Bar, Zoo))`` to
+      ``foo instanceof Bar || foo instanceof Zoo.``
       """
       with switch(cls_or_seq):
-          if (ast.Tuple(elts=classes) | ast.List(elts=classes) |  # noqa: F821
-              ast.Set(elts=classes)):  # noqa: E129,F821
-              binops = [q[isinstance(ast_literal[tgt], ast_literal[c])]
-                        for c in classes]  # noqa: F821
+          if (ast.Tuple(elts=classes) | ast.List(elts=classes) |
+              ast.Set(elts=classes)):
+              binops = [q[isinstance(ast_literal[tgt], ast_literal[c])] for c in classes]
               return ast.BoolOp(op=ast.Or(), values=binops)
           elif q[str]:
-              return q[typeof(ast_literal[tgt]) == 'string' or  # noqa: F821
-                       isinstance(ast_literal[tgt], String)]  # noqa: F821
+              return q[typeof(ast_literal[tgt]) == 'string' or
+                       isinstance(ast_literal[tgt], String)]
           elif q[int] | q[float]:
-              return q[typeof(ast_literal[tgt]) == 'number' or  # noqa: F821
-                       isinstance(ast_literal[tgt], Number)]  # noqa: F821
+              return q[typeof(ast_literal[tgt]) == 'number' or
+                       isinstance(ast_literal[tgt], Number)]
           else:
               return JSBinOp(tgt, JSOpInstanceof(), cls_or_seq)
 
@@ -970,12 +969,12 @@ exactly what `tracing`:ref: macro needs to do:
   # [2, 3, 4]
   >>>
 
-As you can see, the ``trace`` macro is expanded first, and hence the
-when it prints out the expressions being executed, we see the
-un-expanded ``f[_ + 1]`` rather than the expanded ``(lammbda arg0:
-arg0 + 1)``. After the tracing is inserted, the ``f`` is finally
-expanded into a ``lambda`` and the final output of this expression is
-``[2, 3, 4]``.
+As you can see, the ``trace`` macro is expanded first, and hence when
+it prints out the expressions being executed, we see the un-expanded
+``f[_ + 1]`` rather than the expanded ``(lammbda arg0: arg0 +
+1)``. After the tracing is inserted, the ``f`` is finally expanded
+into a ``lambda`` and the final output of this expression is ``[2, 3,
+4]``.
 
 If you need more control over the expansion process for your macro,
 you can define it as a generator, in a similar way you have to do when
