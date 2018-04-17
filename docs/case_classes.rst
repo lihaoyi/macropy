@@ -321,4 +321,4 @@ In the cases where you desperately need additional flexibility `not
 afforded`_ by case classes, you can always fall back on normal Python
 classes and do without the case class functionality.
 
-__ http://docs.python.org/2/library/collections.html#collections.namedtuple
+__ http://docs.python.org/3/library/collections.html#collections.namedtuple

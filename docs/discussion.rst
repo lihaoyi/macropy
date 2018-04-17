@@ -123,9 +123,9 @@ function:
 
   def trace(func):
       def new_func(*args, **kwargs):
-          print "Calling", func.func_name, "with", args, kwargs
+          print("Calling", func.func_name, "with", args, kwargs)
           result = func(*args, **kwargs)
-          print "func.func_name, "returned", result
+          print("func.func_name, "returned", result)
           return result
       return new_func
 

@@ -14,15 +14,66 @@ functions (macros) to perform transformations on the `abstract syntax
 tree <http://en.wikipedia.org/wiki/Abstract_syntax_tree>`_ (AST) of a
 Python program at *import time*. This is an easy way to enhance the
 semantics of a Python program in ways which are otherwise impossible,
-for example providing an extremely concise way of declaring classes:
+for example providing an extremely concise way of declaring classes.
+
+Python like you've never seen before
+====================================
+
+MacroPy allows you to create constructs which are impossible to have
+in normal python code, such as:
+
+Tracing
+-------
+
+.. code:: python
+
+    with trace:
+        sum([x + 5 for x in range(3)])
+
+    # sum([x + 5 for x in range(3)])
+    # range(3) -> [0, 1, 2]
+    # x + 5 -> 5
+    # x + 5 -> 6
+    # x + 5 -> 7
+    # [x + 5 for x in range(3)] -> [5, 6, 7]
+    # sum([x + 5 for x in range(3)]) -> 18
+
+Quick Lambdas
+-------------
+
+.. code:: python
+
+    print(list(map(f[_[0]], ['omg', 'wtf', 'bbq'])))
+    # ['o', 'w', 'b']
+
+    print(list(reduce(f[_ + _], ['omg', 'wtf', 'bbq'])))
+    # 'omgwtfbbq
+
+Case Classes
+------------
+
+.. code:: python
+
+    @case
+    class Point(x, y): pass
+
+    p = Point(1, 2)
+
+    print str(p)    #Point(1, 2)
+    print p.x       #1
+    print p.y       #2
+    print Point(1, 2) == Point(1, 2) # True
+
+and more! See the docs at
+`<http://macropy3.readthedocs.io/en/latest/>`_.
 
 Requirements
 ============
 
 MacroPy3 is tested to run on `CPython 3.4
-<http://en.wikipedia.org/wiki/CPython>`_ or newer and has no current
-support for `Jython <http://www.jython.org/>`_ or `PyPy
-<http://pypy.org/>`_. MacroPy3 is also available on `PyPI
+<http://en.wikipedia.org/wiki/CPython>`_ or newer and `PyPy
+<http://pypy.org/>`_ 3.5. I has no current support for `Jython
+<http://www.jython.org/>`_. MacroPy3 is also available on `PyPI
 <https://pypi.python.org/pypi/macropy3>`_.
 
 Installation
@@ -51,9 +102,12 @@ How to contribute
 We're open to contributions, so send us your
 ideas/questions/issues/pull-requests and we'll do our best to
 accommodate you! You can ask questions on the `Google Group
-<https://groups.google.com/forum/#!forum/macropy>`_ or file bugs on
-thee `issues <issues>`_ page. See the `changelist <changes.md>`_ to
+<https://groups.google.com/forum/#!forum/macropy>`_  and on the
+`Gitter channel <https://gitter.im/lihaoyi/macropy>`_ or file bugs on
+thee `issues`__ page. See the `changelist <CHANGES.rst>`:repo: to
 see what's changed recently.
+
+__ https://github.com/lihaoyi/macropy/issues
 
 Credits
 =======

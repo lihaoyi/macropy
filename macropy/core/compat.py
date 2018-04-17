@@ -8,6 +8,11 @@ PY34 = sys.version_info >= (3, 4)
 PY35 = sys.version_info >= (3, 5)
 PY36 = sys.version_info >= (3, 6)
 
+CPY = sys.implementation.name == 'cpython'
+PYPY = sys.implementation.name == 'pypy'
+
+HAS_FSTRING = CPY and PY36 or PYPY and PY35
+
 if PY34:
     function_nodes = (ast.FunctionDef,)
 else:

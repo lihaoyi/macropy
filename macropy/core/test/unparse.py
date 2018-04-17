@@ -209,7 +209,7 @@ a: Int
 {'a':1, **d}""")
 
     def test_joined_str(self):
-        if not compat.PY36:
+        if not compat.HAS_FSTRING:
             return
         self.convert_test("""
 f'bar {grande!r:foo}   zoo'

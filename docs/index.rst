@@ -19,7 +19,7 @@ Welcome to MacroPy3's documentation!
 
 
 MacroPy3 is a port of the original MacroPy to Python 3. If you look for
-the Python 2 version see the `python2 branch`__
+the Python 2 version see the `python2 branch`__.
 
 __ https://github.com/lihaoyi/macropy/tree/python2
 
@@ -44,9 +44,9 @@ __ //en.wikipedia.org/wiki/Abstract_syntax_tree
   class Point(x, y): pass
 
   >>> p = Point(1, 2)
-  >>> print p.x
+  >>> print(p.x)
   1
-  >>> print p
+  >>> print(p)
   Point(1, 2)
 
 
@@ -60,7 +60,7 @@ MacroPy has been used to implement features such as:
 - `quicklambda`:ref: from Scala and Groovy, and the `lazy`:ref: and
   `interned`:ref: utility macros;
 - `interpolation`:ref:, a common feature in many programming
-    languages;
+  languages;
 - `tracing`:ref: and `asserts`:ref:, and `show_expanded`:ref:, to help
   in the debugging effort;
 - `peg`:ref:, Parser Combinators inspired by Scala's,
@@ -73,8 +73,7 @@ As well as a number of more experimental macros such as:
 - `pinq`:ref:, a shameless clone of LINQ to SQL from C#
 - `pyxl_snippets`:ref:, XML interpolation within your Python code
 - `js`:ref:, cross compiling snippets of Python into equivalent
-  Javascript
-
+  JavaScript
 
 Browse the :ref:`high-level overview <overview>`, or look at the
 `Tutorials`:ref: will go into greater detail and walk you through
@@ -87,17 +86,20 @@ Or just skip ahead to the `discussion`:ref: and
 `conclusion`:ref:. We're open to contributions, so send us your
 ideas/questions/issues/pull-requests and we'll do our best to
 accommodate you! You can ask questions on the `Google Group
-<https://groups.google.com/forum/#!forum/macropy>`_ or file bugs on
-thee issues page. See the `changelist <CHANGES.rst>`:repo: to see
-what's changed recently.
+<https://groups.google.com/forum/#!forum/macropy>`_  and on the
+`Gitter channel <https://gitter.im/lihaoyi/macropy>`_ or file bugs on
+thee `issues`__ page. See the `changelist <CHANGES.rst>`:repo: to
+see what's changed recently.
+
+__ https://github.com/lihaoyi/macropy/issues
 
 Requirements
 ============
 
 MacroPy3 is tested to run on `CPython 3.4
-<http://en.wikipedia.org/wiki/CPython>`_ or newer and has no current
-support for `Jython <http://www.jython.org/>`_ or `PyPy
-<http://pypy.org/>`_. MacroPy3 is also available on `PyPI
+<http://en.wikipedia.org/wiki/CPython>`_ or newer and `PyPy
+<http://pypy.org/>`_ 3.5. I has no current support for `Jython
+<http://www.jython.org/>`_. MacroPy3 is also available on `PyPI
 <https://pypi.python.org/pypi/macropy3>`_.
 
 Installation
@@ -134,7 +136,7 @@ mention extremely difficult to execute.
 With MacroPy, we believe that we have a powerful, flexible tool that
 makes it trivially easy to write AST-transforming macros with any
 level of complexity. We have a `compelling suite of use cases
-<#examples>`_ demonstrating the utility of such transforms.
+<demo>`_ demonstrating the utility of such transforms.
 
 .. and all of it runs perfectly fine on alternative implementations of
 .. Python such as PyPy.

@@ -54,9 +54,10 @@ Now, let us define a simple macro, in ``macro_module.py``
 
 Running this via ``python run.py`` will print out ``3``; so far
 ``expand`` is a simple no-op macro which does not do anything to the
-tree it is passed. This macro is provided in `docs/examples/nop`:repo:
-if you want to try it out yourself; you can run it from the project
-root via ``python docs/examples/nop/run.py``.
+tree it is passed. This macro is provided in
+`docs/examples/first_macro/nop`:repo: if you want to try it out
+yourself; you can run it from the project root via ``python
+docs/examples/first_macro/nop/run.py``.
 
 The ``**kw`` serves to absorb all the arguments that you did not
 declare. The macro can take additional arguments (not shown here)
