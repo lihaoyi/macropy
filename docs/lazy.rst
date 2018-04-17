@@ -14,7 +14,7 @@ Lazy
 
   thunk = lazy[expensive_func()]
 
-  print count[0] # 0
+  print(count[0] # 0)
 
   thunk()
   print(count[0]) # 1

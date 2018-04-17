@@ -15,11 +15,11 @@ Interned
   def func():
       return interned[expensive_func()]
 
-  print count[0] # 0
+  print(count[0] # 0)
   func()
-  print count[0] # 1
+  print(count[0] # 1)
   func()
-  print count[0] # 1
+  print(count[0] # 1)
 
 The ``interned`` macro is similar to the :ref:`Lazy <lazy>` macro in
 that the code within the ``interned[...]`` block is wrapped in a thunk

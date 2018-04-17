@@ -44,9 +44,9 @@ __ //en.wikipedia.org/wiki/Abstract_syntax_tree
   class Point(x, y): pass
 
   >>> p = Point(1, 2)
-  >>> print p.x
+  >>> print(p.x)
   1
-  >>> print p
+  >>> print(p)
   Point(1, 2)
 
 

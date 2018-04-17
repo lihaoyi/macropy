@@ -315,7 +315,7 @@ Quasiquotes
   a = 10
   b = 2
   tree = q[1 + u[a + b]]
-  print ast.dump(tree)
+  print(ast.dump(tree))
   #BinOp(Num(1), Add(), Num(12))
 
 
@@ -355,7 +355,7 @@ example above:
 .. code:: python
 
   tree = q[1 + u[a + b]]
-  print ast.dump(tree)
+  print(ast.dump(tree))
   #BinOp(Num(1), Add(), Num(12))
 
 
@@ -372,7 +372,7 @@ Other ASTs
 
   a = q[1 + 2]
   b = q[ast_literal[a] + 3]
-  print ast.dump(b)
+  print(ast.dump(b))
   #BinOp(BinOp(Num(1), Add(), Num(2)), Add(), Num(3))
 
 
@@ -388,7 +388,7 @@ Names
   n = "x"
   x = 1
   y = q[name[n] + name[n]]
-  print ast.dump(y)
+  print(ast.dump(y))
   #BinOp(Name('x'), Add(), Name('x'))
 
 
@@ -587,12 +587,12 @@ it is called:
 
   @macros.expr
   def f(tree, gen_sym, **kw):
-      print gen_sym() # sym0
-      print gen_sym() # sym1
-      print gen_sym() # sym2
-      print gen_sym() # sym3
+      print(gen_sym()) # sym0
+      print(gen_sym()) # sym1
+      print(gen_sym()) # sym2
+      print(gen_sym()) # sym3
       # skipping sym4 because it's already used in the target file
-      print gen_sym() # sym5
+      print(gen_sym()) # sym5
 
 
 
@@ -819,7 +819,7 @@ be caught just like any others:
   ...     class X:
   ...         1 + 2
   ... except:
-  ...     print "caught!"
+  ...     print("caught!")
   ...
   caught!
 
