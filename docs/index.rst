@@ -19,7 +19,7 @@ Welcome to MacroPy3's documentation!
 
 
 MacroPy3 is a port of the original MacroPy to Python 3. If you look for
-the Python 2 version see the `python2 branch`__
+the Python 2 version see the `python2 branch`__.
 
 __ https://github.com/lihaoyi/macropy/tree/python2
 
@@ -60,7 +60,7 @@ MacroPy has been used to implement features such as:
 - `quicklambda`:ref: from Scala and Groovy, and the `lazy`:ref: and
   `interned`:ref: utility macros;
 - `interpolation`:ref:, a common feature in many programming
-    languages;
+  languages;
 - `tracing`:ref: and `asserts`:ref:, and `show_expanded`:ref:, to help
   in the debugging effort;
 - `peg`:ref:, Parser Combinators inspired by Scala's,
@@ -73,8 +73,7 @@ As well as a number of more experimental macros such as:
 - `pinq`:ref:, a shameless clone of LINQ to SQL from C#
 - `pyxl_snippets`:ref:, XML interpolation within your Python code
 - `js`:ref:, cross compiling snippets of Python into equivalent
-  Javascript
-
+  JavaScript
 
 Browse the :ref:`high-level overview <overview>`, or look at the
 `Tutorials`:ref: will go into greater detail and walk you through
