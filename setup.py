@@ -117,4 +117,5 @@ setup(
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Software Development :: Code Generators',
     ],
+    python_requires='~=3.4',
 )
