@@ -135,7 +135,15 @@ class MacroFinder(object):
         #     file_path, file_path, "", module_name, package_path)
         # if module:
         #     return _MacroLoader(ast.mod)
-        source = spec.loader.get_source(fullname)
+        try:
+            source = spec.loader.get_source(fullname)
+        except ImportError:
+            logging.debug('Loader for %s was unable to find the sources',
+                          fullname)
+            return
+        except Exception:
+            logging.exception('Loader for %s raised an error', fullname)
+            return
         code, tree = self.expand_macros(source, origin, spec)
         if not code:  # no macros!
             return
