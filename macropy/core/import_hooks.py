@@ -72,12 +72,12 @@ class MacroFinder(object):
         remaining meta_path finders. This one is installed by
         ``macropy.activate`` at index 0."""
         spec = None
-        for finder in sys.meta_path[1:]:
+        for finder in sys.meta_path:
             # when testing with pytest, it installs a finder that for
             # some yet unknown reasons makes macros expansion
             # fail. For now it will just avoid using it and pass to
             # the next one
-            if 'pytest' in finder.__module__:
+            if finder is self or 'pytest' in finder.__module__:
                 continue
             if hasattr(finder, 'find_spec'):
                 spec = finder.find_spec(fullname, path, target=target)
