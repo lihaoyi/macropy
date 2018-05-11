@@ -4,6 +4,9 @@ Changelog
 1.1.0 (unreleased)
 -----------------------
 
+1.1.0b1 (2018-05-12)
+-----------------------
+
 - Fix and re-enable the ``SaveExporter()`` class.
 
 - Fix some issues with pattern matching module requiring non obvious
@@ -27,6 +30,8 @@ Changelog
 - Update the examples.
 
 - Update tco and pyxl macros.
+
+- Prevent the import hooks from raising errors.
 
 
 1.0.4.dev2 (2017-09-08)
