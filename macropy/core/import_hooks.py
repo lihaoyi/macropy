@@ -111,7 +111,7 @@ class MacroFinder(object):
             tree, source_code, modules).expand_macros()
         try:
             return compile(tree, filename, "exec"), new_tree
-        except:
+        except Exception:
             logger.exception("Error while compiling file %s", filename)
             raise
 
