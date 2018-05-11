@@ -13,7 +13,7 @@ setup(
     name='macropy3',
     version=__version__,
     description='Macros for Python: Quasiquotes, Case Classes, LINQ and more!',
-    long_description=README + '\n' + CHANGES,
+    long_description=README + '\n\n' + CHANGES,
     license='MIT',
     author='Li Haoyi, Justin Holmgren',
     author_email='haoyi.sg@gmail.com, justin.holmgren@gmail.com',

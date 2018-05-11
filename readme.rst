@@ -1,7 +1,7 @@
 .. -*- coding: utf-8 -*-
 
 =============================
- MacroPy3 1.1.0 (unreleased)
+ MacroPy3 1.1.0b2
 =============================
 
 .. image:: https://travis-ci.org/azazel75/macropy.svg?branch=master
@@ -104,8 +104,7 @@ ideas/questions/issues/pull-requests and we'll do our best to
 accommodate you! You can ask questions on the `Google Group
 <https://groups.google.com/forum/#!forum/macropy>`_  and on the
 `Gitter channel <https://gitter.im/lihaoyi/macropy>`_ or file bugs on
-thee `issues`__ page. See the `changelist <CHANGES.rst>`:repo: to
-see what's changed recently.
+thee `issues`__ page.
 
 __ https://github.com/lihaoyi/macropy/issues
 
