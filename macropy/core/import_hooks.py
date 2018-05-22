@@ -72,12 +72,12 @@ class MacroFinder(object):
         remaining meta_path finders. This one is installed by
         ``macropy.activate`` at index 0."""
         spec = None
-        for finder in sys.meta_path[1:]:
+        for finder in sys.meta_path:
             # when testing with pytest, it installs a finder that for
             # some yet unknown reasons makes macros expansion
             # fail. For now it will just avoid using it and pass to
             # the next one
-            if 'pytest' in finder.__module__:
+            if finder is self or 'pytest' in finder.__module__:
                 continue
             if hasattr(finder, 'find_spec'):
                 spec = finder.find_spec(fullname, path, target=target)
@@ -111,7 +111,7 @@ class MacroFinder(object):
             tree, source_code, modules).expand_macros()
         try:
             return compile(tree, filename, "exec"), new_tree
-        except:
+        except Exception:
             logger.exception("Error while compiling file %s", filename)
             raise
 
@@ -135,7 +135,15 @@ class MacroFinder(object):
         #     file_path, file_path, "", module_name, package_path)
         # if module:
         #     return _MacroLoader(ast.mod)
-        source = spec.loader.get_source(fullname)
+        try:
+            source = spec.loader.get_source(fullname)
+        except ImportError:
+            logging.debug('Loader for %s was unable to find the sources',
+                          fullname)
+            return
+        except Exception:
+            logging.exception('Loader for %s raised an error', fullname)
+            return
         code, tree = self.expand_macros(source, origin, spec)
         if not code:  # no macros!
             return
