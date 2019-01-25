@@ -102,6 +102,13 @@ def tco(tree, **kw):
                                 ast_literal[kwargs or ast.Dict([], [])])
 
                 return code
+            elif ast.Return(value=ast.IfExp(
+                        body=body,
+                        orelse=orelse,
+                        test=test)):
+                return ast.If(body=[ast.Return(value=body)],
+                              orelse=[ast.Return(value=orelse)],
+                              test=test)
             else:
                 return tree
 

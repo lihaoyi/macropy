@@ -119,6 +119,12 @@ class Tests(unittest.TestCase):
 
         self.assertEquals(120, fact(5))
 
+    def test_tco_ternary(self):
+        @tco
+        def foo(n):
+            return 1 if n == 0 else foo(n-1)
+        self.assertEquals(1, foo(3000))
+
 
 if __name__ == '__main__':
     unittest.main()
