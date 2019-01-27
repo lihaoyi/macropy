@@ -84,7 +84,7 @@ def tco(tree, **kw):
                        ast_literal[func],
                        (ast_literal[ast.List(args, ast.Load())] +
                         list(ast_literal[starred])),
-                       ast_literal[kwargs or ast.Dict([],[])])]
+                       ast_literal[kwargs or ast.Dict([], [])])]
         return hq[(tco_type,
                    ast_literal[func],
                    ast_literal[ast.List(args, ast.Load())],
@@ -105,11 +105,12 @@ def tco(tree, **kw):
                     func=func,
                     args=args,
                     keywords=keywords)):
-                return ast.Return(value=replace_call(func, args, keywords, TCOType.CALL))
+                return ast.Return(value=replace_call(
+                        func, args, keywords, TCOType.CALL))
             elif ast.Return(value=ast.IfExp(
-                        body=body,
-                        orelse=orelse,
-                        test=test)):
+                    body=body,
+                    orelse=orelse,
+                    test=test)):
                 return ast.Return(value=ast.IfExp(
                         body=replace_call_node(body, TCOType.CALL),
                         orelse=replace_call_node(orelse, TCOType.CALL),
@@ -125,16 +126,17 @@ def tco(tree, **kw):
                     func=func,
                     args=args,
                     keywords=keywords)):
-                return ast.Return(value=replace_call(func, args, keywords, TCOType.IGNORE))
+                return ast.Return(value=replace_call(
+                        func, args, keywords, TCOType.IGNORE))
             elif ast.If(test=test, body=body, orelse=orelse):
                 body[-1] = replace_tc_pos(body[-1])
                 if orelse:
                     orelse[-1] = replace_tc_pos(orelse[-1])
                 return ast.If(test, body, orelse)
             elif ast.Expr(value=ast.IfExp(
-                        body=body,
-                        orelse=orelse,
-                        test=test)):
+                    body=body,
+                    orelse=orelse,
+                    test=test)):
                 return ast.Return(value=ast.IfExp(
                         body=replace_call_node(body, TCOType.IGNORE),
                         orelse=replace_call_node(orelse, TCOType.IGNORE),
