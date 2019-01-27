@@ -131,6 +131,14 @@ def tco(tree, **kw):
                 if orelse:
                     orelse[-1] = replace_tc_pos(orelse[-1])
                 return ast.If(test, body, orelse)
+            elif ast.Expr(value=ast.IfExp(
+                        body=body,
+                        orelse=orelse,
+                        test=test)):
+                return ast.Return(value=ast.IfExp(
+                        body=replace_call_node(body, TCOType.IGNORE),
+                        orelse=replace_call_node(orelse, TCOType.IGNORE),
+                        test=test))
             else:
                 return node
 

@@ -125,6 +125,18 @@ class Tests(unittest.TestCase):
             return 1 if n == 0 else foo(n-1)
         self.assertEquals(1, foo(3000))
 
+    def test_implicit_tailcall_ternary(self):
+        """Tests for when there is an implicit return None"""
+        blah = []
+
+        @tco
+        def appendStuff(n):
+            blah.append(n)
+            appendStuff(n-1) if n > 1 else None
+
+        appendStuff(10000)
+        self.assertEquals(10000, len(blah))
+
 
 if __name__ == '__main__':
     unittest.main()
