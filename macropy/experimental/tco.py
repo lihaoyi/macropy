@@ -90,6 +90,13 @@ def tco(tree, **kw):
                    ast_literal[ast.List(args, ast.Load())],
                    ast_literal[kwargs or ast.Dict([], [])])]
 
+    def replace_call_node(node, tco_type):
+        with switch(node):
+            if ast.Call(func=func, args=args, keywords=keywords):
+                return replace_call(func, args, keywords, tco_type)
+            else:
+                return node
+
     @Walker
     # Replace returns of calls
     def return_replacer(tree, **kw):
@@ -103,9 +110,10 @@ def tco(tree, **kw):
                         body=body,
                         orelse=orelse,
                         test=test)):
-                return ast.If(body=[ast.Return(value=body)],
-                              orelse=[ast.Return(value=orelse)],
-                              test=test)
+                return ast.Return(value=ast.IfExp(
+                        body=replace_call_node(body, TCOType.CALL),
+                        orelse=replace_call_node(orelse, TCOType.CALL),
+                        test=test))
             else:
                 return tree
 
