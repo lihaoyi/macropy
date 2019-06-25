@@ -72,7 +72,7 @@ Requirements
 
 MacroPy3 is tested to run on `CPython 3.4
 <http://en.wikipedia.org/wiki/CPython>`_ or newer and `PyPy
-<http://pypy.org/>`_ 3.5. I has no current support for `Jython
+<http://pypy.org/>`_ 3.5. It has no current support for `Jython
 <http://www.jython.org/>`_. MacroPy3 is also available on `PyPI
 <https://pypi.python.org/pypi/macropy3>`_.
 
