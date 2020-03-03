@@ -38,7 +38,7 @@ setup(
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Software Development :: Code Generators',
     ],
-    python_requires='~=3.4',
+    python_requires='>=3.4,<3.8',
     project_urls={
         'Documentation': 'http://macropy3.readthedocs.io/en/latest/index.html',
     }
