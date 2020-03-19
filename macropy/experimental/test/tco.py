@@ -119,6 +119,96 @@ class Tests(unittest.TestCase):
 
         self.assertEquals(120, fact(5))
 
+    def test_tco_ternary(self):
+        @tco
+        def foo(n):
+            return 1 if n == 0 else foo(n-1)
+        self.assertEquals(1, foo(3000))
+
+    def test_tco_returns_ternary(self):
+
+        @case
+        class Cons(x, rest): pass
+
+        @case
+        class Nil(): pass
+
+        def my_range(n):
+            cur = Nil()
+            for i in reversed(range(n)):
+                cur = Cons(i, cur)
+            return cur
+
+        @tco
+        def oddLength(xs):
+            with switch(xs):
+                return False if Nil() else evenLength(xs.rest)
+
+        @tco
+        def evenLength(xs):
+            with switch(xs):
+                return True if Nil() else oddLength(xs.rest)
+
+        self.assertTrue(True, evenLength(my_range(2000)))
+        self.assertTrue(True, oddLength(my_range(2001)))
+
+    def test_implicit_tailcall_ternary(self):
+        blah = []
+
+        @tco
+        def appendStuff(n):
+            blah.append(n)
+            appendStuff(n-1) if n > 1 else None
+
+        appendStuff(10000)
+        self.assertEquals(10000, len(blah))
+
+    def test_util_func_compatibility_ternary(self):
+        def util():
+            return 3 + 4
+
+        @tco
+        def f(n):
+            return util() if n == 0 else f(n-1)
+
+        self.assertEquals(7, f(1000))
+
+        def util2():
+            return None
+
+        @tco
+        def f2(n):
+            return util2() if n == 0 else f2(n-1)
+
+        self.assertEquals(None, f2(1000))
+
+    def test_tailcall_methods_ternary(self):
+
+        class Blah(object):
+            @tco
+            def foo(self, n):
+                return 1 if n == 0 else self.foo(n-1)
+
+        self.assertEquals(1, Blah().foo(5000))
+
+    def test_cross_calls_ternary(self):
+        def odd(n):
+            if n == 0:
+                return False
+            return even(n-1)
+
+        @tco
+        def even(n):
+            return True if n == 0 else odd(n-1)
+
+        def fact(n):
+            @tco
+            def helper(n, cumulative):
+                return cumulative if n == 0 else helper(n - 1, n * cumulative)
+            return helper(n, 1)
+
+        self.assertEquals(120, fact(5))
+
 
 if __name__ == '__main__':
     unittest.main()
