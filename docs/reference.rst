@@ -768,7 +768,7 @@ it is entirely possible to write macros which require manual
 importing, or whose identifiers collide with identifiers in the
 macro-expanded file with unpredictable results. At any time, the
 entire AST of the Python code fragment is directly available to you,
-and you can stich together raw quasiquotes any way you like.
+and you can stitch together raw quasiquotes any way you like.
 
 Nonetheless, by providing ``gen_sym`` and the ``hq`` hygienic
 quasiquote macro, MacroPy makes it trivially easy to have
