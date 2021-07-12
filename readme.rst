@@ -79,14 +79,13 @@ MacroPy3 is tested to run on `CPython 3.4
 Installation
 ============
 
-Just execute a:
+If you want to use macros that work without any external libraries, just execute this command:
 
 .. code:: console
 
    $ pip install macropy3
 
-if you want to use macros that require external libraries in order to
-work, you can automatically install those dependencies by installing
+Otherwise, you can install the dependencies required by your macros using
 one of the ``pinq`` or ``pyxl`` extras like this:
 
 .. code:: console
@@ -94,7 +93,7 @@ one of the ``pinq`` or ``pyxl`` extras like this:
    $ pip install macropy3[pinq,pyxl]
 
 
-then have a look at the docs at `<http://macropy3.readthedocs.io/en/latest/>`_.
+You can have a look at the docs at `<http://macropy3.readthedocs.io/en/latest/>`_.
 
 How to contribute
 =================
