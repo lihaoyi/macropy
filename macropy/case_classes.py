@@ -171,6 +171,7 @@ def prep_initialization(init_fun, args, vararg, kwarg, defaults, all_args):
     kws.update({
         'kwonlyargs': [],
         'kw_defaults': [],
+        'posonlyargs': [],
         'args': [ast.arg('self', None)] + [ast.arg(id, None) for id
                                            in args],
         'vararg': ast.arg(vararg, None) if vararg is not None else None,
@@ -235,7 +236,14 @@ def case_transform(tree, gen_sym, parents):
     tree.bases = parents
     assign = ast.FunctionDef(
         gen_sym("prepare_"+tree.name),
-        ast.arguments([], None, [], [], None, []),
+        ast.arguments(
+            posonlyargs=[],
+            args=[],
+            vararg=None,
+            kwonlyargs=[],
+            kw_defaults=[],
+            kwarg=None,
+            defaults=[]),
         outer,
         [hq[apply]],
         None

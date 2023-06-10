@@ -24,7 +24,7 @@ def clear_errors(tree, **kw):
         tb = "".join(traceback.format_tb(tree.__traceback__))
         msg = str(tree)
         if type(tree) is not AssertionError or tree.args == ():
-            msg = ("".join(tree.args) + "\nCaused by Macro-Expansion Error:\n" +
+            msg = ("".join(map(str, tree.args)) + "\nCaused by Macro-Expansion Error:\n" +
                    tb)
         return hq[raise_error(MacroExpansionError(msg))]
     else:
