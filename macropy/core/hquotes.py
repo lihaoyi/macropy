@@ -132,8 +132,16 @@ def hygienator(tree, stop, scope, **kw):
         id, subtree = res
         if 'unhygienic' == id:
             stop()
-            tree.slice.value.ctx = None
-            return tree.slice.value
+            if isinstance(tree.slice, ast.Index):
+                # Python 3.8-
+                tree.slice.value.ctx = None
+                return tree.slice.value
+            elif isinstance(tree.slice, ast.expr):
+                # Python 3.9+
+                tree.slice.ctx = None
+                return tree.slice
+            else:
+                assert False, f'Wrong type: {type(tree.slice)}'
 
 
 macros.expose_unhygienic(ast)

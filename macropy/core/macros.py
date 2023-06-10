@@ -105,16 +105,24 @@ class Expr(MacroType):
     brackets, like ``amacro[foo]``."""
 
     def detect_macro(self, in_tree):
-        if (isinstance(in_tree, ast.Subscript) and
-            type(in_tree.slice) is ast.Index):  # noqa: E129
-            body_tree = in_tree.slice.value
+        if isinstance(in_tree, ast.Subscript):
             name, macro_tree, call_args = self.get_macro_details(in_tree.value)
             if name is not None and name in self.registry:
+                if type(in_tree.slice) is ast.Index:
+                    # Python 3.8-
+                    body_tree = in_tree.slice.value
+                elif isinstance(in_tree.slice, ast.expr):
+                    # Python 3.8+
+                    body_tree = in_tree.slice
+                else:
+                    assert False, f'Wrong type: {type(in_tree.slice)}'
+
                 new_tree = yield MacroData(self.registry[name], macro_tree,
                                            body_tree, call_args, {}, name)
                 assert isinstance(new_tree, ast.expr), ('Wrong type %r' %
                                                         type(new_tree))
                 new_tree = ast.Expr(new_tree)
+
 
 
 class Block(MacroType):
@@ -614,8 +622,12 @@ def detect_macros(tree, from_fullname, from_package=None, from_module=None):
                 if name.name not in mod.macros.decorator.registry
             ]
 
+            # lineno and col_offset are required fields, so we set them to 0.
+            # If this causes issues we might consider setting them to the
+            # lineno following the last actual import, but this too might cause
+            # issues, since it might collide with existing code.
             stmt.names.extend([
-                ast.alias(x, x) for x in
+                ast.alias(x, x, lineno=0, col_offset=0) for x in
                 mod.macros.expose_unhygienic.registry.keys()
             ])
 
@@ -624,6 +636,11 @@ def detect_macros(tree, from_fullname, from_package=None, from_module=None):
 
 def check_annotated(tree):
     """Shorthand for checking if an AST is of the form something[...]."""
-    if (isinstance(tree, ast.Subscript) and type(tree.slice) is ast.Index and
-        type(tree.value) is ast.Name):  # noqa: E129
+    if not isinstance(tree, ast.Subscript) or type(tree.value) is not ast.Name:
+        return None
+    if type(tree.slice) is ast.Index:
+        # Python 3.8-
         return tree.value.id, tree.slice.value
+    elif isinstance(tree.slice, ast.expr):
+        # Python 3.9+
+        return tree.value.id, tree.slice
